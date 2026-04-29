@@ -1,0 +1,73 @@
+{
+  "subject": "english",
+  "grade": 2,
+  "title": "Английский язык, 2 класс",
+  "units": [
+    {
+      "id": "e2-unit-01",
+      "title": "О себе и семье",
+      "topics": [
+        {"id": "e2-01", "title": "I am, you are, he/she is", "skill": "verb_be"},
+        {"id": "e2-02", "title": "My name is... I am from...", "skill": "introduction"},
+        {"id": "e2-03", "title": "My family tree", "skill": "family_extended"},
+        {"id": "e2-04", "title": "Numbers 11-20", "skill": "numbers_20"},
+        {"id": "e2-05", "title": "How many? Let's count!", "skill": "counting"}
+      ]
+    },
+    {
+      "id": "e2-unit-02",
+      "title": "Мир вокруг",
+      "topics": [
+        {"id": "e2-06", "title": "Sunny, rainy, cloudy, snowy", "skill": "weather"},
+        {"id": "e2-07", "title": "Spring, summer, autumn, winter", "skill": "seasons"},
+        {"id": "e2-08", "title": "Monday, Tuesday... Days of the week", "skill": "days"},
+        {"id": "e2-09", "title": "What day is it today?", "skill": "day_questions"},
+        {"id": "e2-10", "title": "I can see... outside the window", "skill": "can_see"}
+      ]
+    },
+    {
+      "id": "e2-unit-03",
+      "title": "Действия и глаголы",
+      "topics": [
+        {"id": "e2-11", "title": "Run, jump, swim, fly", "skill": "action_verbs"},
+        {"id": "e2-12", "title": "I can / I can't", "skill": "can_ability"},
+        {"id": "e2-13", "title": "What can you do?", "skill": "ability_questions"},
+        {"id": "e2-14", "title": "Read, write, draw, sing", "skill": "school_verbs"},
+        {"id": "e2-15", "title": "Let's do it together!", "skill": "lets_imperative"}
+      ]
+    },
+    {
+      "id": "e2-unit-04",
+      "title": "Еда и покупки",
+      "topics": [
+        {"id": "e2-16", "title": "Vegetables: tomato, potato, carrot", "skill": "vegetables"},
+        {"id": "e2-17", "title": "Fruits: apple, orange, grape, strawberry", "skill": "fruits"},
+        {"id": "e2-18", "title": "Do you like...? Yes, I do / No, I don't", "skill": "do_you_like"},
+        {"id": "e2-19", "title": "How much is it? Numbers 20-100", "skill": "numbers_100"},
+        {"id": "e2-20", "title": "At the shop: I'd like...", "skill": "shopping"}
+      ]
+    },
+    {
+      "id": "e2-unit-05",
+      "title": "Мой день",
+      "topics": [
+        {"id": "e2-21", "title": "Morning, afternoon, evening, night", "skill": "time_of_day"},
+        {"id": "e2-22", "title": "I get up, I go to school", "skill": "daily_routine"},
+        {"id": "e2-23", "title": "What time is it? O'clock", "skill": "telling_time"},
+        {"id": "e2-24", "title": "I like to play after school", "skill": "free_time"},
+        {"id": "e2-25", "title": "Good morning! Good night!", "skill": "greetings_time"}
+      ]
+    },
+    {
+      "id": "e2-unit-06",
+      "title": "Рассказываем истории",
+      "topics": [
+        {"id": "e2-26", "title": "There is / there are", "skill": "there_is"},
+        {"id": "e2-27", "title": "A/an and the", "skill": "articles"},
+        {"id": "e2-28", "title": "And, but, because", "skill": "conjunctions"},
+        {"id": "e2-29", "title": "My favourite story", "skill": "storytelling"},
+        {"id": "e2-30", "title": "Write about your pet or toy", "skill": "short_writing"}
+      ]
+    }
+  ]
+}

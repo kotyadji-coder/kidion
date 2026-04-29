@@ -1,0 +1,91 @@
+{% extends "kid/base.html" %}
+
+{% block title %}Kidion — Свободные уроки{% endblock %}
+{% block page_name %}free-lessons{% endblock %}
+
+{% block content %}
+<div class="kid-map">
+  <div class="kid-map__header">
+    <a href="/kid/home" class="btn-back-kid">&#8592; Назад</a>
+    <h1 class="kid-map__title">Свободные уроки</h1>
+    <div class="kid-map__stats" id="map-stats"></div>
+  </div>
+
+  <div id="free-lessons-list">
+    <div class="spinner"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(async () => {
+  try {
+    var resp = await fetch('/api/kid/free-lessons', {credentials: 'same-origin'});
+    var data = await resp.json();
+    var lessons = data.lessons || [];
+    var container = document.getElementById('free-lessons-list');
+    var statsEl = document.getElementById('map-stats');
+
+    if (statsEl) {
+      var completed = lessons.filter(function(l) { return l.stars !== null; }).length;
+      statsEl.innerHTML = '<span>' + completed + '/' + lessons.length + ' пройдено</span>';
+    }
+
+    if (lessons.length === 0) {
+      container.innerHTML = '<div class="empty-state-kid"><div class="empty-state-icon">🎨</div><div class="empty-state-text">Пока нет свободных уроков.<br>Попроси маму или папу создать!</div></div>';
+      return;
+    }
+
+    var html = '<div class="free-lessons-grid">';
+    for (var i = 0; i < lessons.length; i++) {
+      var l = lessons[i];
+      var isDone = l.stars !== null;
+      var isReady = l.status === 'done' && l.content_url;
+      var isPending = l.status === 'pending' || l.status === 'generating';
+
+      var subjectIcon = {math: '📐', russian: '📝', english: '🇬🇧', world: '🌍'}[l.subject] || '📚';
+      var subjectName = {math: 'Математика', russian: 'Русский', english: 'Английский', world: 'Окруж. мир'}[l.subject] || l.subject;
+
+      html += '<div class="free-lesson-card' + (isDone ? ' free-lesson-card--done' : isReady ? ' free-lesson-card--ready' : '') + '">';
+
+      if (isDone) {
+        html += '<div class="free-lesson-card__badge">&#10003;</div>';
+        html += '<div class="free-lesson-card__subject">' + subjectIcon + ' ' + esc(subjectName) + '</div>';
+        html += '<div class="free-lesson-card__title">' + esc(l.topic_title) + '</div>';
+        var starsHtml = '';
+        for (var s = 1; s <= 5; s++) {
+          starsHtml += '<span class="map-star ' + (s <= l.stars ? 'earned' : '') + '">&#11088;</span>';
+        }
+        html += '<div class="free-lesson-card__stars">' + starsHtml + '</div>';
+        html += '<a href="/kid/lesson/' + l.id + '" class="btn-replay-kid">Повторить</a>';
+      } else if (isReady) {
+        html += '<div class="free-lesson-card__badge free-lesson-card__badge--play">&#9654;</div>';
+        html += '<div class="free-lesson-card__subject">' + subjectIcon + ' ' + esc(subjectName) + '</div>';
+        html += '<div class="free-lesson-card__title">' + esc(l.topic_title) + '</div>';
+        html += '<a href="/kid/lesson/' + l.id + '" class="btn-play-kid">Играть!</a>';
+      } else if (isPending) {
+        html += '<div class="free-lesson-card__badge free-lesson-card__badge--pending">&#9203;</div>';
+        html += '<div class="free-lesson-card__subject">' + subjectIcon + ' ' + esc(subjectName) + '</div>';
+        html += '<div class="free-lesson-card__title">' + esc(l.topic_title) + '</div>';
+        html += '<span class="free-lesson-card__hint">Готовится...</span>';
+      } else {
+        html += '<div class="free-lesson-card__badge free-lesson-card__badge--pending">&#128218;</div>';
+        html += '<div class="free-lesson-card__subject">' + subjectIcon + ' ' + esc(subjectName) + '</div>';
+        html += '<div class="free-lesson-card__title">' + esc(l.topic_title) + '</div>';
+      }
+
+      html += '</div>';
+    }
+    html += '</div>';
+    container.innerHTML = html;
+  } catch(e) {
+    document.getElementById('free-lessons-list').innerHTML = '<p style="text-align:center;color:#888">Ошибка загрузки</p>';
+  }
+})();
+
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+{% endblock %}

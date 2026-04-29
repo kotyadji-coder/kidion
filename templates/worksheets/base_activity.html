@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        @page { size: A4 portrait; margin: 10mm; }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            font-size: 12pt;
+            color: #1f2937;
+            background: #f0f0f5;
+            line-height: 1.5;
+        }
+        .page {
+            max-width: 780px;
+            margin: 20px auto;
+            padding: 24px 28px 20px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+        }
+
+        .act-header {
+            text-align: center;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid var(--accent, #6366f1);
+        }
+        .act-brand { font-size: 9pt; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent, #6366f1); }
+        .act-lesson-num {
+            display: inline-block; font-size: 9pt; font-weight: 800;
+            color: #fff; background: var(--accent, #6366f1);
+            padding: 2px 10px; border-radius: 50px; margin-left: 8px;
+        }
+        .act-title { font-size: 20pt; font-weight: 900; color: #111827; line-height: 1.2; margin: 4px 0; }
+        .act-meta { font-size: 9pt; color: #9ca3af; font-weight: 600; }
+
+        .act-story {
+            background: var(--story-bg, #fef3c7);
+            border: 2px solid var(--story-border, #f59e0b);
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 12pt; font-weight: 600; line-height: 1.5;
+            margin-bottom: 14px;
+            color: #92400e;
+        }
+        .act-content { }
+        .answer-line { border-bottom: 1.5px solid #9ca3af; height: 30px; }
+
+        .act-footer {
+            margin-top: 12px; padding-top: 4px; border-top: 1px solid #e5e7eb;
+            font-size: 8pt; color: #b0b0b0; text-align: center;
+        }
+
+        .print-btn-bar { display: none; justify-content: center; padding: 6px 0; margin-bottom: 8px; }
+        .print-btn {
+            background: var(--accent, #6366f1); color: #fff; border: none;
+            padding: 8px 22px; border-radius: 50px;
+            font-family: 'Nunito', sans-serif; font-size: 12pt; font-weight: 800;
+            cursor: pointer;
+        }
+
+        @media print {
+            @page { size: A4 portrait; margin: 10mm !important; }
+            html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+            .page { max-width: none !important; padding: 0 !important; margin: 0 !important; box-shadow: none !important; border-radius: 0 !important; }
+            .print-btn-bar { display: none !important; }
+            .act-footer { display: none !important; }
+        }
+
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+<body>
+<div class="page" id="page">
+
+    <div class="print-btn-bar" id="printBtnBar">
+        <button class="print-btn" onclick="window.print()">Распечатать</button>
+    </div>
+
+    <div class="act-header">
+        <div>
+            <span class="act-brand">Kidion{% if child_name %} / {{ child_name }}{% endif %}</span>
+            <span class="act-lesson-num">Урок {{ lesson_number }}</span>
+        </div>
+        <h1 class="act-title">{{ title }}</h1>
+        <div class="act-meta">{{ subject }} / {{ grade }} класс / {{ topic }}</div>
+    </div>
+
+    {% if story %}<div class="act-story">{{ story }}</div>{% endif %}
+
+    <div class="act-content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <div class="act-footer">Kidion — kidion.ru</div>
+</div>
+
+<script>
+(function () {
+    document.getElementById('printBtnBar').style.display = 'flex';
+    var p = document.getElementById('page');
+    if (!p) return;
+    var vw = window.innerWidth;
+    if (vw < 800) {
+        var pageW = p.scrollWidth;
+        var scale = (vw - 16) / pageW;
+        if (scale < 1) {
+            p.style.transformOrigin = 'top left';
+            p.style.transform = 'scale(' + scale + ')';
+            p.style.width = (100 / scale) + '%';
+            return;
+        }
+    }
+    var A4H = 1047;
+    var h = p.scrollHeight;
+    if (Math.abs(h - A4H) > 20) {
+        var scale = A4H / h;
+        p.style.transformOrigin = 'top left';
+        p.style.transform = 'scale(' + scale + ')';
+        p.style.width = (100 / scale) + '%';
+    }
+})();
+</script>
+</body>
+</html>

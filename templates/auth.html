@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}{% if mode == "login" %}Войти{% else %}Регистрация{% endif %} — Kidion{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card card">
+        <div class="auth-card__logo">
+            <a href="/" class="auth-card__brand">Kidion</a>
+        </div>
+
+        <h1 class="auth-card__title">
+            {% if mode == "login" %}Вход в аккаунт{% else %}Создать аккаунт{% endif %}
+        </h1>
+
+        <div class="alert alert--error" id="auth-error" style="display:none"></div>
+
+        {% if mode == "register" %}
+        <form class="form" id="register-form" novalidate>
+            <div class="form-group">
+                <label class="form-group__label" for="reg-email">Email</label>
+                <input
+                    class="input"
+                    type="email"
+                    id="reg-email"
+                    name="email"
+                    placeholder="you@example.com"
+                    autocomplete="email"
+                    required
+                >
+            </div>
+            <div class="form-group">
+                <label class="form-group__label" for="reg-password">Пароль</label>
+                <input
+                    class="input"
+                    type="password"
+                    id="reg-password"
+                    name="password"
+                    placeholder="Минимум 8 символов"
+                    autocomplete="new-password"
+                    required
+                    minlength="8"
+                >
+            </div>
+            <div class="form-group">
+                <label class="form-group__label" for="reg-confirm">Подтверждение пароля</label>
+                <input
+                    class="input"
+                    type="password"
+                    id="reg-confirm"
+                    name="confirm_password"
+                    placeholder="Повторите пароль"
+                    autocomplete="new-password"
+                    required
+                >
+                <p class="form-group__error" id="password-mismatch" style="display:none">Пароли не совпадают</p>
+            </div>
+            <div class="form-group" style="margin-top:12px;">
+                <label class="form-group__label" style="font-weight:400; font-size:13px; display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="reg-consent" required style="margin-top:3px; flex-shrink:0;">
+                    <span>Я принимаю <a href="/terms" target="_blank">условия использования</a> и <a href="/privacy" target="_blank">политику конфиденциальности</a>, а также подтверждаю, что являюсь родителем или законным представителем ребёнка и даю согласие на обработку его данных</span>
+                </label>
+                <p class="form-group__error" id="consent-error" style="display:none">Необходимо принять условия</p>
+            </div>
+            <button type="submit" class="btn btn--primary btn--full" id="register-btn">Зарегистрироваться</button>
+        </form>
+        <p class="auth-card__switch">
+            Уже есть аккаунт? <a href="/login">Войти</a>
+        </p>
+
+        {% else %}
+        <form class="form" id="login-form">
+            <div class="form-group">
+                <label class="form-group__label" for="login-email">Email</label>
+                <input
+                    class="input"
+                    type="email"
+                    id="login-email"
+                    name="email"
+                    placeholder="you@example.com"
+                    autocomplete="email"
+                    required
+                >
+            </div>
+            <div class="form-group">
+                <label class="form-group__label" for="login-password">Пароль</label>
+                <input
+                    class="input"
+                    type="password"
+                    id="login-password"
+                    name="password"
+                    placeholder="Ваш пароль"
+                    autocomplete="current-password"
+                    required
+                >
+            </div>
+            <button type="submit" class="btn btn--primary btn--full" id="login-btn">Войти</button>
+        </form>
+        <p class="auth-card__switch">
+            Нет аккаунта? <a href="/register">Зарегистрироваться</a>
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    var ERROR_MESSAGES = {
+        email_taken: 'Этот email уже зарегистрирован',
+        invalid_email: 'Некорректный формат email',
+        weak_password: 'Пароль должен быть не менее 8 символов',
+        invalid_credentials: 'Неверный email или пароль'
+    };
+
+    function showError(message) {
+        var el = document.getElementById('auth-error');
+        if (el) {
+            el.textContent = message;
+            el.style.display = '';
+        }
+    }
+
+    function hideError() {
+        var el = document.getElementById('auth-error');
+        if (el) {
+            el.style.display = 'none';
+        }
+    }
+
+    // -------------------------
+    // Register form
+    // -------------------------
+    var registerForm = document.getElementById('register-form');
+    if (registerForm) {
+        // Read ref from query param
+        var params = new URLSearchParams(window.location.search);
+        var refCode = params.get('ref') || '';
+
+        registerForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            var email = document.getElementById('reg-email').value.trim();
+            var password = document.getElementById('reg-password').value;
+            var confirm = document.getElementById('reg-confirm').value;
+            var mismatchEl = document.getElementById('password-mismatch');
+            var consentEl = document.getElementById('reg-consent');
+            var consentErr = document.getElementById('consent-error');
+            var btn = document.getElementById('register-btn');
+
+            // Client-side consent check
+            if (!consentEl.checked) {
+                consentErr.style.display = '';
+                return;
+            }
+            consentErr.style.display = 'none';
+
+            // Client-side password match check
+            if (password !== confirm) {
+                mismatchEl.style.display = '';
+                document.getElementById('reg-confirm').focus();
+                return;
+            }
+            mismatchEl.style.display = 'none';
+            hideError();
+
+            var payload = { email: email, password: password };
+            if (refCode) {
+                payload.ref_code = refCode;
+            }
+
+            btn.disabled = true;
+
+            fetch('/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(function (resp) { return resp.json().then(function (data) { return { status: resp.status, data: data }; }); })
+            .then(function (result) {
+                if (result.data.ok === true) {
+                    window.location.href = '/chat';
+                } else {
+                    var code = result.data.error;
+                    showError(ERROR_MESSAGES[code] || code || 'Произошла ошибка');
+                    btn.disabled = false;
+                }
+            })
+            .catch(function () {
+                showError('Произошла ошибка. Попробуйте ещё раз.');
+                btn.disabled = false;
+            });
+        });
+    }
+
+    // -------------------------
+    // Login form
+    // -------------------------
+    var loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            var email = document.getElementById('login-email').value.trim();
+            var password = document.getElementById('login-password').value;
+            var btn = document.getElementById('login-btn');
+
+            hideError();
+            btn.disabled = true;
+
+            fetch('/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, password: password })
+            })
+            .then(function (resp) { return resp.json().then(function (data) { return { status: resp.status, data: data }; }); })
+            .then(function (result) {
+                if (result.data.ok === true) {
+                    window.location.href = '/chat';
+                } else {
+                    var code = result.data.error;
+                    showError(ERROR_MESSAGES[code] || code || 'Произошла ошибка');
+                    btn.disabled = false;
+                }
+            })
+            .catch(function () {
+                showError('Произошла ошибка. Попробуйте ещё раз.');
+                btn.disabled = false;
+            });
+        });
+    }
+})();
+</script>
+{% endblock %}

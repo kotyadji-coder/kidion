@@ -1,0 +1,11 @@
+.env
+*.db
+__pycache__/
+venv/
+.pytest_cache/
+*.pyc
+google-credentials.json
+content/
+*.db-shm
+*.db-wal
+.claude/handoff/

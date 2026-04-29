@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <rect width="400" height="400" rx="32" fill="#f0e6ff"/>
+  <!-- Body -->
+  <ellipse cx="200" cy="320" rx="70" ry="50" fill="#ff9f43"/>
+  <!-- Head -->
+  <circle cx="200" cy="190" r="80" fill="#ff9f43"/>
+  <!-- Ears -->
+  <ellipse cx="140" cy="120" rx="25" ry="40" fill="#ff9f43" transform="rotate(-15 140 120)"/>
+  <ellipse cx="140" cy="120" rx="15" ry="28" fill="#ffd0a0" transform="rotate(-15 140 120)"/>
+  <ellipse cx="260" cy="120" rx="25" ry="40" fill="#ff9f43" transform="rotate(15 260 120)"/>
+  <ellipse cx="260" cy="120" rx="15" ry="28" fill="#ffd0a0" transform="rotate(15 260 120)"/>
+  <!-- Eyes -->
+  <circle cx="170" cy="180" r="16" fill="white"/>
+  <circle cx="230" cy="180" r="16" fill="white"/>
+  <circle cx="174" cy="178" r="10" fill="#2d3436"/>
+  <circle cx="234" cy="178" r="10" fill="#2d3436"/>
+  <circle cx="177" cy="174" r="4" fill="white"/>
+  <circle cx="237" cy="174" r="4" fill="white"/>
+  <!-- Nose -->
+  <ellipse cx="200" cy="205" rx="8" ry="6" fill="#2d3436"/>
+  <!-- Mouth -->
+  <path d="M185 218 Q200 232 215 218" stroke="#2d3436" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Wizard hat -->
+  <path d="M140 145 L200 50 L260 145 Z" fill="#6c5ce7"/>
+  <ellipse cx="200" cy="145" rx="68" ry="12" fill="#6c5ce7"/>
+  <circle cx="200" cy="55" r="8" fill="#ffeaa7"/>
+  <!-- Star on hat -->
+  <polygon points="200,70 205,82 218,82 208,90 212,102 200,95 188,102 192,90 182,82 195,82" fill="#ffeaa7"/>
+  <!-- Backpack strap -->
+  <path d="M155 240 Q155 200 165 190" stroke="#e17055" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M245 240 Q245 200 235 190" stroke="#e17055" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <!-- Tail -->
+  <path d="M270 310 Q320 280 310 240 Q300 260 280 270" fill="#ff9f43"/>
+  <path d="M310 240 Q305 250 295 255" fill="white" opacity="0.6"/>
+  <!-- Paws -->
+  <ellipse cx="160" cy="355" rx="25" ry="15" fill="#ff9f43"/>
+  <ellipse cx="240" cy="355" rx="25" ry="15" fill="#ff9f43"/>
+</svg>

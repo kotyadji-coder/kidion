@@ -1,0 +1,86 @@
+{% extends "base_activity.html" %}
+
+{% block extra_css %}
+        :root { --accent: #7c3aed; --story-bg: #f5f3ff; --story-border: #a78bfa; }
+        .act-story { color: #5b21b6; }
+
+        .cipher-top { display: flex; gap: 20px; align-items: stretch; margin-bottom: 16px; }
+        .cipher-key-col { flex: 1; display: flex; flex-direction: column; }
+
+        .cipher-section-label { font-size: 12pt; font-weight: 800; color: #111827; margin-bottom: 8px; }
+
+        .cipher-key {
+            flex: 1; display: flex; flex-wrap: wrap; gap: 6px;
+            justify-content: center; align-content: center;
+            padding: 12px 14px; background: #f5f3ff;
+            border: 2px solid #c4b5fd; border-radius: 10px;
+        }
+        .cipher-pair { display: flex; flex-direction: column; align-items: center; width: 42px; }
+        .cipher-code {
+            width: 36px; height: 32px; background: #7c3aed; color: #fff;
+            border-radius: 6px; display: flex; align-items: center; justify-content: center;
+            font-size: 14pt; font-weight: 900;
+        }
+        .cipher-letter { font-size: 12pt; font-weight: 800; color: #5b21b6; margin-top: 2px; }
+        .cipher-arrow { color: #c4b5fd; font-size: 10pt; }
+
+        .cipher-decode {
+            padding: 14px 18px; background: #faf8ff;
+            border: 2px solid #c4b5fd; border-radius: 10px;
+        }
+        .encoded-line { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 8px; }
+        .encoded-line:last-child { margin-bottom: 0; }
+        .encoded-word { display: flex; gap: 3px; }
+        .encoded-cell {
+            width: 38px; height: 44px; border: 2px solid #7c3aed;
+            border-radius: 5px; display: flex; flex-direction: column;
+            align-items: center; justify-content: flex-end;
+            padding-bottom: 2px; background: #fff;
+        }
+        .encoded-cell-code { font-size: 8pt; font-weight: 800; color: #7c3aed; }
+        .encoded-cell-letter {
+            font-size: 14pt; font-weight: 400; color: #ccc;
+            border-top: 1.5px solid #e5e7eb;
+            width: 100%; text-align: center; min-height: 20px;
+        }
+        .cipher-hint { margin-top: 10px; font-size: 11pt; font-style: italic; color: #6b7280; }
+{% endblock %}
+
+{% block content %}
+    <div class="cipher-top">
+        <div class="cipher-key-col">
+            <div class="cipher-section-label">Ключ шифра:</div>
+            <div class="cipher-key">
+                {% for code, letter in cipher_key.items() %}
+                <div class="cipher-pair">
+                    <div class="cipher-code">{{ code }}</div>
+                    <div class="cipher-arrow">=</div>
+                    <div class="cipher-letter">{{ letter }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="cipher-decode">
+        <div class="cipher-section-label">Расшифруй послание:</div>
+        {% for line in encoded_lines %}
+        <div class="encoded-line">
+            {% for word in line.split('  ') %}
+            <div class="encoded-word">
+                {% for code in word.split(' ') %}
+                <div class="encoded-cell">
+                    <div class="encoded-cell-code">{{ code }}</div>
+                    <div class="encoded-cell-letter"></div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+        {% if fun_answer_hint %}
+        <div class="cipher-hint">{{ fun_answer_hint }}</div>
+        {% endif %}
+    </div>
+{% endblock %}

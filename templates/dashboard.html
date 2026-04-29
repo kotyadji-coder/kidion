@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Кабинет родителя — Kidion{% endblock %}
+{% block content %}
+<div class="dashboard">
+  <div class="dashboard__header">
+    <h1>Добрый день!</h1>
+    <div class="dashboard__balance">
+      <span class="crystal-badge">💎 <span id="dash-crystals">{{ user.crystals }}</span></span>
+      <a href="/buy" class="btn btn--accent btn--sm">Пополнить</a>
+    </div>
+  </div>
+
+  <div class="children-grid" id="children-grid">
+    <div class="spinner">Загрузка...</div>
+  </div>
+
+  <a href="/children/new" class="btn btn--primary btn--lg" id="add-child-btn" style="display:none">+ Добавить ребёнка</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(async function() {
+  var resp = await fetch('/api/children');
+  if (!resp.ok) return;
+  var children = await resp.json();
+  var grid = document.getElementById('children-grid');
+  var addBtn = document.getElementById('add-child-btn');
+
+  if (children.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><p>Добавьте первого ребёнка, чтобы начать обучение</p></div>';
+    addBtn.style.display = 'inline-flex';
+    return;
+  }
+
+  var html = '';
+  for (var i = 0; i < children.length; i++) {
+    var c = children[i];
+    html += '<a href="/children/' + c.id + '" class="child-card">';
+    html += '<div class="child-card__avatar">' + (c.gender === 'girl' ? '👧' : '👦') + '</div>';
+    html += '<div class="child-card__info">';
+    html += '<div class="child-card__name">' + esc(c.name) + '</div>';
+    html += '<div class="child-card__grade">' + c.grade + ' класс</div>';
+    html += '</div>';
+    html += '</a>';
+  }
+  grid.innerHTML = html;
+
+  if (children.length < 3) {
+    addBtn.style.display = 'inline-flex';
+  }
+})();
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+{% endblock %}

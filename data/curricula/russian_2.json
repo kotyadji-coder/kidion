@@ -1,0 +1,68 @@
+{
+  "subject": "russian",
+  "grade": 2,
+  "title": "Русский язык, 2 класс",
+  "units": [
+    {
+      "id": "r2-unit-01",
+      "title": "Имя существительное",
+      "topics": [
+        {"id": "r2-01", "title": "Что такое имя существительное", "skill": "noun_concept"},
+        {"id": "r2-02", "title": "Одушевлённые и неодушевлённые существительные", "skill": "animate_inanimate"},
+        {"id": "r2-03", "title": "Собственные и нарицательные имена", "skill": "proper_common"},
+        {"id": "r2-04", "title": "Число имени существительного", "skill": "noun_number"},
+        {"id": "r2-05", "title": "Род имени существительного", "skill": "noun_gender"}
+      ]
+    },
+    {
+      "id": "r2-unit-02",
+      "title": "Глагол",
+      "topics": [
+        {"id": "r2-06", "title": "Что такое глагол", "skill": "verb_concept"},
+        {"id": "r2-07", "title": "Число глагола", "skill": "verb_number"},
+        {"id": "r2-08", "title": "Частица НЕ с глаголами", "skill": "neg_verb"}
+      ]
+    },
+    {
+      "id": "r2-unit-03",
+      "title": "Имя прилагательное",
+      "topics": [
+        {"id": "r2-09", "title": "Что такое имя прилагательное", "skill": "adjective_concept"},
+        {"id": "r2-10", "title": "Связь прилагательного с существительным", "skill": "adj_noun_agreement"},
+        {"id": "r2-11", "title": "Число имени прилагательного", "skill": "adj_number"}
+      ]
+    },
+    {
+      "id": "r2-unit-04",
+      "title": "Предложение",
+      "topics": [
+        {"id": "r2-12", "title": "Виды предложений по цели высказывания", "skill": "sentence_types"},
+        {"id": "r2-13", "title": "Главные члены предложения", "skill": "main_members"},
+        {"id": "r2-14", "title": "Связь слов в предложении", "skill": "word_connection"},
+        {"id": "r2-15", "title": "Текст и предложение", "skill": "text_sentence"}
+      ]
+    },
+    {
+      "id": "r2-unit-05",
+      "title": "Орфография",
+      "topics": [
+        {"id": "r2-16", "title": "Безударные гласные в корне слова", "skill": "unstressed_vowels"},
+        {"id": "r2-17", "title": "Проверка безударных гласных", "skill": "vowel_check"},
+        {"id": "r2-18", "title": "Парные согласные в корне слова", "skill": "paired_consonants"},
+        {"id": "r2-19", "title": "Проверка парных согласных", "skill": "consonant_check"},
+        {"id": "r2-20", "title": "Слова с непроверяемыми написаниями", "skill": "unverifiable_spellings"}
+      ]
+    },
+    {
+      "id": "r2-unit-06",
+      "title": "Состав слова",
+      "topics": [
+        {"id": "r2-21", "title": "Корень слова", "skill": "root"},
+        {"id": "r2-22", "title": "Однокоренные слова", "skill": "related_words"},
+        {"id": "r2-23", "title": "Приставка", "skill": "prefix"},
+        {"id": "r2-24", "title": "Суффикс", "skill": "suffix"},
+        {"id": "r2-25", "title": "Окончание слова", "skill": "ending"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,226 @@
+{% extends "kid/base.html" %}
+
+{% block title %}Мой персонаж — Kidion{% endblock %}
+{% block page_name %}character{% endblock %}
+
+{% block content %}
+<div class="kid-character">
+  <div class="kid-character__header">
+    <a href="/kid/home" class="btn-back-kid">&larr;</a>
+    <h1 class="kid-character__title">Мой персонаж</h1>
+  </div>
+
+  <div class="character-layout" id="character-layout">
+    <div class="spinner"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+var CATEGORY_NAMES = {
+  outfit: 'Одежда',
+  accessory: 'Аксессуары',
+  pet: 'Питомцы',
+  background: 'Фоны',
+  special: 'Особое'
+};
+
+var CATEGORY_ICONS = {
+  outfit: '👕',
+  accessory: '🗡️',
+  pet: '🐾',
+  background: '🏞️',
+  special: '✨'
+};
+
+var currentStars = 0;
+
+(async () => {
+  try {
+    var resp = await fetch('/api/kid/character', {credentials: 'same-origin'});
+    if (!resp.ok) throw new Error('Failed to load');
+    var data = await resp.json();
+    currentStars = data.stars || 0;
+    renderCharacterPage(data);
+  } catch(e) {
+    document.getElementById('character-layout').innerHTML =
+      '<div class="empty-state-kid"><div class="empty-state-icon">🎭</div><div class="empty-state-text">Не удалось загрузить персонажа</div></div>';
+  }
+})();
+
+function renderCharacterPage(data) {
+  var layout = document.getElementById('character-layout');
+  var html = '';
+
+  // Character panel
+  html += '<div class="char-panel">';
+  html += '<div class="char-panel__image-wrap">';
+  var imgSrc = data.character_image_url || '/static/kid/default-character.svg';
+  html += '<img src="' + esc(imgSrc) + '?t=' + Date.now() + '" alt="Персонаж" class="char-panel__image" onerror="this.src=\'/static/kid/default-character.svg\'">';
+  html += '</div>';
+
+  // Equipped items
+  if (data.equipped_items && data.equipped_items.length > 0) {
+    html += '<div class="char-equipped">';
+    html += '<div class="char-equipped__title">Экипировка:</div>';
+    for (var i = 0; i < data.equipped_items.length; i++) {
+      var eq = data.equipped_items[i];
+      html += '<span class="char-equipped__item">' + esc(eq.emoji) + ' ' + esc(eq.title_ru) + '</span>';
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // Shop panel
+  html += '<div class="shop-panel">';
+  html += '<div class="shop-panel__header">';
+  html += '<span class="shop-panel__title">🏪 Магазин</span>';
+  html += '<span class="shop-panel__stars" id="shop-stars">⭐ ' + currentStars + '</span>';
+  html += '</div>';
+
+  // Category tabs
+  var categories = Object.keys(data.shop || {});
+  if (categories.length > 0) {
+    html += '<div class="shop-tabs" id="shop-tabs">';
+    for (var c = 0; c < categories.length; c++) {
+      var cat = categories[c];
+      var activeClass = c === 0 ? ' shop-tab--active' : '';
+      html += '<button class="shop-tab' + activeClass + '" data-cat="' + cat + '" onclick="switchTab(\'' + cat + '\')">';
+      html += (CATEGORY_ICONS[cat] || '🎁') + ' ' + (CATEGORY_NAMES[cat] || cat);
+      html += '</button>';
+    }
+    html += '</div>';
+
+    // Items per category
+    for (var c2 = 0; c2 < categories.length; c2++) {
+      var cat2 = categories[c2];
+      var items = data.shop[cat2] || [];
+      var displayStyle = c2 === 0 ? '' : 'display:none;';
+      html += '<div class="shop-items" id="shop-cat-' + cat2 + '" style="' + displayStyle + '">';
+      for (var j = 0; j < items.length; j++) {
+        var item = items[j];
+        html += renderShopItem(item);
+      }
+      html += '</div>';
+    }
+  } else {
+    html += '<div class="empty-state-kid" style="padding:20px"><div class="empty-state-icon">🏪</div><div class="empty-state-text">Магазин готовится...</div></div>';
+  }
+
+  html += '</div>'; // .shop-panel
+
+  layout.innerHTML = html;
+}
+
+function renderShopItem(item) {
+  var html = '<div class="shop-item' + (item.purchased ? ' shop-item--purchased' : '') + '" id="shop-item-' + item.id + '">';
+  html += '<div class="shop-item__emoji">' + esc(item.emoji) + '</div>';
+  html += '<div class="shop-item__info">';
+  html += '<div class="shop-item__name">' + esc(item.title_ru) + '</div>';
+  html += '<div class="shop-item__desc">' + esc(item.description_ru) + '</div>';
+  html += '</div>';
+
+  if (item.purchased) {
+    if (item.equipped) {
+      html += '<button class="shop-item__btn shop-item__btn--equipped" onclick="toggleEquip(' + item.id + ', false)">Снять</button>';
+    } else {
+      html += '<button class="shop-item__btn shop-item__btn--equip" onclick="toggleEquip(' + item.id + ', true)">Надеть</button>';
+    }
+  } else {
+    var canBuy = currentStars >= item.price_stars;
+    html += '<button class="shop-item__btn shop-item__btn--buy' + (canBuy ? '' : ' shop-item__btn--disabled') + '" ' +
+            (canBuy ? 'onclick="buyItem(' + item.id + ')"' : 'disabled') + '>';
+    html += '⭐ ' + item.price_stars;
+    html += '</button>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function switchTab(cat) {
+  // Hide all
+  var allPanels = document.querySelectorAll('.shop-items');
+  for (var i = 0; i < allPanels.length; i++) allPanels[i].style.display = 'none';
+  // Show selected
+  var target = document.getElementById('shop-cat-' + cat);
+  if (target) target.style.display = '';
+  // Update tab active state
+  var tabs = document.querySelectorAll('.shop-tab');
+  for (var j = 0; j < tabs.length; j++) {
+    tabs[j].classList.toggle('shop-tab--active', tabs[j].getAttribute('data-cat') === cat);
+  }
+}
+
+async function buyItem(itemId) {
+  var btn = document.querySelector('#shop-item-' + itemId + ' .shop-item__btn--buy');
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+
+  try {
+    var resp = await fetch('/api/kid/shop/buy/' + itemId, {
+      method: 'POST',
+      credentials: 'same-origin',
+    });
+    var result = await resp.json();
+
+    if (resp.ok && result.ok) {
+      currentStars = result.stars;
+      // Update stars display
+      var starsEl = document.getElementById('shop-stars');
+      if (starsEl) starsEl.textContent = '⭐ ' + currentStars;
+      var navStars = document.getElementById('star-count');
+      if (navStars) navStars.textContent = currentStars;
+
+      // Show purchase animation
+      showPurchaseAnimation(itemId);
+
+      // Reload character data
+      setTimeout(async function() {
+        var resp2 = await fetch('/api/kid/character', {credentials: 'same-origin'});
+        if (resp2.ok) {
+          var data = await resp2.json();
+          currentStars = data.stars || 0;
+          renderCharacterPage(data);
+        }
+      }, 500);
+    } else {
+      alert(result.message || 'Не удалось купить');
+      if (btn) { btn.disabled = false; btn.textContent = '⭐ ' + currentStars; }
+    }
+  } catch(e) {
+    alert('Ошибка сети');
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function toggleEquip(itemId, equip) {
+  try {
+    await fetch('/api/kid/shop/equip/' + itemId, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({equipped: equip}),
+    });
+    // Reload
+    var resp = await fetch('/api/kid/character', {credentials: 'same-origin'});
+    if (resp.ok) {
+      var data = await resp.json();
+      renderCharacterPage(data);
+    }
+  } catch(e) {}
+}
+
+function showPurchaseAnimation(itemId) {
+  var el = document.getElementById('shop-item-' + itemId);
+  if (!el) return;
+  el.classList.add('shop-item--just-bought');
+  setTimeout(function() { el.classList.remove('shop-item--just-bought'); }, 800);
+}
+
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+<div style="text-align:center; padding:8px; font-size:11px; color:#999;">Персонаж создан с помощью ИИ</div>
+{% endblock %}

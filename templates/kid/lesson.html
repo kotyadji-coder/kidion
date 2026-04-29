@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#6C5CE7">
+  <title>Kidion — {{ lesson.topic_title }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/kid/style.css">
+  <style>
+    body { padding: 0; }
+    .lesson-layout {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      max-width: 1100px;
+      width: 100%;
+    }
+    .lesson-topbar { flex-shrink: 0; }
+    .lesson-iframe {
+      flex: 1;
+      border: none;
+      width: 100%;
+      min-height: 0;
+    }
+    .lesson-bottom-bar { flex-shrink: 0; }
+    .auto-saving {
+      text-align: center;
+      padding: 16px;
+      color: var(--color-muted, #888);
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body data-page="lesson">
+
+  <input type="hidden" id="lesson-id" value="{{ lesson.id }}">
+
+  <div class="lesson-layout">
+    <div class="lesson-topbar">
+      <a href="/kid/home" class="btn-back">←</a>
+      <div style="flex:1">
+        <div class="lesson-topbar-title">{{ lesson.topic_title }}</div>
+      </div>
+      {% if lesson.worksheet_url %}
+      <a href="{{ lesson.worksheet_url }}" target="_blank"
+         style="font-size:14px; font-weight:700; color:#6C5CE7; text-decoration:none; white-space:nowrap; padding:6px 12px; border:2px solid #6C5CE7; border-radius:20px;">
+        🖨 Квест
+      </a>
+      {% endif %}
+    </div>
+
+    {% if lesson.content_url %}
+    <iframe
+      class="lesson-iframe"
+      src="{{ lesson.content_url }}"
+      id="lesson-frame"
+      title="{{ lesson.topic_title }}"
+      sandbox="allow-scripts allow-same-origin allow-popups"
+    ></iframe>
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:4px 16px; font-size:11px; color:#999;">
+      <span>Урок создан с помощью ИИ</span>
+      <button onclick="reportLesson()" style="background:none; border:1px solid #ddd; border-radius:12px; padding:2px 10px; font-size:11px; color:#999; cursor:pointer;">Пожаловаться</button>
+    </div>
+    {% else %}
+    <div style="flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:16px; padding:40px;">
+      <div class="spinner"></div>
+      <p style="color: var(--color-muted); font-size: 18px;">Урок ещё готовится...</p>
+    </div>
+    {% endif %}
+
+    <div class="lesson-bottom-bar" id="bottom-bar">
+      <div class="auto-saving" id="auto-status" style="display:none">⏳ Сохраняю результат...</div>
+    </div>
+  </div>
+
+  <script>
+  var lessonId = document.getElementById('lesson-id').value;
+  var resultSaved = false;
+
+  // Listen for auto-scored result from lesson iframe
+  window.addEventListener('message', async function(event) {
+    if (!event.data || event.data.type !== 'kidion_lesson_complete') return;
+    if (resultSaved) return;
+    resultSaved = true;
+
+    var correct = event.data.correct;
+    var total = event.data.total;
+
+    var statusEl = document.getElementById('auto-status');
+    statusEl.style.display = 'block';
+    statusEl.textContent = '⏳ Сохраняю результат...';
+
+    try {
+      var resp = await fetch('/api/lessons/' + lessonId + '/result', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ correct_answers: correct, total_answers: total || 5 })
+      });
+
+      if (resp.ok) {
+        window.location.href = '/kid/result/' + lessonId;
+      } else {
+        statusEl.textContent = '❌ Ошибка сохранения. Попробуй обновить страницу.';
+        resultSaved = false;
+      }
+    } catch(e) {
+      statusEl.textContent = '❌ Ошибка соединения.';
+      resultSaved = false;
+    }
+  });
+
+  // Stub mode: if no tasks, iframe sends postMessage immediately → auto-redirect
+
+  async function reportLesson() {
+    if (confirm('Пожаловаться на содержание урока?')) {
+      try {
+        await fetch('/api/report', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({lesson_id: parseInt(lessonId), reason: 'inappropriate_content'})
+        });
+        alert('Спасибо! Мы проверим этот урок.');
+      } catch(e) {
+        alert('Ошибка отправки. Попробуйте позже.');
+      }
+    }
+  }
+  </script>
+</body>
+</html>

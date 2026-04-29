@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.70);
+            --glass-border: rgba(255, 255, 255, 0.90);
+            --glass-shadow: 0 8px 32px rgba(99, 102, 241, 0.12);
+            --blur: blur(16px);
+            --text-dark: #1f2937;
+            --text-muted: #6b7280;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.12);
+            --green: #10b981;
+            --red: #ef4444;
+            --radius: 20px;
+            --max-width: 700px;
+        }
+
+        html, body {
+            min-height: 100%;
+            background: transparent;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            color: var(--text-dark);
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        /* ── BACKGROUND ── */
+        .bg-layer {
+            position: fixed;
+            inset: 0;
+            background-image: url('{{ bg_image_url }}');
+            background-size: cover;
+            background-position: center;
+            z-index: -2;
+        }
+
+        .bg-overlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(
+                135deg,
+                rgba(199, 210, 254, 0.38) 0%,
+                rgba(167, 243, 208, 0.28) 50%,
+                rgba(253, 230, 138, 0.25) 100%
+            );
+            z-index: -1;
+        }
+
+        /* ── PAGE LAYOUT ── */
+        .page {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 48px 20px 80px;
+        }
+
+        /* ── GLASS CARD BASE (shared) ── */
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            border-radius: var(--radius);
+            box-shadow: var(--glass-shadow);
+        }
+
+        /* ── HEADER CARD ── */
+        .header-card {
+            padding: 40px 36px 36px;
+            margin-bottom: 28px;
+            text-align: center;
+        }
+
+        .header-tag {
+            display: inline-block;
+            background: var(--accent-glow);
+            border: 1px solid rgba(99, 102, 241, 0.30);
+            color: var(--accent);
+            font-size: 0.78em;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 5px 16px;
+            border-radius: 50px;
+            margin-bottom: 20px;
+        }
+
+        .lesson-title {
+            font-size: clamp(1.6em, 5vw, 2.4em);
+            font-weight: 900;
+            line-height: 1.2;
+            color: var(--text-dark);
+        }
+
+        /* ── STORY BLOCKS ── */
+        .story-block {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            padding: 24px 28px;
+            margin-bottom: 16px;
+            font-size: 1.15rem;
+            line-height: 1.8;
+            color: var(--text-dark);
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.55s ease, transform 0.55s ease,
+                        box-shadow 0.2s ease;
+        }
+
+        .story-emoji {
+            flex-shrink: 0;
+            width: 54px;
+            height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            line-height: 1;
+            background: rgba(255, 255, 255, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.88);
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.08);
+        }
+
+        .story-text { flex: 1; min-width: 0; }
+
+        .story-block.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .story-block.visible:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(99, 102, 241, 0.18);
+        }
+
+        /* ── THEORY BREAK (image + hero speech overlay) ── */
+        .theory-break {
+            margin: 8px 0 40px;
+        }
+
+        @media (min-width: 768px) {
+            .theory-break { display: none; }
+        }
+
+        .theory-image-frame {
+            position: relative;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+        }
+
+        .theory-image {
+            width: 100%;
+            max-height: 280px;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Text rendered directly on the image with a darkening gradient behind it */
+        .theory-overlay-badge {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 40px 24px 20px;
+            background: linear-gradient(to top,
+                rgba(0, 0, 0, 0.78) 0%,
+                rgba(0, 0, 0, 0.45) 55%,
+                transparent 100%);
+            color: #fff;
+            font-size: 1.08rem;
+            font-weight: 900;
+            text-align: center;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+            letter-spacing: 0.01em;
+        }
+
+        /* ── TASKS SECTION ── */
+        .tasks-section { margin-top: 6rem; }
+
+        .tasks-heading {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #fff;
+            background: var(--accent);
+            display: inline-block;
+            padding: 5px 18px;
+            border-radius: 50px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(99,102,241,0.35);
+        }
+
+        /* ── TASK CARD ── */
+        .task-card {
+            padding: 28px 32px;
+            margin-bottom: 16px;
+        }
+
+        .task-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .task-num {
+            width: 26px;
+            height: 26px;
+            background: var(--accent);
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 0.82rem;
+            flex-shrink: 0;
+        }
+
+        .task-type-label {
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            border-radius: 50px;
+        }
+
+        .task-type-quiz            { background: rgba(99,102,241,0.12);  color: #4338ca; }
+        .task-type-multiple_choice { background: rgba(139,92,246,0.12);  color: #6d28d9; }
+        .task-type-drag_and_drop   { background: rgba(13,148,136,0.12);  color: #0f766e; }
+        .task-type-fill_in_the_blank { background: rgba(245,158,11,0.12); color: #b45309; }
+        .task-type-ordering        { background: rgba(236,72,153,0.12);  color: #be185d; }
+
+        .task-question {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .task-ui-hint {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        /* ── FEEDBACK ── */
+        .task-feedback {
+            margin-top: 12px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            padding: 9px 16px;
+            border-radius: 12px;
+            display: none;
+        }
+        .task-feedback.visible  { display: block; }
+        .task-feedback.success  { background: rgba(16,185,129,0.13); color: #065f46; }
+        .task-feedback.error    { background: rgba(239,68,68,0.11);  color: #991b1b; }
+
+        /* ── OPTION BUTTONS (quiz + multiple choice) ── */
+        .options-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .option-btn {
+            padding: 9px 20px;
+            border-radius: 50px;
+            border: 2px solid rgba(99,102,241,0.25);
+            background: rgba(255,255,255,0.80);
+            color: var(--text-dark);
+            font-family: 'Nunito', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .option-btn:hover:not(:disabled):not(.correct):not(.wrong) {
+            background: rgba(99,102,241,0.08);
+            border-color: rgba(99,102,241,0.55);
+            transform: translateY(-1px);
+        }
+
+        .option-btn.selected {
+            background: rgba(99,102,241,0.12);
+            border-color: var(--accent);
+            color: #4338ca;
+        }
+
+        .option-btn.correct {
+            background: rgba(16,185,129,0.14);
+            border-color: var(--green);
+            color: #065f46;
+        }
+
+        .option-btn.wrong {
+            background: rgba(239,68,68,0.11);
+            border-color: var(--red);
+            color: #991b1b;
+        }
+
+        .option-btn:disabled { cursor: default; }
+
+        /* ── CHECK BUTTON ── */
+        .check-btn {
+            display: inline-block;
+            margin-top: 14px;
+            padding: 10px 28px;
+            border-radius: 50px;
+            border: none;
+            background: var(--accent);
+            color: #fff;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: opacity 0.15s, transform 0.15s;
+        }
+        .check-btn:hover  { opacity: 0.87; transform: translateY(-1px); }
+        .check-btn:active { transform: translateY(0); }
+
+        /* ── DRAG AND DROP ── */
+        .dnd-wrapper { display: flex; flex-direction: column; gap: 14px; }
+
+        .drag-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            min-height: 52px;
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.45);
+            border: 2px dashed rgba(99,102,241,0.28);
+            border-radius: 14px;
+        }
+
+        .drag-item {
+            padding: 8px 20px;
+            border-radius: 50px;
+            background: rgba(255,255,255,0.92);
+            border: 2px solid rgba(99,102,241,0.28);
+            color: var(--text-dark);
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: grab;
+            user-select: none;
+            transition: border-color 0.15s, transform 0.15s, opacity 0.15s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            touch-action: none;
+        }
+        .drag-item:hover  { border-color: var(--accent); transform: translateY(-2px); }
+        .drag-item.dragging { opacity: 0.35; cursor: grabbing; }
+
+        .drop-zones {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .drop-zone {
+            flex: 1;
+            min-width: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 8px;
+            border-radius: 14px;
+            border: 2px dashed rgba(99,102,241,0.25);
+            background: rgba(255,255,255,0.38);
+            transition: all 0.15s;
+        }
+        .drop-zone.drag-over  { border-color: var(--accent); background: rgba(99,102,241,0.08); }
+        .drop-zone.matched    { border-color: var(--green);  background: rgba(16,185,129,0.09); border-style: solid; }
+        .drop-zone.wrong-match { border-color: var(--red);   background: rgba(239,68,68,0.08);  border-style: solid; }
+
+        .zone-slot {
+            min-height: 44px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .zone-label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        /* ── DND WORD-BANK + SENTENCES LAYOUT ── */
+        .dnd-bank-label {
+            font-size: 0.73rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+        }
+
+        .dnd-sentences {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .dnd-sentence {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(99,102,241,0.10);
+        }
+        .dnd-sentence:last-child { border-bottom: none; }
+
+        .dnd-sentence-label {
+            flex: 1;
+            min-width: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* Compact drop zone inside a sentence row — no flex-grow */
+        .dnd-sentences .drop-zone {
+            flex: 0 0 auto;
+            min-width: 120px;
+        }
+
+        /* ── FILL IN BLANK ── */
+        .fitb-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .fitb-row .check-btn { margin-top: 0; }
+
+        .fill-input {
+            flex: 1;
+            min-width: 160px;
+            padding: 10px 18px;
+            border-radius: 50px;
+            border: 2px solid rgba(99,102,241,0.25);
+            background: rgba(255,255,255,0.85);
+            font-family: 'Nunito', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            outline: none;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .fill-input:focus  { border-color: var(--accent); }
+        .fill-input.correct { border-color: var(--green); background: rgba(16,185,129,0.09); }
+        .fill-input.wrong   { border-color: var(--red);   background: rgba(239,68,68,0.08); }
+
+        /* ── ORDERING ── */
+        .ordering-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .ordering-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 18px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.85);
+            border: 2px solid rgba(99,102,241,0.18);
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-dark);
+            cursor: grab;
+            user-select: none;
+            transition: all 0.15s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            touch-action: none;
+        }
+        .ordering-item:hover    { border-color: rgba(99,102,241,0.42); }
+        .ordering-item.dragging { opacity: 0.32; cursor: grabbing; }
+        .ordering-item.drag-over { border-color: var(--accent); background: rgba(99,102,241,0.07); }
+        .ordering-item.correct  { border-color: var(--green); background: rgba(16,185,129,0.10); }
+
+        .drag-handle {
+            color: #9ca3af;
+            font-size: 1.15rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        /* ── CONGRATS BANNER ── */
+        .congrats-banner {
+            margin-top: 24px;
+            padding: 32px 28px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(24px);
+            pointer-events: none;
+            transition: opacity 0.6s ease, transform 0.6s ease;
+            will-change: opacity, transform;
+            position: relative;
+            z-index: 10;
+        }
+        .congrats-banner.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        .congrats-trophy { font-size: 3rem; line-height: 1; margin-bottom: 12px; }
+        .congrats-title  {
+            font-size: 1.35rem;
+            font-weight: 900;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+        }
+        .congrats-sub {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* ── FOOTER ── */
+        .page-footer {
+            margin-top: 48px;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .footer-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 20px;
+            border-radius: 50px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 800;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+            transition: opacity 0.15s, transform 0.15s;
+        }
+        .footer-btn:hover { opacity: 0.87; transform: translateY(-1px); }
+
+        .footer-btn-secondary {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            color: var(--text-dark);
+            box-shadow: var(--glass-shadow);
+        }
+
+        .footer-btn-primary {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+        }
+
+        /* ── TELEGRAM OVERLAY ── */
+        .tg-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .tg-overlay.visible { display: flex; }
+        .tg-box {
+            background: #fff;
+            border-radius: 16px;
+            padding: 28px 24px;
+            max-width: 360px;
+            width: 100%;
+            text-align: center;
+            font-family: 'Nunito', sans-serif;
+        }
+        .tg-icon { font-size: 42px; margin-bottom: 12px; }
+        .tg-title { font-size: 16pt; font-weight: 900; color: #111827; margin-bottom: 10px; }
+        .tg-body  { font-size: 11pt; color: #374151; line-height: 1.6; margin-bottom: 20px; }
+        .tg-close {
+            background: #6366f1; color: #fff; border: none;
+            padding: 10px 28px; border-radius: 50px;
+            font-family: 'Nunito', sans-serif; font-size: 11pt; font-weight: 700; cursor: pointer;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 480px) {
+            .page            { padding: 24px 12px 60px; }
+            .header-card     { padding: 28px 20px 24px; }
+            .story-block     { padding: 18px 16px; gap: 14px; }
+            .story-emoji     { width: 44px; height: 44px; font-size: 1.6rem; }
+            .task-card       { padding: 22px 18px; }
+            .drop-zones      { flex-direction: column; }
+            .fitb-row        { flex-direction: column; align-items: stretch; }
+            .fitb-row .check-btn { align-self: flex-start; }
+            .theory-image         { max-height: 180px; }
+            .theory-overlay-badge { font-size: 0.95rem; padding: 28px 16px 14px; }
+            .congrats-banner      { padding: 24px 16px; margin-top: 16px; }
+        }
+
+        @media (min-width: 900px) {
+            .page { padding: 64px 20px 100px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-layer"></div>
+<div class="bg-overlay"></div>
+
+<div class="tg-overlay" id="tgOverlay">
+    <div class="tg-box">
+        <div class="tg-icon">🖨️</div>
+        <div class="tg-title">Откройте в браузере</div>
+        <div class="tg-body">
+            Печать недоступна во встроенном браузере Telegram.<br><br>
+            Нажмите <strong>⋯ → Открыть в браузере</strong> (Safari или Chrome), а затем нажмите «Распечатать».
+        </div>
+        <button class="tg-close" onclick="document.getElementById('tgOverlay').classList.remove('visible')">Понятно</button>
+    </div>
+</div>
+
+<div class="page">
+
+    <div class="header-card glass-card">
+        <div class="header-tag">Урок · Kidion</div>
+        <h1 class="lesson-title">{{ title }}</h1>
+    </div>
+
+    {% for block in story_blocks %}
+    <div class="story-block glass-card">
+        <div class="story-emoji" aria-hidden="true">{{ block.emoji }}</div>
+        <div class="story-text">{{ block.text }}</div>
+    </div>
+    {% endfor %}
+
+    <div class="theory-break">
+        <div class="theory-image-frame">
+            <img class="theory-image" src="{{ bg_image_url }}" alt="{{ title }}">
+            <div class="theory-overlay-badge">Теперь мы всё знаем! Пора выполнять миссии!</div>
+        </div>
+    </div>
+
+    {% if tasks %}
+    <div class="tasks-section">
+        <h2 class="tasks-heading">Задания</h2>
+
+        {% for task in tasks %}
+        <div class="task-card glass-card task-{{ task.type }}" id="task-{{ loop.index }}">
+
+            <div class="task-header">
+                <span class="task-num">{{ loop.index }}</span>
+                <span class="task-type-label task-type-{{ task.type }}">
+                    {%- if task.type == 'quiz' -%}Выбери ответ
+                    {%- elif task.type == 'multiple_choice' -%}Выбери несколько верных ответов
+                    {%- elif task.type == 'drag_and_drop' -%}Перетащи
+                    {%- elif task.type == 'fill_in_the_blank' -%}Заполни пропуск
+                    {%- elif task.type == 'ordering' -%}Расставь по порядку
+                    {%- endif -%}
+                </span>
+            </div>
+
+            <p class="task-question">{{ task.question }}</p>
+
+            {# ── QUIZ ── #}
+            {% if task.type == 'quiz' %}
+            <div class="options-grid">
+                {% for opt in task.options %}
+                <button class="option-btn quiz-option"
+                        data-correct="{{ 'true' if opt == task.correct else 'false' }}">{{ opt }}</button>
+                {% endfor %}
+            </div>
+            <div class="task-feedback"></div>
+
+            {# ── MULTIPLE CHOICE ── #}
+            {% elif task.type == 'multiple_choice' %}
+            <div class="options-grid" data-correct='{{ task.correct | tojson }}'>
+                {% for opt in task.options %}
+                <button class="option-btn mc-option" data-value="{{ opt }}">{{ opt }}</button>
+                {% endfor %}
+            </div>
+            <button class="check-btn mc-check">Проверить</button>
+            <div class="task-feedback"></div>
+
+            {# ── DRAG AND DROP ── #}
+            {% elif task.type == 'drag_and_drop' %}
+            <span class="task-ui-hint">(перетащи слово из банка слов в нужное место)</span>
+            <div class="dnd-wrapper" data-correct='{{ task.correct | tojson }}'>
+                <span class="dnd-bank-label">Банк слов</span>
+                <div class="drag-pool">
+                    {% for item in task['items'] %}
+                    <div class="drag-item" draggable="true" data-item="{{ item }}">{{ item }}</div>
+                    {% endfor %}
+                </div>
+                <div class="dnd-sentences">
+                    {% for zone in task.zones %}
+                    <div class="dnd-sentence">
+                        <span class="dnd-sentence-label">{{ zone }}</span>
+                        <div class="drop-zone" data-zone="{{ zone }}">
+                            <div class="zone-slot"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {# ── FILL IN THE BLANK ── #}
+            {% elif task.type == 'fill_in_the_blank' %}
+            <div class="fitb-row">
+                <input class="fill-input" type="text" placeholder="Введи ответ…"
+                       data-correct="{{ task.correct }}">
+                <button class="check-btn fitb-check">Проверить</button>
+            </div>
+            <div class="task-feedback"></div>
+
+            {# ── ORDERING ── #}
+            {% elif task.type == 'ordering' %}
+            <span class="task-ui-hint">(перетащи элементы, чтобы выстроить порядок)</span>
+            <ul class="ordering-list" data-correct='{{ task.correct_order | tojson }}'>
+                {% for item in task['items'] %}
+                <li class="ordering-item" draggable="true">
+                    <span class="drag-handle" aria-hidden="true">⠿</span>
+                    <span class="item-text">{{ item }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            <button class="check-btn ordering-check">Проверить порядок</button>
+            <div class="task-feedback"></div>
+
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div id="congrats-banner" class="congrats-banner glass-card" aria-live="polite">
+        <div class="congrats-trophy">🏆</div>
+        <div class="congrats-title">Все задания выполнены!</div>
+        <div class="congrats-sub" id="congrats-score"></div>
+    </div>
+
+    <div class="page-footer">
+        <button class="footer-btn footer-btn-secondary" onclick="handlePrint()">
+            🖨 Распечатать
+        </button>
+        <a class="footer-btn footer-btn-primary" href="https://edtale.ru/">
+            ✨ Создать урок
+        </a>
+    </div>
+
+</div>
+
+<script>
+    // ── PRINT HANDLER ───────────────────────────────────────────────────────
+    function handlePrint() {
+        var isTelegram = /Telegram/i.test(navigator.userAgent || '');
+        if (isTelegram) {
+            document.getElementById('tgOverlay').classList.add('visible');
+        } else {
+            var w = window.open('{{ print_url }}');
+            if (w) {
+                w.addEventListener('load', function () { w.print(); });
+            } else {
+                // Popup blocked — fall back to showing the print URL
+                window.location.href = '{{ print_url }}';
+            }
+        }
+    }
+
+    // ── SCROLL-IN: theory cards only ────────────────────────────────────────
+    (function () {
+        var storyBlocks = document.querySelectorAll('.story-block');
+        if (!storyBlocks.length) return;
+
+        var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.12 });
+
+        storyBlocks.forEach(function (block) { observer.observe(block); });
+    })();
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ── FISHER-YATES SHUFFLE ─────────────────────────────────────────────────
+    function shuffleArray(arr) {
+        for (var i = arr.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+        }
+        return arr;
+    }
+
+    // Shuffle drag-pool items so the initial order doesn't reveal the answer
+    document.querySelectorAll('.drag-pool').forEach(function (pool) {
+        var items = shuffleArray(Array.from(pool.children));
+        items.forEach(function (item) { pool.appendChild(item); });
+    });
+
+    // ── HELPERS ─────────────────────────────────────────────────────────────
+    function showFeedback(el, text) {
+        el.textContent = text;
+        el.className = 'task-feedback visible ' + (text.startsWith('✓') ? 'success' : 'error');
+    }
+
+    // Creates a floating clone that follows the finger/cursor during drag
+    function makeFloatingClone(source, touch) {
+        var rect = source.getBoundingClientRect();
+        var clone = source.cloneNode(true);
+        clone.style.cssText = [
+            'position:fixed', 'pointer-events:none', 'z-index:9999', 'margin:0',
+            'opacity:0.9', 'width:' + rect.width + 'px',
+            'left:' + rect.left + 'px', 'top:' + rect.top + 'px'
+        ].join(';');
+        document.body.appendChild(clone);
+        return {
+            el: clone,
+            offX: touch.clientX - rect.left,
+            offY: touch.clientY - rect.top
+        };
+    }
+
+    function moveClone(ghost, touch) {
+        ghost.el.style.left = (touch.clientX - ghost.offX) + 'px';
+        ghost.el.style.top  = (touch.clientY - ghost.offY) + 'px';
+    }
+
+    function removeClone(ghost) {
+        if (ghost.el.parentNode) ghost.el.parentNode.removeChild(ghost.el);
+    }
+
+    // Temporarily hides the clone and uses elementFromPoint to find target
+    function elementUnderTouch(ghost, touch) {
+        ghost.el.style.visibility = 'hidden';
+        var el = document.elementFromPoint(touch.clientX, touch.clientY);
+        ghost.el.style.visibility = '';
+        return el;
+    }
+
+    // ── COMPLETION TRACKER ───────────────────────────────────────────────────
+    var totalTasks = document.querySelectorAll('.task-card').length;
+    var solvedCount = 0;
+    var correctFirstTry = 0;
+
+    function markWrongAttempt(card) {
+        card.dataset.hadWrong = 'true';
+    }
+
+    function onTaskSolved(card) {
+        if (card.dataset.solved === 'true') return;
+        card.dataset.solved = 'true';
+        solvedCount++;
+        if (card.dataset.hadWrong !== 'true') {
+            correctFirstTry++;
+        }
+        if (solvedCount >= totalTasks && totalTasks > 0) {
+            var banner = document.getElementById('congrats-banner');
+            var score  = document.getElementById('congrats-score');
+            if (score)  score.textContent = correctFirstTry + ' из ' + totalTasks + ' заданий решено верно с первого раза!';
+            if (banner) {
+                banner.classList.add('visible');
+                setTimeout(function () {
+                    var rect    = banner.getBoundingClientRect();
+                    var scrollY = window.pageYOffset || document.documentElement.scrollTop;
+                    var targetY = scrollY + rect.top - 20;
+                    try {
+                        window.scrollTo({ top: targetY, behavior: 'smooth' });
+                    } catch (e) {
+                        window.scrollTo(0, targetY);
+                    }
+                }, 350);
+            }
+            // Notify parent iframe (kid/lesson.html) with auto-scored result
+            try {
+                window.parent.postMessage({
+                    type: 'kidion_lesson_complete',
+                    correct: correctFirstTry,
+                    total: totalTasks
+                }, '*');
+            } catch(e) {}
+        }
+    }
+
+    // ── 1. QUIZ ─────────────────────────────────────────────────────────────
+    document.querySelectorAll('.task-quiz').forEach(function (card) {
+        var buttons  = card.querySelectorAll('.quiz-option');
+        var feedback = card.querySelector('.task-feedback');
+
+        buttons.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                if (btn.dataset.correct === 'true') {
+                    buttons.forEach(function (b) { b.disabled = true; });
+                    btn.classList.add('correct');
+                    showFeedback(feedback, '✓ Верно!');
+                    onTaskSolved(card);
+                } else {
+                    btn.disabled = true;
+                    btn.classList.add('wrong');
+                    markWrongAttempt(card);
+                    showFeedback(feedback, '✗ Неверно. Выбери другой ответ!');
+                }
+            });
+        });
+    });
+
+    // ── 2. MULTIPLE CHOICE ──────────────────────────────────────────────────
+    document.querySelectorAll('.task-multiple_choice').forEach(function (card) {
+        var grid     = card.querySelector('.options-grid');
+        var correct  = JSON.parse(grid.dataset.correct);
+        var feedback = card.querySelector('.task-feedback');
+        var done     = false;
+
+        grid.querySelectorAll('.mc-option').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                if (done) return;
+                btn.classList.toggle('selected');
+            });
+        });
+
+        card.querySelector('.mc-check').addEventListener('click', function () {
+            if (done) return;
+
+            var selected = Array.from(grid.querySelectorAll('.mc-option.selected'))
+                               .map(function (b) { return b.dataset.value; });
+
+            var isCorrect =
+                selected.length === correct.length &&
+                selected.every(function (v) { return correct.indexOf(v) !== -1; });
+
+            if (isCorrect) {
+                done = true;
+                grid.querySelectorAll('.mc-option').forEach(function (b) {
+                    b.disabled = true;
+                    if (correct.indexOf(b.dataset.value) !== -1) {
+                        b.classList.remove('selected');
+                        b.classList.add('correct');
+                    }
+                });
+                showFeedback(feedback, '✓ Всё верно!');
+                onTaskSolved(card);
+            } else {
+                markWrongAttempt(card);
+                showFeedback(feedback, '✗ Не все ответы верны. Попробуй ещё раз!');
+            }
+        });
+    });
+
+    // ── 3. DRAG AND DROP ────────────────────────────────────────────────────
+    document.querySelectorAll('.task-drag_and_drop').forEach(function (card) {
+        var wrapper   = card.querySelector('.dnd-wrapper');
+        var correct   = JSON.parse(wrapper.dataset.correct);
+        var pool      = wrapper.querySelector('.drag-pool');
+        var draggedEl = null;
+
+        function evaluateZone(zone) {
+            var slot = zone.querySelector('.zone-slot');
+            var item = slot.querySelector('.drag-item');
+            zone.classList.remove('matched', 'wrong-match');
+            if (item) {
+                var ok = correct[item.dataset.item] === zone.dataset.zone;
+                zone.classList.add(ok ? 'matched' : 'wrong-match');
+                if (!ok) markWrongAttempt(card);
+            }
+        }
+
+        function checkAllMatched() {
+            // Every single drag-item must be sitting inside a .matched zone.
+            // Items still in the pool, or in a wrong-match zone, will fail this check.
+            var allItems = Array.from(wrapper.querySelectorAll('.drag-item'));
+            if (allItems.length === 0) return;
+            var allPlacedCorrectly = allItems.every(function (item) {
+                var zone = item.closest('.drop-zone');
+                return zone && zone.classList.contains('matched');
+            });
+            if (allPlacedCorrectly) onTaskSolved(card);
+        }
+
+        // ── Mouse drag ──
+        function attachDrag(item) {
+            item.addEventListener('dragstart', function (e) {
+                draggedEl = item;
+                e.dataTransfer.setData('text/plain', item.dataset.item);
+                e.dataTransfer.effectAllowed = 'move';
+                var ghost = document.createElement('div');
+                ghost.textContent = item.textContent;
+                ghost.style.cssText = 'position:absolute;top:-9999px;left:-9999px;padding:8px 20px;border-radius:50px;background:#6366f1;color:#fff;font-weight:800;font-size:1rem;font-family:Nunito,sans-serif;white-space:nowrap';
+                document.body.appendChild(ghost);
+                e.dataTransfer.setDragImage(ghost, ghost.offsetWidth / 2, 20);
+                setTimeout(function () {
+                    item.classList.add('dragging');
+                    if (ghost.parentNode) ghost.parentNode.removeChild(ghost);
+                }, 0);
+            });
+            item.addEventListener('dragend', function () {
+                item.classList.remove('dragging');
+                draggedEl = null;
+            });
+        }
+
+        // ── Touch drag ──
+        function attachTouchDrag(item) {
+            var ghost = null;
+
+            item.addEventListener('touchstart', function (e) {
+                if (e.touches.length !== 1) return;
+                ghost = makeFloatingClone(item, e.touches[0]);
+                item.classList.add('dragging');
+            }, { passive: true });
+
+            item.addEventListener('touchmove', function (e) {
+                e.preventDefault();
+                if (!ghost) return;
+                moveClone(ghost, e.touches[0]);
+                var el = elementUnderTouch(ghost, e.touches[0]);
+                var hoverZone = el ? el.closest('.drop-zone') : null;
+                wrapper.querySelectorAll('.drop-zone').forEach(function (z) {
+                    z.classList.toggle('drag-over', z === hoverZone);
+                });
+            }, { passive: false });
+
+            function finishTouch(e) {
+                if (!ghost) return;
+                var touch = e.changedTouches[0];
+                var el = elementUnderTouch(ghost, touch);
+                removeClone(ghost);
+                ghost = null;
+                item.classList.remove('dragging');
+                wrapper.querySelectorAll('.drop-zone').forEach(function (z) {
+                    z.classList.remove('drag-over');
+                });
+
+                var zone     = el ? el.closest('.drop-zone') : null;
+                var fromZone = item.closest('.drop-zone');
+
+                if (zone) {
+                    var slot     = zone.querySelector('.zone-slot');
+                    var existing = slot.querySelector('.drag-item');
+                    if (existing && existing !== item) pool.appendChild(existing);
+                    if (fromZone && fromZone !== zone) fromZone.classList.remove('matched', 'wrong-match');
+                    slot.appendChild(item);
+                    evaluateZone(zone);
+                    if (fromZone && fromZone !== zone) evaluateZone(fromZone);
+                    checkAllMatched();
+                } else {
+                    if (fromZone) fromZone.classList.remove('matched', 'wrong-match');
+                    pool.appendChild(item);
+                    if (fromZone) evaluateZone(fromZone);
+                }
+            }
+
+            item.addEventListener('touchend',   finishTouch, { passive: false });
+            item.addEventListener('touchcancel', function () {
+                if (ghost) { removeClone(ghost); ghost = null; }
+                item.classList.remove('dragging');
+                wrapper.querySelectorAll('.drop-zone').forEach(function (z) { z.classList.remove('drag-over'); });
+            }, { passive: true });
+        }
+
+        wrapper.querySelectorAll('.drag-item').forEach(function (item) {
+            attachDrag(item);
+            attachTouchDrag(item);
+        });
+
+        // Mouse: drop back to pool
+        pool.addEventListener('dragover', function (e) { e.preventDefault(); });
+        pool.addEventListener('drop', function (e) {
+            e.preventDefault();
+            if (!draggedEl) return;
+            var fromZone = draggedEl.closest('.drop-zone');
+            pool.appendChild(draggedEl);
+            if (fromZone) { fromZone.classList.remove('matched', 'wrong-match'); evaluateZone(fromZone); }
+            draggedEl = null;
+        });
+
+        // Mouse: drop onto zones
+        wrapper.querySelectorAll('.drop-zone').forEach(function (zone) {
+            zone.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                zone.classList.add('drag-over');
+            });
+            zone.addEventListener('dragleave', function (e) {
+                if (!zone.contains(e.relatedTarget)) zone.classList.remove('drag-over');
+            });
+            zone.addEventListener('drop', function (e) {
+                e.preventDefault();
+                zone.classList.remove('drag-over');
+                if (!draggedEl) return;
+
+                var slot     = zone.querySelector('.zone-slot');
+                var existing = slot.querySelector('.drag-item');
+                var fromZone = draggedEl.closest('.drop-zone');
+
+                if (existing && existing !== draggedEl) pool.appendChild(existing);
+                if (fromZone && fromZone !== zone) fromZone.classList.remove('matched', 'wrong-match');
+
+                slot.appendChild(draggedEl);
+                evaluateZone(zone);
+                if (fromZone && fromZone !== zone) evaluateZone(fromZone);
+                checkAllMatched();
+                draggedEl = null;
+            });
+        });
+    });
+
+    // ── 4. FILL IN THE BLANK ────────────────────────────────────────────────
+    document.querySelectorAll('.task-fill_in_the_blank').forEach(function (card) {
+        var input    = card.querySelector('.fill-input');
+        var feedback = card.querySelector('.task-feedback');
+
+        function check() {
+            var answer  = input.value.trim().toLowerCase();
+            var correct = input.dataset.correct.trim().toLowerCase();
+            var ok      = answer === correct;
+            input.classList.remove('correct', 'wrong');
+            input.classList.add(ok ? 'correct' : 'wrong');
+            if (ok) {
+                input.disabled = true;
+                card.querySelector('.fitb-check').disabled = true;
+                showFeedback(feedback, '✓ Правильно!');
+                onTaskSolved(card);
+            } else {
+                markWrongAttempt(card);
+                showFeedback(feedback, '✗ Неверно. Попробуй ещё раз!');
+            }
+        }
+
+        card.querySelector('.fitb-check').addEventListener('click', check);
+        input.addEventListener('keydown', function (e) { if (e.key === 'Enter') check(); });
+    });
+
+    // ── 5. ORDERING ─────────────────────────────────────────────────────────
+    document.querySelectorAll('.task-ordering').forEach(function (card) {
+        var list         = card.querySelector('.ordering-list');
+        var correctOrder = JSON.parse(list.dataset.correct);
+        var feedback     = card.querySelector('.task-feedback');
+        var draggedItem  = null;
+
+        list.querySelectorAll('.ordering-item').forEach(function (item) {
+
+            // ── Mouse drag ──
+            item.addEventListener('dragstart', function (e) {
+                draggedItem = item;
+                item.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            item.addEventListener('dragend', function () {
+                item.classList.remove('dragging');
+                list.querySelectorAll('.ordering-item').forEach(function (i) { i.classList.remove('drag-over'); });
+                draggedItem = null;
+            });
+            item.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                if (!draggedItem || item === draggedItem) return;
+                item.classList.add('drag-over');
+                var rect = item.getBoundingClientRect();
+                if (e.clientY < rect.top + rect.height / 2) {
+                    list.insertBefore(draggedItem, item);
+                } else {
+                    list.insertBefore(draggedItem, item.nextSibling);
+                }
+            });
+            item.addEventListener('dragleave', function () { item.classList.remove('drag-over'); });
+
+            // ── Touch drag ──
+            var tGhost = null;
+
+            item.addEventListener('touchstart', function (e) {
+                if (e.touches.length !== 1) return;
+                tGhost = makeFloatingClone(item, e.touches[0]);
+                draggedItem = item;
+                item.classList.add('dragging');
+            }, { passive: true });
+
+            item.addEventListener('touchmove', function (e) {
+                e.preventDefault();
+                if (!tGhost || !draggedItem) return;
+                moveClone(tGhost, e.touches[0]);
+                var el     = elementUnderTouch(tGhost, e.touches[0]);
+                var target = el ? el.closest('.ordering-item') : null;
+                list.querySelectorAll('.ordering-item').forEach(function (i) {
+                    i.classList.toggle('drag-over', i === target && i !== draggedItem);
+                });
+            }, { passive: false });
+
+            item.addEventListener('touchend', function (e) {
+                if (!tGhost) return;
+                var touch  = e.changedTouches[0];
+                var el     = elementUnderTouch(tGhost, touch);
+                removeClone(tGhost);
+                tGhost = null;
+
+                if (draggedItem) {
+                    draggedItem.classList.remove('dragging');
+                    list.querySelectorAll('.ordering-item').forEach(function (i) { i.classList.remove('drag-over'); });
+                }
+
+                var target = el ? el.closest('.ordering-item') : null;
+                if (target && target !== draggedItem && draggedItem) {
+                    var rect = target.getBoundingClientRect();
+                    if (touch.clientY < rect.top + rect.height / 2) {
+                        list.insertBefore(draggedItem, target);
+                    } else {
+                        list.insertBefore(draggedItem, target.nextSibling);
+                    }
+                }
+                draggedItem = null;
+            }, { passive: false });
+
+            item.addEventListener('touchcancel', function () {
+                if (tGhost) { removeClone(tGhost); tGhost = null; }
+                if (draggedItem) { draggedItem.classList.remove('dragging'); draggedItem = null; }
+                list.querySelectorAll('.ordering-item').forEach(function (i) { i.classList.remove('drag-over'); });
+            }, { passive: true });
+        });
+
+        card.querySelector('.ordering-check').addEventListener('click', function () {
+            if (card.dataset.solved === 'true') return;
+
+            var current = Array.from(list.querySelectorAll('.ordering-item'))
+                              .map(function (i) {
+                                  return i.querySelector('.item-text').textContent.trim();
+                              });
+
+            var isCorrect = current.every(function (val, idx) { return val === correctOrder[idx]; });
+
+            if (isCorrect) {
+                list.querySelectorAll('.ordering-item').forEach(function (item) {
+                    item.classList.add('correct');
+                    item.setAttribute('draggable', 'false');
+                });
+                card.querySelector('.ordering-check').disabled = true;
+                showFeedback(feedback, '✓ Порядок верный!');
+                onTaskSolved(card);
+            } else {
+                markWrongAttempt(card);
+                showFeedback(feedback, '✗ Не совсем. Попробуй переставить элементы!');
+            }
+        });
+    });
+
+    // ── STUB MODE: no tasks → auto-complete with 5/5 ────────────────────────
+    if (totalTasks === 0) {
+        correctFirstTry = 5;
+        try {
+            window.parent.postMessage({
+                type: 'kidion_lesson_complete',
+                correct: 5,
+                total: 5
+            }, '*');
+        } catch(e) {}
+    }
+
+});
+</script>
+
+</body>
+</html>

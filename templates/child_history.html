@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}История уроков — {{ child.name }} — Kidion{% endblock %}
+{% block content %}
+<div class="container child-profile-page">
+  <a href="/children/{{ child.id }}" class="btn btn--ghost btn--sm">&larr; Назад к профилю</a>
+  <h1>📊 История уроков — {{ child.name }}</h1>
+
+  <!-- Stats summary -->
+  <div class="history-stats" id="history-stats">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Lessons table -->
+  <div id="history-table">
+    <div class="spinner"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+var CHILD_ID = {{ child.id }};
+
+document.addEventListener('DOMContentLoaded', async function() {
+  // Load stats
+  try {
+    var resp = await fetch('/api/children/' + CHILD_ID + '/stats');
+    var stats = await resp.json();
+    var statsEl = document.getElementById('history-stats');
+
+    var avgStars = stats.average_stars ? stats.average_stars.toFixed(1) : '—';
+
+    statsEl.innerHTML =
+      '<div class="stats-grid">' +
+      '  <div class="stat-card card"><div class="stat-card__value">' + stats.total_lessons + '</div><div class="stat-card__label">Уроков пройдено</div></div>' +
+      '  <div class="stat-card card"><div class="stat-card__value">⭐ ' + avgStars + '</div><div class="stat-card__label">Средний балл</div></div>' +
+      '  <div class="stat-card card"><div class="stat-card__value">🔥 ' + stats.current_streak + '</div><div class="stat-card__label">Серия дней</div></div>' +
+      '  <div class="stat-card card"><div class="stat-card__value">🏆 ' + stats.longest_streak + '</div><div class="stat-card__label">Рекорд серии</div></div>' +
+      '</div>';
+  } catch(e) {
+    document.getElementById('history-stats').innerHTML = '';
+  }
+
+  // Load lessons
+  try {
+    var resp2 = await fetch('/api/children/' + CHILD_ID + '/lessons');
+    var data = await resp2.json();
+    var tableEl = document.getElementById('history-table');
+
+    if (!data.lessons || data.lessons.length === 0) {
+      tableEl.innerHTML = '<p class="empty-state">Ещё нет пройденных уроков</p>';
+      return;
+    }
+
+    var html = '<table class="history-tbl"><thead><tr>' +
+      '<th>Тема</th><th>Предмет</th><th>Режим</th><th>Статус</th><th>Звёзды</th>' +
+      '</tr></thead><tbody>';
+
+    for (var i = 0; i < data.lessons.length; i++) {
+      var l = data.lessons[i];
+      var modeLabel = l.mode === 'weekly' ? 'Тема недели' : l.mode === 'curriculum' ? 'Маршрут' : 'По запросу';
+      var statusLabel = '';
+      var starsHtml = '';
+
+      if (l.stars !== null && l.stars !== undefined) {
+        statusLabel = '<span class="badge badge--green">Пройден</span>';
+        starsHtml = renderStars(l.stars);
+      } else if (l.status === 'done') {
+        statusLabel = '<span class="badge badge--blue">Готов</span>';
+        starsHtml = '—';
+      } else if (l.status === 'pending') {
+        statusLabel = '<span class="badge" style="background:#fef3c7;color:#92400e">Генерируется</span>';
+        starsHtml = '—';
+      } else {
+        statusLabel = l.status;
+        starsHtml = '—';
+      }
+
+      html += '<tr>' +
+        '<td>' + esc(l.topic_title) + '</td>' +
+        '<td>' + esc(l.subject) + '</td>' +
+        '<td>' + modeLabel + '</td>' +
+        '<td>' + statusLabel + '</td>' +
+        '<td>' + starsHtml + '</td>' +
+        '</tr>';
+    }
+
+    html += '</tbody></table>';
+    tableEl.innerHTML = html;
+
+  } catch(e) {
+    document.getElementById('history-table').innerHTML = '<p class="empty-state">Ошибка загрузки</p>';
+  }
+});
+
+function renderStars(stars) {
+  var s = '';
+  for (var i = 1; i <= 3; i++) {
+    s += '<span class="star ' + (i <= stars ? 'earned' : '') + '">★</span>';
+  }
+  return s;
+}
+
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+{% endblock %}

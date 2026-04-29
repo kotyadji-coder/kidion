@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#6C5CE7">
+  <title>Kidion — Вход</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/kid/style.css">
+</head>
+<body data-page="login">
+
+  <main class="kid-main">
+    <div class="login-page">
+
+      {% if child %}
+        <!-- Child identified: show personalized login -->
+        <div class="child-welcome">
+          <div class="child-welcome-avatar">{{ child.name[0] | upper }}</div>
+          <div class="child-welcome-name">Привет, {{ child.name }}!</div>
+        </div>
+        <p style="color: var(--color-muted); margin-bottom: 28px; font-size: 18px;">Введи свой PIN-код</p>
+        <input type="hidden" id="child-id-input" value="{{ child.id }}">
+      {% else %}
+        <!-- Generic login -->
+        <div class="login-logo">🎓</div>
+        <div class="login-title">Kidion</div>
+        <div class="login-subtitle">Введи свой PIN-код</div>
+        {% if child_id %}
+          <input type="hidden" id="child-id-input" value="{{ child_id }}">
+        {% else %}
+          <input type="hidden" id="child-id-input" value="">
+        {% endif %}
+      {% endif %}
+
+      <!-- PIN dots (4 digits) -->
+      <div class="pin-dots">
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+      </div>
+
+      <!-- PIN keyboard -->
+      <div class="pin-keyboard">
+        <button class="pin-btn" data-digit="1">1</button>
+        <button class="pin-btn" data-digit="2">2</button>
+        <button class="pin-btn" data-digit="3">3</button>
+        <button class="pin-btn" data-digit="4">4</button>
+        <button class="pin-btn" data-digit="5">5</button>
+        <button class="pin-btn" data-digit="6">6</button>
+        <button class="pin-btn" data-digit="7">7</button>
+        <button class="pin-btn" data-digit="8">8</button>
+        <button class="pin-btn" data-digit="9">9</button>
+        <button class="pin-btn pin-backspace">⌫</button>
+        <button class="pin-btn" data-digit="0">0</button>
+        <button class="pin-btn pin-submit" id="pin-submit-btn">Войти</button>
+      </div>
+
+      <div class="pin-error" id="pin-error"></div>
+
+    </div>
+  </main>
+
+  <script src="/static/kid/app.js"></script>
+</body>
+</html>

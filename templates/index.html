@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kidion — уроки, в которые ребёнок влюбится</title>
+  <meta name="description" content="Персональная образовательная вселенная для детей 6–10 лет. Школьная программа превращается в приключение с персонажем, звёздами и наградами.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --emerald: #10B981;
+      --emerald-deep: #059669;
+      --coral: #FF6B6B;
+      --coral-deep: #F04C4C;
+      --mint: #6EE7B7;
+      --turquoise: #14B8A6;
+      --violet: #8B5CF6;
+      --ink: #0F1F1A;
+      --ink-soft: #3B4A44;
+      --muted: #6B7A74;
+      --line: #E6EDEA;
+      --bg: #FFFFFF;
+      --bg-soft: #F5FBF8;
+      --bg-warm: #FFF7F5;
+      --font: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font); color: var(--ink); background: var(--bg); -webkit-font-smoothing: antialiased; }
+    img { max-width: 100%; display: block; }
+    a { text-decoration: none; color: inherit; }
+    button { font-family: inherit; cursor: pointer; border: none; }
+    details > summary { list-style: none; cursor: pointer; }
+    details > summary::-webkit-details-marker { display: none; }
+    details[open] summary .faq-icon { transform: rotate(45deg); }
+    .faq-icon { transition: transform 0.2s; }
+
+    /* ─── NAV ─── */
+    .nav { display: flex; align-items: center; justify-content: space-between; padding: 20px 72px; border-bottom: 1px solid var(--line); background: rgba(255,255,255,0.85); backdrop-filter: blur(14px); position: sticky; top: 0; z-index: 100; }
+    .nav__logo { display: flex; align-items: center; gap: 10px; }
+    .nav__logo-icon { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, var(--emerald), var(--turquoise)); display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px rgba(16,185,129,0.25); flex-shrink: 0; }
+    .nav__logo-text { font-size: 22px; font-weight: 800; letter-spacing: -0.6px; }
+    .nav__logo-text span { color: var(--emerald); }
+    .nav__links { display: flex; gap: 34px; font-size: 15px; font-weight: 500; color: var(--ink-soft); }
+    .nav__links a:hover { color: var(--ink); }
+    .nav__actions { display: flex; gap: 12px; align-items: center; }
+    .nav__login { font-size: 14px; font-weight: 500; color: var(--ink-soft); }
+    .btn-cta { display: inline-flex; align-items: center; justify-content: center; gap: 10px; border: none; font-weight: 700; background: var(--coral); color: #fff; padding: 11px 20px; font-size: 14px; border-radius: 999px; box-shadow: 0 8px 18px rgba(255,107,107,0.3); transition: transform 0.15s, box-shadow 0.15s; }
+    .btn-cta:hover { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(255,107,107,0.4); }
+    .btn-cta--big { padding: 18px 30px; font-size: 17px; box-shadow: 0 12px 28px rgba(255,107,107,0.33), inset 0 -2px 0 rgba(0,0,0,0.12); }
+    .btn-cta--full { width: 100%; }
+    .btn-cta--ink { background: var(--ink); box-shadow: none; }
+    .btn-cta--ink:hover { box-shadow: 0 8px 20px rgba(15,31,26,0.3); }
+    .btn-cta svg { flex-shrink: 0; }
+    .btn-secondary { border: 1.5px solid var(--line); background: #fff; color: var(--ink); padding: 17px 26px; border-radius: 999px; font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; gap: 10px; transition: border-color 0.15s; }
+    .btn-secondary:hover { border-color: var(--emerald); }
+
+    /* ─── HERO ─── */
+    .hero { position: relative; overflow: hidden; padding: 80px 72px 100px; }
+    .hero__blob1 { position: absolute; top: -120px; right: -180px; width: 700px; height: 700px; border-radius: 50%; background: radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 65%); pointer-events: none; }
+    .hero__blob2 { position: absolute; bottom: -140px; left: -160px; width: 520px; height: 520px; border-radius: 50%; background: radial-gradient(circle, rgba(255,107,107,0.08) 0%, transparent 65%); pointer-events: none; }
+    .hero__grid { display: grid; grid-template-columns: 1fr 540px; gap: 60px; align-items: center; position: relative; }
+    .hero__badge { display: inline-flex; align-items: center; gap: 10px; padding: 7px 14px 7px 8px; border-radius: 999px; background: #fff; border: 1px solid var(--line); font-size: 13px; font-weight: 600; color: var(--ink-soft); margin-bottom: 28px; box-shadow: 0 6px 18px rgba(15,31,26,0.05); }
+    .hero__badge-new { background: var(--emerald); color: #fff; padding: 4px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 0.3px; }
+    .hero h1 { font-size: 76px; line-height: 1.02; font-weight: 800; letter-spacing: -2.4px; margin-bottom: 26px; text-wrap: balance; }
+    .hero h1 .gradient-text { background: linear-gradient(95deg, var(--emerald) 0%, var(--turquoise) 60%, var(--violet) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero__sub { font-size: 19px; line-height: 1.55; color: var(--ink-soft); max-width: 540px; margin-bottom: 36px; }
+    .hero__buttons { display: flex; gap: 14px; align-items: center; margin-bottom: 36px; }
+    .hero__trust { display: flex; align-items: center; gap: 28px; }
+    .hero__avatars { display: flex; }
+    .hero__avatar { width: 36px; height: 36px; border-radius: 50%; border: 3px solid #fff; color: #fff; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+    .hero__avatar + .hero__avatar { margin-left: -10px; }
+    .hero__stars { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
+    .hero__stars-rating { font-size: 13px; font-weight: 700; margin-left: 4px; }
+    .hero__trust-text { font-size: 13px; color: var(--muted); }
+    .hero__trust-text strong { color: var(--ink); }
+
+    /* Hero app mock */
+    .hero__right { position: relative; display: flex; justify-content: center; }
+    .hero__app { width: 460px; height: 560px; position: relative; border-radius: 36px; overflow: hidden; background: linear-gradient(160deg, #1B1346 0%, #3D1F6B 45%, #6F2D9C 100%); box-shadow: 0 50px 90px -30px rgba(31,16,70,0.55), 0 18px 40px -12px rgba(31,16,70,0.35); border: 8px solid var(--ink); }
+    .hero__app-stars { color: #fff; opacity: 0.7; }
+    .hero__app-bar { position: absolute; top: 16px; left: 18px; right: 18px; display: flex; justify-content: space-between; align-items: center; color: #fff; font-size: 13px; font-weight: 600; }
+    .hero__app-pill { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.18); padding: 6px 12px; border-radius: 999px; backdrop-filter: blur(8px); }
+    .hero__app-pill--sm { font-size: 12px; }
+    .hero__app-card { position: absolute; left: 18px; right: 18px; bottom: 18px; background: rgba(255,255,255,0.97); border-radius: 22px; padding: 18px; }
+    .hero__app-chapter { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .hero__app-topic { font-size: 16px; font-weight: 800; margin-top: 2px; color: var(--ink); letter-spacing: -0.3px; }
+    .hero__app-reward { background: var(--emerald); color: #fff; padding: 5px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; }
+    .hero__app-dots { display: flex; justify-content: space-between; align-items: center; margin: 14px 0 12px; }
+    .hero__app-dot { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff; font-weight: 700; flex-shrink: 0; }
+    .hero__app-dot--done { background: var(--emerald); }
+    .hero__app-dot--current { width: 32px; height: 32px; background: var(--emerald); border: 3px solid var(--emerald); box-shadow: 0 0 0 4px rgba(16,185,129,0.19); }
+    .hero__app-dot--todo { background: #E6EDEA; }
+    .hero__app-line { flex: 1; height: 3px; margin: 0 4px; border-radius: 2px; }
+    .hero__app-btn { width: 100%; border: none; padding: 13px; border-radius: 14px; background: var(--coral); color: #fff; font-size: 14px; font-weight: 800; font-family: inherit; box-shadow: 0 6px 16px rgba(255,107,107,0.33), inset 0 -2px 0 rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; gap: 8px; }
+    /* floating cards */
+    .hero__float { position: absolute; background: #fff; border-radius: 16px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 14px 30px rgba(15,31,26,0.18); border: 1px solid var(--line); }
+    .hero__float--left { top: 80px; left: -50px; }
+    .hero__float--right { bottom: 100px; right: -70px; max-width: 220px; }
+    .hero__float-icon { width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .hero__float-title { font-size: 13px; font-weight: 700; }
+    .hero__float-sub { font-size: 11px; color: var(--muted); }
+
+    /* ─── EYEBROW ─── */
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; margin-bottom: 14px; }
+    .eyebrow::before { content: ''; width: 18px; height: 2px; border-radius: 2px; }
+    .eyebrow--emerald { color: var(--emerald); }
+    .eyebrow--emerald::before { background: var(--emerald); }
+    .eyebrow--coral { color: var(--coral); }
+    .eyebrow--coral::before { background: var(--coral); }
+    .eyebrow--violet { color: var(--violet); }
+    .eyebrow--violet::before { background: var(--violet); }
+    .eyebrow--mint { color: var(--mint); }
+    .eyebrow--mint::before { background: var(--mint); }
+
+    /* ─── PAINS ─── */
+    .pains { padding: 90px 72px; background: #fff; border-top: 1px solid var(--line); }
+    .pains__header { text-align: center; margin-bottom: 60px; }
+    .pains__header h2 { font-size: 64px; font-weight: 800; letter-spacing: -1.8px; margin-bottom: 18px; line-height: 1.05; }
+    .pains__header p { font-size: 18px; color: var(--muted); max-width: 620px; margin: 0 auto; line-height: 1.5; }
+    .pains__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .pains__card { border-radius: 28px; padding: 36px; position: relative; overflow: hidden; }
+    .pains__card--warm { background: var(--bg-warm); border: 1px solid rgba(255,107,107,0.12); }
+    .pains__card--soft { background: var(--bg-soft); border: 1px solid rgba(20,184,166,0.12); }
+    .pains__card--violet { background: #F5F2FB; border: 1px solid rgba(139,92,246,0.12); }
+    .pains__emoji { font-size: 56px; margin-bottom: 18px; line-height: 1; }
+    .pains__quote { font-size: 26px; font-weight: 800; letter-spacing: -0.6px; line-height: 1.15; margin-bottom: 14px; }
+    .pains__quote--coral { color: var(--coral); }
+    .pains__quote--turquoise { color: var(--turquoise); }
+    .pains__quote--violet { color: var(--violet); }
+    .pains__body { font-size: 16px; line-height: 1.55; color: var(--ink-soft); }
+    .pains__bottom { text-align: center; margin-top: 48px; }
+    .pains__resolve { display: inline-flex; align-items: center; gap: 14px; background: var(--bg-soft); border: 1px solid rgba(16,185,129,0.2); border-radius: 999px; padding: 24px 32px; }
+    .pains__check { width: 30px; height: 30px; border-radius: 50%; background: var(--emerald); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; flex-shrink: 0; }
+    .pains__resolve-text { font-size: 16px; font-weight: 600; color: var(--ink); }
+
+    /* ─── HOW IT WORKS ─── */
+    .steps-section { padding: 110px 72px; background: var(--bg-soft); }
+    .steps-section__header { text-align: center; margin-bottom: 70px; }
+    .steps-section__header h2 { font-size: 64px; font-weight: 800; letter-spacing: -1.8px; line-height: 1.05; text-wrap: balance; }
+    .steps__grid { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+    .steps__connector { position: absolute; top: 70px; left: 16%; right: 16%; height: 2px; background: repeating-linear-gradient(to right, var(--emerald) 0 8px, transparent 8px 16px); z-index: 0; }
+    .steps__card { background: #fff; border-radius: 28px; padding: 32px; border: 1px solid var(--line); position: relative; z-index: 1; }
+    .steps__num { width: 64px; height: 64px; border-radius: 18px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 24px; margin-bottom: 22px; letter-spacing: -1px; }
+    .steps__card h3 { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 12px; text-wrap: balance; }
+    .steps__card p { font-size: 15px; line-height: 1.55; color: var(--ink-soft); margin-bottom: 20px; }
+    .steps__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .steps__chip { padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+    .steps__chip--active { background: var(--emerald); color: #fff; }
+    .steps__chip--inactive { background: var(--bg-soft); color: var(--ink-soft); border: 1px solid var(--line); }
+    .steps__universe { border-radius: 14px; padding: 16px; background: linear-gradient(135deg, #1B1346 0%, #6F2D9C 100%); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .steps__universe-item { height: 36px; border-radius: 8px; opacity: 0.85; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .steps__result { background: var(--bg-soft); border-radius: 14px; padding: 14px; display: flex; align-items: center; gap: 12px; }
+    .steps__result-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--coral); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; flex-shrink: 0; }
+    .steps__result-stars { display: flex; align-items: center; gap: 4px; color: var(--coral); font-weight: 800; font-size: 14px; }
+
+    /* ─── KID FEATURES ─── */
+    .kid-features { padding: 110px 72px; background: #fff; }
+    .kid-features__top { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: flex-start; margin-bottom: 64px; }
+    .kid-features__top h2 { font-size: 60px; font-weight: 800; letter-spacing: -1.8px; line-height: 1.05; text-wrap: balance; }
+    .kid-features__top h2 em { font-style: italic; font-weight: 800; background: linear-gradient(95deg, var(--violet), var(--coral)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .kid-features__top p { font-size: 18px; color: var(--ink-soft); line-height: 1.55; padding-top: 20px; }
+    .kid-features__grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+    .kid-features__card { border-radius: 28px; padding: 36px; border: 1px solid var(--line); display: grid; grid-template-columns: 120px 1fr; gap: 28px; align-items: flex-start; }
+    .kid-features__icon { width: 120px; height: 120px; border-radius: 22px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .kid-features__icon::after { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle, rgba(255,255,255,0.25) 1px, transparent 1px); background-size: 14px 14px; opacity: 0.5; pointer-events: none; }
+    .kid-features__card h3 { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 10px; text-wrap: balance; }
+    .kid-features__card p { font-size: 15px; line-height: 1.55; color: var(--ink-soft); }
+
+    /* ─── PARENT FEATURES ─── */
+    .parent-features { padding: 110px 72px; background: var(--ink); color: #fff; position: relative; overflow: hidden; }
+    .parent-features__header { position: relative; max-width: 760px; margin-bottom: 72px; }
+    .parent-features__header h2 { font-size: 60px; font-weight: 800; letter-spacing: -1.8px; margin-bottom: 20px; line-height: 1.05; text-wrap: balance; }
+    .parent-features__header h2 span { color: var(--mint); }
+    .parent-features__header p { font-size: 18px; color: rgba(255,255,255,0.65); line-height: 1.55; }
+    .parent-features__grid { position: relative; display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+    .parent-features__card { background: rgba(255,255,255,0.04); border-radius: 24px; padding: 32px; border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(8px); }
+    .parent-features__card h3 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 12px; }
+    .parent-features__card p { font-size: 15px; line-height: 1.55; color: rgba(255,255,255,0.7); margin-bottom: 20px; }
+    .parent-features__pills { display: flex; flex-wrap: wrap; gap: 8px; }
+    .parent-features__pill { padding: 6px 12px; border-radius: 999px; background: rgba(110,231,183,0.12); color: var(--mint); font-size: 13px; font-weight: 600; border: 1px solid rgba(110,231,183,0.3); }
+    .parent-features__stat { font-size: 56px; font-weight: 800; letter-spacing: -2px; background: linear-gradient(95deg, var(--mint), var(--turquoise)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; }
+    .parent-features__stat-label { font-size: 14px; color: rgba(255,255,255,0.5); }
+    .parent-features__print { background: #fff; border-radius: 12px; padding: 14px; color: var(--ink); display: flex; align-items: center; gap: 12px; }
+    .parent-features__chart { background: rgba(255,255,255,0.04); border-radius: 12px; padding: 14px 16px; border: 1px solid rgba(255,255,255,0.08); }
+    .parent-features__chart-head { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px; }
+
+    /* ─── FREE START ─── */
+    .free-start { padding: 90px 72px; background: #fff; }
+    .free-start__card { background: linear-gradient(125deg, #FFF7F5 0%, #F5FBF8 60%, #F5F2FB 100%); border: 1px solid var(--line); border-radius: 36px; padding: 64px 72px; display: grid; grid-template-columns: 1fr 360px; gap: 60px; align-items: center; position: relative; overflow: hidden; }
+    .free-start__card h2 { font-size: 56px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 18px; line-height: 1.05; text-wrap: balance; }
+    .free-start__card > div:first-child p { font-size: 18px; color: var(--ink-soft); line-height: 1.55; margin-bottom: 30px; max-width: 540px; }
+    .free-start__crystals { position: relative; width: 360px; height: 280px; display: flex; align-items: center; justify-content: center; }
+    .free-start__crystals-glow { position: absolute; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgba(20,184,166,0.2) 0%, transparent 70%); }
+    .free-start__crystals-grid { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .free-start__crystals-badge { position: absolute; bottom: 10px; right: 0; background: var(--ink); color: #fff; border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+    .free-start__crystals-badge span { color: var(--mint); }
+
+    /* ─── PRICING ─── */
+    .pricing { padding: 110px 72px; background: var(--bg-soft); }
+    .pricing__header { text-align: center; margin-bottom: 60px; }
+    .pricing__header h2 { font-size: 60px; font-weight: 800; letter-spacing: -1.8px; margin-bottom: 18px; line-height: 1.05; }
+    .pricing__header p { font-size: 18px; color: var(--muted); max-width: 580px; margin: 0 auto; line-height: 1.5; }
+    .pricing__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+    .pricing__card { border-radius: 24px; padding: 28px; position: relative; background: #fff; border: 1px solid var(--line); }
+    .pricing__card--dark { background: var(--ink); color: #fff; border: none; box-shadow: 0 22px 50px -10px rgba(15,31,26,0.33); transform: translateY(-8px); }
+    .pricing__popular { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--emerald); color: #fff; padding: 5px 12px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; }
+    .pricing__name { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 18px; }
+    .pricing__name-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .pricing__price { margin-bottom: 22px; display: flex; align-items: baseline; gap: 6px; }
+    .pricing__price-num { font-size: 56px; font-weight: 800; letter-spacing: -2px; line-height: 1; }
+    .pricing__price-cur { font-size: 18px; font-weight: 700; }
+    .pricing__info { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding: 12px 14px; border-radius: 12px; }
+    .pricing__info-count { font-size: 17px; font-weight: 800; line-height: 1.1; }
+    .pricing__info-lessons { font-size: 12px; margin-top: 2px; }
+    .pricing__per { font-size: 13px; margin-bottom: 24px; }
+    .pricing__per strong { font-weight: 700; }
+    .pricing__btn { width: 100%; padding: 13px; border-radius: 999px; font-size: 14px; font-weight: 700; font-family: inherit; }
+    .pricing__footer { margin-top: 36px; text-align: center; font-size: 14px; color: var(--muted); display: flex; justify-content: center; align-items: center; gap: 24px; flex-wrap: wrap; }
+    .pricing__footer span { display: inline-flex; align-items: center; gap: 8px; }
+    .pricing__footer .check { color: var(--emerald); font-weight: 800; }
+
+    /* ─── FAQ ─── */
+    .faq { padding: 110px 72px; background: #fff; }
+    .faq__grid { display: grid; grid-template-columns: 380px 1fr; gap: 80px; align-items: flex-start; }
+    .faq__left { position: sticky; top: 100px; }
+    .faq__left h2 { font-size: 48px; font-weight: 800; letter-spacing: -1.4px; margin-bottom: 18px; line-height: 1.1; text-wrap: balance; }
+    .faq__left p { font-size: 16px; color: var(--muted); line-height: 1.5; margin-bottom: 24px; }
+    .faq__email { display: inline-flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 999px; background: var(--bg-soft); border: 1px solid var(--line); font-size: 14px; font-weight: 600; }
+    .faq__email-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 0 4px rgba(16,185,129,0.2); }
+    .faq details { border-bottom: 1px solid var(--line); padding: 24px 0; }
+    .faq details:first-of-type { border-top: 1px solid var(--line); }
+    .faq summary { display: flex; justify-content: space-between; align-items: center; gap: 20px; font-size: 20px; font-weight: 700; letter-spacing: -0.4px; color: var(--ink); }
+    .faq-icon { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; background: var(--bg-soft); display: inline-flex; align-items: center; justify-content: center; color: var(--emerald); font-weight: 800; font-size: 16px; }
+    .faq details p { font-size: 16px; line-height: 1.55; color: var(--ink-soft); margin-top: 12px; max-width: 720px; }
+
+    /* ─── FINAL CTA ─── */
+    .final-cta { padding: 0 72px 110px; background: #fff; }
+    .final-cta__card { border-radius: 40px; padding: 90px 72px; position: relative; overflow: hidden; background: linear-gradient(140deg, var(--ink) 0%, #1D3530 50%, #0E2823 100%); color: #fff; text-align: center; }
+    .final-cta__inner { position: relative; max-width: 760px; margin: 0 auto; }
+    .final-cta__card h2 { font-size: 76px; font-weight: 800; letter-spacing: -2.4px; line-height: 1.02; margin-bottom: 22px; text-wrap: balance; }
+    .final-cta__card h2 em { font-style: italic; background: linear-gradient(95deg, var(--mint), var(--turquoise)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .final-cta__card > .final-cta__inner > p { font-size: 19px; color: rgba(255,255,255,0.7); line-height: 1.5; margin-bottom: 40px; }
+    .final-cta__sub { font-size: 13px; color: rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 14px; }
+    .final-cta__btns { display: inline-flex; flex-direction: column; align-items: center; gap: 14px; }
+
+    /* ─── FOOTER ─── */
+    .landing-footer { position: relative; overflow: hidden; background: linear-gradient(160deg, var(--ink) 0%, #122722 55%, #0B1F1A 100%); color: #fff; padding: 80px 72px 0; }
+    .landing-footer__dots { position: absolute; inset: 0; opacity: 0.5; pointer-events: none; background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 28px 28px; }
+    .landing-footer__inner { position: relative; }
+    .landing-footer__top { display: grid; grid-template-columns: 1fr 460px; gap: 80px; align-items: center; padding-bottom: 56px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .landing-footer__brand-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+    .landing-footer__brand-icon { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, var(--emerald), var(--turquoise)); display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 22px rgba(16,185,129,0.33); }
+    .landing-footer__brand-text { font-size: 26px; font-weight: 800; letter-spacing: -0.6px; }
+    .landing-footer__brand-text span { color: var(--mint); }
+    .landing-footer__brand h3 { font-size: 36px; font-weight: 800; letter-spacing: -1px; line-height: 1.1; margin-bottom: 14px; max-width: 520px; text-wrap: balance; }
+    .landing-footer__brand h3 em { font-style: italic; background: linear-gradient(95deg, var(--mint), var(--turquoise)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .landing-footer__brand p { font-size: 15px; color: rgba(255,255,255,0.55); line-height: 1.55; max-width: 460px; }
+    .landing-footer__newsletter { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 22px; padding: 28px; backdrop-filter: blur(8px); }
+    .landing-footer__newsletter-label { font-size: 11px; font-weight: 800; letter-spacing: 1.6px; text-transform: uppercase; color: var(--mint); margin-bottom: 10px; }
+    .landing-footer__newsletter h4 { font-size: 20px; font-weight: 800; letter-spacing: -0.4px; margin-bottom: 8px; line-height: 1.2; }
+    .landing-footer__newsletter p { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.5; margin-bottom: 16px; }
+    .landing-footer__newsletter-form { display: flex; gap: 8px; }
+    .landing-footer__newsletter-form input { flex: 1; padding: 12px 14px; border-radius: 10px; border: none; background: rgba(255,255,255,0.08); color: #fff; font-size: 14px; font-family: inherit; outline: 1px solid rgba(255,255,255,0.12); }
+    .landing-footer__newsletter-form button { border: none; padding: 0 18px; border-radius: 10px; background: var(--coral); color: #fff; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; box-shadow: 0 6px 16px rgba(255,107,107,0.33); white-space: nowrap; }
+    .landing-footer__newsletter-note { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 10px; }
+    .landing-footer__links { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding: 56px 0 48px; }
+    .landing-footer__links-col-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.6px; color: var(--mint); margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+    .landing-footer__links-col-title::before { content: ''; width: 14px; height: 2px; background: var(--mint); border-radius: 2px; }
+    .landing-footer__links-col a { display: block; font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 12px; }
+    .landing-footer__links-col a:hover { color: #fff; }
+    .landing-footer__social-row { display: flex; justify-content: space-between; align-items: center; padding: 32px 0; border-top: 1px solid rgba(255,255,255,0.08); border-bottom: 1px solid rgba(255,255,255,0.08); gap: 40px; flex-wrap: wrap; }
+    .landing-footer__apps { display: flex; align-items: center; gap: 14px; }
+    .landing-footer__apps-label { font-size: 13px; color: rgba(255,255,255,0.55); font-weight: 600; }
+    .landing-footer__app-badge { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); }
+    .landing-footer__app-badge-icon { width: 26px; height: 26px; border-radius: 7px; background: var(--emerald); color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+    .landing-footer__app-badge-text span { font-size: 9px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px; display: block; }
+    .landing-footer__app-badge-text strong { font-size: 13px; font-weight: 700; display: block; line-height: 1.1; }
+    .landing-footer__socials { display: flex; gap: 10px; }
+    .landing-footer__social-btn { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.8); }
+    .landing-footer__bottom { display: flex; justify-content: space-between; align-items: center; padding: 28px 0 36px; font-size: 12px; color: rgba(255,255,255,0.45); gap: 24px; flex-wrap: wrap; }
+    .landing-footer__bottom-links { display: flex; gap: 24px; }
+    .landing-footer__bottom .made-with { color: var(--mint); }
+
+    /* ─── NODE GLYPH (decorative) ─── */
+    .node-glyph { position: absolute; pointer-events: none; }
+
+    /* ─── STAR SVG ─── */
+    .star-svg { flex-shrink: 0; }
+
+    /* ─── CRYSTAL SVG ─── */
+    .crystal-svg { flex-shrink: 0; }
+
+    /* ─── CHARACTER SVG (hero) ─── */
+    .hero__character { position: absolute; left: 50%; top: 60px; transform: translateX(-50%); width: 180px; height: 180px; }
+    .hero__character-aura { position: absolute; inset: -20px; border-radius: 50%; background: radial-gradient(circle, rgba(110,231,183,0.5) 0%, transparent 65%); filter: blur(6px); }
+    .hero__character-name { position: absolute; left: 50%; top: 250px; transform: translateX(-50%); background: rgba(15,31,26,0.6); backdrop-filter: blur(12px); padding: 6px 14px; border-radius: 999px; color: #fff; font-size: 13px; font-weight: 700; letter-spacing: 0.2px; border: 1px solid rgba(255,255,255,0.15); white-space: nowrap; }
+    .hero__app-star { position: absolute; border-radius: 50%; background: #fff; opacity: 0.7; box-shadow: 0 0 6px rgba(255,255,255,0.7); }
+    .hero__app-aurora { position: absolute; left: -30%; top: 40%; width: 160%; height: 200px; border-radius: 50%; background: radial-gradient(ellipse, rgba(110,231,183,0.35) 0%, transparent 70%); filter: blur(8px); }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 1024px) {
+      .nav { padding: 16px 20px; }
+      .nav__links { display: none; }
+      .nav__login { display: none; }
+      .hero { padding: 32px 20px 48px; }
+      .hero__grid { grid-template-columns: 1fr; gap: 32px; }
+      .hero h1 { font-size: 42px; letter-spacing: -1.6px; }
+      .hero__sub { font-size: 16px; margin-bottom: 24px; }
+      .hero__buttons { flex-direction: column; }
+      .hero__buttons .btn-secondary { display: none; }
+      .hero__right { display: flex; justify-content: center; }
+      .hero__app { width: 322px; height: 392px; border-radius: 25px; border-width: 6px; }
+      .hero__app-bar { top: 11px; left: 13px; right: 13px; font-size: 9px; }
+      .hero__app-pill { padding: 4px 8px; gap: 4px; }
+      .hero__app-card { left: 13px; right: 13px; bottom: 13px; border-radius: 15px; padding: 13px; }
+      .hero__app-chapter { font-size: 8px; }
+      .hero__app-topic { font-size: 11px; }
+      .hero__app-reward { font-size: 8px; padding: 4px 7px; }
+      .hero__app-dot { width: 15px; height: 15px; font-size: 8px; }
+      .hero__app-dot--current { width: 22px; height: 22px; }
+      .hero__app-line { height: 2px; }
+      .hero__app-btn { padding: 9px; font-size: 10px; border-radius: 10px; }
+      .hero__character { width: 126px; height: 126px; top: 42px; }
+      .hero__character-name { top: 175px; font-size: 9px; padding: 4px 10px; }
+      .hero__float { display: none; }
+      .hero__trust { gap: 14px; }
+      .hero__avatar { width: 30px; height: 30px; font-size: 11px; border-width: 2px; }
+      .hero__avatar + .hero__avatar { margin-left: -8px; }
+
+      .pains { padding: 60px 20px; }
+      .pains__header { margin-bottom: 28px; }
+      .pains__header h2 { font-size: 38px; letter-spacing: -1.2px; }
+      .pains__header p { font-size: 15px; }
+      .pains__grid { grid-template-columns: 1fr; gap: 14px; }
+      .pains__card { padding: 24px; border-radius: 22px; }
+      .pains__emoji { font-size: 36px; margin-bottom: 10px; }
+      .pains__quote { font-size: 20px; margin-bottom: 8px; }
+      .pains__body { font-size: 14px; }
+      .pains__bottom { margin-top: 24px; }
+      .pains__resolve { padding: 14px 18px; border-radius: 18px; gap: 12px; }
+      .pains__check { width: 26px; height: 26px; font-size: 14px; }
+      .pains__resolve-text { font-size: 14px; }
+
+      .steps-section { padding: 60px 20px; }
+      .steps-section__header { margin-bottom: 28px; }
+      .steps-section__header h2 { font-size: 38px; letter-spacing: -1.2px; }
+      .steps__grid { grid-template-columns: 1fr; gap: 14px; }
+      .steps__connector { display: none; }
+      .steps__card { padding: 24px; border-radius: 22px; }
+      .steps__num { width: 52px; height: 52px; border-radius: 14px; font-size: 20px; margin-bottom: 16px; }
+      .steps__card h3 { font-size: 19px; margin-bottom: 8px; }
+      .steps__card p { font-size: 14px; }
+
+      .kid-features { padding: 60px 20px; }
+      .kid-features__top { grid-template-columns: 1fr; gap: 12px; margin-bottom: 28px; }
+      .kid-features__top h2 { font-size: 38px; letter-spacing: -1.2px; }
+      .kid-features__top p { padding-top: 0; font-size: 15px; }
+      .kid-features__grid { grid-template-columns: 1fr; gap: 14px; }
+      .kid-features__card { grid-template-columns: 56px 1fr; gap: 16px; padding: 22px; border-radius: 22px; }
+      .kid-features__icon { width: 56px; height: 56px; border-radius: 14px; }
+      .kid-features__card h3 { font-size: 17px; margin-bottom: 6px; }
+      .kid-features__card p { font-size: 14px; }
+
+      .parent-features { padding: 60px 20px; }
+      .parent-features__header { margin-bottom: 28px; }
+      .parent-features__header h2 { font-size: 38px; letter-spacing: -1.2px; }
+      .parent-features__header p { font-size: 14px; }
+      .parent-features__grid { grid-template-columns: 1fr; gap: 14px; }
+      .parent-features__card { padding: 22px; border-radius: 18px; }
+      .parent-features__card h3 { font-size: 17px; margin-bottom: 8px; }
+      .parent-features__card p { font-size: 14px; margin-bottom: 14px; }
+      .parent-features__stat { font-size: 40px; letter-spacing: -1.5px; }
+      .parent-features__pill { font-size: 11px; padding: 5px 10px; }
+
+      .free-start { padding: 60px 20px; }
+      .free-start__card { grid-template-columns: 1fr; padding: 28px; border-radius: 26px; text-align: center; }
+      .free-start__card h2 { font-size: 32px; letter-spacing: -1px; }
+      .free-start__card > div:first-child p { font-size: 14px; margin: 0 auto 22px; }
+      .free-start__crystals { display: none; }
+
+      .pricing { padding: 60px 20px; }
+      .pricing__header { margin-bottom: 24px; }
+      .pricing__header h2 { font-size: 36px; letter-spacing: -1.2px; }
+      .pricing__header p { font-size: 14px; }
+      .pricing__grid { grid-template-columns: 1fr; gap: 12px; }
+      .pricing__card { padding: 20px; border-radius: 20px; display: flex; flex-wrap: wrap; align-items: flex-start; }
+      .pricing__card--dark { transform: none; }
+      .pricing__card > .pricing__main { flex: 1; }
+      .pricing__card > .pricing__btn-wrap { flex-shrink: 0; padding-top: 8px; }
+      .pricing__popular { left: auto; right: 16px; transform: none; top: -10px; }
+      .pricing__price-num { font-size: 36px; }
+      .pricing__card .pricing__info { padding: 5px 10px; border-radius: 999px; display: inline-flex; margin-bottom: 0; }
+      .pricing__card .pricing__per { display: block; width: 100%; margin-top: 12px; padding-top: 12px; margin-bottom: 0; }
+      .pricing__footer { gap: 12px; font-size: 12px; }
+
+      .faq { padding: 60px 20px; }
+      .faq__grid { grid-template-columns: 1fr; gap: 24px; }
+      .faq__left { position: static; }
+      .faq__left h2 { font-size: 32px; letter-spacing: -1px; }
+      .faq summary { font-size: 16px; gap: 12px; }
+      .faq-icon { width: 26px; height: 26px; font-size: 14px; }
+      .faq details { padding: 18px 0; }
+      .faq details p { font-size: 14px; margin-top: 10px; }
+
+      .final-cta { padding: 32px 20px 60px; }
+      .final-cta__card { border-radius: 28px; padding: 40px 28px; }
+      .final-cta__card h2 { font-size: 38px; letter-spacing: -1.4px; }
+      .final-cta__card > .final-cta__inner > p { font-size: 14px; margin-bottom: 24px; }
+      .final-cta__sub { font-size: 11px; }
+
+      .landing-footer { padding: 48px 20px 32px; }
+      .landing-footer__top { grid-template-columns: 1fr; gap: 28px; }
+      .landing-footer__brand h3 { font-size: 22px; }
+      .landing-footer__brand p { font-size: 13px; }
+      .landing-footer__newsletter { padding: 18px; border-radius: 18px; }
+      .landing-footer__links { grid-template-columns: 1fr 1fr; gap: 24px; }
+      .landing-footer__links-col-title { font-size: 10px; letter-spacing: 1.4px; margin-bottom: 12px; }
+      .landing-footer__links-col a { font-size: 13px; margin-bottom: 8px; }
+      .landing-footer__social-row { flex-direction: column; align-items: flex-start; gap: 16px; }
+      .landing-footer__apps { flex-wrap: wrap; }
+      .landing-footer__bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── NAV ─── -->
+<header class="nav">
+  <a href="/" class="nav__logo">
+    <div class="nav__logo-icon">
+      <svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="3" fill="#fff"/><circle cx="4" cy="6" r="1.6" fill="#fff"/><circle cx="16" cy="6" r="1.6" fill="#fff"/><circle cx="4" cy="14" r="1.6" fill="#fff"/><circle cx="16" cy="14" r="1.6" fill="#fff"/><g stroke="#fff" stroke-width="1" opacity=".6"><line x1="10" y1="10" x2="4" y2="6"/><line x1="10" y1="10" x2="16" y2="6"/><line x1="10" y1="10" x2="4" y2="14"/><line x1="10" y1="10" x2="16" y2="14"/></g></svg>
+    </div>
+    <div class="nav__logo-text">kidion<span>.</span>ru</div>
+  </a>
+  <nav class="nav__links">
+    <a href="#how">Как это работает</a>
+    <a href="#features">Что внутри</a>
+    <a href="#pricing">Цены</a>
+    <a href="#faq">FAQ</a>
+  </nav>
+  <div class="nav__actions">
+    <a href="/login" class="nav__login">Войти</a>
+    <a href="/register" class="btn-cta">Попробовать бесплатно</a>
+  </div>
+</header>
+
+<!-- ─── HERO ─── -->
+<section class="hero">
+  <div class="hero__blob1"></div>
+  <div class="hero__blob2"></div>
+  <div class="hero__grid">
+    <div>
+      <div class="hero__badge">
+        <span class="hero__badge-new">NEW</span>
+        ИИ-вселенная для каждого ребёнка
+      </div>
+      <h1>
+        Уроки, в которые ребёнок<br>
+        <span class="gradient-text">влюбится</span>
+      </h1>
+      <p class="hero__sub">
+        Персональная вселенная по интересам вашего ребёнка превращает школьную программу в приключение —
+        с персонажем, звёздами и наградами.
+      </p>
+      <div class="hero__buttons">
+        <a href="/register" class="btn-cta btn-cta--big">
+          Попробовать бесплатно
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10m-4-4l4 4-4 4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <button class="btn-secondary">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="#10B981" stroke-width="1.5"/><path d="M5.5 4.5l4 2.5-4 2.5z" fill="#10B981"/></svg>
+          Как это работает · 1 мин
+        </button>
+      </div>
+      <div class="hero__trust">
+        <div class="hero__avatars">
+          <div class="hero__avatar" style="background:#FF6B6B">А</div>
+          <div class="hero__avatar" style="background:#14B8A6">М</div>
+          <div class="hero__avatar" style="background:#8B5CF6">Л</div>
+          <div class="hero__avatar" style="background:#10B981">К</div>
+        </div>
+        <div>
+          <div class="hero__stars">
+            <svg class="star-svg" width="14" height="14" viewBox="0 0 16 16"><path d="M8 1l2.09 4.26 4.7.68-3.4 3.31.8 4.68L8 11.7l-4.2 2.23.8-4.68L1.2 5.94l4.7-.68z" fill="#FFC93C" stroke="#E6A92A" stroke-width=".8" stroke-linejoin="round"/></svg>
+            <svg class="star-svg" width="14" height="14" viewBox="0 0 16 16"><path d="M8 1l2.09 4.26 4.7.68-3.4 3.31.8 4.68L8 11.7l-4.2 2.23.8-4.68L1.2 5.94l4.7-.68z" fill="#FFC93C" stroke="#E6A92A" stroke-width=".8" stroke-linejoin="round"/></svg>
+            <svg class="star-svg" width="14" height="14" viewBox="0 0 16 16"><path d="M8 1l2.09 4.26 4.7.68-3.4 3.31.8 4.68L8 11.7l-4.2 2.23.8-4.68L1.2 5.94l4.7-.68z" fill="#FFC93C" stroke="#E6A92A" stroke-width=".8" stroke-linejoin="round"/></svg>
+            <svg class="star-svg" width="14" height="14" viewBox="0 0 16 16"><path d="M8 1l2.09 4.26 4.7.68-3.4 3.31.8 4.68L8 11.7l-4.2 2.23.8-4.68L1.2 5.94l4.7-.68z" fill="#FFC93C" stroke="#E6A92A" stroke-width=".8" stroke-linejoin="round"/></svg>
+            <svg class="star-svg" width="14" height="14" viewBox="0 0 16 16"><path d="M8 1l2.09 4.26 4.7.68-3.4 3.31.8 4.68L8 11.7l-4.2 2.23.8-4.68L1.2 5.94l4.7-.68z" fill="#FFC93C" stroke="#E6A92A" stroke-width=".8" stroke-linejoin="round"/></svg>
+            <span class="hero__stars-rating">4.9</span>
+          </div>
+          <div class="hero__trust-text"><strong>2 800+ родителей</strong> уже учат с Kidion</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT — App Mock -->
+    <div class="hero__right">
+      <div class="hero__app">
+        <!-- Starfield -->
+        <div class="hero__app-star" style="left:40px;top:50px;width:4px;height:4px"></div>
+        <div class="hero__app-star" style="left:120px;top:30px;width:3px;height:3px"></div>
+        <div class="hero__app-star" style="left:200px;top:70px;width:4px;height:4px"></div>
+        <div class="hero__app-star" style="left:320px;top:40px;width:4px;height:4px"></div>
+        <div class="hero__app-star" style="left:410px;top:90px;width:3px;height:3px"></div>
+        <div class="hero__app-star" style="left:80px;top:130px;width:2px;height:2px"></div>
+        <div class="hero__app-star" style="left:380px;top:160px;width:3px;height:3px"></div>
+        <div class="hero__app-aurora"></div>
+
+        <!-- Top bar -->
+        <div class="hero__app-bar">
+          <div class="hero__app-pill">
+            <svg class="star-svg" width="14" height="14" viewBox="0 0 16 16"><path d="M8 1l2.09 4.26 4.7.68-3.4 3.31.8 4.68L8 11.7l-4.2 2.23.8-4.68L1.2 5.94l4.7-.68z" fill="#FFC93C" stroke="#E6A92A" stroke-width=".8" stroke-linejoin="round"/></svg>
+            240
+          </div>
+          <div class="hero__app-pill hero__app-pill--sm">🔥 7 дней</div>
+        </div>
+
+        <!-- Character -->
+        <div class="hero__character">
+          <div class="hero__character-aura"></div>
+          <svg width="100%" height="100%" viewBox="0 0 180 180">
+            <defs>
+              <linearGradient id="drg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#6EE7B7"/><stop offset="100%" stop-color="#14B8A6"/></linearGradient>
+              <linearGradient id="drg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FF9B6B"/><stop offset="100%" stop-color="#FF6B6B"/></linearGradient>
+            </defs>
+            <path d="M50 130 Q30 150 35 165 Q50 158 60 145" fill="url(#drg)"/>
+            <ellipse cx="90" cy="115" rx="45" ry="38" fill="url(#drg)"/>
+            <ellipse cx="90" cy="120" rx="28" ry="22" fill="#A7F3D0" opacity=".7"/>
+            <circle cx="92" cy="68" r="38" fill="url(#drg)"/>
+            <path d="M75 40 L70 22 L82 36 Z" fill="url(#drg2)"/>
+            <path d="M110 40 L115 22 L102 36 Z" fill="url(#drg2)"/>
+            <path d="M125 90 Q160 70 158 110 Q140 105 130 115 Z" fill="url(#drg2)" opacity=".95"/>
+            <circle cx="80" cy="65" r="6" fill="#fff"/><circle cx="106" cy="65" r="6" fill="#fff"/>
+            <circle cx="82" cy="67" r="3" fill="#0F1F1A"/><circle cx="108" cy="67" r="3" fill="#0F1F1A"/>
+            <circle cx="83" cy="66" r="1" fill="#fff"/><circle cx="109" cy="66" r="1" fill="#fff"/>
+            <path d="M82 82 Q92 90 102 82" stroke="#0F1F1A" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+            <circle cx="72" cy="78" r="4" fill="#FF6B6B" opacity=".55"/>
+            <circle cx="114" cy="78" r="4" fill="#FF6B6B" opacity=".55"/>
+          </svg>
+        </div>
+
+        <!-- Name plate -->
+        <div class="hero__character-name">Спарки · ур. 4</div>
+
+        <!-- Lesson card -->
+        <div class="hero__app-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div>
+              <div class="hero__app-chapter">Глава 3 · Долина чисел</div>
+              <div class="hero__app-topic">Сложение до 100</div>
+            </div>
+            <div class="hero__app-reward">
+              +20 <svg class="star-svg" width="11" height="11" viewBox="0 0 16 16"><path d="M8 1l2.09 4.26 4.7.68-3.4 3.31.8 4.68L8 11.7l-4.2 2.23.8-4.68L1.2 5.94l4.7-.68z" fill="#fff" stroke="#E6A92A" stroke-width=".8" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <div class="hero__app-dots">
+            <div class="hero__app-dot hero__app-dot--done">✓</div>
+            <div class="hero__app-line" style="background:var(--emerald)"></div>
+            <div class="hero__app-dot hero__app-dot--done">✓</div>
+            <div class="hero__app-line" style="background:var(--emerald)"></div>
+            <div class="hero__app-dot hero__app-dot--current">
+              <svg class="star-svg" width="14" height="14" viewBox="0 0 16 16"><path d="M8 1l2.09 4.26 4.7.68-3.4 3.31.8 4.68L8 11.7l-4.2 2.23.8-4.68L1.2 5.94l4.7-.68z" fill="#fff" stroke="#E6A92A" stroke-width=".8" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="hero__app-line" style="background:var(--line)"></div>
+            <div class="hero__app-dot hero__app-dot--todo"></div>
+            <div class="hero__app-line" style="background:var(--line)"></div>
+            <div class="hero__app-dot hero__app-dot--todo"></div>
+            <div class="hero__app-line" style="background:var(--line)"></div>
+            <div class="hero__app-dot hero__app-dot--todo"></div>
+          </div>
+          <button class="hero__app-btn">▶ Начать урок</button>
+        </div>
+      </div>
+
+      <!-- Floating notifications -->
+      <div class="hero__float hero__float--left">
+        <div class="hero__float-icon" style="background:linear-gradient(135deg,var(--emerald),var(--turquoise))">
+          <svg class="star-svg" width="18" height="18" viewBox="0 0 16 16"><path d="M8 1l2.09 4.26 4.7.68-3.4 3.31.8 4.68L8 11.7l-4.2 2.23.8-4.68L1.2 5.94l4.7-.68z" fill="#fff" stroke="#E6A92A" stroke-width=".8" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <div class="hero__float-title">+15 звёзд!</div>
+          <div class="hero__float-sub">Урок завершён за 6 мин</div>
+        </div>
+      </div>
+      <div class="hero__float hero__float--right">
+        <div class="hero__float-icon" style="background:var(--bg-warm);font-size:20px">🛒</div>
+        <div>
+          <div class="hero__float-title">Купил питомца</div>
+          <div class="hero__float-sub">Лисёнок Огонёк, 80 ★</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PAINS ─── -->
+<section class="pains">
+  <div class="pains__header">
+    <div class="eyebrow eyebrow--coral">Для кого это</div>
+    <h2>Знакомо?</h2>
+    <p>Если вы киваете хоть на одну фразу — мы делали Kidion для вас.</p>
+  </div>
+  <div class="pains__grid">
+    <div class="pains__card pains__card--warm">
+      <div class="pains__emoji">😩</div>
+      <div class="pains__quote pains__quote--coral">«Не хочу делать уроки!»</div>
+      <p class="pains__body">Ребёнок воспринимает учёбу как скучную обязанность и сопротивляется каждый день.</p>
+    </div>
+    <div class="pains__card pains__card--soft">
+      <div class="pains__emoji">😕</div>
+      <div class="pains__quote pains__quote--turquoise">«Мам, я не понимаю...»</div>
+      <p class="pains__body">Школьные объяснения не работают, а репетитор — дорого и не по каждому предмету.</p>
+    </div>
+    <div class="pains__card pains__card--violet">
+      <div class="pains__emoji">📱</div>
+      <div class="pains__quote pains__quote--violet">«Он сидит в телефоне часами»</div>
+      <p class="pains__body">Экранное время уходит на мультики и игры, а не на развитие.</p>
+    </div>
+  </div>
+  <div class="pains__bottom">
+    <div class="pains__resolve">
+      <span class="pains__check">✓</span>
+      <span class="pains__resolve-text">Kidion решает все три — ребёнок сам просит «ещё урок»</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─── HOW IT WORKS ─── -->
+<section class="steps-section" id="how">
+  <div class="steps-section__header">
+    <div class="eyebrow eyebrow--emerald">Как это работает</div>
+    <h2>Три шага — и ребёнок<br>учится сам</h2>
+  </div>
+  <div class="steps__grid">
+    <div class="steps__connector"></div>
+    <div class="steps__card">
+      <div class="steps__num" style="background:linear-gradient(135deg,var(--emerald),var(--turquoise));box-shadow:0 12px 24px rgba(16,185,129,0.27)">01</div>
+      <h3>Создайте профиль ребёнка</h3>
+      <p>Имя, класс и интересы. Любит драконов? Космос? Единорогов? Расскажите нам — это займёт 30 секунд.</p>
+      <div class="steps__chips">
+        <span class="steps__chip steps__chip--active">Драконы</span>
+        <span class="steps__chip steps__chip--active">Космос</span>
+        <span class="steps__chip steps__chip--inactive">Динозавры</span>
+        <span class="steps__chip steps__chip--inactive">Единороги</span>
+        <span class="steps__chip steps__chip--inactive">Машины</span>
+      </div>
+    </div>
+    <div class="steps__card">
+      <div class="steps__num" style="background:linear-gradient(135deg,var(--violet),var(--coral));box-shadow:0 12px 24px rgba(139,92,246,0.27)">02</div>
+      <h3>Мы создаём вселенную</h3>
+      <p>Уникальный мир, персонаж и магазин наград — всё по интересам вашего ребёнка. ИИ собирает её за минуту.</p>
+      <div class="steps__universe">
+        <div class="steps__universe-item" style="background:var(--mint)">🐉</div>
+        <div class="steps__universe-item" style="background:var(--coral)">🚀</div>
+        <div class="steps__universe-item" style="background:var(--turquoise)">🦄</div>
+        <div class="steps__universe-item" style="background:#FFC93C">⭐</div>
+        <div class="steps__universe-item" style="background:var(--violet)">🏰</div>
+        <div class="steps__universe-item" style="background:#A7F3D0">🌳</div>
+      </div>
+    </div>
+    <div class="steps__card">
+      <div class="steps__num" style="background:linear-gradient(135deg,var(--coral),#FFB45A);box-shadow:0 12px 24px rgba(255,107,107,0.27)">03</div>
+      <h3>Ребёнок проходит уроки</h3>
+      <p>Школьная программа внутри его вселенной. Решает задачи — получает звёзды — прокачивает персонажа.</p>
+      <div class="steps__result">
+        <div class="steps__result-icon">✓</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700">4 + 5 = 9</div>
+          <div style="font-size:11px;color:var(--muted)">Верно! +5 звёзд</div>
+        </div>
+        <div class="steps__result-stars">
+          +5 <svg class="star-svg" width="14" height="14" viewBox="0 0 16 16"><path d="M8 1l2.09 4.26 4.7.68-3.4 3.31.8 4.68L8 11.7l-4.2 2.23.8-4.68L1.2 5.94l4.7-.68z" fill="#FFC93C" stroke="#E6A92A" stroke-width=".8" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── KID FEATURES ─── -->
+<section class="kid-features" id="features">
+  <div class="kid-features__top">
+    <div>
+      <div class="eyebrow eyebrow--violet">Что получает ребёнок</div>
+      <h2>Обучение, которое<br><em>чувствуется как игра</em></h2>
+    </div>
+    <p>Каждая механика спроектирована, чтобы ребёнок возвращался сам. Никакого насилия над собой — только вовлечение.</p>
+  </div>
+  <div class="kid-features__grid">
+    <div class="kid-features__card">
+      <div class="kid-features__icon" style="background:linear-gradient(140deg,var(--violet),rgba(139,92,246,0.56))">
+        <svg width="80" height="80" viewBox="0 0 80 80" style="position:relative;z-index:1"><circle cx="40" cy="40" r="22" fill="none" stroke="#fff" stroke-width="2" opacity=".5"/><ellipse cx="40" cy="40" rx="32" ry="12" fill="none" stroke="#fff" stroke-width="2" opacity=".5" transform="rotate(-25 40 40)"/><circle cx="40" cy="40" r="8" fill="#fff"/><circle cx="20" cy="20" r="2" fill="#fff"/><circle cx="62" cy="58" r="2" fill="#fff"/><circle cx="14" cy="56" r="1.5" fill="#fff"/></svg>
+      </div>
+      <div>
+        <h3>Персональная вселенная</h3>
+        <p>Если ребёнок любит космос — уроки проходят на космических станциях. Любит лес — в эльфийской деревне.</p>
+      </div>
+    </div>
+    <div class="kid-features__card">
+      <div class="kid-features__icon" style="background:linear-gradient(140deg,var(--turquoise),rgba(20,184,166,0.56))">
+        <svg width="74" height="74" viewBox="0 0 74 74" style="position:relative;z-index:1"><circle cx="37" cy="30" r="20" fill="#fff"/><circle cx="30" cy="28" r="3" fill="#14B8A6"/><circle cx="44" cy="28" r="3" fill="#14B8A6"/><path d="M30 38 Q37 44 44 38" stroke="#14B8A6" stroke-width="2.5" fill="none" stroke-linecap="round"/><rect x="20" y="50" width="34" height="20" rx="6" fill="#fff"/></svg>
+      </div>
+      <div>
+        <h3>Свой персонаж</h3>
+        <p>Уникальный герой, которого можно прокачивать: покупать питомцев, менять одежду и фоны.</p>
+      </div>
+    </div>
+    <div class="kid-features__card">
+      <div class="kid-features__icon" style="background:linear-gradient(140deg,var(--coral),rgba(255,107,107,0.56))">
+        <div style="display:flex;gap:6px;align-items:center;position:relative;z-index:1">
+          <svg width="28" height="28" viewBox="0 0 16 16"><path d="M8 1l2.09 4.26 4.7.68-3.4 3.31.8 4.68L8 11.7l-4.2 2.23.8-4.68L1.2 5.94l4.7-.68z" fill="#fff" stroke="#E6A92A" stroke-width=".8" stroke-linejoin="round"/></svg>
+          <svg width="42" height="42" viewBox="0 0 16 16"><path d="M8 1l2.09 4.26 4.7.68-3.4 3.31.8 4.68L8 11.7l-4.2 2.23.8-4.68L1.2 5.94l4.7-.68z" fill="#fff" stroke="#E6A92A" stroke-width=".8" stroke-linejoin="round"/></svg>
+          <svg width="28" height="28" viewBox="0 0 16 16"><path d="M8 1l2.09 4.26 4.7.68-3.4 3.31.8 4.68L8 11.7l-4.2 2.23.8-4.68L1.2 5.94l4.7-.68z" fill="#fff" stroke="#E6A92A" stroke-width=".8" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+      <div>
+        <h3>Звёзды за знания</h3>
+        <p>За каждый правильный ответ — звёзды. Их можно тратить в магазине персонажа.</p>
+      </div>
+    </div>
+    <div class="kid-features__card">
+      <div class="kid-features__icon" style="background:linear-gradient(140deg,var(--emerald),rgba(16,185,129,0.56))">
+        <svg width="74" height="74" viewBox="0 0 74 74" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" style="position:relative;z-index:1"><path d="M10 50 Q22 50 28 38 Q34 26 46 26 Q58 26 64 14"/><circle cx="46" cy="26" r="4" fill="#fff"/><circle cx="28" cy="38" r="3" fill="#fff"/></svg>
+      </div>
+      <div>
+        <h3>Адаптивная сложность</h3>
+        <p>Если тема даётся легко — система усложняет, если трудно — помогает разобраться.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PARENT FEATURES ─── -->
+<section class="parent-features">
+  <!-- Decorative node glyph -->
+  <svg class="node-glyph" width="180" height="180" viewBox="0 0 80 80" style="top:60px;right:60px;opacity:0.3"><circle cx="14" cy="14" r="5" fill="#6EE7B7"/><circle cx="66" cy="22" r="4" fill="#FF6B6B"/><circle cx="40" cy="40" r="6" fill="#fff" stroke="#6EE7B7" stroke-width="2.5"/><circle cx="18" cy="62" r="4" fill="#FF6B6B"/><circle cx="62" cy="62" r="5" fill="#6EE7B7"/><g stroke="#6EE7B7" stroke-width="1.3" opacity=".55" fill="none"><line x1="14" y1="14" x2="40" y2="40"/><line x1="66" y1="22" x2="40" y2="40"/><line x1="18" y1="62" x2="40" y2="40"/><line x1="62" y1="62" x2="40" y2="40"/></g></svg>
+
+  <div class="parent-features__header">
+    <div class="eyebrow eyebrow--mint">Что получает родитель</div>
+    <h2>А вы получаете <span>спокойствие</span></h2>
+    <p>Меньше контроля, больше прозрачности. Школьная программа, чёткий прогресс, рабочие тетради на печать.</p>
+  </div>
+  <div class="parent-features__grid">
+    <div class="parent-features__card">
+      <h3>Школьная программа</h3>
+      <p>Математика, русский, английский, окружающий мир — 1–4 класс, всё по школьной программе.</p>
+      <div class="parent-features__pills">
+        <span class="parent-features__pill">Математика</span>
+        <span class="parent-features__pill">Русский</span>
+        <span class="parent-features__pill">Английский</span>
+        <span class="parent-features__pill">Окруж. мир</span>
+      </div>
+    </div>
+    <div class="parent-features__card">
+      <h3>Без экранной зависимости</h3>
+      <p>Каждый урок — 5–10 минут. Ребёнок учится, а не залипает в бесконечной ленте.</p>
+      <div style="display:flex;align-items:baseline;gap:12px">
+        <span class="parent-features__stat">5–10</span>
+        <span class="parent-features__stat-label">минут урок</span>
+      </div>
+    </div>
+    <div class="parent-features__card">
+      <h3>Рабочие тетради для печати</h3>
+      <p>В каждом уроке — задания для распечатки: закрепить материал офлайн, без экрана.</p>
+      <div class="parent-features__print">
+        <div style="width:36px;height:44px;border-radius:4px;background:var(--bg-soft);border:1px solid var(--line);position:relative;flex-shrink:0">
+          <div style="position:absolute;top:6px;left:4px;right:4px;height:2px;background:var(--line);border-radius:1px"></div>
+          <div style="position:absolute;top:12px;left:4px;right:8px;height:2px;background:var(--line);border-radius:1px"></div>
+          <div style="position:absolute;top:18px;left:4px;right:6px;height:2px;background:var(--line);border-radius:1px"></div>
+          <div style="position:absolute;top:24px;left:4px;right:10px;height:2px;background:var(--line);border-radius:1px"></div>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700">Урок 12 · Тетрадь.pdf</div>
+          <div style="font-size:11px;color:var(--muted)">4 страницы · A4</div>
+        </div>
+        <div style="padding:6px 10px;background:var(--bg-soft);border-radius:8px;font-size:11px;font-weight:700;color:var(--emerald)">Скачать</div>
+      </div>
+    </div>
+    <div class="parent-features__card">
+      <h3>Прогресс как на ладони</h3>
+      <p>Видите пройденные темы, оценки и динамику по каждому предмету в кабинете родителя.</p>
+      <div class="parent-features__chart">
+        <div class="parent-features__chart-head">
+          <span style="color:rgba(255,255,255,0.5)">Математика, 2 класс</span>
+          <span style="color:var(--mint);font-weight:700">+24% за неделю</span>
+        </div>
+        <svg width="100%" height="48" viewBox="0 0 280 48" preserveAspectRatio="none">
+          <path d="M0 38 L40 32 L80 34 L120 24 L160 26 L200 16 L240 18 L280 8 L280 48 L0 48 Z" fill="rgba(110,231,183,0.13)"/>
+          <path d="M0 38 L40 32 L80 34 L120 24 L160 26 L200 16 L240 18 L280 8" stroke="#6EE7B7" stroke-width="2.5" fill="none"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FREE START ─── -->
+<section class="free-start">
+  <div class="free-start__card">
+    <div style="position:relative">
+      <div class="eyebrow eyebrow--coral">Бесплатный старт</div>
+      <h2>60 кристаллов в подарок при регистрации</h2>
+      <p>Этого хватит на 3 полноценных урока. Без привязки карты, без подписки — просто попробуйте.</p>
+      <a href="/register" class="btn-cta btn-cta--big">
+        Начать бесплатно
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10m-4-4l4 4-4 4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+    <div class="free-start__crystals">
+      <div class="free-start__crystals-glow"></div>
+      <div class="free-start__crystals-grid">
+        <svg width="56" height="56" viewBox="0 0 20 20" style="transform:rotate(-8deg)"><defs><linearGradient id="cr1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#A7F3D0"/><stop offset="100%" stop-color="#14B8A6"/></linearGradient></defs><path d="M10 1.5l5 4-2 11h-6l-2-11z" fill="url(#cr1)" stroke="#0F766E" stroke-width=".9" stroke-linejoin="round"/><path d="M5 5.5h10M10 1.5v15" stroke="rgba(255,255,255,0.55)" stroke-width=".7"/></svg>
+        <svg width="56" height="56" viewBox="0 0 20 20"><defs><linearGradient id="cr2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#A7F3D0"/><stop offset="100%" stop-color="#14B8A6"/></linearGradient></defs><path d="M10 1.5l5 4-2 11h-6l-2-11z" fill="url(#cr2)" stroke="#0F766E" stroke-width=".9" stroke-linejoin="round"/><path d="M5 5.5h10M10 1.5v15" stroke="rgba(255,255,255,0.55)" stroke-width=".7"/></svg>
+        <svg width="56" height="56" viewBox="0 0 20 20" style="transform:rotate(8deg)"><defs><linearGradient id="cr3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#A7F3D0"/><stop offset="100%" stop-color="#14B8A6"/></linearGradient></defs><path d="M10 1.5l5 4-2 11h-6l-2-11z" fill="url(#cr3)" stroke="#0F766E" stroke-width=".9" stroke-linejoin="round"/><path d="M5 5.5h10M10 1.5v15" stroke="rgba(255,255,255,0.55)" stroke-width=".7"/></svg>
+        <svg width="56" height="56" viewBox="0 0 20 20" style="transform:rotate(-8deg) translateY(-10px)"><defs><linearGradient id="cr4" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#A7F3D0"/><stop offset="100%" stop-color="#14B8A6"/></linearGradient></defs><path d="M10 1.5l5 4-2 11h-6l-2-11z" fill="url(#cr4)" stroke="#0F766E" stroke-width=".9" stroke-linejoin="round"/><path d="M5 5.5h10M10 1.5v15" stroke="rgba(255,255,255,0.55)" stroke-width=".7"/></svg>
+        <svg width="56" height="56" viewBox="0 0 20 20" style="transform:translateY(-10px)"><defs><linearGradient id="cr5" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#A7F3D0"/><stop offset="100%" stop-color="#14B8A6"/></linearGradient></defs><path d="M10 1.5l5 4-2 11h-6l-2-11z" fill="url(#cr5)" stroke="#0F766E" stroke-width=".9" stroke-linejoin="round"/><path d="M5 5.5h10M10 1.5v15" stroke="rgba(255,255,255,0.55)" stroke-width=".7"/></svg>
+        <svg width="56" height="56" viewBox="0 0 20 20" style="transform:rotate(8deg) translateY(-10px)"><defs><linearGradient id="cr6" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#A7F3D0"/><stop offset="100%" stop-color="#14B8A6"/></linearGradient></defs><path d="M10 1.5l5 4-2 11h-6l-2-11z" fill="url(#cr6)" stroke="#0F766E" stroke-width=".9" stroke-linejoin="round"/><path d="M5 5.5h10M10 1.5v15" stroke="rgba(255,255,255,0.55)" stroke-width=".7"/></svg>
+        <svg width="56" height="56" viewBox="0 0 20 20" style="transform:rotate(-8deg)"><defs><linearGradient id="cr7" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#A7F3D0"/><stop offset="100%" stop-color="#14B8A6"/></linearGradient></defs><path d="M10 1.5l5 4-2 11h-6l-2-11z" fill="url(#cr7)" stroke="#0F766E" stroke-width=".9" stroke-linejoin="round"/><path d="M5 5.5h10M10 1.5v15" stroke="rgba(255,255,255,0.55)" stroke-width=".7"/></svg>
+        <svg width="56" height="56" viewBox="0 0 20 20"><defs><linearGradient id="cr8" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#A7F3D0"/><stop offset="100%" stop-color="#14B8A6"/></linearGradient></defs><path d="M10 1.5l5 4-2 11h-6l-2-11z" fill="url(#cr8)" stroke="#0F766E" stroke-width=".9" stroke-linejoin="round"/><path d="M5 5.5h10M10 1.5v15" stroke="rgba(255,255,255,0.55)" stroke-width=".7"/></svg>
+        <svg width="56" height="56" viewBox="0 0 20 20" style="transform:rotate(8deg)"><defs><linearGradient id="cr9" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#A7F3D0"/><stop offset="100%" stop-color="#14B8A6"/></linearGradient></defs><path d="M10 1.5l5 4-2 11h-6l-2-11z" fill="url(#cr9)" stroke="#0F766E" stroke-width=".9" stroke-linejoin="round"/><path d="M5 5.5h10M10 1.5v15" stroke="rgba(255,255,255,0.55)" stroke-width=".7"/></svg>
+      </div>
+      <div class="free-start__crystals-badge"><span>+60</span> при регистрации</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PRICING ─── -->
+<section class="pricing" id="pricing">
+  <div class="pricing__header">
+    <div class="eyebrow eyebrow--emerald">Цены</div>
+    <h2>Платите только за уроки</h2>
+    <p>Никаких подписок. Покупаете кристаллы пакетом — тратите когда удобно. Чем больше пакет, тем дешевле кристалл.</p>
+  </div>
+  <div class="pricing__grid">
+    <!-- Starter -->
+    <div class="pricing__card">
+      <div class="pricing__name" style="color:var(--muted)"><span class="pricing__name-dot" style="background:var(--muted)"></span> Стартовый</div>
+      <div class="pricing__price">
+        <span class="pricing__price-num">60</span>
+        <span class="pricing__price-cur" style="color:var(--muted)">₽</span>
+      </div>
+      <div class="pricing__info" style="background:var(--bg-soft)">
+        <svg class="crystal-svg" width="18" height="18" viewBox="0 0 20 20"><defs><linearGradient id="pc1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#A7F3D0"/><stop offset="100%" stop-color="#14B8A6"/></linearGradient></defs><path d="M10 1.5l5 4-2 11h-6l-2-11z" fill="url(#pc1)" stroke="#0F766E" stroke-width=".9" stroke-linejoin="round"/><path d="M5 5.5h10M10 1.5v15" stroke="rgba(255,255,255,0.55)" stroke-width=".7"/></svg>
+        <div>
+          <div class="pricing__info-count">60 кристаллов</div>
+          <div class="pricing__info-lessons" style="color:var(--muted)">≈ 3 урока</div>
+        </div>
+      </div>
+      <div class="pricing__per" style="color:var(--muted)"><strong style="color:var(--ink)">1 ₽</strong> за кристалл</div>
+      <button class="pricing__btn" style="background:var(--bg-soft);color:var(--ink);border:1px solid var(--line)">Попробовать</button>
+    </div>
+    <!-- Basic -->
+    <div class="pricing__card">
+      <div class="pricing__name" style="color:var(--turquoise)"><span class="pricing__name-dot" style="background:var(--turquoise)"></span> Базовый</div>
+      <div class="pricing__price">
+        <span class="pricing__price-num">320</span>
+        <span class="pricing__price-cur" style="color:var(--muted)">₽</span>
+      </div>
+      <div class="pricing__info" style="background:var(--bg-soft)">
+        <svg class="crystal-svg" width="18" height="18" viewBox="0 0 20 20"><defs><linearGradient id="pc2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#A7F3D0"/><stop offset="100%" stop-color="#14B8A6"/></linearGradient></defs><path d="M10 1.5l5 4-2 11h-6l-2-11z" fill="url(#pc2)" stroke="#0F766E" stroke-width=".9" stroke-linejoin="round"/><path d="M5 5.5h10M10 1.5v15" stroke="rgba(255,255,255,0.55)" stroke-width=".7"/></svg>
+        <div>
+          <div class="pricing__info-count">360 кристаллов</div>
+          <div class="pricing__info-lessons" style="color:var(--muted)">≈ 18 уроков</div>
+        </div>
+      </div>
+      <div class="pricing__per" style="color:var(--muted)"><strong style="color:var(--ink)">0,89 ₽</strong> за кристалл</div>
+      <button class="pricing__btn btn-cta--ink" style="background:var(--ink);color:#fff">Выбрать</button>
+    </div>
+    <!-- Advanced (popular) -->
+    <div class="pricing__card pricing__card--dark">
+      <div class="pricing__popular">★ Хит выбора</div>
+      <div class="pricing__name" style="color:var(--mint)"><span class="pricing__name-dot" style="background:var(--mint)"></span> Продвинутый</div>
+      <div class="pricing__price">
+        <span class="pricing__price-num">490</span>
+        <span class="pricing__price-cur" style="color:rgba(255,255,255,0.5)">₽</span>
+      </div>
+      <div class="pricing__info" style="background:rgba(255,255,255,0.06)">
+        <svg class="crystal-svg" width="18" height="18" viewBox="0 0 20 20"><defs><linearGradient id="pc3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#A7F3D0"/><stop offset="100%" stop-color="#14B8A6"/></linearGradient></defs><path d="M10 1.5l5 4-2 11h-6l-2-11z" fill="url(#pc3)" stroke="#0F766E" stroke-width=".9" stroke-linejoin="round"/><path d="M5 5.5h10M10 1.5v15" stroke="rgba(255,255,255,0.55)" stroke-width=".7"/></svg>
+        <div>
+          <div class="pricing__info-count">600 кристаллов</div>
+          <div class="pricing__info-lessons" style="color:rgba(255,255,255,0.55)">≈ 30 уроков</div>
+        </div>
+      </div>
+      <div class="pricing__per" style="color:rgba(255,255,255,0.55)"><strong style="color:#fff">0,82 ₽</strong> за кристалл</div>
+      <button class="pricing__btn" style="background:var(--coral);color:#fff;box-shadow:0 10px 22px rgba(255,107,107,0.33)">Выбрать</button>
+    </div>
+    <!-- Max -->
+    <div class="pricing__card">
+      <div class="pricing__name" style="color:var(--coral)"><span class="pricing__name-dot" style="background:var(--coral)"></span> Максимальный</div>
+      <div class="pricing__price">
+        <span class="pricing__price-num">800</span>
+        <span class="pricing__price-cur" style="color:var(--muted)">₽</span>
+      </div>
+      <div class="pricing__info" style="background:var(--bg-soft)">
+        <svg class="crystal-svg" width="18" height="18" viewBox="0 0 20 20"><defs><linearGradient id="pc4" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#A7F3D0"/><stop offset="100%" stop-color="#14B8A6"/></linearGradient></defs><path d="M10 1.5l5 4-2 11h-6l-2-11z" fill="url(#pc4)" stroke="#0F766E" stroke-width=".9" stroke-linejoin="round"/><path d="M5 5.5h10M10 1.5v15" stroke="rgba(255,255,255,0.55)" stroke-width=".7"/></svg>
+        <div>
+          <div class="pricing__info-count">1000 кристаллов</div>
+          <div class="pricing__info-lessons" style="color:var(--muted)">≈ 50 уроков</div>
+        </div>
+      </div>
+      <div class="pricing__per" style="color:var(--muted)"><strong style="color:var(--ink)">0,80 ₽</strong> за кристалл</div>
+      <button class="pricing__btn" style="background:var(--ink);color:#fff">Выбрать</button>
+    </div>
+  </div>
+  <div class="pricing__footer">
+    <span><span class="check">✓</span> Кристаллы не сгорают</span>
+    <span><span class="check">✓</span> До 3 детей на аккаунте</span>
+    <span><span class="check">✓</span> Возврат в течение 14 дней</span>
+  </div>
+</section>
+
+<!-- ─── FAQ ─── -->
+<section class="faq" id="faq">
+  <div class="faq__grid">
+    <div class="faq__left">
+      <div class="eyebrow eyebrow--violet">Вопросы и ответы</div>
+      <h2>Что чаще всего спрашивают родители</h2>
+      <p>Не нашли ответ? Напишите нам — отвечаем в течение часа в рабочие дни.</p>
+      <div class="faq__email">
+        <span class="faq__email-dot"></span>
+        hello@kidion.ru
+      </div>
+    </div>
+    <div>
+      <details open>
+        <summary>Для какого возраста? <span class="faq-icon">+</span></summary>
+        <p>6–10 лет (1–4 класс). Программа покрывает базовые предметы началки.</p>
+      </details>
+      <details>
+        <summary>Какие предметы? <span class="faq-icon">+</span></summary>
+        <p>Математика, русский язык, английский язык, окружающий мир. Список расширяется.</p>
+      </details>
+      <details>
+        <summary>Это заменяет школу? <span class="faq-icon">+</span></summary>
+        <p>Нет, это дополнение. Уроки по школьной программе помогают закрепить и понять материал.</p>
+      </details>
+      <details>
+        <summary>Как ребёнок входит? <span class="faq-icon">+</span></summary>
+        <p>У ребёнка свой вход по PIN-коду (4 цифры). Без пароля и без email — родитель управляет.</p>
+      </details>
+      <details>
+        <summary>Сколько детей можно добавить? <span class="faq-icon">+</span></summary>
+        <p>До 3 детей на одном аккаунте, у каждого своя вселенная и свой персонаж.</p>
+      </details>
+      <details>
+        <summary>А если ребёнку не понравится? <span class="faq-icon">+</span></summary>
+        <p>60 бесплатных кристаллов при регистрации — попробуйте без риска и без карты.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FINAL CTA ─── -->
+<section class="final-cta">
+  <div class="final-cta__card">
+    <!-- Decorative nodes -->
+    <svg class="node-glyph" width="120" height="120" viewBox="0 0 80 80" style="top:50px;left:80px;opacity:0.4"><circle cx="14" cy="14" r="5" fill="#6EE7B7"/><circle cx="66" cy="22" r="4" fill="#FF6B6B"/><circle cx="40" cy="40" r="6" fill="#fff" stroke="#6EE7B7" stroke-width="2.5"/><circle cx="18" cy="62" r="4" fill="#FF6B6B"/><circle cx="62" cy="62" r="5" fill="#6EE7B7"/><g stroke="#6EE7B7" stroke-width="1.3" opacity=".55" fill="none"><line x1="14" y1="14" x2="40" y2="40"/><line x1="66" y1="22" x2="40" y2="40"/><line x1="18" y1="62" x2="40" y2="40"/><line x1="62" y1="62" x2="40" y2="40"/></g></svg>
+    <svg class="node-glyph" width="140" height="140" viewBox="0 0 80 80" style="bottom:60px;right:90px;opacity:0.4"><circle cx="14" cy="14" r="5" fill="#FF6B6B"/><circle cx="66" cy="22" r="4" fill="#8B5CF6"/><circle cx="40" cy="40" r="6" fill="#fff" stroke="#FF6B6B" stroke-width="2.5"/><circle cx="18" cy="62" r="4" fill="#8B5CF6"/><circle cx="62" cy="62" r="5" fill="#FF6B6B"/><g stroke="#FF6B6B" stroke-width="1.3" opacity=".55" fill="none"><line x1="14" y1="14" x2="40" y2="40"/><line x1="66" y1="22" x2="40" y2="40"/><line x1="18" y1="62" x2="40" y2="40"/><line x1="62" y1="62" x2="40" y2="40"/></g></svg>
+
+    <div class="final-cta__inner">
+      <div class="eyebrow eyebrow--mint">Финальный шаг</div>
+      <h2>Превратите уроки в <em>приключение</em></h2>
+      <p>Создайте аккаунт за 30 секунд и посмотрите, как ваш ребёнок попросит ещё один урок.</p>
+      <div class="final-cta__btns">
+        <a href="/register" class="btn-cta btn-cta--big">
+          Зарегистрироваться бесплатно
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10m-4-4l4 4-4 4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <div class="final-cta__sub">
+          <svg class="crystal-svg" width="14" height="14" viewBox="0 0 20 20"><defs><linearGradient id="crf" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#A7F3D0"/><stop offset="100%" stop-color="#14B8A6"/></linearGradient></defs><path d="M10 1.5l5 4-2 11h-6l-2-11z" fill="url(#crf)" stroke="#0F766E" stroke-width=".9" stroke-linejoin="round"/><path d="M5 5.5h10M10 1.5v15" stroke="rgba(255,255,255,0.55)" stroke-width=".7"/></svg>
+          60 кристаллов в подарок · без карты
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer class="landing-footer">
+  <div class="landing-footer__dots" aria-hidden="true"></div>
+  <!-- Decorative node -->
+  <svg class="node-glyph" width="140" height="140" viewBox="0 0 80 80" style="top:60px;right:100px;opacity:0.25"><circle cx="14" cy="14" r="5" fill="#6EE7B7"/><circle cx="66" cy="22" r="4" fill="#FF6B6B"/><circle cx="40" cy="40" r="6" fill="#fff" stroke="#6EE7B7" stroke-width="2.5"/><circle cx="18" cy="62" r="4" fill="#FF6B6B"/><circle cx="62" cy="62" r="5" fill="#6EE7B7"/><g stroke="#6EE7B7" stroke-width="1.3" opacity=".55" fill="none"><line x1="14" y1="14" x2="40" y2="40"/><line x1="66" y1="22" x2="40" y2="40"/><line x1="18" y1="62" x2="40" y2="40"/><line x1="62" y1="62" x2="40" y2="40"/></g></svg>
+
+  <div class="landing-footer__inner">
+    <!-- Top: brand + newsletter -->
+    <div class="landing-footer__top">
+      <div class="landing-footer__brand">
+        <div class="landing-footer__brand-logo">
+          <div class="landing-footer__brand-icon">
+            <svg width="22" height="22" viewBox="0 0 20 20"><circle cx="10" cy="10" r="3" fill="#fff"/><circle cx="4" cy="6" r="1.6" fill="#fff"/><circle cx="16" cy="6" r="1.6" fill="#fff"/><circle cx="4" cy="14" r="1.6" fill="#fff"/><circle cx="16" cy="14" r="1.6" fill="#fff"/><g stroke="#fff" stroke-width="1" opacity=".6"><line x1="10" y1="10" x2="4" y2="6"/><line x1="10" y1="10" x2="16" y2="6"/><line x1="10" y1="10" x2="4" y2="14"/><line x1="10" y1="10" x2="16" y2="14"/></g></svg>
+          </div>
+          <div class="landing-footer__brand-text">kidion<span>.</span>ru</div>
+        </div>
+        <h3>Учиться может <em>быть любимым делом</em></h3>
+        <p>Персональная образовательная вселенная для детей 6–10 лет. Создана педагогами и инженерами в Москве.</p>
+      </div>
+      <div class="landing-footer__newsletter">
+        <div class="landing-footer__newsletter-label">· Рассылка для родителей</div>
+        <h4>Одно письмо в неделю</h4>
+        <p>Идеи для уроков, обновления Kidion и бесплатные рабочие тетради.</p>
+        <div class="landing-footer__newsletter-form">
+          <input type="email" placeholder="ваш@email.ru">
+          <button>Подписаться</button>
+        </div>
+        <div class="landing-footer__newsletter-note">12 400 родителей уже читают · Отписка в 1 клик</div>
+      </div>
+    </div>
+
+    <!-- Link columns -->
+    <div class="landing-footer__links">
+      <div class="landing-footer__links-col">
+        <div class="landing-footer__links-col-title">Продукт</div>
+        <a href="#how">Как это работает</a>
+        <a href="#features">Что внутри</a>
+        <a href="#pricing">Цены</a>
+        <a href="#">Тарифы для школ</a>
+        <a href="#">Обновления</a>
+      </div>
+      <div class="landing-footer__links-col">
+        <div class="landing-footer__links-col-title">Программа</div>
+        <a href="#">Математика</a>
+        <a href="#">Русский язык</a>
+        <a href="#">Английский</a>
+        <a href="#">Окружающий мир</a>
+        <a href="#">Рабочие тетради</a>
+      </div>
+      <div class="landing-footer__links-col">
+        <div class="landing-footer__links-col-title">Компания</div>
+        <a href="#">О нас</a>
+        <a href="#">Блог</a>
+        <a href="#">Наша миссия</a>
+        <a href="#">Методология</a>
+        <a href="#">Вакансии</a>
+      </div>
+      <div class="landing-footer__links-col">
+        <div class="landing-footer__links-col-title">Поддержка</div>
+        <a href="#faq">FAQ</a>
+        <a href="mailto:hello@kidion.ru">hello@kidion.ru</a>
+        <a href="#">+7 495 000-00-00</a>
+        <a href="#">Политика</a>
+        <a href="#">Оферта</a>
+      </div>
+    </div>
+
+    <!-- Social row -->
+    <div class="landing-footer__social-row">
+      <div class="landing-footer__apps">
+        <span class="landing-footer__apps-label">Скачать приложение:</span>
+        <div class="landing-footer__app-badge">
+          <div class="landing-footer__app-badge-icon"></div>
+          <div class="landing-footer__app-badge-text"><span>Download on</span><strong>App Store</strong></div>
+        </div>
+        <div class="landing-footer__app-badge">
+          <div class="landing-footer__app-badge-icon">A</div>
+          <div class="landing-footer__app-badge-text"><span>Get it on</span><strong>Google Play</strong></div>
+        </div>
+        <div class="landing-footer__app-badge">
+          <div class="landing-footer__app-badge-icon">RU</div>
+          <div class="landing-footer__app-badge-text"><span>Доступно в</span><strong>RuStore</strong></div>
+        </div>
+      </div>
+      <div class="landing-footer__socials">
+        <a href="#" class="landing-footer__social-btn">TG</a>
+        <a href="#" class="landing-footer__social-btn">VK</a>
+        <a href="#" class="landing-footer__social-btn">YT</a>
+        <a href="#" class="landing-footer__social-btn">IG</a>
+        <a href="#" class="landing-footer__social-btn">OK</a>
+      </div>
+    </div>
+
+    <!-- Bottom legal -->
+    <div class="landing-footer__bottom">
+      <div>© 2026 Kidion · ИП Иванов И. И. · ОГРНИП 320XXXXXXXXXXXX</div>
+      <div class="landing-footer__bottom-links">
+        <a href="#">Обработка персональных данных</a>
+        <a href="#">Cookies</a>
+        <span class="made-with">Сделано с ♥ для детей</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,678 @@
+{% extends "base.html" %}
+{% block title %}{{ subject_name }} — {{ child.name }} — Kidion{% endblock %}
+
+{% block head %}
+<style>
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modal-box {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-width: 420px;
+  width: 90%;
+  padding: 2rem;
+  text-align: center;
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.modal-box__icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.modal-box__title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+}
+
+.modal-box__text {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.modal-box__buttons {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.modal-box__buttons .btn {
+  min-width: 120px;
+}
+
+/* Generation progress bar */
+.gen-progress {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--primary-light);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.gen-progress__bar-wrap {
+  flex: 1;
+  background: var(--border);
+  border-radius: 100px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.gen-progress__bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  border-radius: 100px;
+  transition: width 0.5s ease;
+}
+
+.gen-progress__text {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  min-width: 100px;
+  text-align: right;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.gen-progress--active .gen-progress__text {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Ready button */
+.gen-ready-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.6rem 1.25rem;
+  background: linear-gradient(135deg, var(--success), #16a34a);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.gen-ready-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.35);
+  text-decoration: none;
+  color: #fff;
+}
+
+/* Clickable lesson rows */
+.lesson-row--clickable {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  margin: 0 -0.5rem;
+  transition: background 0.15s;
+}
+
+.lesson-row--clickable:hover {
+  background: var(--primary-light);
+}
+
+/* Generating spinner for lesson row */
+.lesson-row--generating .lesson-row__icon {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
+{% endblock head %}
+
+{% block content %}
+<div class="subject-page">
+  <div class="subject-page__header">
+    <a href="/children/{{ child.id }}" class="btn btn--ghost btn--sm">&larr; {{ child.name }}</a>
+    <h1>{{ subject_name }}</h1>
+  </div>
+
+  <!-- Stats Block -->
+  <div class="stats-grid" id="stats-grid">
+    <div class="spinner">Загрузка...</div>
+  </div>
+
+  <!-- Program Block -->
+  <section class="program-section">
+    <div class="program-section__header">
+      <h2>Программа</h2>
+      <div class="program-actions">
+        <a href="/api/children/{{ child.id }}/worksheets?subject={{ subject }}" target="_blank"
+         class="btn btn--outline btn--sm" id="btn-print-all" style="display:none">
+        🖨 Распечатать все листы
+      </a>
+      <button class="btn btn--accent btn--sm" id="btn-generate-month" style="display:none">
+          Сгенерировать месяц (200 💎)
+        </button>
+      </div>
+    </div>
+    <div id="topics-list" class="topics-list">
+      <div class="spinner">Загрузка программы...</div>
+    </div>
+  </section>
+</div>
+
+<!-- Modal container (inserted dynamically) -->
+<div id="modal-root"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+var CHILD_ID = {{ child.id }};
+var SUBJECT = '{{ subject }}';
+var GRADE = {{ child.grade }};
+var generatingLessons = {}; // lesson_id -> true, tracks active polls
+
+document.addEventListener('DOMContentLoaded', function() {
+  enrollAndLoad();
+});
+
+async function enrollAndLoad() {
+  await fetch('/api/children/' + CHILD_ID + '/enroll-subject', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({subject: SUBJECT, grade: GRADE})
+  });
+  loadStats();
+  loadProgram();
+}
+
+async function loadStats() {
+  var grid = document.getElementById('stats-grid');
+  try {
+    var resp = await fetch('/api/children/' + CHILD_ID + '/subject-progress/' + SUBJECT);
+    if (!resp.ok) { grid.innerHTML = '<p>Нет данных</p>'; return; }
+    var data = await resp.json();
+
+    var currentTopic = '—';
+    if (data.topics) {
+      for (var i = 0; i < data.topics.length; i++) {
+        var t = data.topics[i];
+        for (var j = 0; j < t.lessons.length; j++) {
+          if (t.lessons[j].status === 'available') {
+            currentTopic = t.title_ru;
+            break;
+          }
+        }
+        if (currentTopic !== '—') break;
+      }
+    }
+
+    grid.innerHTML =
+      '<div class="stat-card"><div class="stat-card__value">' + (data.completed_lessons || 0) + '/' + (data.total_lessons || 0) + '</div><div class="stat-card__label">Пройдено уроков</div></div>' +
+      '<div class="stat-card"><div class="stat-card__value">' + esc(currentTopic) + '</div><div class="stat-card__label">Текущая тема</div></div>' +
+      '<div class="stat-card"><div class="stat-card__value">' + (data.total_stars || 0) + '</div><div class="stat-card__label">Заработано звёзд</div></div>';
+  } catch(e) {
+    grid.innerHTML = '<p>Ошибка загрузки</p>';
+  }
+}
+
+async function loadProgram() {
+  var list = document.getElementById('topics-list');
+  try {
+    var resp = await fetch('/api/children/' + CHILD_ID + '/subject-progress/' + SUBJECT);
+    if (!resp.ok) { list.innerHTML = '<p>Программа не найдена</p>'; return; }
+    var data = await resp.json();
+    var topics = data.topics || [];
+
+    if (topics.length === 0) {
+      list.innerHTML = '<p>Программа для этого предмета пока не загружена</p>';
+      return;
+    }
+
+    document.getElementById('btn-generate-month').style.display = 'inline-flex';
+
+    // Show print-all button if any lessons are generated
+    var anyGenerated = false;
+    for (var ti = 0; ti < topics.length; ti++) {
+      var tls = topics[ti].lessons || [];
+      for (var tli = 0; tli < tls.length; tli++) {
+        if (tls[tli].lesson_id && tls[tli].lesson_status === 'done') { anyGenerated = true; break; }
+      }
+      if (anyGenerated) break;
+    }
+    if (anyGenerated) {
+      document.getElementById('btn-print-all').style.display = 'inline-flex';
+    }
+
+    var html = '';
+    for (var i = 0; i < topics.length; i++) {
+      var t = topics[i];
+      var lessons = t.lessons || [];
+
+      var completed = 0, available = 0, locked = 0;
+      var pendingIds = [], doneIds = [];
+      for (var j = 0; j < lessons.length; j++) {
+        if (lessons[j].status === 'completed') completed++;
+        else if (lessons[j].status === 'available') available++;
+        else locked++;
+        // Track generating lessons
+        if (lessons[j].lesson_id && lessons[j].lesson_status === 'pending') {
+          pendingIds.push(lessons[j].lesson_id);
+        }
+        if (lessons[j].lesson_id && lessons[j].lesson_status === 'done') {
+          doneIds.push(lessons[j].lesson_id);
+        }
+      }
+      var totalStars = 0;
+      for (var k = 0; k < lessons.length; k++) {
+        totalStars += lessons[k].stars_earned || 0;
+      }
+
+      var topicStatus = completed === lessons.length ? 'completed' : (available > 0 || completed > 0) ? 'active' : 'locked';
+
+      html += '<div class="topic-card topic-card--' + topicStatus + '" id="topic-card-' + t.id + '">';
+      html += '<div class="topic-card__header" onclick="toggleTopic(' + i + ')">';
+      html += '<div class="topic-card__info">';
+      html += '<span class="topic-card__icon">' + (t.icon || '') + '</span>';
+      html += '<div>';
+      html += '<div class="topic-card__title">' + esc(t.title_ru) + '</div>';
+      html += '<div class="topic-card__meta">' + completed + '/' + lessons.length + ' уроков · ' + totalStars + '</div>';
+      html += '</div></div>';
+
+      // Action buttons
+      html += '<div class="topic-card__actions">';
+      if (topicStatus === 'locked') {
+        html += '<button class="btn btn--sm btn--outline" onclick="event.stopPropagation(); assignSkipTest(' + t.id + ')">Тест для пропуска</button>';
+      }
+      if (doneIds.length > 0) {
+        html += '<a href="/api/children/' + CHILD_ID + '/worksheets?topic_id=' + t.id + '" target="_blank" class="btn btn--sm btn--outline" onclick="event.stopPropagation()" style="font-size:0.8rem">🖨 Листы</a>';
+      }
+      if (locked > 0 || available > 0) {
+        var ungenerated = 0;
+        for (var m = 0; m < lessons.length; m++) {
+          if (!lessons[m].lesson_id && lessons[m].status !== 'completed') ungenerated++;
+        }
+        if (ungenerated > 0) {
+          html += '<button class="btn btn--sm btn--primary" onclick="event.stopPropagation(); generateTopic(' + t.id + ', ' + ungenerated + ')">Сгенерировать тему (' + (ungenerated * 10) + ' 💎)</button>';
+        }
+      }
+      html += '</div></div>';
+
+      // Generation progress indicator
+      if (pendingIds.length > 0) {
+        var totalGen = pendingIds.length + doneIds.length;
+        var doneCount = doneIds.length;
+        var pct = totalGen > 0 ? Math.round((doneCount / totalGen) * 100) : 0;
+        html += '<div class="gen-progress gen-progress--active" id="gen-progress-' + t.id + '" data-topic-id="' + t.id + '" data-lesson-ids="' + pendingIds.join(',') + '" data-total="' + totalGen + '" data-done="' + doneCount + '">';
+        html += '<div class="gen-progress__bar-wrap"><div class="gen-progress__bar" style="width:' + pct + '%"></div></div>';
+        html += '<div class="gen-progress__text">Генерация: ' + doneCount + '/' + totalGen + '</div>';
+        html += '</div>';
+      } else if (doneIds.length > 0 && doneIds.length > completed) {
+        // There are generated lessons not yet completed — show "go learn" + print buttons
+        html += '<div style="padding: 0 1.25rem 0.75rem; display:flex; gap:8px; align-items:center; flex-wrap:wrap">';
+        html += '<a href="/kid/login?child_id=' + CHILD_ID + '" class="gen-ready-btn">Уроки готовы. Учиться!</a>';
+        html += '<a href="/api/children/' + CHILD_ID + '/worksheets?topic_id=' + t.id + '" target="_blank" class="btn btn--outline btn--sm" style="font-size:0.85rem">🖨 Распечатать листы</a>';
+        html += '</div>';
+      }
+
+      // Lessons list (collapsible)
+      html += '<div class="topic-card__lessons" id="topic-lessons-' + i + '" style="display:none">';
+      for (var n = 0; n < lessons.length; n++) {
+        var l = lessons[n];
+        var statusIcon = l.status === 'completed' ? '✅' : (l.lesson_id && l.lesson_status === 'pending') ? '⏳' : l.status === 'available' ? '🟡' : l.status === 'test' ? '📋' : '🔒';
+        var starsText = l.stars_earned > 0 ? ' · ' + l.stars_earned : '';
+        var isClickable = l.lesson_id && l.lesson_status === 'done' && l.status !== 'locked';
+        var isGenerating = l.lesson_id && l.lesson_status === 'pending';
+        var rowClass = 'lesson-row lesson-row--' + l.status;
+        if (isClickable) rowClass += ' lesson-row--clickable';
+        if (isGenerating) rowClass += ' lesson-row--generating';
+
+        if (isClickable) {
+          html += '<div class="' + rowClass + '" onclick="window.open(\'/kid/lesson/' + l.lesson_id + '\', \'_blank\')">';
+        } else {
+          html += '<div class="' + rowClass + '">';
+        }
+        html += '<span class="lesson-row__icon">' + statusIcon + '</span>';
+        html += '<span class="lesson-row__title">' + esc(l.title_ru) + starsText + '</span>';
+        html += '</div>';
+      }
+      html += '</div></div>';
+    }
+    list.innerHTML = html;
+
+    // Start polling for generating lessons
+    startGenerationPolling();
+  } catch(e) {
+    list.innerHTML = '<p>Ошибка загрузки</p>';
+  }
+}
+
+function startGenerationPolling() {
+  var progressEls = document.querySelectorAll('.gen-progress--active');
+  progressEls.forEach(function(el) {
+    var lessonIds = el.getAttribute('data-lesson-ids').split(',').map(Number);
+    var topicId = el.getAttribute('data-topic-id');
+    if (!generatingLessons[topicId]) {
+      generatingLessons[topicId] = true;
+      pollGenerationProgress(topicId, lessonIds, parseInt(el.getAttribute('data-total')));
+    }
+  });
+}
+
+async function pollGenerationProgress(topicId, lessonIds, totalCount) {
+  var doneCount = 0;
+  var allDone = false;
+
+  while (!allDone) {
+    await sleep(3000);
+    doneCount = 0;
+    allDone = true;
+    for (var i = 0; i < lessonIds.length; i++) {
+      try {
+        var resp = await fetch('/api/lessons/' + lessonIds[i] + '/poll');
+        var data = await resp.json();
+        if (data.status === 'done' || data.status === 'error') {
+          doneCount++;
+        } else {
+          allDone = false;
+        }
+      } catch(e) {
+        allDone = false;
+      }
+    }
+
+    // Update progress bar
+    var el = document.getElementById('gen-progress-' + topicId);
+    if (el) {
+      var totalDone = (totalCount - lessonIds.length) + doneCount;
+      var pct = Math.round((totalDone / totalCount) * 100);
+      el.querySelector('.gen-progress__bar').style.width = pct + '%';
+      el.querySelector('.gen-progress__text').textContent = 'Генерация: ' + totalDone + '/' + totalCount;
+    }
+  }
+
+  // All done — refresh the program view
+  delete generatingLessons[topicId];
+  loadProgram();
+  loadStats();
+}
+
+function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+
+function toggleTopic(idx) {
+  var el = document.getElementById('topic-lessons-' + idx);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+// --- Styled Modals ---
+function showModal(opts) {
+  // opts: { icon, title, text, buttons: [{label, class, action}] }
+  var root = document.getElementById('modal-root');
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.onclick = function(e) { if (e.target === overlay) closeCurrentModal(); };
+
+  var box = document.createElement('div');
+  box.className = 'modal-box';
+  box.innerHTML = '<div class="modal-box__icon">' + (opts.icon || '') + '</div>' +
+    '<div class="modal-box__title">' + esc(opts.title || '') + '</div>' +
+    '<div class="modal-box__text">' + (opts.text || '') + '</div>' +
+    '<div class="modal-box__buttons" id="modal-buttons"></div>';
+
+  overlay.appendChild(box);
+  root.appendChild(overlay);
+
+  var btnWrap = box.querySelector('#modal-buttons');
+  (opts.buttons || []).forEach(function(b) {
+    var btn = document.createElement('button');
+    btn.className = 'btn ' + (b.cls || 'btn--outline');
+    btn.textContent = b.label;
+    btn.onclick = function() { closeCurrentModal(); if (b.action) b.action(); };
+    btnWrap.appendChild(btn);
+  });
+
+  root._currentOverlay = overlay;
+}
+
+function closeCurrentModal() {
+  var root = document.getElementById('modal-root');
+  if (root._currentOverlay) {
+    root._currentOverlay.remove();
+    root._currentOverlay = null;
+  }
+}
+
+function showConfirm(icon, title, text, onConfirm) {
+  showModal({
+    icon: icon,
+    title: title,
+    text: text,
+    buttons: [
+      { label: 'Отмена', cls: 'btn--outline', action: null },
+      { label: 'Да', cls: 'btn--primary', action: onConfirm },
+    ]
+  });
+}
+
+function showAlert(icon, title, text) {
+  showModal({
+    icon: icon,
+    title: title,
+    text: text,
+    buttons: [
+      { label: 'Ок', cls: 'btn--primary', action: null },
+    ]
+  });
+}
+
+// --- Actions ---
+function generateTopic(topicId, count) {
+  showConfirm('💎', 'Генерация уроков', 'Сгенерировать ' + count + ' уроков за <b>' + (count * 10) + ' 💎</b>?', async function() {
+    try {
+      var resp = await fetch('/api/children/' + CHILD_ID + '/generate-topic', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({topic_id: topicId})
+      });
+      var data = await resp.json();
+      if (resp.ok) {
+        // Immediately show progress bar on the topic card
+        showInlineProgress(topicId, data.lesson_ids);
+        loadStats();
+      } else {
+        showAlert('❌', 'Ошибка', data.error === 'insufficient_crystals' ? 'Недостаточно кристаллов' : (data.error || 'Произошла ошибка'));
+      }
+    } catch(e) { showAlert('❌', 'Ошибка', 'Ошибка соединения с сервером'); }
+  });
+}
+
+function showInlineProgress(topicId, lessonIds) {
+  var card = document.getElementById('topic-card-' + topicId);
+  if (!card) { loadProgram(); return; }
+
+  // Remove existing progress/ready elements from card
+  var existing = card.querySelector('.gen-progress, .gen-ready-btn');
+  if (existing) existing.parentElement.removeChild(existing);
+
+  // Remove generate button from this topic
+  var genBtn = card.querySelector('.btn--primary');
+  if (genBtn) genBtn.style.display = 'none';
+
+  // Insert progress bar after header
+  var header = card.querySelector('.topic-card__header');
+  var progressEl = document.createElement('div');
+  progressEl.className = 'gen-progress gen-progress--active';
+  progressEl.id = 'gen-progress-' + topicId;
+  progressEl.innerHTML =
+    '<div class="gen-progress__bar-wrap"><div class="gen-progress__bar" style="width:0%"></div></div>' +
+    '<div class="gen-progress__text">Генерация: 0/' + lessonIds.length + '</div>';
+  header.insertAdjacentElement('afterend', progressEl);
+
+  // Start polling these lesson IDs
+  pollInlineProgress(topicId, lessonIds);
+}
+
+async function pollInlineProgress(topicId, lessonIds) {
+  var total = lessonIds.length;
+  var allDone = false;
+
+  while (!allDone) {
+    await sleep(2000);
+    var doneCount = 0;
+    allDone = true;
+    for (var i = 0; i < lessonIds.length; i++) {
+      try {
+        var resp = await fetch('/api/lessons/' + lessonIds[i] + '/poll');
+        var data = await resp.json();
+        if (data.status === 'done' || data.status === 'error') {
+          doneCount++;
+        } else {
+          allDone = false;
+        }
+      } catch(e) {
+        allDone = false;
+      }
+    }
+
+    var el = document.getElementById('gen-progress-' + topicId);
+    if (el) {
+      var pct = Math.round((doneCount / total) * 100);
+      el.querySelector('.gen-progress__bar').style.width = pct + '%';
+      el.querySelector('.gen-progress__text').textContent = 'Генерация: ' + doneCount + '/' + total;
+    }
+  }
+
+  // All done — replace progress with ready button (stays until user navigates away)
+  var el = document.getElementById('gen-progress-' + topicId);
+  if (el) {
+    el.outerHTML =
+      '<div style="padding: 0.75rem 1.25rem">' +
+      '<a href="/kid/login?child_id=' + CHILD_ID + '" class="gen-ready-btn">Уроки готовы. Учиться!</a>' +
+      '</div>';
+  }
+  loadStats();
+  // Do NOT call loadProgram() — it would rebuild DOM and wipe the button.
+  // The button stays visible until user leaves the page.
+  // On next visit, loadProgram() will render lessons as clickable links.
+}
+
+function assignSkipTest(topicId) {
+  showConfirm('📋', 'Тест для пропуска', 'Назначить тест для пропуска темы?<br>Тест <b>бесплатный</b>.', async function() {
+    try {
+      var resp = await fetch('/api/children/' + CHILD_ID + '/skip-test', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({topic_id: topicId})
+      });
+      var data = await resp.json();
+      if (resp.ok) {
+        showAlert('✅', 'Тест назначен!', 'Ребёнок увидит его на своей карте.');
+        loadProgram();
+      } else {
+        showAlert('❌', 'Ошибка', data.error || 'Произошла ошибка');
+      }
+    } catch(e) { showAlert('❌', 'Ошибка', 'Ошибка соединения с сервером'); }
+  });
+}
+
+document.getElementById('btn-generate-month').addEventListener('click', function() {
+  showConfirm('📅', 'Генерация месяца', 'Сгенерировать 20 уроков (месяц) за <b>200 💎</b>?', async function() {
+    try {
+      var resp = await fetch('/api/children/' + CHILD_ID + '/generate-month', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({subject: SUBJECT})
+      });
+      var data = await resp.json();
+      if (resp.ok) {
+        // Show a global progress bar at the top of the program section
+        showMonthProgress(data.lesson_ids || [], data.lessons_count || 0);
+        loadStats();
+      } else {
+        showAlert('❌', 'Ошибка', data.error === 'insufficient_crystals' ? 'Недостаточно кристаллов' : (data.error || 'Произошла ошибка'));
+      }
+    } catch(e) { showAlert('❌', 'Ошибка', 'Ошибка соединения с сервером'); }
+  });
+});
+
+function showMonthProgress(lessonIds, count) {
+  var list = document.getElementById('topics-list');
+  var existing = document.getElementById('month-progress');
+  if (existing) existing.remove();
+
+  var el = document.createElement('div');
+  el.id = 'month-progress';
+  el.className = 'gen-progress gen-progress--active';
+  el.style.marginBottom = '1rem';
+  el.innerHTML =
+    '<div class="gen-progress__bar-wrap"><div class="gen-progress__bar" style="width:0%"></div></div>' +
+    '<div class="gen-progress__text">Генерация месяца: 0/' + lessonIds.length + '</div>';
+  list.parentElement.insertBefore(el, list);
+
+  pollMonthProgress(lessonIds);
+}
+
+async function pollMonthProgress(lessonIds) {
+  var total = lessonIds.length;
+  var allDone = false;
+
+  while (!allDone) {
+    await sleep(2000);
+    var doneCount = 0;
+    allDone = true;
+    for (var i = 0; i < lessonIds.length; i++) {
+      try {
+        var resp = await fetch('/api/lessons/' + lessonIds[i] + '/poll');
+        var data = await resp.json();
+        if (data.status === 'done' || data.status === 'error') {
+          doneCount++;
+        } else {
+          allDone = false;
+        }
+      } catch(e) {
+        allDone = false;
+      }
+    }
+
+    var el = document.getElementById('month-progress');
+    if (el) {
+      var pct = Math.round((doneCount / total) * 100);
+      el.querySelector('.gen-progress__bar').style.width = pct + '%';
+      el.querySelector('.gen-progress__text').textContent = 'Генерация месяца: ' + doneCount + '/' + total;
+    }
+  }
+
+  var el = document.getElementById('month-progress');
+  if (el) {
+    el.innerHTML =
+      '<a href="/kid/login?child_id=' + CHILD_ID + '" class="gen-ready-btn">Уроки готовы. Учиться!</a>';
+    el.className = '';
+    el.style.padding = '0';
+  }
+  loadStats();
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+{% endblock %}

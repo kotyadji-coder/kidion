@@ -1,0 +1,704 @@
+{% extends "base.html" %}
+{% block title %}{{ child.name }} — Kidion{% endblock %}
+
+{% block head %}
+<style>
+.child-profile-page {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* Header card */
+.child-hero {
+  background: linear-gradient(135deg, var(--primary) 0%, #a78bfa 100%);
+  border-radius: var(--radius-lg);
+  color: #fff;
+  padding: 1.75rem 2rem;
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.child-hero::after {
+  content: '';
+  position: absolute;
+  right: -30px;
+  top: -30px;
+  width: 120px;
+  height: 120px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+}
+
+.child-hero__back {
+  color: rgba(255,255,255,0.8);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+.child-hero__back:hover { color: #fff; text-decoration: none; }
+
+.child-hero h1 {
+  margin: 0.5rem 0 0.25rem;
+  font-size: 1.6rem;
+}
+
+.child-hero__meta {
+  opacity: 0.85;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* Section cards */
+.profile-section {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.profile-section__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.profile-section__icon {
+  font-size: 1.75rem;
+  flex-shrink: 0;
+}
+
+.profile-section__title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.profile-section__subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0.15rem 0 0;
+}
+
+/* Subject cards in grid */
+.subjects-grid-v2 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.subject-card-v2 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.25rem 0.75rem;
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--text);
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 2px solid var(--border);
+  background: var(--bg);
+}
+
+.subject-card-v2:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+  border-color: var(--primary);
+  text-decoration: none;
+}
+
+.subject-card-v2--disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.subject-card-v2__icon {
+  font-size: 2rem;
+  margin-bottom: 0.4rem;
+}
+
+.subject-card-v2__name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 0.2rem;
+}
+
+.subject-card-v2__progress {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-bottom: 0.4rem;
+}
+
+.subject-card-v2 .progress-bar-wrap {
+  width: 100%;
+  height: 6px;
+  margin-top: 0.25rem;
+}
+
+/* Free lesson form */
+.free-lesson-form-v2 {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+
+.free-lesson-form-v2 .input-topic {
+  flex: 1;
+  min-width: 180px;
+  padding: 0.6rem 0.85rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  background: var(--bg);
+  transition: border-color 0.2s;
+}
+
+.free-lesson-form-v2 .input-topic:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.free-lesson-form-v2 .input-subject {
+  width: 150px;
+  padding: 0.6rem 0.75rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  background: var(--bg);
+}
+
+.free-lesson-form-v2 .btn-create {
+  padding: 0.6rem 1.2rem;
+  white-space: nowrap;
+}
+
+.free-status-v2 {
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--radius-sm);
+  background: var(--primary-light);
+  font-size: 0.9rem;
+}
+
+/* Free lesson list */
+.free-list-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin: 1.25rem 0 0.5rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.free-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.free-list-item:last-child {
+  border-bottom: none;
+}
+
+.free-list-item__stars .star {
+  color: #d4d4d8;
+  font-size: 1rem;
+}
+
+.free-list-item__stars .star.earned {
+  color: #f59e0b;
+}
+
+.free-list-item__status {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Quick links */
+.quick-links {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.quick-link {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  text-decoration: none;
+  color: var(--text);
+  border: 2px solid transparent;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.quick-link:hover {
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+.quick-link__icon {
+  font-size: 1.5rem;
+}
+
+.quick-link__text {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.quick-link__desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-close:hover { color: var(--text); }
+
+.modal-body {
+  padding: 1.25rem 1.5rem;
+}
+
+.modal-warning {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  color: #b91c1c;
+  margin-bottom: 1rem;
+}
+
+.modal-form-group {
+  margin-bottom: 1rem;
+}
+
+.modal-form-group label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-bottom: 0.3rem;
+}
+
+.modal-form-group input {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-family: var(--font);
+  background: var(--bg);
+  transition: border-color 0.2s;
+}
+
+.modal-form-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.modal-hint {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  margin-top: 3px;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 540px) {
+  .subjects-grid-v2 {
+    grid-template-columns: 1fr 1fr;
+  }
+  .free-lesson-form-v2 {
+    flex-direction: column;
+  }
+  .free-lesson-form-v2 .input-subject {
+    width: 100%;
+  }
+  .child-hero {
+    padding: 1.25rem 1.25rem;
+  }
+  .profile-section {
+    padding: 1.25rem;
+  }
+  .modal-card {
+    max-width: 100%;
+  }
+}
+</style>
+{% endblock head %}
+
+{% block content %}
+<div class="child-profile-page">
+  <!-- Hero header -->
+  <div class="child-hero">
+    <a href="/dashboard" class="child-hero__back">&larr; Назад к детям</a>
+    <h1>{{ child.name }}</h1>
+    <p class="child-hero__meta">{{ child.grade }} класс · {{ child.universe }}</p>
+  </div>
+
+  <!-- Subjects -->
+  <div class="profile-section">
+    <div class="profile-section__header">
+      <span class="profile-section__icon">📚</span>
+      <div>
+        <h2 class="profile-section__title">Программа обучения</h2>
+        <p class="profile-section__subtitle">Выберите предмет, чтобы начать</p>
+      </div>
+    </div>
+    <div class="subjects-grid-v2" id="subjects-grid"></div>
+  </div>
+
+  <!-- Free Lessons -->
+  <div class="profile-section">
+    <div class="profile-section__header">
+      <span class="profile-section__icon">🎨</span>
+      <div>
+        <h2 class="profile-section__title">Свободные уроки</h2>
+        <p class="profile-section__subtitle">Любая тема — для любопытства и развлечения</p>
+      </div>
+    </div>
+
+    <form id="free-lesson-form" class="free-lesson-form-v2">
+      <input type="text" id="free-topic" placeholder="Например: Почему вымерли динозавры" required class="input-topic">
+      <select id="free-subject" class="input-subject">
+        <option value="science">Окруж. мир</option>
+        <option value="math">Математика</option>
+        <option value="russian">Русский язык</option>
+        <option value="general">Другое</option>
+      </select>
+      <button type="submit" class="btn btn--accent btn-create">Создать урок (10 💎)</button>
+    </form>
+    <p style="font-size:12px; color:#999; margin-top:6px;">Уроки создаются с помощью ИИ и могут содержать неточности. Рекомендуем проверить содержание перед тем, как ребёнок начнёт урок.</p>
+    <div id="free-status" class="free-status-v2" style="display:none"></div>
+    <div id="free-lessons-list"></div>
+  </div>
+
+  <!-- Quick links -->
+  <div class="quick-links">
+    <a href="/children/{{ child.id }}/history" class="quick-link">
+      <span class="quick-link__icon">📊</span>
+      <div>
+        <div class="quick-link__text">История уроков</div>
+        <div class="quick-link__desc">Все пройденные уроки</div>
+      </div>
+    </a>
+    <a href="/kid/login?child_id={{ child.id }}" class="quick-link">
+      <span class="quick-link__icon">👶</span>
+      <div>
+        <div class="quick-link__text">Кабинет ребёнка</div>
+        <div class="quick-link__desc">Войти как {{ child.name }}</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Recreate universe -->
+  <div class="profile-section" style="margin-top: 1.25rem;">
+    <div class="profile-section__header">
+      <span class="profile-section__icon">🔄</span>
+      <div>
+        <h2 class="profile-section__title">Вселенная</h2>
+        <p class="profile-section__subtitle">Пересоздать персонажа и магазин наград</p>
+      </div>
+    </div>
+    <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1rem;">
+      Если интересы ребёнка изменились, можно создать новую вселенную. Персонаж, предметы в магазине и купленные вещи будут удалены. Потраченные звёзды не вернутся. Уже пройденные уроки останутся без изменений.
+    </p>
+    <button class="btn btn--outline" id="btn-recreate-universe" style="border-color: var(--accent); color: var(--accent);">
+      Пересоздать вселенную
+    </button>
+    <div id="recreate-status" style="display:none; margin-top:0.75rem; font-size:0.9rem;"></div>
+  </div>
+
+  <!-- Recreate universe modal -->
+  <div id="recreate-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Пересоздать вселенную</h2>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-warning">
+          Купленные предметы в магазине будут удалены. Потраченные на них звёзды не вернутся.
+        </div>
+        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.25rem;">
+          Заполните анкету заново — на её основе создастся новая вселенная
+        </p>
+        <div class="modal-form-group">
+          <label>Любимые герои и персонажи</label>
+          <input type="text" id="re-favorite-heroes" placeholder="Гарри Поттер, Наруто, Фиксики, Майнкрафт...">
+          <div class="modal-hint">Из мультфильмов, книг, игр — всё, что нравится ребёнку</div>
+        </div>
+        <div class="modal-form-group">
+          <label>Любимые животные</label>
+          <input type="text" id="re-favorite-animals" placeholder="Динозавры, коты, драконы, дельфины...">
+        </div>
+        <div class="modal-form-group">
+          <label>Любимые занятия и хобби</label>
+          <input type="text" id="re-favorite-activities" placeholder="Рисование, футбол, эксперименты, Лего...">
+        </div>
+        <div class="modal-form-group">
+          <label>В каком мире хотел бы оказаться?</label>
+          <input type="text" id="re-dream-world" placeholder="Космос, подводное царство, волшебный лес...">
+          <div class="modal-hint">Если бы можно было попасть в любое место</div>
+        </div>
+        <div class="modal-form-group">
+          <label>Что больше всего интересует в учёбе?</label>
+          <input type="text" id="re-favorite-subject-theme" placeholder="Планеты, роботы, древние цивилизации...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn--outline" id="modal-cancel">Отмена</button>
+        <button class="btn btn--primary" id="modal-confirm">Пересоздать</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+var CHILD_ID = {{ child.id }};
+var CHILD_GRADE = {{ child.grade }};
+
+document.addEventListener('DOMContentLoaded', function() {
+  loadSubjects();
+  loadFreeLessons();
+});
+
+async function loadSubjects() {
+  var grid = document.getElementById('subjects-grid');
+  try {
+    var resp = await fetch('/api/children/' + CHILD_ID + '/enrolled-subjects');
+    var data = await resp.json();
+    var subjects = data.subjects || [];
+
+    var allSubjects = [
+      {key: 'math', name: 'Математика', icon: '📐'},
+      {key: 'russian', name: 'Русский язык', icon: '📝'},
+      {key: 'world', name: 'Окруж. мир', icon: '🌍'}
+    ];
+
+    var enrolledMap = {};
+    for (var i = 0; i < subjects.length; i++) {
+      enrolledMap[subjects[i].subject] = subjects[i];
+    }
+
+    var html = '';
+    for (var j = 0; j < allSubjects.length; j++) {
+      var s = allSubjects[j];
+      var enrolled = enrolledMap[s.key];
+      var progress = enrolled ? enrolled.completed_lessons + '/' + enrolled.total_lessons : '—';
+      var percent = enrolled ? enrolled.percent : 0;
+      var hasData = s.key === 'math';
+
+      html += '<a href="/children/' + CHILD_ID + '/subject/' + s.key + '" class="subject-card-v2' + (hasData ? '' : ' subject-card-v2--disabled') + '">';
+      html += '<div class="subject-card-v2__icon">' + s.icon + '</div>';
+      html += '<div class="subject-card-v2__name">' + s.name + '</div>';
+      html += '<div class="subject-card-v2__progress">' + progress + ' уроков</div>';
+      if (enrolled && percent > 0) {
+        html += '<div class="progress-bar-wrap"><div class="progress-bar" style="width:' + percent + '%"></div></div>';
+      }
+      html += '</a>';
+    }
+    grid.innerHTML = html;
+  } catch(e) {
+    grid.innerHTML = '<p>Ошибка загрузки</p>';
+  }
+}
+
+// Free Lessons
+document.getElementById('free-lesson-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  var topic = document.getElementById('free-topic').value.trim();
+  var subject = document.getElementById('free-subject').value;
+  if (!topic) return;
+
+  var statusEl = document.getElementById('free-status');
+  statusEl.style.display = 'block';
+  statusEl.innerHTML = 'Создаю урок...';
+
+  try {
+    var resp = await fetch('/api/lessons/generate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ child_id: CHILD_ID, topic: topic, subject: subject })
+    });
+    var data = await resp.json();
+
+    if (resp.ok) {
+      statusEl.innerHTML = 'Урок создан!';
+      document.getElementById('free-topic').value = '';
+      setTimeout(loadFreeLessons, 1000);
+    } else if (data.error === 'insufficient_crystals') {
+      statusEl.innerHTML = 'Недостаточно кристаллов. <a href="/buy">Пополнить</a>';
+    } else {
+      statusEl.innerHTML = 'Ошибка: ' + (data.error || 'попробуйте позже');
+    }
+  } catch(e) {
+    statusEl.innerHTML = 'Ошибка соединения';
+  }
+});
+
+async function loadFreeLessons() {
+  var list = document.getElementById('free-lessons-list');
+  try {
+    var resp = await fetch('/api/children/' + CHILD_ID + '/free-lessons');
+    if (!resp.ok) return;
+    var data = await resp.json();
+    var lessons = data.lessons || [];
+
+    if (lessons.length === 0) { list.innerHTML = ''; return; }
+
+    var html = '<div class="free-list-title">Созданные уроки</div>';
+    for (var i = 0; i < lessons.length; i++) {
+      var l = lessons[i];
+      var starsHtml = '';
+      if (l.stars !== null && l.stars !== undefined) {
+        for (var s = 1; s <= 3; s++) {
+          starsHtml += '<span class="star ' + (s <= l.stars ? 'earned' : '') + '">&#9733;</span>';
+        }
+      } else {
+        starsHtml = '<span class="free-list-item__status">' + (l.status === 'done' ? 'Ожидает' : 'Генерация...') + '</span>';
+      }
+      html += '<div class="free-list-item">';
+      html += '<span>' + esc(l.topic_title) + '</span>';
+      html += '<span class="free-list-item__stars">' + starsHtml + '</span>';
+      html += '</div>';
+    }
+    list.innerHTML = html;
+  } catch(e) {}
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Recreate universe — modal
+var modal = document.getElementById('recreate-modal');
+
+document.getElementById('btn-recreate-universe').addEventListener('click', function() {
+  modal.style.display = 'flex';
+});
+
+document.getElementById('modal-close').addEventListener('click', function() {
+  modal.style.display = 'none';
+});
+
+document.getElementById('modal-cancel').addEventListener('click', function() {
+  modal.style.display = 'none';
+});
+
+modal.addEventListener('click', function(e) {
+  if (e.target === modal) modal.style.display = 'none';
+});
+
+document.getElementById('modal-confirm').addEventListener('click', async function() {
+  var btn = this;
+  var statusEl = document.getElementById('recreate-status');
+  btn.disabled = true;
+  btn.textContent = 'Пересоздаём...';
+
+  var data = {
+    favorite_heroes: document.getElementById('re-favorite-heroes').value.trim(),
+    favorite_animals: document.getElementById('re-favorite-animals').value.trim(),
+    favorite_activities: document.getElementById('re-favorite-activities').value.trim(),
+    dream_world: document.getElementById('re-dream-world').value.trim(),
+    favorite_subject_theme: document.getElementById('re-favorite-subject-theme').value.trim(),
+  };
+
+  try {
+    var resp = await fetch('/api/children/' + CHILD_ID + '/recreate-universe', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data),
+    });
+    modal.style.display = 'none';
+    if (resp.ok) {
+      statusEl.style.display = 'block';
+      statusEl.style.color = 'var(--success)';
+      statusEl.textContent = 'Вселенная пересоздаётся! Это займёт пару минут.';
+      document.getElementById('btn-recreate-universe').disabled = true;
+    } else {
+      var err = await resp.json();
+      statusEl.style.display = 'block';
+      statusEl.style.color = 'var(--error)';
+      statusEl.textContent = 'Ошибка: ' + (err.error || 'попробуйте позже');
+      btn.disabled = false;
+      btn.textContent = 'Пересоздать';
+    }
+  } catch(e) {
+    modal.style.display = 'none';
+    statusEl.style.display = 'block';
+    statusEl.style.color = 'var(--error)';
+    statusEl.textContent = 'Ошибка соединения';
+    btn.disabled = false;
+    btn.textContent = 'Пересоздать';
+  }
+});
+</script>
+{% endblock %}

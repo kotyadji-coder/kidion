@@ -1,0 +1,73 @@
+{
+  "subject": "english",
+  "grade": 1,
+  "title": "Английский язык, 1 класс",
+  "units": [
+    {
+      "id": "e1-unit-01",
+      "title": "Приветствие и знакомство",
+      "topics": [
+        {"id": "e1-01", "title": "Hello! What is your name?", "skill": "greeting"},
+        {"id": "e1-02", "title": "How are you?", "skill": "feelings_basic"},
+        {"id": "e1-03", "title": "My family: mum, dad, sister, brother", "skill": "family"},
+        {"id": "e1-04", "title": "Numbers 1-10", "skill": "numbers_10"},
+        {"id": "e1-05", "title": "How old are you?", "skill": "age"}
+      ]
+    },
+    {
+      "id": "e1-unit-02",
+      "title": "Цвета и формы",
+      "topics": [
+        {"id": "e1-06", "title": "Red, blue, green, yellow", "skill": "colours_basic"},
+        {"id": "e1-07", "title": "Black, white, orange, pink, purple", "skill": "colours_extra"},
+        {"id": "e1-08", "title": "What colour is it?", "skill": "colour_questions"},
+        {"id": "e1-09", "title": "Circle, square, triangle, star", "skill": "shapes"},
+        {"id": "e1-10", "title": "I like... / I don't like...", "skill": "likes"}
+      ]
+    },
+    {
+      "id": "e1-unit-03",
+      "title": "Животные",
+      "topics": [
+        {"id": "e1-11", "title": "Cat, dog, fish, bird", "skill": "pets"},
+        {"id": "e1-12", "title": "Lion, elephant, monkey, bear", "skill": "wild_animals"},
+        {"id": "e1-13", "title": "Big and small", "skill": "size_adjectives"},
+        {"id": "e1-14", "title": "I have a... / I don't have a...", "skill": "have_got"},
+        {"id": "e1-15", "title": "What animal is this?", "skill": "animal_questions"}
+      ]
+    },
+    {
+      "id": "e1-unit-04",
+      "title": "Еда и напитки",
+      "topics": [
+        {"id": "e1-16", "title": "Apple, banana, milk, juice", "skill": "food_basic"},
+        {"id": "e1-17", "title": "I like pizza! Yummy and yucky", "skill": "food_preferences"},
+        {"id": "e1-18", "title": "Please, thank you, you're welcome", "skill": "polite_words"},
+        {"id": "e1-19", "title": "Can I have...?", "skill": "requests"},
+        {"id": "e1-20", "title": "Breakfast, lunch, dinner", "skill": "meals"}
+      ]
+    },
+    {
+      "id": "e1-unit-05",
+      "title": "Мой дом и школа",
+      "topics": [
+        {"id": "e1-21", "title": "Table, chair, bed, door, window", "skill": "furniture"},
+        {"id": "e1-22", "title": "Pen, pencil, book, bag", "skill": "school_things"},
+        {"id": "e1-23", "title": "This is my room", "skill": "rooms"},
+        {"id": "e1-24", "title": "Where is the ball? On, in, under", "skill": "prepositions"},
+        {"id": "e1-25", "title": "Let's play! Toys in English", "skill": "toys"}
+      ]
+    },
+    {
+      "id": "e1-unit-06",
+      "title": "Части тела и одежда",
+      "topics": [
+        {"id": "e1-26", "title": "Head, arms, legs, hands, feet", "skill": "body_parts"},
+        {"id": "e1-27", "title": "Eyes, nose, mouth, ears", "skill": "face"},
+        {"id": "e1-28", "title": "T-shirt, trousers, dress, hat", "skill": "clothes"},
+        {"id": "e1-29", "title": "Put on / take off", "skill": "dressing"},
+        {"id": "e1-30", "title": "Head, shoulders, knees and toes!", "skill": "body_song"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Профиль — Kidion{% endblock %}
+
+{% block content %}
+<div class="profile-page container">
+    <h1 class="page-title">Личный кабинет</h1>
+
+    <div class="profile-grid">
+        <!-- Balance card -->
+        <div class="card">
+            <h2 class="card__title">Мой баланс</h2>
+            <div class="balance-display">
+                <span class="balance-display__icon">💎</span>
+                <span class="balance-display__value">{{ user.crystals }}</span>
+                <span class="balance-display__label">кристаллов</span>
+            </div>
+            <a href="/buy" class="btn btn--primary btn--full">Пополнить</a>
+        </div>
+
+        <!-- Referral card -->
+        <div class="card">
+            <h2 class="card__title">Реферальная программа</h2>
+            <p class="card__text">Поделитесь ссылкой с друзьями и получайте бонусы:</p>
+            <div class="ref-link-wrap">
+                <input
+                    class="input input--readonly"
+                    type="text"
+                    id="ref-link"
+                    value="https://kidion.ru/?ref={{ user.ref_code }}"
+                    readonly
+                >
+                <button class="btn btn--outline" id="copy-ref-btn" onclick="copyRefLink()">Скопировать</button>
+            </div>
+            <ul class="bonus-list">
+                <li>Вы получаете <strong>+60 кристаллов</strong> когда друг регистрируется по вашей ссылке</li>
+                <li>Вы получаете <strong>+120 кристаллов</strong> после первой оплаты друга</li>
+            </ul>
+        </div>
+
+        {% if user.is_blogger %}
+        <!-- Blogger payouts card -->
+        <div class="card">
+            <h2 class="card__title">Мои выплаты</h2>
+            <div class="payout-display">
+                <span class="payout-display__value">{{ "%.2f"|format(user.blogger_balance_rub) }} ₽</span>
+                <span class="payout-display__label">накоплено</span>
+            </div>
+            <p class="card__text">10% от каждого платежа приглашённых пользователей зачисляется на ваш счёт. Выплаты производятся по запросу.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function copyRefLink() {
+    var input = document.getElementById('ref-link');
+    input.select();
+    input.setSelectionRange(0, 9999);
+    try {
+        navigator.clipboard.writeText(input.value).then(function () {
+            var btn = document.getElementById('copy-ref-btn');
+            var original = btn.textContent;
+            btn.textContent = 'Скопировано!';
+            setTimeout(function () { btn.textContent = original; }, 2000);
+        });
+    } catch (e) {
+        document.execCommand('copy');
+    }
+}
+</script>
+{% endblock %}

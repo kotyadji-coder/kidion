@@ -1,0 +1,62 @@
+{
+  "subject": "math",
+  "grade": 1,
+  "title": "Математика, 1 класс",
+  "units": [
+    {
+      "id": "m1-unit-01",
+      "title": "Числа от 1 до 10",
+      "topics": [
+        {"id": "m1-01", "title": "Счёт предметов до 10", "skill": "counting"},
+        {"id": "m1-02", "title": "Цифры и числа", "skill": "digits"},
+        {"id": "m1-03", "title": "Больше, меньше, равно", "skill": "comparing"},
+        {"id": "m1-04", "title": "Числовой ряд", "skill": "number_line"},
+        {"id": "m1-05", "title": "Состав числа", "skill": "number_composition"}
+      ]
+    },
+    {
+      "id": "m1-unit-02",
+      "title": "Сложение и вычитание до 10",
+      "topics": [
+        {"id": "m1-06", "title": "Что значит сложить", "skill": "addition_concept"},
+        {"id": "m1-07", "title": "Знак плюс и знак равно", "skill": "addition_notation"},
+        {"id": "m1-08", "title": "Прибавляем числа до 5", "skill": "addition_to5"},
+        {"id": "m1-09", "title": "Что значит вычесть", "skill": "subtraction_concept"},
+        {"id": "m1-10", "title": "Знак минус", "skill": "subtraction_notation"},
+        {"id": "m1-11", "title": "Вычитаем числа до 5", "skill": "subtraction_to5"},
+        {"id": "m1-12", "title": "Сложение и вычитание в пределах 10", "skill": "add_sub_10"}
+      ]
+    },
+    {
+      "id": "m1-unit-03",
+      "title": "Числа от 11 до 20",
+      "topics": [
+        {"id": "m1-13", "title": "Счёт до 20", "skill": "counting_20"},
+        {"id": "m1-14", "title": "Десяток и единицы", "skill": "tens_units"},
+        {"id": "m1-15", "title": "Сравнение чисел до 20", "skill": "comparing_20"},
+        {"id": "m1-16", "title": "Сложение с переходом через 10", "skill": "addition_carry"},
+        {"id": "m1-17", "title": "Вычитание с переходом через 10", "skill": "subtraction_borrow"}
+      ]
+    },
+    {
+      "id": "m1-unit-04",
+      "title": "Геометрические фигуры",
+      "topics": [
+        {"id": "m1-18", "title": "Точка, линия, отрезок", "skill": "points_lines"},
+        {"id": "m1-19", "title": "Круг, квадрат, прямоугольник", "skill": "shapes_basic"},
+        {"id": "m1-20", "title": "Треугольник", "skill": "triangle"},
+        {"id": "m1-21", "title": "Сравнение фигур по размеру", "skill": "shapes_size"}
+      ]
+    },
+    {
+      "id": "m1-unit-05",
+      "title": "Задачи",
+      "topics": [
+        {"id": "m1-22", "title": "Что такое задача", "skill": "problem_intro"},
+        {"id": "m1-23", "title": "Задачи на сложение", "skill": "addition_problems"},
+        {"id": "m1-24", "title": "Задачи на вычитание", "skill": "subtraction_problems"},
+        {"id": "m1-25", "title": "Задачи на сравнение", "skill": "comparison_problems"}
+      ]
+    }
+  ]
+}

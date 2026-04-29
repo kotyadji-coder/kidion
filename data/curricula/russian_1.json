@@ -1,0 +1,60 @@
+{
+  "subject": "russian",
+  "grade": 1,
+  "title": "Русский язык, 1 класс",
+  "units": [
+    {
+      "id": "r1-unit-01",
+      "title": "Звуки и буквы",
+      "topics": [
+        {"id": "r1-01", "title": "Звуки речи", "skill": "speech_sounds"},
+        {"id": "r1-02", "title": "Гласные звуки", "skill": "vowels"},
+        {"id": "r1-03", "title": "Согласные звуки", "skill": "consonants"},
+        {"id": "r1-04", "title": "Твёрдые и мягкие согласные", "skill": "hard_soft"},
+        {"id": "r1-05", "title": "Звонкие и глухие согласные", "skill": "voiced_unvoiced"},
+        {"id": "r1-06", "title": "Буква и звук", "skill": "letter_sound"}
+      ]
+    },
+    {
+      "id": "r1-unit-02",
+      "title": "Слог и ударение",
+      "topics": [
+        {"id": "r1-07", "title": "Что такое слог", "skill": "syllable_concept"},
+        {"id": "r1-08", "title": "Деление на слоги", "skill": "syllable_division"},
+        {"id": "r1-09", "title": "Ударение в слове", "skill": "stress"},
+        {"id": "r1-10", "title": "Ударный слог", "skill": "stressed_syllable"}
+      ]
+    },
+    {
+      "id": "r1-unit-03",
+      "title": "Правописание",
+      "topics": [
+        {"id": "r1-11", "title": "Заглавная буква в начале предложения", "skill": "capital_sentence"},
+        {"id": "r1-12", "title": "Заглавная буква в именах", "skill": "capital_names"},
+        {"id": "r1-13", "title": "ЖИ-ШИ, ЧА-ЩА, ЧУ-ЩУ", "skill": "spelling_rules"},
+        {"id": "r1-14", "title": "Мягкий знак", "skill": "soft_sign"},
+        {"id": "r1-15", "title": "Разделительный мягкий знак", "skill": "separating_soft_sign"}
+      ]
+    },
+    {
+      "id": "r1-unit-04",
+      "title": "Слово и предложение",
+      "topics": [
+        {"id": "r1-16", "title": "Что такое слово", "skill": "word_concept"},
+        {"id": "r1-17", "title": "Слово и его значение", "skill": "word_meaning"},
+        {"id": "r1-18", "title": "Что такое предложение", "skill": "sentence_concept"},
+        {"id": "r1-19", "title": "Знаки препинания в конце", "skill": "end_punctuation"},
+        {"id": "r1-20", "title": "Текст", "skill": "text_concept"}
+      ]
+    },
+    {
+      "id": "r1-unit-05",
+      "title": "Части речи (введение)",
+      "topics": [
+        {"id": "r1-21", "title": "Предмет и слово-название", "skill": "noun_intro"},
+        {"id": "r1-22", "title": "Действие предмета", "skill": "verb_intro"},
+        {"id": "r1-23", "title": "Признак предмета", "skill": "adjective_intro"}
+      ]
+    }
+  ]
+}

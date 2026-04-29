@@ -1,0 +1,71 @@
+{
+  "subject": "math",
+  "grade": 2,
+  "title": "Математика, 2 класс",
+  "units": [
+    {
+      "id": "m2-unit-01",
+      "title": "Числа до 100",
+      "topics": [
+        {"id": "m2-01", "title": "Счёт десятками", "skill": "count_tens"},
+        {"id": "m2-02", "title": "Числа от 20 до 100", "skill": "numbers_100"},
+        {"id": "m2-03", "title": "Разрядный состав числа", "skill": "place_value"},
+        {"id": "m2-04", "title": "Сравнение двузначных чисел", "skill": "compare_2digit"},
+        {"id": "m2-05", "title": "Числовой луч до 100", "skill": "number_line_100"}
+      ]
+    },
+    {
+      "id": "m2-unit-02",
+      "title": "Сложение и вычитание в пределах 100",
+      "topics": [
+        {"id": "m2-06", "title": "Сложение без перехода через десяток", "skill": "add_no_carry"},
+        {"id": "m2-07", "title": "Сложение с переходом через десяток", "skill": "add_carry"},
+        {"id": "m2-08", "title": "Вычитание без перехода", "skill": "sub_no_borrow"},
+        {"id": "m2-09", "title": "Вычитание с переходом через десяток", "skill": "sub_borrow"},
+        {"id": "m2-10", "title": "Письменное сложение и вычитание", "skill": "written_add_sub"}
+      ]
+    },
+    {
+      "id": "m2-unit-03",
+      "title": "Умножение",
+      "topics": [
+        {"id": "m2-11", "title": "Что такое умножение", "skill": "multiplication_concept"},
+        {"id": "m2-12", "title": "Таблица умножения на 2", "skill": "times_2"},
+        {"id": "m2-13", "title": "Таблица умножения на 3", "skill": "times_3"},
+        {"id": "m2-14", "title": "Таблица умножения на 4", "skill": "times_4"},
+        {"id": "m2-15", "title": "Таблица умножения на 5", "skill": "times_5"},
+        {"id": "m2-16", "title": "Перестановка множителей", "skill": "commutative_mult"}
+      ]
+    },
+    {
+      "id": "m2-unit-04",
+      "title": "Деление",
+      "topics": [
+        {"id": "m2-17", "title": "Что такое деление", "skill": "division_concept"},
+        {"id": "m2-18", "title": "Связь умножения и деления", "skill": "mult_div_relation"},
+        {"id": "m2-19", "title": "Деление на 2", "skill": "divide_2"},
+        {"id": "m2-20", "title": "Деление на 3", "skill": "divide_3"},
+        {"id": "m2-21", "title": "Деление на 4 и 5", "skill": "divide_4_5"}
+      ]
+    },
+    {
+      "id": "m2-unit-05",
+      "title": "Задачи в два действия",
+      "topics": [
+        {"id": "m2-22", "title": "Составные задачи", "skill": "compound_problems"},
+        {"id": "m2-23", "title": "Задачи на умножение", "skill": "multiplication_problems"},
+        {"id": "m2-24", "title": "Задачи на деление", "skill": "division_problems"},
+        {"id": "m2-25", "title": "Задачи с вопросом", "skill": "question_problems"}
+      ]
+    },
+    {
+      "id": "m2-unit-06",
+      "title": "Длина и измерение",
+      "topics": [
+        {"id": "m2-26", "title": "Сантиметр и дециметр", "skill": "cm_dm"},
+        {"id": "m2-27", "title": "Метр", "skill": "meter"},
+        {"id": "m2-28", "title": "Периметр фигуры", "skill": "perimeter"}
+      ]
+    }
+  ]
+}

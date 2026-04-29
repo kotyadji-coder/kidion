@@ -1,0 +1,92 @@
+{% extends "base_activity.html" %}
+
+{% block extra_css %}
+        :root { --accent: #ea580c; --story-bg: #fff7ed; --story-border: #fb923c; }
+        .act-story { color: #9a3412; }
+
+        .cafe-layout { display: flex; gap: 20px; align-items: flex-start; }
+        .cafe-menu-col { flex: 0 0 280px; }
+        .cafe-tasks-col { flex: 1; }
+
+        .cafe-menu { border: 2px solid #fb923c; border-radius: 10px; overflow: hidden; }
+        .cafe-menu-header {
+            background: #ea580c; color: #fff; text-align: center;
+            padding: 8px; font-size: 14pt; font-weight: 900;
+        }
+        .cafe-menu-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 6px 12px; border-bottom: 1px solid #fed7aa; font-size: 12pt;
+        }
+        .cafe-menu-item:last-child { border-bottom: none; }
+        .cafe-menu-emoji { font-size: 16pt; }
+        .cafe-menu-name { flex: 1; font-weight: 700; }
+        .cafe-menu-price {
+            font-weight: 900; color: #ea580c;
+            background: #fff7ed; padding: 2px 8px; border-radius: 50px; font-size: 12pt;
+        }
+
+        .cafe-task { margin-bottom: 10px; }
+        .cafe-task-num {
+            display: inline-flex; width: 22px; height: 22px;
+            background: #ea580c; color: #fff; border-radius: 50%;
+            align-items: center; justify-content: center;
+            font-size: 12pt; font-weight: 900; margin-right: 6px;
+        }
+        .cafe-task-text { font-size: 12pt; font-weight: 600; }
+
+        .cafe-budget {
+            margin-top: 16px; padding: 14px 20px;
+            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+            border: 2px solid #fb923c; border-radius: 14px;
+            display: flex; align-items: flex-start; gap: 16px;
+        }
+        .cafe-budget-coin {
+            flex-shrink: 0; width: 72px; height: 72px;
+            background: linear-gradient(145deg, #fbbf24, #f59e0b);
+            border-radius: 50%; border: 3px solid #d97706;
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column;
+            font-size: 22pt; font-weight: 900; color: #fff;
+            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.4); line-height: 1;
+        }
+        .cafe-budget-body { flex: 1; }
+        .cafe-budget-title { font-size: 12pt; font-weight: 800; color: #ea580c; margin-bottom: 6px; }
+{% endblock %}
+
+{% block content %}
+    <div class="cafe-layout">
+        <div class="cafe-menu-col">
+            <div class="cafe-menu">
+                <div class="cafe-menu-header">{{ cafe_name }}</div>
+                {% for item in menu %}
+                <div class="cafe-menu-item">
+                    <span class="cafe-menu-emoji">{{ item.emoji }}</span>
+                    <span class="cafe-menu-name">{{ item.name }}</span>
+                    <span class="cafe-menu-price">{{ item.price }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="cafe-tasks-col">
+            {% for task in tasks %}
+            <div class="cafe-task">
+                <span class="cafe-task-num">{{ loop.index }}</span>
+                <span class="cafe-task-text">{{ task.question }}</span>
+                {% for _ in range(task.answer_lines) %}
+                <div class="answer-line"></div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="cafe-budget">
+        <div class="cafe-budget-coin">{{ budget_amount }}<span style="font-size:9pt;display:block;line-height:1;margin-top:2px;">монет</span></div>
+        <div class="cafe-budget-body">
+            <div class="cafe-budget-title">{{ budget_task }}</div>
+            <div class="answer-line"></div>
+            <div class="answer-line"></div>
+            <div class="answer-line"></div>
+        </div>
+    </div>
+{% endblock %}

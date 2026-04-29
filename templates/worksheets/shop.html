@@ -1,0 +1,94 @@
+{% extends "base_activity.html" %}
+
+{% block extra_css %}
+        :root { --accent: #0891b2; --story-bg: #ecfeff; --story-border: #22d3ee; }
+        .act-story { color: #155e75; }
+
+        .shop-layout { display: flex; gap: 20px; align-items: flex-start; }
+        .shop-items-col { flex: 0 0 300px; }
+        .shop-tasks-col { flex: 1; }
+
+        .shop-shelf { border: 2px solid #22d3ee; border-radius: 10px; overflow: hidden; }
+        .shop-shelf-header {
+            background: #0891b2; color: #fff; text-align: center;
+            padding: 8px; font-size: 14pt; font-weight: 900;
+        }
+        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+        .shop-item {
+            display: flex; flex-direction: column; align-items: center;
+            padding: 8px 6px; border: 1px solid #e0f2fe; text-align: center;
+        }
+        .shop-item-emoji { font-size: 22pt; }
+        .shop-item-name { font-size: 10pt; font-weight: 700; margin: 2px 0; }
+        .shop-item-price {
+            font-weight: 900; color: #0891b2;
+            background: #ecfeff; padding: 1px 8px; border-radius: 50px; font-size: 12pt;
+        }
+
+        .shop-task { margin-bottom: 10px; }
+        .shop-task-num {
+            display: inline-flex; width: 22px; height: 22px;
+            background: #0891b2; color: #fff; border-radius: 50%;
+            align-items: center; justify-content: center;
+            font-size: 12pt; font-weight: 900; margin-right: 6px;
+        }
+        .shop-task-text { font-size: 12pt; font-weight: 600; }
+
+        .shop-budget {
+            margin-top: 16px; padding: 14px 20px;
+            background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+            border: 2px solid #22d3ee; border-radius: 14px;
+            display: flex; align-items: flex-start; gap: 16px;
+        }
+        .shop-budget-coin {
+            flex-shrink: 0; width: 72px; height: 72px;
+            background: linear-gradient(145deg, #fbbf24, #f59e0b);
+            border-radius: 50%; border: 3px solid #d97706;
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column;
+            font-size: 22pt; font-weight: 900; color: #fff;
+            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.4); line-height: 1;
+        }
+        .shop-budget-body { flex: 1; }
+        .shop-budget-title { font-size: 12pt; font-weight: 800; color: #0891b2; margin-bottom: 6px; }
+{% endblock %}
+
+{% block content %}
+    <div class="shop-layout">
+        <div class="shop-items-col">
+            <div class="shop-shelf">
+                <div class="shop-shelf-header">{{ shop_name }}</div>
+                <div class="shop-grid">
+                    {% for item in items %}
+                    <div class="shop-item">
+                        <span class="shop-item-emoji">{{ item.emoji }}</span>
+                        <span class="shop-item-name">{{ item.name }}</span>
+                        <span class="shop-item-price">{{ item.price }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="shop-tasks-col">
+            {% for task in tasks %}
+            <div class="shop-task">
+                <span class="shop-task-num">{{ loop.index }}</span>
+                <span class="shop-task-text">{{ task.question }}</span>
+                {% for _ in range(task.answer_lines) %}
+                <div class="answer-line"></div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="shop-budget">
+        <div class="shop-budget-coin">{{ budget_amount }}<span style="font-size:9pt;display:block;line-height:1;margin-top:2px;">монет</span></div>
+        <div class="shop-budget-body">
+            <div class="shop-budget-title">{{ shopping_list_task }}</div>
+            <div class="answer-line"></div>
+            <div class="answer-line"></div>
+            <div class="answer-line"></div>
+        </div>
+    </div>
+{% endblock %}

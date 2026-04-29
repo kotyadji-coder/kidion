@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} — для печати</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* ── RESET ── */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* ── PAGE SIZE ── */
+        @page {
+            size: A4 portrait;
+            margin: 15mm;
+        }
+
+        /* ── BASE ── */
+        body {
+            font-family: 'Nunito', sans-serif;
+            font-size: 13pt;
+            color: #1f2937;
+            background: #f3f4f6;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+            background: #fff;
+            box-sizing: border-box;
+        }
+
+        /* ── HEADER ── */
+        .print-header {
+            border-bottom: 3px solid #6366f1;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        .print-brand {
+            font-size: 9pt;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #6366f1;
+            margin-bottom: 6px;
+        }
+
+        .print-title {
+            font-size: 20pt;
+            font-weight: 900;
+            line-height: 1.2;
+            color: #111827;
+        }
+
+        /* ── HERO IMAGE ── */
+        .print-image {
+            max-width: 50%;
+            height: auto;
+            object-fit: contain;
+            border-radius: 10px;
+            margin: 0 auto 24px;
+            display: block;
+        }
+
+        /* ── SECTION HEADINGS ── */
+        .section-heading {
+            font-size: 12pt;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #6366f1;
+            border-bottom: 1.5px solid #e5e7eb;
+            padding-bottom: 5px;
+            margin-bottom: 14px;
+        }
+
+        /* ── THEORY BLOCKS ── */
+        .theory-section { margin-bottom: 28px; }
+
+        .story-card {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            page-break-inside: avoid;
+        }
+
+        .story-emoji {
+            font-size: 22pt;
+            line-height: 1;
+            flex-shrink: 0;
+            width: 44px;
+            text-align: center;
+        }
+
+        .story-text {
+            flex: 1;
+            min-width: 0;
+            font-size: 12pt;
+            line-height: 1.65;
+        }
+
+        /* ── TASKS SECTION ── */
+        .tasks-section {
+            margin-top: 8px;
+            page-break-before: always;
+            break-before: page;
+        }
+
+        .task-card {
+            border: 1.5px solid #d1d5db;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+
+        .task-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .task-num {
+            width: 22px;
+            height: 22px;
+            background: #6366f1;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8pt;
+            font-weight: 900;
+            flex-shrink: 0;
+        }
+
+        .task-type-badge {
+            font-size: 7.5pt;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            padding: 2px 9px;
+            border-radius: 50px;
+            background: #f3f4f6;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+        }
+
+        .task-question {
+            font-size: 12pt;
+            font-weight: 700;
+            margin-bottom: 10px;
+            line-height: 1.45;
+        }
+
+        /* ── QUIZ & MULTIPLE CHOICE ── */
+        .print-options { display: flex; flex-direction: column; gap: 6px; }
+
+        .print-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12pt;
+        }
+
+        .print-checkbox {
+            width: 16px;
+            height: 16px;
+            border: 1.5px solid #6b7280;
+            border-radius: 3px;
+            flex-shrink: 0;
+            display: inline-block;
+        }
+
+        .print-circle {
+            width: 16px;
+            height: 16px;
+            border: 1.5px solid #6b7280;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: inline-block;
+        }
+
+        /* ── DRAG AND DROP → WORD BANK + SENTENCES ── */
+        .dnd-print-bank {
+            font-size: 11pt;
+            margin-bottom: 14px;
+            padding: 8px 12px;
+            border: 1.5px dashed #9ca3af;
+            border-radius: 8px;
+            line-height: 1.8;
+        }
+
+        .dnd-print-bank-label {
+            font-weight: 800;
+            color: #6366f1;
+            margin-right: 6px;
+        }
+
+        .dnd-print-word { font-weight: 700; color: #1f2937; }
+
+        .dnd-print-sentences {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .dnd-print-sentence {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            font-size: 12pt;
+        }
+
+        .dnd-print-num { font-weight: 900; color: #6366f1; flex-shrink: 0; }
+
+        .dnd-print-text { font-weight: 600; flex: 1; min-width: 0; }
+
+        .dnd-print-blank {
+            display: inline-block;
+            width: 120px;
+            border-bottom: 1.5px solid #374151;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        /* ── WORD CHIP (shared) ── */
+        .word-chip {
+            border: 1.5px solid #6b7280;
+            border-radius: 6px;
+            padding: 3px 12px;
+            font-size: 10pt;
+            font-weight: 700;
+        }
+
+        /* ── FILL IN THE BLANK ── */
+        .fitb-answer {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-top: 4px;
+            font-size: 12pt;
+        }
+
+        .fitb-line {
+            display: inline-block;
+            border-bottom: 1.5px solid #374151;
+            min-width: 180px;
+            height: 20px;
+        }
+
+        /* ── ORDERING ── */
+        .ordering-word-list {
+            font-size: 12pt;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 14px;
+            letter-spacing: 0.02em;
+        }
+
+        .ordering-boxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .ordering-box {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10pt;
+        }
+
+        .ordering-box-num {
+            font-weight: 900;
+            color: #6366f1;
+        }
+
+        .ordering-box-blank {
+            display: inline-block;
+            width: 72px;
+            height: 24px;
+            border: 1.5px solid #6b7280;
+            border-radius: 5px;
+        }
+
+        /* ── PRINT BUTTON BAR (screen only, hidden by default — shown by JS in real browsers) ── */
+        .print-btn-bar {
+            display: none;
+            justify-content: center;
+            padding: 16px 0 0;
+            margin-bottom: 2rem;
+        }
+
+        .print-btn {
+            background: #6366f1;
+            color: #fff;
+            border: none;
+            padding: 9px 24px;
+            border-radius: 50px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 11pt;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(99,102,241,0.35);
+            letter-spacing: 0.02em;
+        }
+
+        .print-btn:hover { background: #4f46e5; }
+
+        /* ── FOOTER ── */
+        .print-footer {
+            margin-top: 28px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 8.5pt;
+            color: #9ca3af;
+            text-align: center;
+        }
+
+        /* ── TELEGRAM BANNER (visible by default — hidden by JS in real browsers) ── */
+        .tg-banner {
+            display: block;
+            background: #fffbeb;
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            font-size: 12pt;
+            font-weight: 700;
+            color: #92400e;
+            line-height: 1.55;
+            text-align: center;
+        }
+
+        /* ── PRINT OVERRIDES ── */
+        @media print {
+            @page { margin: 15mm !important; }
+
+            /* Force block layout on all ancestors so browser pagination works correctly */
+            html, body, .container {
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #fff !important;
+                font-size: 12pt;
+                height: auto !important;
+                overflow: visible !important;
+            }
+
+            a { text-decoration: none; color: inherit; }
+
+            /* @page supplies all margins — strip screen-layout constraints from container */
+            .container {
+                max-width: none !important;
+                width: auto !important;
+                box-shadow: none !important;
+            }
+
+            .print-image { max-width: 50%; max-height: none; object-fit: contain; margin: 0 auto 20px; }
+
+            /* Allow natural page flow for theory, but keep tasks together */
+            .theory-section, .tasks-section, .story-card {
+                page-break-inside: auto;
+                break-inside: auto;
+            }
+
+            .task-card {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            /* Hide all interactive / screen-only UI */
+            .print-btn-bar { display: none !important; }
+            .tg-banner { display: none !important; }
+
+            .print-footer { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- TELEGRAM STATIC BANNER (shown instead of print button when in Telegram webview) -->
+    <div class="tg-banner" id="tgBanner">
+        🖨️ Для печати откройте эту страницу в обычном браузере. Нажмите на меню (три точки в правом верхнем углу) и выберите «Открыть в браузере».
+    </div>
+
+    <!-- PRINT BUTTON (hidden in Telegram webview) -->
+    <div class="print-btn-bar" id="printBtnBar">
+        <button class="print-btn" onclick="window.print()">🖨️&nbsp; Распечатать</button>
+    </div>
+
+    <!-- HEADER -->
+    <div class="print-header">
+        <div class="print-brand">Kidion · Рабочий лист</div>
+        <h1 class="print-title">{{ title }}</h1>
+    </div>
+
+    <!-- HERO IMAGE -->
+    <img class="print-image" src="{{ bg_image_url }}" alt="{{ title }}">
+
+    <!-- THEORY -->
+    <div class="theory-section">
+        <div class="section-heading">Теория</div>
+
+        {% for block in story_blocks %}
+        <div class="story-card">
+            <div class="story-emoji" aria-hidden="true">{{ block.emoji }}</div>
+            <div class="story-text">{{ block.text }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- TASKS -->
+    {% if tasks %}
+    <div class="tasks-section">
+        <div class="section-heading">Задания</div>
+
+        {% for task in tasks %}
+        <div class="task-card">
+
+            <div class="task-header">
+                <span class="task-num">{{ loop.index }}</span>
+                <span class="task-type-badge">
+                    {%- if task.type == 'quiz' -%}Выбери ответ
+                    {%- elif task.type == 'multiple_choice' -%}Несколько верных
+                    {%- elif task.type == 'drag_and_drop' -%}Соедини
+                    {%- elif task.type == 'fill_in_the_blank' -%}Заполни пропуск
+                    {%- elif task.type == 'ordering' -%}Расставь по порядку
+                    {%- endif -%}
+                </span>
+            </div>
+
+            <p class="task-question">{{ task.question }}</p>
+
+            {# ── QUIZ: circles to tick ── #}
+            {% if task.type == 'quiz' %}
+            <div class="print-options">
+                {% for opt in task.options %}
+                <div class="print-option">
+                    <span class="print-circle"></span>
+                    <span>{{ opt }}</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            {# ── MULTIPLE CHOICE: checkboxes ── #}
+            {% elif task.type == 'multiple_choice' %}
+            <div class="print-options">
+                {% for opt in task.options %}
+                <div class="print-option">
+                    <span class="print-checkbox"></span>
+                    <span>{{ opt }}</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            {# ── DRAG AND DROP: word bank + sentence blanks ── #}
+            {% elif task.type == 'drag_and_drop' %}
+            <div class="dnd-print-bank">
+                <span class="dnd-print-bank-label">Банк слов:</span>
+                <span class="dnd-print-bank-words">{% for item in task['items'] %}<span class="dnd-print-word">{{ item }}</span>{% if not loop.last %} &nbsp;·&nbsp; {% endif %}{% endfor %}</span>
+            </div>
+            <div class="dnd-print-sentences">
+                {% for zone in task.zones %}
+                <div class="dnd-print-sentence">
+                    <span class="dnd-print-num">{{ loop.index }}.</span>
+                    <span class="dnd-print-text">{{ zone }}</span>
+                    <span class="dnd-print-blank"></span>
+                </div>
+                {% endfor %}
+            </div>
+
+            {# ── FILL IN THE BLANK: answer line ── #}
+            {% elif task.type == 'fill_in_the_blank' %}
+            <div class="fitb-answer">
+                <span style="font-weight:700;">Ответ:</span>
+                <span class="fitb-line"></span>
+            </div>
+
+            {# ── ORDERING: horizontal word list + numbered boxes ── #}
+            {% elif task.type == 'ordering' %}
+            <p class="ordering-word-list">
+                {% for item in task['items'] %}
+                <span class="ordering-word">{{ item }}</span>{% if not loop.last %} &nbsp;·&nbsp; {% endif %}
+                {% endfor %}
+            </p>
+            <div class="ordering-boxes">
+                {% for item in task['items'] %}
+                <div class="ordering-box">
+                    <span class="ordering-box-num">{{ loop.index }}.</span>
+                    <span class="ordering-box-blank"></span>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="print-footer">
+        Kidion — детям на понятном · kidion.ru
+    </div>
+
+</div>
+
+<script>
+// Default state: print button hidden, banner visible (safe for Telegram / JS failure).
+// Only reveal print button when we are SURE this is a real browser.
+(function () {
+    var ua = navigator.userAgent || '';
+    var isTelegram = /Telegram/i.test(ua) || window.TelegramWebviewProxy !== undefined;
+
+    if (!isTelegram) {
+        document.getElementById('tgBanner').style.display = 'none';
+        document.getElementById('printBtnBar').style.display = 'flex';
+    }
+})();
+
+// ── SHUFFLE ORDERING WORD LISTS ──────────────────────────────────────────────
+// Printed worksheets must not reveal the correct order of items.
+(function () {
+    function shuffleArray(arr) {
+        for (var i = arr.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+        }
+        return arr;
+    }
+
+    document.querySelectorAll('.ordering-word-list').forEach(function (p) {
+        var spans = shuffleArray(Array.from(p.querySelectorAll('.ordering-word')));
+        p.innerHTML = '';
+        spans.forEach(function (span, idx) {
+            p.appendChild(span);
+            if (idx < spans.length - 1) {
+                p.insertAdjacentHTML('beforeend', ' \u00a0·\u00a0 ');
+            }
+        });
+    });
+
+    // Shuffle DnD word bank so printed items don't align with their zones
+    document.querySelectorAll('.dnd-print-bank-words').forEach(function (container) {
+        var spans = shuffleArray(Array.from(container.querySelectorAll('.dnd-print-word')));
+        container.innerHTML = '';
+        spans.forEach(function (span, idx) {
+            container.appendChild(span);
+            if (idx < spans.length - 1) {
+                container.insertAdjacentHTML('beforeend', ' \u00a0·\u00a0 ');
+            }
+        });
+    });
+})();
+</script>
+</body>
+</html>

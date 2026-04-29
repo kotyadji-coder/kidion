@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Kidion{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/kid/style.css">
+  {% block head %}{% endblock %}
+</head>
+<body data-page="{% block page_name %}{% endblock %}">
+  {% if child is defined and child %}
+  <nav class="kid-nav">
+    <a href="/kid/home" class="kid-nav__home">&#127968;</a>
+    <span class="kid-nav__name">{{ child.name }}</span>
+    <span class="kid-nav__stars">&#11088; <span id="star-count">{{ child.stars if child.stars is defined else 0 }}</span></span>
+    <button class="kid-nav__logout" onclick="kidLogout()">&#128075;</button>
+  </nav>
+  {% endif %}
+  <main class="kid-main">
+    {% block content %}{% endblock %}
+  </main>
+  <script src="/static/kid/app.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

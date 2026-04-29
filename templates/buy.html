@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Купить кристаллы — Kidion{% endblock %}
+
+{% block content %}
+<div class="buy-page container">
+    <h1 class="page-title">Пополнить баланс</h1>
+    <p class="page-subtitle">Выберите пакет кристаллов</p>
+
+    <div class="packages-grid">
+        <div class="package-card card" data-package="60_60">
+            <div class="package-card__crystals">💎 60</div>
+            <div class="package-card__name">Стартовый</div>
+            <div class="package-card__price">60 ₽</div>
+            <div class="package-card__per">1 ₽ / кристалл</div>
+            <button class="btn btn--primary btn--full" onclick="buyPackage('60_60')">Купить</button>
+        </div>
+
+        <div class="package-card card package-card--popular" data-package="360_320">
+            <div class="package-card__badge">Популярный</div>
+            <div class="package-card__crystals">💎 360</div>
+            <div class="package-card__name">Базовый</div>
+            <div class="package-card__price">320 ₽</div>
+            <div class="package-card__per">0.89 ₽ / кристалл</div>
+            <button class="btn btn--primary btn--full" onclick="buyPackage('360_320')">Купить</button>
+        </div>
+
+        <div class="package-card card" data-package="600_490">
+            <div class="package-card__crystals">💎 600</div>
+            <div class="package-card__name">Продвинутый</div>
+            <div class="package-card__price">490 ₽</div>
+            <div class="package-card__per">0.82 ₽ / кристалл</div>
+            <button class="btn btn--primary btn--full" onclick="buyPackage('600_490')">Купить</button>
+        </div>
+
+        <div class="package-card card" data-package="1000_800">
+            <div class="package-card__crystals">💎 1000</div>
+            <div class="package-card__name">Максимальный</div>
+            <div class="package-card__price">800 ₽</div>
+            <div class="package-card__per">0.80 ₽ / кристалл</div>
+            <button class="btn btn--primary btn--full" onclick="buyPackage('1000_800')">Купить</button>
+        </div>
+    </div>
+
+    <div id="buy-error" class="alert alert--error" style="display:none"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function buyPackage(packageId) {
+    var errorEl = document.getElementById('buy-error');
+    errorEl.style.display = 'none';
+
+    try {
+        var resp = await fetch('/api/payment/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ package_id: packageId })
+        });
+        var data = await resp.json();
+        if (resp.ok && data.confirmation_url) {
+            window.location.href = data.confirmation_url;
+        } else {
+            errorEl.textContent = data.error || 'Произошла ошибка. Попробуйте позже.';
+            errorEl.style.display = 'block';
+        }
+    } catch (e) {
+        errorEl.textContent = 'Ошибка соединения. Попробуйте позже.';
+        errorEl.style.display = 'block';
+    }
+}
+</script>
+{% endblock %}

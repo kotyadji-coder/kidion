@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Чат — Kidion{% endblock %}
+
+{% block content %}
+<div class="chat-wrapper">
+    <div class="chat-topbar">
+        <span class="chat-topbar__title">Kidion Chat</span>
+        <span class="chat-topbar__crystals" id="crystals-count">💎 {{ user.crystals }}</span>
+    </div>
+
+    <div class="chat-container" id="chat-messages">
+        <!-- Messages will be rendered here by JS -->
+    </div>
+
+    <div class="chat-input-area" id="chat-input-area" style="display:none">
+        <div class="chat-input-wrap">
+            <textarea
+                class="chat-textarea"
+                id="chat-textarea"
+                placeholder="Опишите, что нужно создать..."
+                rows="1"
+            ></textarea>
+            <button class="chat-send-btn" id="chat-send-btn" aria-label="Отправить">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/chat.js"></script>
+<script>
+    window.KIDION_USER = {
+        id: {{ user.id }},
+        email: "{{ user.email }}",
+        crystals: {{ user.crystals }}
+    };
+    document.addEventListener('DOMContentLoaded', function () {
+        chatInit();
+    });
+</script>
+{% endblock %}

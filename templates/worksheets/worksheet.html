@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        @page { size: A4 portrait; margin: 10mm; }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            font-size: 12pt;
+            color: #1f2937;
+            background: #f0f0f5;
+            line-height: 1.45;
+        }
+
+        .container {
+            max-width: 780px;
+            margin: 20px auto;
+            padding: 24px 28px 16px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+        }
+
+        .ws-header {
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #6366f1;
+        }
+        .ws-header-top {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+        .ws-brand {
+            font-size: 9pt; font-weight: 800;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: #6366f1; flex-shrink: 0;
+        }
+        .ws-lesson-num {
+            font-size: 9pt; font-weight: 800;
+            color: #fff; background: #6366f1;
+            padding: 2px 10px; border-radius: 50px;
+            flex-shrink: 0;
+        }
+        .ws-title {
+            font-size: 14pt; font-weight: 900; color: #111827;
+        }
+        .ws-meta {
+            font-size: 9pt; color: #9ca3af; font-weight: 600; margin-top: 2px;
+        }
+
+        .tasks-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .task-card {
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 10px 14px;
+            page-break-inside: avoid;
+            background: #fff;
+        }
+        .task-card--wide { grid-column: 1 / -1; }
+
+        .task-header {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+        }
+        .task-num {
+            width: 22px; height: 22px;
+            background: #6366f1; color: #fff;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12pt; font-weight: 900; flex-shrink: 0;
+        }
+        .task-type-badge {
+            font-size: 12pt; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 0.06em;
+            padding: 2px 9px; border-radius: 50px;
+            background: #eef2ff; color: #6366f1; border: 1px solid #c7d2fe;
+        }
+        .task-instruction {
+            font-size: 12pt; font-weight: 700;
+            margin-bottom: 10px; line-height: 1.35; color: #1f2937;
+        }
+        .task-inner-2col {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px;
+        }
+
+        /* ── MATCHING ── */
+        .matching-container { display: flex; align-items: flex-start; gap: 12px; max-width: 500px; }
+        .matching-col { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+        .matching-item { display: flex; align-items: center; gap: 6px; font-size: 12pt; font-weight: 600; }
+        .matching-circle {
+            width: 22px; height: 22px;
+            border: 2px solid #6366f1; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12pt; font-weight: 900; color: #6366f1; flex-shrink: 0;
+        }
+        .matching-dots { width: 60px; border-bottom: 2px dotted #d1d5db; align-self: center; height: 1px; flex-shrink: 0; }
+
+        /* ── GRID MAZE ── */
+        .grid-maze-wrap { display: block; width: 100%; border: 2px solid #374151; border-radius: 6px; overflow: hidden; }
+        .grid-maze-label { text-align: center; font-size: 12pt; font-weight: 900; padding: 3px 0; letter-spacing: 0.05em; }
+        .grid-maze-label--start { background: #dcfce7; color: #16a34a; }
+        .grid-maze-label--end { background: #fef2f2; color: #dc2626; }
+        .grid-maze { display: grid; gap: 0; width: 100%; }
+        .grid-maze-cell {
+            height: 30px; border: 1px solid #d1d5db;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11pt; font-weight: 700; padding: 0 3px;
+            overflow: hidden; white-space: nowrap;
+        }
+
+        /* ── ANAGRAM ── */
+        .anagram-letters { display: flex; gap: 4px; margin-bottom: 6px; }
+        .anagram-letter {
+            width: 26px; height: 26px; border: 2px solid #6366f1; border-radius: 5px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12pt; font-weight: 900; color: #6366f1; background: #eef2ff;
+        }
+        .anagram-hint { font-size: 12pt; color: #6b7280; font-style: italic; margin-bottom: 5px; }
+        .anagram-answer { display: flex; gap: 4px; }
+        .anagram-box { width: 26px; height: 26px; border: 2px solid #374151; border-radius: 4px; }
+
+        /* ── FILL BLANKS ── */
+        .fill-blanks-text { font-size: 12pt; line-height: 2.2; }
+        .fill-blank { display: inline-block; width: 80px; border-bottom: 2px solid #6366f1; height: 14px; margin: 0 2px; }
+
+        /* ── SORTING TABLE ── */
+        .sorting-word-bank {
+            font-size: 12pt; margin-bottom: 6px; padding: 5px 8px;
+            border: 2px dashed #c7d2fe; border-radius: 6px; line-height: 1.7; background: #f8f9ff;
+        }
+        .sorting-bank-label { font-weight: 800; color: #6366f1; margin-right: 4px; }
+        .sorting-word { font-weight: 700; }
+        .sorting-table { width: 100%; border-collapse: collapse; font-size: 12pt; }
+        .sorting-table th { background: #eef2ff; padding: 5px 8px; border: 1.5px solid #c7d2fe; font-weight: 800; text-align: center; color: #4338ca; }
+        .sorting-table td { border: 1.5px solid #d1d5db; padding: 5px 8px; height: 60px; vertical-align: top; }
+
+        /* ── ODD ONE OUT ── */
+        .odd-items { display: flex; flex-direction: column; gap: 4px; margin-bottom: 6px; }
+        .odd-item { border: 2px solid #e5e7eb; border-radius: 8px; padding: 4px 10px; font-size: 12pt; font-weight: 700; background: #fafafa; }
+        .odd-explain-label { font-weight: 700; color: #6366f1; display: block; margin-bottom: 2px; font-size: 12pt; }
+        .odd-explain-line { border-bottom: 1px solid #9ca3af; height: 26px; }
+
+        /* ── WORD SEARCH ── */
+        .ws-layout { display: flex; gap: 16px; align-items: flex-start; }
+        .ws-words-col { flex: 1; }
+        .ws-word-item { display: flex; align-items: center; gap: 6px; font-size: 12pt; font-weight: 700; color: #374151; padding: 3px 0; }
+        .ws-word-bullet { color: #6366f1; font-size: 14pt; line-height: 1; }
+        .ws-grid-col { flex-shrink: 0; }
+        .ws-grid { display: inline-grid; gap: 0; border: 2px solid #374151; border-radius: 4px; }
+        .ws-grid-cell {
+            width: 24px; height: 24px; border: 1px solid #e5e7eb;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12pt; font-weight: 700; font-family: 'Courier New', monospace;
+        }
+
+        /* ── COLORING ── */
+        .coloring-task-wrap { position: relative; }
+        .coloring-task-img {
+            position: absolute; right: 0; top: -36px;
+            width: 220px; height: 220px; object-fit: cover;
+            border-radius: 10px; border: 2px solid #e5e7eb; background: #fafafa;
+        }
+        .coloring-task-right { margin-right: 236px; min-height: 184px; display: flex; flex-direction: column; justify-content: space-between; }
+
+        /* ── NUMBER PYRAMID ── */
+        .pyramid-wrap { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+        .pyramid-row { display: flex; gap: 4px; }
+        .pyramid-cell {
+            width: 38px; height: 30px; border: 2px solid #374151; border-radius: 5px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12pt; font-weight: 800;
+        }
+        .pyramid-cell--empty { border-style: dashed; background: #f9fafb; }
+        .pyramid-cell--filled { background: #eef2ff; color: #4338ca; }
+
+        /* ── MAGIC SQUARE ── */
+        .magic-square { display: inline-grid; gap: 0; border: 2px solid #374151; border-radius: 4px; }
+        .magic-cell {
+            width: 44px; height: 36px; border: 1px solid #d1d5db;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12pt; font-weight: 800;
+        }
+        .magic-cell--empty { background: #f9fafb; }
+        .magic-cell--filled { background: #eef2ff; color: #4338ca; }
+        .magic-target { font-size: 12pt; color: #6b7280; margin-top: 4px; font-weight: 700; }
+
+        /* ── COMPARISON CHAIN ── */
+        .comparison-pairs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 30px; max-width: 600px; }
+        .comparison-pair { display: flex; align-items: center; gap: 8px; font-size: 12pt; font-weight: 700; }
+        .comparison-value { padding: 4px 12px; background: #f3f4f6; border-radius: 6px; border: 1.5px solid #e5e7eb; min-width: 50px; text-align: center; }
+        .comparison-circle { width: 28px; height: 28px; border: 2px solid #6366f1; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+        /* ── EXPRESSION BUILDER ── */
+        .expr-equations { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
+        .expr-line { font-size: 12pt; font-weight: 700; letter-spacing: 0.5px; }
+        .expr-circle { display: inline-flex; width: 24px; height: 24px; border: 2px solid #6366f1; border-radius: 50%; align-items: center; justify-content: center; margin: 0 2px; vertical-align: middle; }
+
+        /* ── NUMBER SEQUENCE ── */
+        .sequence-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
+        .sequence-row { display: flex; gap: 4px; align-items: center; }
+        .seq-cell { width: 36px; height: 30px; border: 2px solid #374151; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 12pt; font-weight: 800; }
+        .seq-cell--empty { border-style: dashed; background: #f9fafb; }
+        .seq-cell--filled { background: #eef2ff; color: #4338ca; }
+        .seq-arrow { color: #9ca3af; font-size: 12pt; }
+
+        /* ── SYLLABLE BUILDER ── */
+        .syllable-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
+        .syllable-group { display: flex; align-items: center; gap: 4px; }
+        .syllable-block { padding: 4px 10px; background: #eef2ff; border: 2px solid #c7d2fe; border-radius: 6px; font-size: 12pt; font-weight: 800; color: #4338ca; }
+        .syllable-plus { color: #9ca3af; font-weight: 900; }
+        .syllable-eq { color: #9ca3af; font-weight: 900; margin: 0 4px; }
+        .syllable-answer-line { width: 80px; border-bottom: 2px solid #374151; height: 14px; }
+
+        /* ── SENTENCE ORDER ── */
+        .sentence-order-items { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
+        .sentence-words { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 2px; }
+        .sentence-word { padding: 4px 10px; border: 2px solid #e5e7eb; border-radius: 6px; font-size: 12pt; font-weight: 700; background: #fafafa; }
+        .sentence-answer-line { border-bottom: 1.5px solid #9ca3af; height: 32px; }
+
+        /* ── WORD CHAIN ── */
+        .word-chain { display: flex; gap: 0; align-items: center; flex-wrap: wrap; }
+        .chain-word { padding: 4px 10px; border: 2px solid #4338ca; border-radius: 6px; font-size: 12pt; font-weight: 800; color: #4338ca; background: #eef2ff; }
+        .chain-blank { width: 70px; height: 28px; border: 2px dashed #9ca3af; border-radius: 6px; }
+        .chain-arrow { color: #c7d2fe; font-size: 14pt; margin: 0 2px; }
+
+        /* ── MISSING VOWELS ── */
+        .mv-words { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .mv-word { font-size: 12pt; font-weight: 800; letter-spacing: 2px; padding: 4px 8px; border: 1.5px solid #e5e7eb; border-radius: 6px; background: #fafafa; }
+
+        /* ── SEQUENCE ORDER ── */
+        .seq-order-layout { display: flex; gap: 20px; align-items: flex-start; }
+        .seq-order-left { flex: 1; }
+        .seq-order-items { display: flex; flex-direction: column; gap: 5px; }
+        .seq-order-item { padding: 6px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 12pt; font-weight: 700; background: #fafafa; }
+        .seq-order-right { flex: 1; }
+        .seq-order-label { font-size: 12pt; font-weight: 800; color: #6366f1; margin-bottom: 6px; }
+        .seq-order-boxes { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+        .seq-order-box { width: 70px; height: 30px; border: 2px solid #374151; border-radius: 5px; }
+        .seq-order-arrow { color: #c7d2fe; font-size: 14pt; }
+
+        /* ── TRUE/FALSE FIX ── */
+        .tff-statements { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
+        .tff-row { display: flex; align-items: flex-start; gap: 6px; }
+        .tff-checkbox { width: 18px; height: 18px; border: 2px solid #374151; border-radius: 3px; flex-shrink: 0; margin-top: 2px; }
+        .tff-text { font-size: 12pt; font-weight: 600; flex: 1; }
+        .tff-fix { margin-top: 2px; margin-left: 24px; border-bottom: 1px solid #9ca3af; height: 28px; width: 90%; }
+
+        /* ── CAUSE EFFECT ── */
+        .ce-container { display: flex; align-items: flex-start; gap: 12px; }
+        .ce-col { display: flex; flex-direction: column; gap: 5px; }
+        .ce-item { display: flex; align-items: center; gap: 6px; font-size: 12pt; font-weight: 600; }
+        .ce-circle { width: 20px; height: 20px; border: 2px solid #6366f1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12pt; font-weight: 900; color: #6366f1; flex-shrink: 0; }
+        .ce-dots { flex: 1; min-width: 40px; border-bottom: 2px dotted #d1d5db; align-self: center; height: 1px; }
+
+        /* ── RIDDLE BOXES ── */
+        .riddle-items { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
+        .riddle-text { font-size: 12pt; font-weight: 600; font-style: italic; margin-bottom: 3px; color: #374151; }
+        .riddle-boxes { display: flex; gap: 3px; }
+        .riddle-box { width: 24px; height: 24px; border: 2px solid #374151; border-radius: 4px; }
+
+        /* ── WRITING LINES ── */
+        .lines-prompt { font-size: 12pt; font-weight: 600; margin-bottom: 6px; }
+        .writing-line { border-bottom: 1px solid #b0b0b0; height: 30px; }
+
+        /* ── FOOTER ── */
+        .ws-footer {
+            margin-top: 10px; padding-top: 4px; border-top: 1px solid #e5e7eb;
+            font-size: 8pt; color: #b0b0b0; text-align: center;
+        }
+
+        /* ── PRINT BUTTON ── */
+        .print-btn-bar { display: none; justify-content: center; padding: 8px 0; margin-bottom: 10px; }
+        .print-btn {
+            background: #6366f1; color: #fff; border: none;
+            padding: 9px 24px; border-radius: 50px;
+            font-family: 'Nunito', sans-serif; font-size: 12pt; font-weight: 800;
+            cursor: pointer; box-shadow: 0 4px 14px rgba(99,102,241,0.3);
+        }
+        .print-btn:hover { background: #4f46e5; }
+
+        @media print {
+            @page { size: A4 portrait; margin: 10mm !important; }
+            html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+            .container { max-width: none !important; padding: 0 !important; margin: 0 !important; box-shadow: none !important; border-radius: 0 !important; }
+            .print-btn-bar { display: none !important; }
+            .ws-footer { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="print-btn-bar" id="printBtnBar">
+        <button class="print-btn" onclick="window.print()">Распечатать</button>
+    </div>
+
+    <div class="ws-header">
+        <div class="ws-header-top">
+            <span class="ws-brand">Kidion</span>
+            <span class="ws-lesson-num">Урок {{ lesson_number }}</span>
+            <h1 class="ws-title">{{ title }}{% if child_name %} / {{ child_name }}{% endif %}</h1>
+        </div>
+        <div class="ws-meta">{{ subject }} / {{ grade }} класс / {{ topic }}</div>
+    </div>
+
+    <div class="tasks-grid">
+    {% set half_types = ['matching', 'anagram', 'odd_one_out', 'number_pyramid', 'magic_square'] %}
+    {% set half_count = tasks | selectattr('type', 'in', half_types) | list | length %}
+    {% for task in tasks %}
+
+        {% if task.type not in half_types %}
+        <div class="task-card task-card--wide">
+        {% elif half_count == 1 %}
+        <div class="task-card task-card--wide">
+        {% else %}
+        <div class="task-card">
+        {% endif %}
+
+        <div class="task-header">
+            <span class="task-num">{{ loop.index }}</span>
+            <span class="task-type-badge">
+                {%- if task.type == 'matching' -%}Соедини
+                {%- elif task.type == 'grid_maze' -%}Лабиринт
+                {%- elif task.type == 'anagram' -%}Анаграмма
+                {%- elif task.type == 'fill_blanks' -%}Вставь
+                {%- elif task.type == 'sorting_table' -%}Рассортируй
+                {%- elif task.type == 'odd_one_out' -%}Найди лишнее
+                {%- elif task.type == 'word_search' -%}Найди слова
+                {%- elif task.type == 'coloring' -%}Раскрась
+                {%- elif task.type == 'number_pyramid' -%}Пирамида
+                {%- elif task.type == 'magic_square' -%}Магический квадрат
+                {%- elif task.type == 'comparison_chain' -%}Сравни
+                {%- elif task.type == 'expression_builder' -%}Расставь знаки
+                {%- elif task.type == 'number_sequence' -%}Продолжи ряд
+                {%- elif task.type == 'syllable_builder' -%}Собери слово
+                {%- elif task.type == 'sentence_order' -%}Составь предложение
+                {%- elif task.type == 'word_chain' -%}Цепочка слов
+                {%- elif task.type == 'missing_vowels' -%}Впиши гласные
+                {%- elif task.type == 'sequence_order' -%}По порядку
+                {%- elif task.type == 'true_false_fix' -%}Найди ошибку
+                {%- elif task.type == 'cause_effect' -%}Причина и следствие
+                {%- elif task.type == 'riddle_boxes' -%}Загадки
+                {%- endif -%}
+            </span>
+        </div>
+
+        <p class="task-instruction">{{ task.instruction }}</p>
+
+        {% if task.type == 'coloring' %}
+        <div class="coloring-task-wrap">
+            {% if coloring_image_url %}
+            <img class="coloring-task-img" src="{{ coloring_image_url }}" alt="Раскраска">
+            {% else %}
+            <div class="coloring-task-img" style="display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:12pt;text-align:center;">Раскраска</div>
+            {% endif %}
+            <div class="coloring-task-right">
+                <p class="lines-prompt">{{ task.prompt_text }}</p>
+                {% for _ in range(task.line_count|default(3)) %}
+                <div class="writing-line"></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% elif task.type == 'matching' %}
+        <div class="matching-container">
+            <div class="matching-col">
+                {% for item in task.left_column %}
+                <div class="matching-item">
+                    <span class="matching-circle">{{ loop.index }}</span>
+                    <span>{{ item }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="matching-dots"></div>
+            <div class="matching-col">
+                {% for item in task.right_column %}
+                <div class="matching-item">
+                    <span class="matching-circle" style="border-color:#374151;color:#374151;">{{ ['А','Б','В','Г'][loop.index0] }}</span>
+                    <span>{{ item }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% elif task.type == 'grid_maze' %}
+        <div class="grid-maze-wrap">
+            <div class="grid-maze-label grid-maze-label--start">СТАРТ</div>
+            <div class="grid-maze" style="grid-template-columns: repeat({{ task.grid_size }}, 1fr);">
+                {% for cell in task.cells %}
+                <div class="grid-maze-cell">{{ cell }}</div>
+                {% endfor %}
+            </div>
+            <div class="grid-maze-label grid-maze-label--end">ФИНИШ</div>
+        </div>
+
+        {% elif task.type == 'anagram' %}
+        <div class="anagram-letters">
+            {% for ch in task.scrambled %}
+            <div class="anagram-letter">{{ ch }}</div>
+            {% endfor %}
+        </div>
+        <div class="anagram-hint">{{ task.hint }}</div>
+        <div class="anagram-answer">
+            {% for _ in range(task.answer_length) %}
+            <div class="anagram-box"></div>
+            {% endfor %}
+        </div>
+
+        {% elif task.type == 'fill_blanks' %}
+        <div class="fill-blanks-text">
+            {{ task.text_with_blanks | replace("____", '<span class="fill-blank"></span>') }}
+        </div>
+
+        {% elif task.type == 'sorting_table' %}
+        <div class="sorting-word-bank">
+            <span class="sorting-bank-label">Слова:</span>
+            {% for w in task.word_bank %}
+            <span class="sorting-word">{{ w }}</span>{% if not loop.last %} · {% endif %}
+            {% endfor %}
+        </div>
+        <table class="sorting-table">
+            <tr>{% for h in task.column_headers %}<th>{{ h }}</th>{% endfor %}</tr>
+            <tr>{% for h in task.column_headers %}<td></td>{% endfor %}</tr>
+        </table>
+
+        {% elif task.type == 'odd_one_out' %}
+        <div class="odd-items">
+            {% for item in task['items'] %}
+            <div class="odd-item">{{ item }}</div>
+            {% endfor %}
+        </div>
+        <div>
+            <span class="odd-explain-label">Лишнее: _______ Потому что:</span>
+            <div class="odd-explain-line"></div>
+        </div>
+
+        {% elif task.type == 'word_search' %}
+        <div class="ws-layout">
+            <div class="ws-words-col">
+                <div style="font-size:12pt;font-weight:800;color:#6366f1;margin-bottom:4px;">НАЙДИ:</div>
+                {% for w in task.words %}
+                <div class="ws-word-item"><span class="ws-word-bullet">*</span> {{ w }}</div>
+                {% endfor %}
+            </div>
+            <div class="ws-grid-col">
+                <div class="ws-grid" style="grid-template-columns: repeat({{ task.grid_size }}, 24px);">
+                    {% for row in task.grid %}
+                    {% for cell in row %}
+                    <div class="ws-grid-cell">{{ cell }}</div>
+                    {% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        {% elif task.type == 'number_pyramid' %}
+        <div class="pyramid-wrap">
+            {% for row in task.rows %}
+            <div class="pyramid-row">
+                {% for cell in row %}
+                <div class="pyramid-cell {% if cell %}pyramid-cell--filled{% else %}pyramid-cell--empty{% endif %}">{{ cell }}</div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+
+        {% elif task.type == 'magic_square' %}
+        <div class="magic-square" style="grid-template-columns: repeat(3, 44px);">
+            {% for row in task.grid %}
+            {% for cell in row %}
+            <div class="magic-cell {% if cell %}magic-cell--filled{% else %}magic-cell--empty{% endif %}">{{ cell }}</div>
+            {% endfor %}
+            {% endfor %}
+        </div>
+        <div class="magic-target">Сумма = {{ task.target_sum }}</div>
+
+        {% elif task.type == 'comparison_chain' %}
+        <div class="comparison-pairs">
+            {% for pair in task.pairs %}
+            <div class="comparison-pair">
+                <span class="comparison-value">{{ pair[0] }}</span>
+                <span class="comparison-circle"></span>
+                <span class="comparison-value">{{ pair[1] }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% elif task.type == 'expression_builder' %}
+        <div class="expr-equations">
+            {% for eq in task.equations %}
+            <div class="expr-line">{{ eq | replace("O", '<span class="expr-circle"></span>') }}</div>
+            {% endfor %}
+        </div>
+
+        {% elif task.type == 'number_sequence' %}
+        <div class="sequence-rows">
+            {% for seq in task.sequences %}
+            <div class="sequence-row">
+                {% for val in seq %}
+                {% if not loop.first %}<span class="seq-arrow">→</span>{% endif %}
+                <div class="seq-cell {% if val %}seq-cell--filled{% else %}seq-cell--empty{% endif %}">{{ val }}</div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+
+        {% elif task.type == 'syllable_builder' %}
+        <div class="syllable-groups">
+            {% for group in task.syllable_groups %}
+            <div class="syllable-group">
+                {% for syl in group %}
+                {% if not loop.first %}<span class="syllable-plus">+</span>{% endif %}
+                <span class="syllable-block">{{ syl }}</span>
+                {% endfor %}
+                <span class="syllable-eq">=</span>
+                <span class="syllable-answer-line"></span>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% elif task.type == 'sentence_order' %}
+        <div class="sentence-order-items">
+            {% for sent in task.scrambled_sentences %}
+            <div>
+                <div style="font-size:12pt;font-weight:800;color:#6366f1;margin-bottom:3px;">{{ loop.index }}.</div>
+                <div class="sentence-words">
+                    {% for w in sent %}<span class="sentence-word">{{ w }}</span>{% endfor %}
+                </div>
+                <div class="sentence-answer-line"></div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% elif task.type == 'word_chain' %}
+        <div class="word-chain">
+            {% for i in range(task.chain_length) %}
+            {% if i > 0 %}<span class="chain-arrow">→</span>{% endif %}
+            {% if i < task.given_words|length %}
+            <span class="chain-word">{{ task.given_words[i] }}</span>
+            {% else %}
+            <span class="chain-blank"></span>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        {% elif task.type == 'missing_vowels' %}
+        <div class="mv-words">
+            {% for w in task.words_with_gaps %}
+            <span class="mv-word">{{ w }}</span>
+            {% endfor %}
+        </div>
+
+        {% elif task.type == 'sequence_order' %}
+        <div class="seq-order-layout">
+            <div class="seq-order-left">
+                <div class="seq-order-items">
+                    {% for item in task['items'] %}
+                    <div class="seq-order-item">{{ item }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="seq-order-right">
+                <div class="seq-order-label">Правильный порядок:</div>
+                <div class="seq-order-boxes">
+                    {% for item in task['items'] %}
+                    {% if not loop.first %}<span class="seq-order-arrow">→</span>{% endif %}
+                    <div class="seq-order-box"></div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        {% elif task.type == 'true_false_fix' %}
+        <div class="tff-statements">
+            {% for st in task.statements %}
+            <div>
+                <div class="tff-row">
+                    <div class="tff-checkbox"></div>
+                    <div class="tff-text">{{ st }}</div>
+                </div>
+                <div class="tff-fix"></div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% elif task.type == 'cause_effect' %}
+        <div class="ce-container">
+            <div class="ce-col">
+                {% for c in task.causes %}
+                <div class="ce-item">
+                    <span class="ce-circle">{{ loop.index }}</span>
+                    <span>{{ c }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="ce-dots"></div>
+            <div class="ce-col">
+                {% for e in task.effects %}
+                <div class="ce-item">
+                    <span class="ce-circle" style="border-color:#374151;color:#374151;">{{ ['А','Б','В','Г'][loop.index0] }}</span>
+                    <span>{{ e }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% elif task.type == 'riddle_boxes' %}
+        <div class="riddle-items">
+            {% for i in range(task.riddles|length) %}
+            <div class="riddle-row">
+                <div class="riddle-text">{{ task.riddles[i] }}</div>
+                <div class="riddle-boxes">
+                    {% for _ in range(task.answer_lengths[i]) %}
+                    <div class="riddle-box"></div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% endif %}
+        </div>
+    {% endfor %}
+    </div>
+
+    <div class="ws-footer">Kidion — kidion.ru</div>
+</div>
+
+<script>
+(function () {
+    document.getElementById('printBtnBar').style.display = 'flex';
+    var vw = window.innerWidth;
+    var c = document.querySelector('.container');
+    if (vw < 800 && c) {
+        var pageW = c.scrollWidth;
+        var scale = (vw - 16) / pageW;
+        if (scale < 1) {
+            c.style.transformOrigin = 'top left';
+            c.style.transform = 'scale(' + scale + ')';
+            c.style.width = (100 / scale) + '%';
+            return;
+        }
+    }
+    var A4H = 1047;
+    var grid = document.querySelector('.tasks-grid');
+    if (!c || !grid) return;
+    var cards = grid.querySelectorAll('.task-card');
+    var n = cards.length;
+    var h = c.scrollHeight;
+    if (h < A4H && n > 0) {
+        var extra = A4H - h;
+        var slots = n + 1;
+        var gapAdd = extra * 0.3 / slots;
+        var padAdd = extra * 0.7 / n / 2;
+        grid.style.marginTop = Math.round(gapAdd) + 'px';
+        grid.style.gap = Math.round(8 + gapAdd) + 'px';
+        for (var i = 0; i < n; i++) {
+            cards[i].style.paddingTop = Math.round(10 + padAdd) + 'px';
+            cards[i].style.paddingBottom = Math.round(10 + padAdd) + 'px';
+        }
+    }
+    h = c.scrollHeight;
+    if (h > A4H) {
+        var scale = A4H / h;
+        c.style.transformOrigin = 'top left';
+        c.style.transform = 'scale(' + scale + ')';
+        c.style.width = (100 / scale) + '%';
+    }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,381 @@
+{% extends "base.html" %}
+{% block title %}Программа обучения · {{ child.name }} — Kidion{% endblock %}
+{% block content %}
+<div class="container program-page">
+  <div class="program-page__header">
+    <a href="/children/{{ child.id }}" class="btn btn--ghost btn--sm">&larr; Назад к профилю</a>
+    <h1>Программа обучения</h1>
+    <p class="program-page__meta">{{ child.name }} · {{ child.grade }} класс</p>
+  </div>
+
+  <!-- Subject tabs -->
+  <div class="subject-tabs" id="subject-tabs">
+    <button class="subject-tab active" data-subject="math">Математика</button>
+    <button class="subject-tab" data-subject="russian">Русский язык</button>
+  </div>
+
+  <!-- Subject content area -->
+  <div id="subject-content">
+    <div class="program-loading">Загрузка программы...</div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+var CHILD_ID = {{ child.id }};
+var CHILD_GRADE = {{ child.grade }};
+var currentSubject = 'math';
+var curriculumCache = {};
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Tab switching
+  document.querySelectorAll('.subject-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.subject-tab').forEach(function(t) { t.classList.remove('active'); });
+      this.classList.add('active');
+      currentSubject = this.dataset.subject;
+      loadSubject(currentSubject);
+    });
+  });
+
+  loadSubject('math');
+});
+
+async function loadSubject(subject) {
+  var area = document.getElementById('subject-content');
+  area.innerHTML = '<div class="program-loading">Загрузка программы...</div>';
+
+  try {
+    var resp = await fetch('/api/children/' + CHILD_ID + '/curriculum/' + subject);
+    if (!resp.ok) {
+      area.innerHTML = '<div class="program-empty">Программа по этому предмету пока недоступна для ' + CHILD_GRADE + ' класса</div>';
+      return;
+    }
+    var data = await resp.json();
+    curriculumCache[subject] = data;
+    renderSubject(area, data);
+  } catch(e) {
+    area.innerHTML = '<div class="program-empty">Ошибка загрузки</div>';
+  }
+}
+
+function renderSubject(area, data) {
+  var percent = data.percent || 0;
+
+  // Progress bar
+  var html = '<div class="program-progress-section">';
+  html += '<div class="program-progress-section__header">';
+  html += '<span class="program-progress-section__title">' + esc(data.title) + '</span>';
+  html += '<span class="program-progress-section__pct">' + percent + '%</span>';
+  html += '</div>';
+  html += '<div class="program-progress-bar-wrap">';
+  html += '<div class="program-progress-bar" style="width:' + percent + '%"></div>';
+  html += '</div>';
+  html += '<span class="program-progress-text">' + data.completed_topics + ' из ' + data.total_topics + ' тем пройдено</span>';
+  html += '</div>';
+
+  // Mode selector
+  html += '<div class="program-modes">';
+  html += '<h3 class="program-modes__title">Выберите режим</h3>';
+  html += '<div class="program-modes__grid">';
+
+  // Mode 1: Weekly topic
+  html += '<div class="program-mode-card program-mode-card--weekly" data-mode="weekly">';
+  html += '<div class="program-mode-card__icon">📅</div>';
+  html += '<div class="program-mode-card__title">Тема недели</div>';
+  html += '<div class="program-mode-card__desc">Выберите тему — система создаст 3-5 уроков на неделю</div>';
+  html += '</div>';
+
+  // Mode 2: Full route
+  html += '<div class="program-mode-card program-mode-card--route" data-mode="route">';
+  html += '<div class="program-mode-card__icon">🗺️</div>';
+  html += '<div class="program-mode-card__title">Весь маршрут</div>';
+  html += '<div class="program-mode-card__desc">Последовательно пройти все темы от начала до конца</div>';
+  html += '</div>';
+
+  // Mode 3: Pick a topic
+  html += '<div class="program-mode-card program-mode-card--pick" data-mode="pick">';
+  html += '<div class="program-mode-card__icon">🎯</div>';
+  html += '<div class="program-mode-card__title">Выбрать урок</div>';
+  html += '<div class="program-mode-card__desc">Выберите конкретную тему из программы</div>';
+  html += '</div>';
+
+  html += '</div>'; // modes grid
+  html += '</div>'; // modes
+
+  // Active modes info
+  if (data.active_weekly_plan) {
+    html += '<div class="program-active-info program-active-info--weekly">';
+    html += '<strong>Активная тема недели:</strong> Урок ' + (data.active_weekly_plan.current_lesson_index + 1) + ' из ' + data.active_weekly_plan.lessons_count;
+    html += ' <button class="btn btn--outline btn--sm" onclick="showWeeklyPlanUI()">Продолжить</button>';
+    html += '</div>';
+  }
+  if (data.active_enrollment) {
+    var flat = 0;
+    data.units.forEach(function(u) { flat += u.topics.length; });
+    html += '<div class="program-active-info program-active-info--route">';
+    html += '<strong>Активный маршрут:</strong> Тема ' + (data.active_enrollment.current_topic_index + 1) + ' из ' + flat;
+    html += ' <button class="btn btn--outline btn--sm" onclick="enrollmentNextFromProgram(' + data.active_enrollment.id + ')">Следующий урок (10 💎)</button>';
+    html += '</div>';
+  }
+
+  // Mode panels (hidden by default)
+  html += '<div id="mode-panel"></div>';
+
+  // Topics list
+  html += '<div class="program-topics">';
+  html += '<h3 class="program-topics__title">Темы программы</h3>';
+
+  for (var i = 0; i < data.units.length; i++) {
+    var unit = data.units[i];
+    var unitIcon = unit.completed === unit.total ? '✅' : (unit.completed > 0 ? '🔄' : '📋');
+    html += '<div class="program-unit">';
+    html += '<div class="program-unit__header" onclick="toggleUnit(this)">';
+    html += '<span class="program-unit__icon">' + unitIcon + '</span>';
+    html += '<span class="program-unit__title">' + esc(unit.title) + '</span>';
+    html += '<span class="program-unit__progress">' + unit.completed + '/' + unit.total + '</span>';
+    html += '<span class="program-unit__chevron">▸</span>';
+    html += '</div>';
+    html += '<div class="program-unit__topics" style="display:none">';
+
+    for (var j = 0; j < unit.topics.length; j++) {
+      var topic = unit.topics[j];
+      var topicIcon = topic.completed ? '✅' : '⬜';
+      var topicClass = topic.completed ? 'program-topic--done' : 'program-topic--pending';
+      html += '<div class="program-topic ' + topicClass + '" data-topic-id="' + topic.id + '">';
+      html += '<span class="program-topic__icon">' + topicIcon + '</span>';
+      html += '<span class="program-topic__title">' + esc(topic.title) + '</span>';
+      if (!topic.completed) {
+        html += '<button class="btn btn--outline btn--sm program-topic__btn" onclick="generateTopicLesson(\'' + topic.id + '\', \'' + esc(topic.title).replace(/'/g, "\\'") + '\')">Создать урок (10 💎)</button>';
+      }
+      html += '</div>';
+    }
+
+    html += '</div>'; // topics
+    html += '</div>'; // unit
+  }
+
+  html += '</div>'; // program-topics
+  html += '<div id="program-status" class="mode-status" style="display:none"></div>';
+
+  area.innerHTML = html;
+
+  // Attach mode card clicks
+  area.querySelectorAll('.program-mode-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+      handleModeClick(this.dataset.mode);
+    });
+  });
+}
+
+function toggleUnit(header) {
+  var topics = header.nextElementSibling;
+  var chevron = header.querySelector('.program-unit__chevron');
+  if (topics.style.display === 'none') {
+    topics.style.display = 'block';
+    chevron.textContent = '▾';
+  } else {
+    topics.style.display = 'none';
+    chevron.textContent = '▸';
+  }
+}
+
+function handleModeClick(mode) {
+  var panel = document.getElementById('mode-panel');
+
+  if (mode === 'weekly') {
+    showWeeklyPlanUI();
+  } else if (mode === 'route') {
+    showRouteUI(panel);
+  } else if (mode === 'pick') {
+    // Expand all units to let parent pick
+    document.querySelectorAll('.program-unit__topics').forEach(function(el) {
+      el.style.display = 'block';
+    });
+    document.querySelectorAll('.program-unit__chevron').forEach(function(el) {
+      el.textContent = '▾';
+    });
+    panel.innerHTML = '<div class="program-hint">Выберите тему ниже и нажмите «Создать урок»</div>';
+  }
+}
+
+function showWeeklyPlanUI() {
+  var panel = document.getElementById('mode-panel');
+  var data = curriculumCache[currentSubject];
+
+  if (data && data.active_weekly_plan) {
+    panel.innerHTML = '<div class="program-hint">У вас уже есть активная тема недели. Перейдите в <a href="/kid/login?child_id=' + CHILD_ID + '">кабинет ребёнка</a>, чтобы продолжить.</div>';
+    return;
+  }
+
+  panel.innerHTML =
+    '<div class="program-weekly-form card">' +
+    '<h4>Создать тему недели</h4>' +
+    '<p class="mode-card__desc">Введите ключевое слово — система найдёт подходящий раздел</p>' +
+    '<form id="wp-form-program" class="mode-form">' +
+    '  <div class="mode-form__row">' +
+    '    <input type="text" id="wp-query-program" placeholder="Например: сложение" required class="input">' +
+    '  </div>' +
+    '  <button type="submit" class="btn btn--primary">Создать план (50 💎)</button>' +
+    '</form>' +
+    '<div id="wp-status-program" class="mode-status" style="display:none"></div>' +
+    '</div>';
+
+  document.getElementById('wp-form-program').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var query = document.getElementById('wp-query-program').value.trim();
+    if (!query) return;
+
+    var statusEl = document.getElementById('wp-status-program');
+    statusEl.style.display = 'block';
+    statusEl.innerHTML = '⏳ Ищу раздел в программе...';
+
+    try {
+      var resp = await fetch('/api/weekly-plans', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ child_id: CHILD_ID, subject: currentSubject, query: query })
+      });
+      var data = await resp.json();
+      if (resp.ok) {
+        statusEl.innerHTML = '✅ План создан: ' + esc(data.unit_title) + ' (' + data.topics.length + ' уроков)';
+
+        // Show generate all button
+        statusEl.innerHTML += '<br><button class="btn btn--primary btn--sm" style="margin-top:8px" onclick="generateAllWeekly(' + data.plan_id + ')">Сгенерировать все уроки (50 💎)</button>';
+      } else {
+        statusEl.innerHTML = '❌ ' + (data.error || 'Раздел не найден');
+      }
+    } catch(e) {
+      statusEl.innerHTML = '❌ Ошибка соединения';
+    }
+  });
+}
+
+async function generateAllWeekly(planId) {
+  var statusEl = document.getElementById('wp-status-program');
+  statusEl.innerHTML = '⏳ Генерирую все уроки...';
+
+  try {
+    var resp = await fetch('/api/weekly-plans/' + planId + '/generate-all', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'}
+    });
+    var data = await resp.json();
+    if (resp.ok) {
+      statusEl.innerHTML = '✅ Создано ' + data.lessons_count + ' уроков! Списано ' + data.crystals_spent + ' 💎<br><a href="/kid/login?child_id=' + CHILD_ID + '" class="btn btn--primary btn--sm" style="margin-top:8px;display:inline-block">Открыть кабинет ребёнка</a>';
+    } else if (data.error === 'insufficient_crystals') {
+      statusEl.innerHTML = '💎 Недостаточно кристаллов. <a href="/buy">Пополнить</a>';
+    } else {
+      statusEl.innerHTML = '❌ ' + (data.error || 'Ошибка');
+    }
+  } catch(e) {
+    statusEl.innerHTML = '❌ Ошибка соединения';
+  }
+}
+
+function showRouteUI(panel) {
+  var data = curriculumCache[currentSubject];
+
+  if (data && data.active_enrollment) {
+    panel.innerHTML = '<div class="program-hint">Маршрут по ' + (currentSubject === 'math' ? 'математике' : 'русскому языку') + ' уже активен. Нажмите «Следующий урок» выше.</div>';
+    return;
+  }
+
+  panel.innerHTML =
+    '<div class="program-route-start card">' +
+    '<h4>Маршрут по программе</h4>' +
+    '<p class="mode-card__desc">Система будет вести ребёнка по всем темам последовательно</p>' +
+    '<button class="btn btn--primary" id="start-route-btn">Начать маршрут</button>' +
+    '<div id="route-status" class="mode-status" style="display:none"></div>' +
+    '</div>';
+
+  document.getElementById('start-route-btn').addEventListener('click', async function() {
+    var btn = this;
+    btn.disabled = true;
+    btn.textContent = '⏳ Создаю маршрут...';
+    var statusEl = document.getElementById('route-status');
+
+    try {
+      var resp = await fetch('/api/enrollments', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ child_id: CHILD_ID, subject: currentSubject })
+      });
+      var data = await resp.json();
+      if (resp.ok) {
+        statusEl.style.display = 'block';
+        statusEl.innerHTML = '✅ Маршрут создан! Нажмите «Следующий урок», чтобы начать.';
+        setTimeout(function() { loadSubject(currentSubject); }, 1500);
+      } else if (data.error === 'enrollment_already_active') {
+        statusEl.style.display = 'block';
+        statusEl.innerHTML = 'Маршрут уже активен.';
+      } else {
+        statusEl.style.display = 'block';
+        statusEl.innerHTML = '❌ ' + (data.error || 'Ошибка');
+      }
+    } catch(e) {
+      statusEl.style.display = 'block';
+      statusEl.innerHTML = '❌ Ошибка соединения';
+    }
+    btn.disabled = false;
+    btn.textContent = 'Начать маршрут';
+  });
+}
+
+async function enrollmentNextFromProgram(enrollmentId) {
+  var statusEl = document.getElementById('program-status');
+  statusEl.style.display = 'block';
+  statusEl.innerHTML = '⏳ Генерирую урок...';
+
+  try {
+    var resp = await fetch('/api/enrollments/' + enrollmentId + '/next', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'}
+    });
+    var data = await resp.json();
+    if (resp.ok) {
+      statusEl.innerHTML = '✅ Урок «' + esc(data.topic_title) + '» создан!<br><a href="/kid/login?child_id=' + CHILD_ID + '" class="btn btn--primary btn--sm" style="margin-top:8px;display:inline-block">Открыть кабинет ребёнка</a>';
+    } else if (data.error === 'enrollment_completed') {
+      statusEl.innerHTML = '🎉 Маршрут пройден!';
+    } else if (data.error === 'insufficient_crystals') {
+      statusEl.innerHTML = '💎 Недостаточно кристаллов. <a href="/buy">Пополнить</a>';
+    } else {
+      statusEl.innerHTML = '❌ ' + (data.error || 'Ошибка');
+    }
+  } catch(e) {
+    statusEl.innerHTML = '❌ Ошибка соединения';
+  }
+}
+
+async function generateTopicLesson(topicId, topicTitle) {
+  var statusEl = document.getElementById('program-status');
+  statusEl.style.display = 'block';
+  statusEl.innerHTML = '⏳ Создаю урок «' + topicTitle + '»...';
+
+  try {
+    var resp = await fetch('/api/lessons/generate-topic', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ child_id: CHILD_ID, topic_id: topicId, subject: currentSubject })
+    });
+    var data = await resp.json();
+    if (resp.ok) {
+      statusEl.innerHTML = '✅ Урок «' + esc(data.topic_title) + '» создан!<br><a href="/kid/login?child_id=' + CHILD_ID + '" class="btn btn--primary btn--sm" style="margin-top:8px;display:inline-block">Открыть кабинет ребёнка</a>';
+      // Reload to update completion status
+      setTimeout(function() { loadSubject(currentSubject); }, 2000);
+    } else if (data.error === 'insufficient_crystals') {
+      statusEl.innerHTML = '💎 Недостаточно кристаллов. <a href="/buy">Пополнить</a>';
+    } else {
+      statusEl.innerHTML = '❌ ' + (data.error || 'Ошибка');
+    }
+  } catch(e) {
+    statusEl.innerHTML = '❌ Ошибка соединения';
+  }
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+{% endblock %}
