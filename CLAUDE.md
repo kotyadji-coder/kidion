@@ -21,9 +21,9 @@ Parent creates child (name, grade, interests) → AI generates universe + charac
 - **Backend:** FastAPI + uvicorn + SQLite (sqlite3, no ORM)
 - **Frontend:** Jinja2 templates + vanilla JS (no React/Vue)
 - **Auth:** bcrypt (passwords) + itsdangerous (signed cookies `kid_session` for parents, `kid_session_child` for kids)
-- **AI Generation:** Google Vertex AI (Gemini 3.1 Pro for text, Gemini 2.5 Flash for images)
+- **AI Generation:** Google Vertex AI (Gemini 3.1 Pro for text, Gemini 2.5 Flash for images and kid chat)
 - **Payments:** YooKassa Python SDK (not yet connected with real keys)
-- **Tests:** pytest + pytest-asyncio + httpx (292 tests)
+- **Tests:** pytest + pytest-asyncio + httpx (306 tests)
 
 ## File Structure
 
@@ -43,6 +43,7 @@ kidion/
 │   ├── content_generator.py   # Saves lesson HTML/PNG/JSON to content/
 │   ├── curricula.py           # Load/search curriculum JSON files
 │   ├── universe.py            # Universe/character/shop generation (Gemini)
+│   ├── kid_chat.py            # Safe AI chat: 3 characters, safety prompts, Gemini 2.5 Flash
 │   └── worksheet/             # Printable worksheet generation (from metodist)
 │       ├── models.py           # Pydantic models: 24 task types + 3 activities
 │       ├── prompts.py          # Prompts for worksheet/activity generation
@@ -60,15 +61,18 @@ kidion/
 │   ├── home.html              # Kid home: character avatar + subjects + streak
 │   ├── character.html         # RPG-style character page + star shop
 │   ├── subject_map.html       # Duolingo-style vertical lesson map per subject
+│   ├── chat.html              # AI chat: 3-column layout (chats, messages, characters)
 │   ├── lesson.html            # Lesson iframe + auto-score via postMessage
 │   └── result.html            # Stars animation + streak
 ├── static/kid/style.css       # Kid CSS (Nunito, pastels, mobile-first)
+├── static/kid/chat.css        # Chat page CSS (3-column responsive)
+├── static/kid/chat.js         # Chat page JS (CRUD, send, typing, attachments)
 ├── content/                   # Generated lesson HTML/PNG + characters/ (gitignored)
 ├── content/characters/        # Generated character PNGs: {child_id}.png
 └── tests/                     # 306 tests across 16 test files
 ```
 
-## Database Schema (17 tables)
+## Database Schema (20 tables)
 
 | Table | Purpose | Key Fields |
 |-------|---------|------------|
@@ -89,6 +93,9 @@ kidion/
 | `payments` | YooKassa payments | user_id, yookassa_payment_id, amount_rub, crystals, status |
 | `generations` | Legacy generation records | user_id, type, status, result_url |
 | `referrals` | Referral relationships | referrer_id, referred_id |
+| `kid_chats` | Kid AI chat sessions | child_id, character_key, title |
+| `kid_chat_messages` | Chat messages | chat_id, role (user/assistant), content, image_url |
+| `chat_subscriptions` | Chat subscription (parent) | user_id, started_at, expires_at |
 
 ## Personalized Universe & Character System
 
@@ -114,8 +121,32 @@ All generation functions return predefined defaults when `GOOGLE_CLOUD_PROJECT` 
 
 ## Two Currencies
 
-- **Crystals**: Parent currency. Bought with real money, spent on lesson generation. Child never sees crystals.
+- **Crystals**: Parent currency. Bought with real money, spent on lesson generation and chat subscription. Child never sees crystals.
 - **Stars**: Child currency. Earned by completing lessons (+1 per correct task, max 5 per lesson). Spent in character shop. Stored in `children.stars`.
+
+## Kid AI Chat System
+
+### Characters (personas)
+3 AI characters with different system prompts, all using Gemini 2.5 Flash:
+- **Owl** (`owl`) — teacher, explains things simply
+- **Dreamer** (`dreamer`) — creative, helps with stories and art
+- **Professor** (`professor`) — science facts, answers "why?" questions
+
+### Safety
+- Strict system prompt: no violence, politics, adult content, no personal data requests
+- Gemini safety filters at `BLOCK_LOW_AND_ABOVE`
+- Input sanitization against prompt injection
+- Responses adapted for ages 6-10
+
+### Subscription & Limits
+- **Free:** 5 messages/day per parent account (all children share)
+- **Subscription:** 300 crystals/month → 50 messages/day
+- Limits counted across all children of the same parent
+- Subscription bought on `/buy` page (parent auth)
+
+### Chat Context
+- Last 30 messages sent to Gemini as conversation history
+- Auto-title generated after first message via separate Gemini call
 
 ## Key Business Logic
 
@@ -124,6 +155,7 @@ All generation functions return predefined defaults when `GOOGLE_CLOUD_PROJECT` 
 - **Packages:** 60/60 rub, 360/320 rub, 600/490 rub, 1000/800 rub
 - **Adaptive difficulty** (1-3): auto-adjusts based on last 2 lesson results
 - **Auto-scoring:** iframe postMessage → auto-submit result. Stub mode → 5/5.
+- **Chat subscription:** 300 crystals/month, 50 msg/day (5 free). Per account, all children.
 
 ## API Endpoints
 
@@ -140,12 +172,15 @@ All generation functions return predefined defaults when `GOOGLE_CLOUD_PROJECT` 
 - Data: `GET /api/kid/me` (includes character_image_url, universe_description), `/lessons`, `/lessons/{id}`, `/subjects`, `/subject/{s}/map`, `/free-lessons`
 - Actions: `POST /api/kid/lessons/{curriculum_lesson_id}/start`
 - **Character & Shop:** `GET /api/kid/character`, `POST /api/kid/shop/buy/{item_id}`, `POST /api/kid/shop/equip/{item_id}`
+- **Chat:** `GET /api/kid/chats`, `POST /api/kid/chats`, `DELETE /api/kid/chats/{id}`, `GET /api/kid/chats/{id}/messages`, `POST /api/kid/chats/{id}/send`
 
 ### Payments & Lessons (parent auth)
 - `POST /api/lessons/generate`, `POST /api/lessons/generate-topic`, `GET /api/lessons/{id}/poll`, `POST /api/lessons/{id}/result`
 - `POST /api/payment/create`, `POST /api/payment/webhook`, `GET /api/payment/status/{id}`
 - `GET /api/children/{id}/worksheets?topic_id=X` — batch print worksheets for topic (5 pages)
 - `GET /api/children/{id}/worksheets?subject=X` — batch print all worksheets for subject
+- `POST /api/chat/subscribe` — buy chat subscription (300 crystals/month)
+- `GET /api/chat/subscription` — check subscription status
 
 ## Pages
 
@@ -154,6 +189,7 @@ All generation functions return predefined defaults when `GOOGLE_CLOUD_PROJECT` 
 - `/kid/character` — RPG character page + star shop
 - `/kid/subject/{subject}` — Duolingo-style lesson map
 - `/kid/lesson/{id}` — lesson iframe
+- `/kid/chat` — AI chat with 3 characters (Owl, Dreamer, Professor)
 - `/kid/result/{id}` — stars animation
 
 ### Parent
@@ -173,13 +209,14 @@ uvicorn main:app --host 127.0.0.1 --port 8003 --reload
 
 - **Domain:** kidion.ru
 - **VPS:** 72.56.126.111, SSH: `ssh -i ~/.ssh/vps_key root@72.56.126.111`
-- **Port:** 8003, **Path:** /opt/kidion
-- **Status:** NOT deployed yet (local only)
+- **Port:** 8004, **Path:** /opt/kidion
+- **GitHub:** https://github.com/kotyadji-coder/kidion
+- **Status:** deployed (SSL active)
 
 ## TODO
 
-- [ ] Deploy to VPS (systemd + nginx + certbot SSL)
-- [ ] DNS: A-record kidion.ru -> 72.56.126.111
+- [x] Deploy to VPS (systemd + nginx + certbot SSL)
+- [x] DNS: A-record kidion.ru -> 72.56.126.111
 - [ ] YooKassa: get real SHOP_ID and SECRET_KEY
 - [x] Connect print worksheet generation (worksheets generated alongside lessons)
 - [ ] Add curricula for grades 3-4 and more subjects (world)
