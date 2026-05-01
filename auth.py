@@ -75,6 +75,25 @@ def decode_child_session_token(token: str) -> int | None:
         return None
 
 
+def create_reset_token(user_id: int) -> str:
+    """Create a signed token for password reset (valid 1 hour)."""
+    signer = _get_signer()
+    return signer.sign(f"reset:{user_id}").decode()
+
+
+def decode_reset_token(token: str) -> int | None:
+    """Decode password reset token. Returns user_id or None if invalid/expired (1 hour)."""
+    signer = _get_signer()
+    try:
+        value = signer.unsign(token, max_age=3600)  # 1 hour
+        raw = value.decode()
+        if not raw.startswith("reset:"):
+            return None
+        return int(raw[len("reset:"):])
+    except (BadSignature, SignatureExpired, ValueError):
+        return None
+
+
 def get_current_child(request, conn) -> dict | None:
     """Read kid_session_child cookie, decode it, return child dict (without pin_hash) or None."""
     token = request.cookies.get("kid_session_child")

@@ -348,6 +348,14 @@ def get_user_by_ref_code(conn: sqlite3.Connection, ref_code: str) -> dict | None
     return dict(row) if row else None
 
 
+def update_user_password(conn: sqlite3.Connection, user_id: int, password_hash: str) -> None:
+    conn.execute(
+        "UPDATE users SET password_hash = ? WHERE id = ?",
+        (password_hash, user_id),
+    )
+    conn.commit()
+
+
 def update_crystals(conn: sqlite3.Connection, user_id: int, delta: int) -> bool:
     """
     Atomically update crystals by delta.

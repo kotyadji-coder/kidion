@@ -20,7 +20,9 @@ load_dotenv()
 
 from auth import (
     create_child_session_token,
+    create_reset_token,
     create_session_token,
+    decode_reset_token,
     get_current_child,
     get_current_user,
     hash_password,
@@ -69,6 +71,7 @@ from db import (
     update_child_universe,
     update_crystals,
     update_difficulty_level,
+    update_user_password,
     update_streak,
     update_weekly_plan_index,
     create_enrollment,
@@ -401,6 +404,98 @@ async def login(request: Request):
 async def logout():
     response = JSONResponse({"ok": True})
     _clear_session_cookie(response)
+    return response
+
+
+@app.post("/auth/forgot-password")
+async def forgot_password(request: Request):
+    body = await request.json()
+    email = body.get("email", "").strip().lower()
+
+    if not _EMAIL_RE.match(email):
+        return JSONResponse({"error": "invalid_email"}, status_code=400)
+
+    conn = get_db_connection()
+    user = get_user_by_email(conn, email)
+
+    # Always return ok to prevent email enumeration
+    if not user:
+        return JSONResponse({"ok": True})
+
+    token = create_reset_token(user["id"])
+    base_url = os.environ.get("APP_BASE_URL", "http://localhost:8003")
+    reset_link = f"{base_url}/reset-password?token={token}"
+
+    # Send email if SMTP is configured, otherwise log the link
+    _send_reset_email(email, reset_link)
+
+    return JSONResponse({"ok": True})
+
+
+def _send_reset_email(to_email: str, reset_link: str) -> None:
+    """Send password reset email via SMTP. Falls back to logging if SMTP is not configured."""
+    import smtplib
+    from email.mime.text import MIMEText
+
+    smtp_host = os.environ.get("SMTP_HOST")
+    smtp_port = int(os.environ.get("SMTP_PORT", "587"))
+    smtp_user = os.environ.get("SMTP_USER")
+    smtp_password = os.environ.get("SMTP_PASSWORD")
+    smtp_from = os.environ.get("SMTP_FROM", smtp_user)
+
+    if not all([smtp_host, smtp_user, smtp_password]):
+        logging.warning("SMTP not configured. Reset link: %s", reset_link)
+        return
+
+    html = (
+        "<div style='font-family:sans-serif;max-width:480px;margin:0 auto;'>"
+        "<h2 style='color:#6c5ce7;'>Kidion</h2>"
+        "<p>Вы запросили сброс пароля.</p>"
+        f"<p><a href='{reset_link}' style='display:inline-block;padding:12px 24px;"
+        "background:#6c5ce7;color:#fff;border-radius:8px;text-decoration:none;'>"
+        "Сбросить пароль</a></p>"
+        "<p style='color:#999;font-size:13px;'>Ссылка действительна 1 час. "
+        "Если вы не запрашивали сброс — просто проигнорируйте это письмо.</p>"
+        "</div>"
+    )
+
+    msg = MIMEText(html, "html", "utf-8")
+    msg["Subject"] = "Сброс пароля — Kidion"
+    msg["From"] = smtp_from
+    msg["To"] = to_email
+
+    try:
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            server.send_message(msg)
+        logging.info("Reset email sent to %s", to_email)
+    except Exception:
+        logging.exception("Failed to send reset email to %s", to_email)
+
+
+@app.post("/auth/reset-password")
+async def reset_password(request: Request):
+    body = await request.json()
+    token = body.get("token", "")
+    password = body.get("password", "")
+
+    if len(password) < 8:
+        return JSONResponse({"error": "weak_password"}, status_code=400)
+
+    user_id = decode_reset_token(token)
+    if user_id is None:
+        return JSONResponse({"error": "invalid_token"}, status_code=400)
+
+    conn = get_db_connection()
+    user = get_user_by_id(conn, user_id)
+    if not user:
+        return JSONResponse({"error": "invalid_token"}, status_code=400)
+
+    update_user_password(conn, user_id, hash_password(password))
+
+    response = JSONResponse({"ok": True})
+    _set_session_cookie(response, user_id)
     return response
 
 
@@ -2470,6 +2565,25 @@ async def page_register(request: Request, ref: str = ""):
         request,
         "auth.html",
         {"user": None, "mode": "register", "error": None, "ref_code": ref},
+    )
+
+
+@app.get("/forgot-password", response_class=HTMLResponse)
+async def page_forgot_password(request: Request):
+    if templates is None:
+        return HTMLResponse("<h1>Forgot Password</h1>")
+    return templates.TemplateResponse(
+        request, "auth.html", {"user": None, "mode": "forgot", "error": None}
+    )
+
+
+@app.get("/reset-password", response_class=HTMLResponse)
+async def page_reset_password(request: Request, token: str = ""):
+    if templates is None:
+        return HTMLResponse("<h1>Reset Password</h1>")
+    return templates.TemplateResponse(
+        request, "auth.html",
+        {"user": None, "mode": "reset", "error": None, "reset_token": token},
     )
 
 
