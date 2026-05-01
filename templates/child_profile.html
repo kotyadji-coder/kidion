@@ -541,6 +541,8 @@ var CHILD_ID = {{ child.id }};
 var CHILD_GRADE = {{ child.grade }};
 
 document.addEventListener('DOMContentLoaded', function() {
+  // Mark child profile as visited (for dashboard "start here" hint)
+  localStorage.setItem('child_setup_' + CHILD_ID, '1');
   loadSubjects();
   loadFreeLessons();
 });

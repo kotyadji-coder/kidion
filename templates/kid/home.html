@@ -17,14 +17,24 @@
     </div>
   </div>
 
-  <p class="home-subtitle">Выбери, чем займёмся:</p>
+  <!-- Streak block -->
+  <div class="home-streak-block" id="streak-block" style="display:none">
+    <span class="home-streak-fire">&#128293;</span>
+    <span class="home-streak-text" id="streak-text"></span>
+  </div>
+
+  <p class="home-subtitle">Какую миссию пройдем сегодня?</p>
 
   <div class="subjects-grid-kid" id="subjects-grid">
     <div class="spinner"></div>
   </div>
 
-  <!-- Last lesson result -->
-  <div id="last-result" style="display:none"></div>
+  <!-- Shop button -->
+  <a href="/kid/character" class="home-shop-btn" id="shop-btn">
+    <span class="home-shop-btn__icon">&#128717;&#65039;</span>
+    <span class="home-shop-btn__text">Перейти в магазин</span>
+    <span class="home-shop-btn__hint">Трать звезды тут!</span>
+  </a>
 </div>
 {% endblock %}
 
@@ -47,10 +57,20 @@
       charAvatar.parentNode.insertBefore(img, charAvatar);
     }
 
-    // Streak
-    var sw = document.getElementById('streak-wrap');
-    if (me.current_streak > 0 && sw) {
-      sw.innerHTML = '<span class="streak-badge-mini">&#128293; ' + me.current_streak + ' ' + pluralDays(me.current_streak) + ' подряд!</span>';
+    // Character name in link
+    if (me.character_name) {
+      var charLink = document.getElementById('char-link-text');
+      if (charLink) charLink.textContent = me.character_name;
+    }
+
+    // Streak block
+    if (me.current_streak > 0) {
+      var streakBlock = document.getElementById('streak-block');
+      var streakText = document.getElementById('streak-text');
+      if (streakBlock && streakText) {
+        streakText.textContent = 'Ты в игре уже ' + me.current_streak + ' ' + pluralDays(me.current_streak) + ' подряд! Так держать!';
+        streakBlock.style.display = '';
+      }
     }
     var starEl = document.getElementById('star-count');
     if (starEl) starEl.textContent = me.stars || 0;
@@ -70,9 +90,9 @@
 
     // Subject definitions
     var allSubjects = [
-      {key: 'math', name: 'Математика', icon: '📐', color: '#6c5ce7', gradient: 'linear-gradient(135deg, #6c5ce7, #a29bfe)'},
-      {key: 'russian', name: 'Русский язык', icon: '📝', color: '#00b894', gradient: 'linear-gradient(135deg, #00b894, #55efc4)'},
-      {key: 'world', name: 'Окруж. мир', icon: '🌍', color: '#fdcb6e', gradient: 'linear-gradient(135deg, #f39c12, #fdcb6e)'}
+      {key: 'math', name: 'Математика', icon: '&#129518;', color: '#6c5ce7', gradient: 'linear-gradient(135deg, #6c5ce7, #a29bfe)'},
+      {key: 'russian', name: 'Русский язык', icon: '&#128221;', color: '#00b894', gradient: 'linear-gradient(135deg, #00b894, #55efc4)'},
+      {key: 'world', name: 'Окруж. мир', icon: '&#127757;', color: '#fdcb6e', gradient: 'linear-gradient(135deg, #f39c12, #fdcb6e)'}
     ];
 
     var enrolledMap = {};
@@ -81,15 +101,18 @@
     }
 
     var html = '';
+    var hasAnyLessons = false;
     for (var j = 0; j < allSubjects.length; j++) {
       var s = allSubjects[j];
       var enrolled = enrolledMap[s.key];
       var hasLessons = enrolled && enrolled.total_lessons > 0;
-      var completed = enrolled ? enrolled.completed_lessons : 0;
-      var total = enrolled ? enrolled.total_lessons : 0;
-      var pct = total > 0 ? Math.round(completed / total * 100) : 0;
 
       if (hasLessons) {
+        hasAnyLessons = true;
+        var completed = enrolled.completed_lessons;
+        var total = enrolled.total_lessons;
+        var pct = total > 0 ? Math.round(completed / total * 100) : 0;
+
         html += '<a href="/kid/subject/' + s.key + '" class="subject-card-kid" style="--accent:' + s.color + '; --gradient:' + s.gradient + '">';
         html += '<div class="subject-card-kid__icon-wrap" style="background:' + s.gradient + '">' + s.icon + '</div>';
         html += '<div class="subject-card-kid__body">';
@@ -98,35 +121,26 @@
         html += '<div class="subject-card-kid__progress-text">' + completed + ' из ' + total + '</div>';
         html += '</div>';
         html += '</a>';
-      } else {
-        html += '<div class="subject-card-kid subject-card-kid--locked" style="--accent:' + s.color + '">';
-        html += '<div class="subject-card-kid__icon-wrap subject-card-kid__icon-wrap--locked">' + s.icon + '</div>';
-        html += '<div class="subject-card-kid__body">';
-        html += '<div class="subject-card-kid__name">' + s.name + '</div>';
-        html += '<div class="subject-card-kid__progress-text">&#128274; Закрыто</div>';
-        html += '</div>';
-        html += '</div>';
       }
+      // Don't show locked subjects — only those with lessons
     }
 
     // Free lessons card
     var freeCount = freeLessons.length;
-    var freeCompleted = freeLessons.filter(function(l) { return l.stars !== null; }).length;
-    var freeReady = freeLessons.filter(function(l) { return l.status === 'done' && l.stars === null; }).length;
-
-    html += '<a href="/kid/free-lessons" class="subject-card-kid" style="--accent:#e17055; --gradient:linear-gradient(135deg, #e17055, #fab1a0)">';
-    html += '<div class="subject-card-kid__icon-wrap" style="background:linear-gradient(135deg, #e17055, #fab1a0)">🎨</div>';
-    html += '<div class="subject-card-kid__body">';
-    html += '<div class="subject-card-kid__name">Свободные уроки</div>';
     if (freeCount > 0) {
+      var freeCompleted = freeLessons.filter(function(l) { return l.stars !== null; }).length;
+      var freeReady = freeLessons.filter(function(l) { return l.status === 'done' && l.stars === null; }).length;
+
+      html += '<a href="/kid/free-lessons" class="subject-card-kid" style="--accent:#e17055; --gradient:linear-gradient(135deg, #e17055, #fab1a0)">';
+      html += '<div class="subject-card-kid__icon-wrap" style="background:linear-gradient(135deg, #e17055, #fab1a0)">&#127912;</div>';
+      html += '<div class="subject-card-kid__body">';
+      html += '<div class="subject-card-kid__name">Свободные уроки</div>';
       html += '<div class="subject-card-kid__progress-text">' + freeCount + ' ' + pluralLessons(freeCount);
-      if (freeReady > 0) html += ' · ' + freeReady + ' новых';
+      if (freeReady > 0) html += ' &middot; ' + freeReady + ' новых';
       html += '</div>';
-    } else {
-      html += '<div class="subject-card-kid__progress-text">Любые темы</div>';
+      html += '</div>';
+      html += '</a>';
     }
-    html += '</div>';
-    html += '</a>';
 
     // AI Chat card
     html += '<a href="/kid/chat" class="subject-card-kid" style="--accent:#6c5ce7; --gradient:linear-gradient(135deg, #6c5ce7, #a29bfe)">';

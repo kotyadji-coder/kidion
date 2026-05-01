@@ -6,26 +6,29 @@
 {% block content %}
 <div class="result-page">
 
+  <!-- Confetti canvas -->
+  <canvas id="confetti-canvas" class="result-confetti"></canvas>
+
   <!-- Stars -->
   <div class="result-stars">
     {% set stars = result.stars if result else 0 %}
-    <span class="result-star {% if stars >= 1 %}earned{% endif %}">★</span>
-    <span class="result-star {% if stars >= 2 %}earned{% endif %}">★</span>
-    <span class="result-star {% if stars >= 3 %}earned{% endif %}">★</span>
-    <span class="result-star {% if stars >= 4 %}earned{% endif %}">★</span>
-    <span class="result-star {% if stars >= 5 %}earned{% endif %}">★</span>
+    <span class="result-star {% if stars >= 1 %}earned{% endif %}">&#9733;</span>
+    <span class="result-star {% if stars >= 2 %}earned{% endif %}">&#9733;</span>
+    <span class="result-star {% if stars >= 3 %}earned{% endif %}">&#9733;</span>
+    <span class="result-star {% if stars >= 4 %}earned{% endif %}">&#9733;</span>
+    <span class="result-star {% if stars >= 5 %}earned{% endif %}">&#9733;</span>
   </div>
 
   <!-- Congratulation text -->
   {% if stars == 5 %}
-    <div class="result-congrats">Отлично! 🎉</div>
-    <div class="result-message">Ты справился на 100%!<br>Так держать!</div>
+    <div class="result-congrats">Ура! Ты молодец!</div>
+    <div class="result-message">Ты заработал +{{ stars }} &#11088;!</div>
   {% elif stars >= 3 %}
-    <div class="result-congrats">Молодец! 👍</div>
-    <div class="result-message">Хороший результат!<br>Продолжай в том же духе.</div>
+    <div class="result-congrats">Ура! Ты молодец!</div>
+    <div class="result-message">Ты заработал +{{ stars }} &#11088;!<br>Продолжай в том же духе.</div>
   {% elif stars >= 1 %}
-    <div class="result-congrats">Хорошая попытка! 💪</div>
-    <div class="result-message">Не сдавайся!<br>Каждый урок делает тебя умнее.</div>
+    <div class="result-congrats">Ура! Ты молодец!</div>
+    <div class="result-message">Ты заработал +{{ stars }} &#11088;!<br>Каждый урок делает тебя умнее.</div>
   {% else %}
     <div class="result-congrats">Урок пройден!</div>
     <div class="result-message">Ты старался — это главное!</div>
@@ -34,7 +37,7 @@
   <!-- Streak -->
   {% if streak and streak.current_streak > 0 %}
   <div class="result-streak">
-    🔥 {{ streak.current_streak }}
+    &#128293; {{ streak.current_streak }}
     {% if streak.current_streak == 1 %}день{% elif streak.current_streak in [2,3,4] %}дня{% else %}дней{% endif %}
     подряд!
   </div>
@@ -42,20 +45,70 @@
 
   <!-- Print worksheet -->
   {% if lesson.worksheet_url %}
-  <div class="result-print" style="margin: 16px 0; text-align: center;">
-    <a href="{{ lesson.worksheet_url }}" target="_blank"
-       class="btn btn-secondary"
-       style="display: inline-flex; align-items: center; gap: 6px;">
-      🖨 Распечатать квест
+  <div class="result-print">
+    <a href="{{ lesson.worksheet_url }}" target="_blank" class="btn btn-secondary">
+      &#128424; Распечатать квест
     </a>
   </div>
   {% endif %}
 
   <!-- Actions -->
   <div class="result-actions">
-    <a href="/kid/home" class="btn btn-primary">На главную 🏠</a>
-    <a href="/kid/home" class="btn btn-secondary">Ещё урок</a>
+    <a href="/kid/subject/{{ lesson.subject if lesson else 'math' }}" class="btn btn-primary">Вернуться на карту &#128506;</a>
+    <a href="/kid/character" class="btn btn-green">В магазин &#128717;&#65039;</a>
   </div>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Simple confetti animation
+(function() {
+  var canvas = document.getElementById('confetti-canvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  var colors = ['#6C5CE7', '#FDCB6E', '#FD79A8', '#00B894', '#74B9FF', '#FF7675'];
+  var particles = [];
+
+  for (var i = 0; i < 80; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      w: Math.random() * 10 + 5,
+      h: Math.random() * 6 + 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: (Math.random() - 0.5) * 3,
+      vy: Math.random() * 4 + 2,
+      rot: Math.random() * 360,
+      rotSpeed: (Math.random() - 0.5) * 8,
+    });
+  }
+
+  var frame = 0;
+  function animate() {
+    if (frame > 150) { canvas.style.display = 'none'; return; }
+    frame++;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.rotSpeed;
+      p.vy += 0.05;
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
 {% endblock %}

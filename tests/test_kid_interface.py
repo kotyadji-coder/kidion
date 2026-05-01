@@ -57,6 +57,12 @@ async def child_profile(parent_client: AsyncClient) -> dict:
 @pytest_asyncio.fixture
 async def kid_client(client: AsyncClient, child_profile: dict) -> AsyncClient:
     """A separate client authenticated as the child (has kid_session_child cookie)."""
+    # Mark child as onboarded so /kid/home doesn't redirect to /kid/onboarding
+    from db import update_child_character_name
+    from main import get_db_connection
+    conn = get_db_connection()
+    update_child_character_name(conn, child_profile["id"], "Искатель")
+
     # We need a fresh client because parent is logged in on `client`
     async with AsyncClient(
         transport=ASGITransport(app=app),

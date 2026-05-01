@@ -197,6 +197,34 @@
   background: var(--bg);
   color: var(--text);
 }
+
+/* Start here hint */
+.start-here-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--primary);
+  animation: hint-bounce 1.5s ease-in-out infinite;
+  white-space: nowrap;
+}
+
+.start-here-arrow {
+  font-size: 1.2rem;
+  display: inline-block;
+  animation: arrow-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes hint-bounce {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-4px); }
+}
+
+@keyframes arrow-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
 </style>
 {% endblock %}
 
@@ -297,6 +325,8 @@ function renderChildCard(c) {
     avatarHtml = '<div class="child-card-v2__avatar">' + (c.gender === 'girl' ? '👧' : '👦') + '</div>';
   }
 
+  var setupDone = localStorage.getItem('child_setup_' + c.id);
+
   var html = '<div class="child-card-v2">';
   html += '<div class="child-card-v2__header">';
   html += avatarHtml;
@@ -313,9 +343,19 @@ function renderChildCard(c) {
   html += '</div>';
 
   // Actions
-  html += '<div class="child-card-v2__actions">';
-  html += '<a href="/children/' + c.id + '" class="btn btn--primary btn--sm">Перейти к урокам</a>';
-  html += '<a href="/children/' + c.id + '" class="btn btn--ghost btn--sm">Настройки профиля</a>';
+  html += '<div class="child-card-v2__actions" style="position:relative;">';
+  if (setupDone) {
+    html += '<a href="/kid/login?child_id=' + c.id + '" class="btn btn--primary btn--sm">Перейти к урокам</a>';
+  }
+  html += '<a href="/children/' + c.id + '" class="btn ' + (setupDone ? 'btn--ghost' : 'btn--primary') + ' btn--sm" onclick="localStorage.setItem(\'child_setup_' + c.id + '\',\'1\')">Настройки профиля</a>';
+
+  // Show "start here" hint if setup not done
+  if (!setupDone) {
+    html += '<div class="start-here-hint">';
+    html += '<span class="start-here-arrow">&#8592;</span> Начните здесь';
+    html += '</div>';
+  }
+
   html += '</div>';
   html += '</div>';
   return html;

@@ -57,13 +57,14 @@ kidion/
 │   └── shop.html               # Shop activity (lesson 5, math)
 ├── templates/kid/
 │   ├── base.html              # Kid base template (nav: home, name, stars, logout)
-│   ├── login.html             # PIN keyboard (4 digits)
-│   ├── home.html              # Kid home: character avatar + subjects + streak
-│   ├── character.html         # RPG-style character page + star shop
-│   ├── subject_map.html       # Duolingo-style vertical lesson map per subject
+│   ├── login.html             # Child picker cards + PIN keyboard
+│   ├── onboarding.html        # First-login: name the character
+│   ├── home.html              # Kid home: character avatar + subjects + streak + shop btn
+│   ├── character.html         # RPG character page + star shop + name editing + speech bubble
+│   ├── subject_map.html       # Duolingo-style vertical lesson map with tooltip
 │   ├── chat.html              # AI chat: 3-column layout (chats, messages, characters)
 │   ├── lesson.html            # Lesson iframe + auto-score via postMessage
-│   └── result.html            # Stars animation + streak
+│   └── result.html            # Stars animation + confetti + shop button
 ├── static/kid/style.css       # Kid CSS (Nunito, pastels, mobile-first)
 ├── static/kid/chat.css        # Chat page CSS (3-column responsive)
 ├── static/kid/chat.js         # Chat page JS (CRUD, send, typing, attachments)
@@ -77,7 +78,7 @@ kidion/
 | Table | Purpose | Key Fields |
 |-------|---------|------------|
 | `users` | Parent accounts | email, password_hash, crystals, ref_code |
-| `children` | Child profiles | parent_id, name, gender, grade, universe, pin_hash, difficulty_level, **stars**, **interests** (JSON), **universe_description**, **character_prompt**, **character_image_url** |
+| `children` | Child profiles | parent_id, name, gender, grade, universe, pin_hash, difficulty_level, **stars**, **interests** (JSON), **universe_description**, **character_prompt**, **character_image_url**, **character_name**, **character_onboarded** |
 | `lessons` | All lessons | child_id, mode, topic_title, subject, status, worksheet_url |
 | `lesson_results` | Completion results | lesson_id, child_id, correct_answers, stars (1-3) |
 | `curriculum_topics` | Seeded topics (12 per subject/grade) | subject, grade, theme_order, title_ru, icon |
@@ -110,11 +111,23 @@ kidion/
 ### Stub Mode
 All generation functions return predefined defaults when `GOOGLE_CLOUD_PROJECT` is not set. Character image returns `None` (UI shows placeholder).
 
+### Kid Onboarding (`/kid/onboarding`)
+- First login redirects here if `character_onboarded=0`
+- Shows character image + speech bubble: "Привет! Я твой новый друг. Как меня зовут?"
+- Child enters character name (default: "Искатель") → `POST /api/kid/character/name`
+- Sets `character_onboarded=1`, redirects to `/kid/home`
+
 ### Character Page (`/kid/character`)
-- Left: character PNG + equipped items list
+- Left: character PNG + **character name with edit pencil** + speech bubble (contextual phrases based on star count)
 - Right: star shop with category tabs (outfit, accessory, pet, background, special)
-- Buying item: deducts stars → creates `child_items` record → triggers background character regeneration with equipped items
+- Buying item: deducts stars → creates `child_items` record → triggers background character regeneration
+- Insufficient stars: grey button, tooltip on click "Нужно еще немного поучиться!"
 - Equip/unequip: toggles `child_items.equipped` → triggers background character regeneration
+
+### Kid Login (`/kid/login`)
+- Multi-child: shows child picker cards (avatar + name), click → PIN keyboard
+- Single child: shows avatar + PIN keyboard directly
+- PIN label: "Введи свой секретный код"
 
 ### Shop Item Categories & Pricing
 - outfit (5 items, 5-20 stars), accessory (5 items, 10-25 stars), pet (4 items, 20-40 stars), background (3 items, 15-30 stars), special (3 items, 30-50 stars)
@@ -150,7 +163,7 @@ All generation functions return predefined defaults when `GOOGLE_CLOUD_PROJECT` 
 
 ## Key Business Logic
 
-- **Crystals:** 60 on registration (120 with referral). Prices: 1 lesson=20, 1 topic (5 lessons)=100, 1 month (20 lessons)=400. Skip test=FREE.
+- **Crystals:** 60 on registration (120 with referral). Prices: 1 lesson=20, 1 topic (5 lessons)=100, 1 month (20 lessons)=400. Skip test=FREE. **First 4 lessons per subject=FREE** (auto-generated on first enrollment).
 - **Stars:** +1 per correct task (5 tasks = 5 max per lesson).
 - **Packages:** 60/60 rub, 360/320 rub, 600/490 rub, 1000/800 rub
 - **Adaptive difficulty** (1-3): auto-adjusts based on last 2 lesson results
@@ -165,13 +178,13 @@ All generation functions return predefined defaults when `GOOGLE_CLOUD_PROJECT` 
 ### Children (parent auth)
 - CRUD: `POST /api/children` (max 3, accepts `interests: list[str]`), `GET`, `PUT`, `DELETE`
 - Progress: `/stats`, `/lessons`, `/program-progress`, `/curriculum/{subject}`, `/free-lessons`, `/enrolled-subjects`, `/subject-progress/{subject}`
-- Actions: `/enroll-subject`, `/skip-test`, `/generate-topic`, `/generate-month`
+- Actions: `/enroll-subject` (auto-generates first 4 lessons FREE), `/skip-test` (inline fullscreen test), `/generate-topic`, `/generate-month`
 
 ### Kid Interface (child auth via PIN)
 - Auth: `POST /api/kid/auth`, `POST /api/kid/logout`
 - Data: `GET /api/kid/me` (includes character_image_url, universe_description), `/lessons`, `/lessons/{id}`, `/subjects`, `/subject/{s}/map`, `/free-lessons`
 - Actions: `POST /api/kid/lessons/{curriculum_lesson_id}/start`
-- **Character & Shop:** `GET /api/kid/character`, `POST /api/kid/shop/buy/{item_id}`, `POST /api/kid/shop/equip/{item_id}`
+- **Character & Shop:** `GET /api/kid/character`, `POST /api/kid/character/name`, `POST /api/kid/shop/buy/{item_id}`, `POST /api/kid/shop/equip/{item_id}`
 - **Chat:** `GET /api/kid/chats`, `POST /api/kid/chats`, `DELETE /api/kid/chats/{id}`, `GET /api/kid/chats/{id}/messages`, `POST /api/kid/chats/{id}/send`
 
 ### Payments & Lessons (parent auth)
@@ -185,12 +198,14 @@ All generation functions return predefined defaults when `GOOGLE_CLOUD_PROJECT` 
 ## Pages
 
 ### Kid
-- `/kid/home` — character avatar + subjects + streak
-- `/kid/character` — RPG character page + star shop
-- `/kid/subject/{subject}` — Duolingo-style lesson map
-- `/kid/lesson/{id}` — lesson iframe
+- `/kid/login` — child picker cards + PIN keyboard
+- `/kid/onboarding` — first-login character naming (redirects to home after)
+- `/kid/home` — character avatar + subjects + streak + shop button
+- `/kid/character` — RPG character page + star shop + name editing + speech bubble
+- `/kid/subject/{subject}` — Duolingo-style lesson map with tooltip
+- `/kid/lesson/{id}` — lesson iframe + print button
 - `/kid/chat` — AI chat with 3 characters (Owl, Dreamer, Professor)
-- `/kid/result/{id}` — stars animation
+- `/kid/result/{id}` — confetti + stars animation + shop button
 
 ### Parent
 - `/dashboard`, `/children/new`, `/children/{id}`, `/children/{id}/subject/{subject}`, `/children/{id}/history`

@@ -318,6 +318,20 @@ def _init_schema(conn: sqlite3.Connection) -> None:
     except sqlite3.OperationalError:
         pass
 
+    # Add character_name column to children table (migration-safe)
+    try:
+        conn.execute("ALTER TABLE children ADD COLUMN character_name TEXT NOT NULL DEFAULT ''")
+        conn.commit()
+    except sqlite3.OperationalError:
+        pass
+
+    # Add character_onboarded column to children table (migration-safe)
+    try:
+        conn.execute("ALTER TABLE children ADD COLUMN character_onboarded INTEGER NOT NULL DEFAULT 0")
+        conn.commit()
+    except sqlite3.OperationalError:
+        pass
+
     # Seed curriculum data
     _seed_math_grade1(conn)
 
@@ -600,6 +614,7 @@ def get_children_by_parent(conn: sqlite3.Connection, parent_id: int) -> list[dic
     rows = conn.execute(
         "SELECT id, parent_id, name, gender, birth_date, grade, universe, "
         "difficulty_level, stars, character_image_url, universe_description, interests, "
+        "character_name, character_onboarded, "
         "created_at, updated_at FROM children WHERE parent_id = ? ORDER BY created_at ASC",
         (parent_id,),
     ).fetchall()
@@ -1486,6 +1501,14 @@ def update_child_character_image(conn: sqlite3.Connection, child_id: int, image_
     conn.execute(
         "UPDATE children SET character_image_url=?, updated_at=? WHERE id=?",
         (image_url, _now(), child_id),
+    )
+    conn.commit()
+
+
+def update_child_character_name(conn: sqlite3.Connection, child_id: int, character_name: str) -> None:
+    conn.execute(
+        "UPDATE children SET character_name=?, character_onboarded=1, updated_at=? WHERE id=?",
+        (character_name, _now(), child_id),
     )
     conn.commit()
 

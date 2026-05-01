@@ -1781,12 +1781,56 @@ async def enroll_subject(child_id: int, body: EnrollSubjectRequest, request: Req
     ).fetchone()[0]
 
     message = "enrolled" if rows_created > 0 else "already_enrolled"
+
+    # Auto-generate first 4 lessons of the first topic on first enrollment (FREE)
+    auto_lesson_ids = []
+    if rows_created > 0:
+        first_topic = topics[0] if topics else None
+        if first_topic:
+            first_topic_id = first_topic["id"]
+            # Get first 4 lessons of the first topic (exclude the 5th = test/activity)
+            first_lessons = conn.execute(
+                """SELECT clp.id AS progress_id, cl.id AS curriculum_lesson_id, cl.lesson_order, cl.title_ru
+                   FROM child_lesson_progress clp
+                   JOIN curriculum_lessons cl ON cl.id = clp.curriculum_lesson_id
+                   WHERE clp.child_id=? AND cl.topic_id=? AND clp.lesson_id IS NULL
+                   ORDER BY cl.lesson_order LIMIT 4""",
+                (child_id, first_topic_id),
+            ).fetchall()
+
+            server_url = os.environ.get("APP_BASE_URL", "http://localhost:8003")
+            db_path = get_db_path()
+
+            for fl in first_lessons:
+                try:
+                    lesson_id = create_lesson(
+                        conn, child_id, "curriculum", fl["title_ru"],
+                        body.subject, plan_id=None,
+                    )
+                    conn.execute(
+                        "UPDATE child_lesson_progress SET status='available', lesson_id=? WHERE id=?",
+                        (lesson_id, fl["progress_id"]),
+                    )
+                    conn.commit()
+                    auto_lesson_ids.append(lesson_id)
+
+                    import threading
+                    thread = threading.Thread(
+                        target=services.generation.generate_lesson_content,
+                        args=(lesson_id, dict(child), fl["title_ru"], body.subject, db_path, server_url),
+                        kwargs={"lesson_number": fl["lesson_order"]},
+                    )
+                    thread.start()
+                except Exception:
+                    pass
+
     return JSONResponse({
         "ok": True,
         "subject": body.subject,
         "grade": body.grade,
         "total_lessons": total,
         "message": message,
+        "auto_lesson_ids": auto_lesson_ids,
     })
 
 
@@ -2683,6 +2727,8 @@ async def kid_me(request: Request):
         "stars": child.get("stars", 0),
         "character_image_url": child.get("character_image_url"),
         "universe_description": child.get("universe_description", ""),
+        "character_name": child.get("character_name", ""),
+        "character_onboarded": bool(child.get("character_onboarded", 0)),
     })
 
 
@@ -2831,7 +2877,7 @@ async def kid_character_api(request: Request):
 
     return JSONResponse({
         "character_image_url": child.get("character_image_url"),
-        "character_name": "",
+        "character_name": child.get("character_name", ""),
         "universe_description": child.get("universe_description", ""),
         "interests": interests,
         "stars": child.get("stars", 0),
@@ -2841,6 +2887,27 @@ async def kid_character_api(request: Request):
         ],
         "shop": categories,
     })
+
+
+@app.post("/api/kid/character/name")
+async def kid_set_character_name(request: Request):
+    """Set or update the character name."""
+    conn = get_db_connection()
+    child = get_current_child(request, conn)
+    if not child:
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+
+    body = await request.json()
+    name = str(body.get("name", "")).strip()
+    if not name:
+        name = "Искатель"
+    if len(name) > 30:
+        name = name[:30]
+
+    from db import update_child_character_name
+    update_child_character_name(conn, child["id"], name)
+
+    return JSONResponse({"ok": True, "character_name": name})
 
 
 @app.post("/api/kid/shop/buy/{item_id}")
@@ -2964,21 +3031,40 @@ async def kid_login_page(request: Request, child_id: Optional[int] = None):
     if templates is None:
         return HTMLResponse("<h1>Login</h1>")
 
-    child = None
+    conn = get_db_connection()
+    children = []
+
+    # Try to get children from parent session
+    user = get_current_user(request, conn)
+    if user:
+        all_children = get_children_by_parent(conn, user["id"])
+        children = [
+            {
+                "id": c["id"],
+                "name": c["name"],
+                "character_image_url": c.get("character_image_url"),
+            }
+            for c in all_children
+        ]
+
+    # If child_id is provided directly, ensure it's in the list
+    selected_child = None
     if child_id is not None:
-        conn = get_db_connection()
         fetched = get_child_by_id(conn, child_id)
         if fetched:
-            # Only expose safe fields
-            child = {
+            selected_child = {
                 "id": fetched["id"],
                 "name": fetched["name"],
+                "character_image_url": fetched.get("character_image_url"),
             }
+            # If no parent session, add this child as the only option
+            if not children:
+                children = [selected_child]
 
     return templates.TemplateResponse(
         request,
         "kid/login.html",
-        {"child": child, "child_id": child_id},
+        {"children": children, "selected_child": selected_child, "child_id": child_id},
     )
 
 
@@ -2989,12 +3075,36 @@ async def kid_home_page(request: Request):
     if not child:
         return RedirectResponse(url="/kid/login", status_code=302)
 
+    # Redirect to onboarding if first time
+    if not child.get("character_onboarded"):
+        return RedirectResponse(url="/kid/onboarding", status_code=302)
+
     if templates is None:
         return HTMLResponse(f"<h1>Привет, {child['name']}!</h1>")
 
     return templates.TemplateResponse(
         request,
         "kid/home.html",
+        {"child": child},
+    )
+
+
+@app.get("/kid/onboarding", response_class=HTMLResponse)
+async def kid_onboarding_page(request: Request):
+    conn = get_db_connection()
+    child = get_current_child(request, conn)
+    if not child:
+        return RedirectResponse(url="/kid/login", status_code=302)
+
+    if child.get("character_onboarded"):
+        return RedirectResponse(url="/kid/home", status_code=302)
+
+    if templates is None:
+        return HTMLResponse("<h1>Onboarding</h1>")
+
+    return templates.TemplateResponse(
+        request,
+        "kid/onboarding.html",
         {"child": child},
     )
 

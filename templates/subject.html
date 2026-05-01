@@ -212,6 +212,12 @@
   transition: background 0.15s;
 }
 .lesson-row--clickable:hover { background: var(--primary-light); }
+.lesson-row--clickable .lesson-row__title {
+  color: var(--primary);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
 
 .lesson-row--generating .lesson-row__icon {
   display: inline-block;
@@ -421,17 +427,7 @@
       <div class="spinner">Загрузка программы...</div>
     </div>
 
-    <!-- Month block (below topics) -->
-    <div class="month-block" id="month-block" style="display:none;">
-      <div class="month-block__icon">📅</div>
-      <div class="month-block__content">
-        <div class="month-block__title">Занятия на месяц</div>
-        <p class="month-block__text">Создайте сразу 4 темы (20 уроков) — этого хватит на месяц регулярных занятий.</p>
-        <div id="month-action">
-          <button class="btn btn--accent" id="btn-generate-month">Создать уроки на месяц (400 💎)</button>
-        </div>
-      </div>
-    </div>
+    <!-- Month block inserted dynamically after 4th locked topic -->
   </section>
 </div>
 
@@ -479,13 +475,28 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 async function enrollAndLoad() {
-  await fetch('/api/children/' + CHILD_ID + '/enroll-subject', {
+  var resp = await fetch('/api/children/' + CHILD_ID + '/enroll-subject', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({subject: SUBJECT, grade: GRADE})
   });
+  var data = await resp.json();
+
   loadStats();
   loadProgram();
+
+  // If first enrollment triggered auto-generation, show progress for first topic
+  if (data.auto_lesson_ids && data.auto_lesson_ids.length > 0) {
+    // Wait a moment for program to render, then show inline progress
+    setTimeout(function() {
+      // Find the first topic ID from the rendered topics
+      var firstTopicCard = document.querySelector('.topic-card');
+      if (firstTopicCard) {
+        var topicId = firstTopicCard.id.replace('topic-card-', '');
+        showInlineProgress(topicId, data.auto_lesson_ids);
+      }
+    }, 1500);
+  }
 }
 
 async function loadStats() {
@@ -531,9 +542,6 @@ async function loadProgram() {
       return;
     }
 
-    // Show month block
-    document.getElementById('month-block').style.display = 'flex';
-
     // Count all generated lessons across all topics
     var totalGenerated = 0;
     var totalLessons = 0;
@@ -545,30 +553,10 @@ async function loadProgram() {
       }
     }
 
-    // If all lessons generated (month done) — show print button instead
-    var monthAction = document.getElementById('month-action');
-    if (totalGenerated >= 20) {
-      monthAction.innerHTML =
-        '<div class="month-block__done">' +
-        '<div class="month-block__done-text">✅ ' + totalGenerated + ' уроков готовы!</div>' +
-        '<div style="display:flex; gap:0.75rem; flex-wrap:wrap;">' +
-        '<a href="/kid/login?child_id=' + CHILD_ID + '" class="btn btn--primary">✨ Перейти к урокам</a>' +
-        '<a href="/api/children/' + CHILD_ID + '/worksheets?subject=' + SUBJECT + '" target="_blank" class="btn btn--outline">🖨 Рабочая тетрадь</a>' +
-        '</div>' +
-        '<span style="font-size:0.8rem; color:var(--text-muted)">Все печатные задания одним файлом</span>' +
-        '</div>';
-    } else if (totalGenerated > 0) {
-      // Some generated but not full month — show both
-      monthAction.innerHTML =
-        '<button class="btn btn--accent" id="btn-generate-month">Создать уроки на месяц (400 💎)</button>' +
-        '<div style="margin-top:0.75rem;">' +
-        '<a href="/api/children/' + CHILD_ID + '/worksheets?subject=' + SUBJECT + '" target="_blank" class="btn btn--outline btn--sm">🖨 Распечатать готовые листы</a>' +
-        '</div>';
-      document.getElementById('btn-generate-month').addEventListener('click', monthClickHandler);
-    }
-
     var html = '';
     var firstActiveExpanded = false;
+    var lockedCount = 0;
+    var monthBlockInserted = false;
     for (var i = 0; i < topics.length; i++) {
       var t = topics[i];
       var lessons = t.lessons || [];
@@ -588,6 +576,14 @@ async function loadProgram() {
       }
 
       var topicStatus = completed === lessons.length ? 'completed' : (available > 0 || completed > 0) ? 'active' : 'locked';
+
+      if (topicStatus === 'locked') lockedCount++;
+
+      // Insert month block after 4th locked topic
+      if (lockedCount === 4 && !monthBlockInserted) {
+        monthBlockInserted = true;
+        html += buildMonthBlock(totalGenerated, totalLessons);
+      }
 
       // Determine if this topic should be auto-expanded
       var autoExpand = false;
@@ -613,9 +609,7 @@ async function loadProgram() {
       if (topicStatus === 'locked') {
         html += '<button class="btn btn--sm btn--skip" onclick="event.stopPropagation(); assignSkipTest(' + t.id + ', \'' + esc(t.title_ru).replace(/'/g, "\\'") + '\')" title="Ребенок уже знает этот материал? Пройдите тест-проверку. При успешной сдаче тема будет засчитана.">Тест для пропуска</button>';
       }
-      if (doneIds.length > 0) {
-        html += '<a href="/api/children/' + CHILD_ID + '/worksheets?topic_id=' + t.id + '" target="_blank" class="btn btn--sm btn--outline" onclick="event.stopPropagation()" style="font-size:0.8rem">🖨 Листы</a>';
-      }
+      // No per-topic "Листы" button in header — use ready buttons below instead
       // Generate topic button
       var ungenerated = 0;
       for (var m = 0; m < lessons.length; m++) {
@@ -669,8 +663,17 @@ async function loadProgram() {
       }
       html += '</div></div>';
     }
+    // Add month block at end if not inserted yet (fewer than 4 locked topics)
+    if (!monthBlockInserted && topics.length >= 4) {
+      html += buildMonthBlock(totalGenerated, totalLessons);
+    }
+
     list.innerHTML = html;
     firstLoad = false;
+
+    // Attach month button handler
+    var monthBtn = document.getElementById('btn-generate-month');
+    if (monthBtn) monthBtn.addEventListener('click', monthClickHandler);
 
     // Start polling
     startGenerationPolling();
@@ -880,32 +883,143 @@ function assignSkipTest(topicId, topicTitle) {
       '⚠️ <strong>Внимание:</strong> Позовите ребенка к экрану. Сейчас начнётся тест из 5 вопросов по теме «' + topicTitle + '». За этот тест не выдаются печатные материалы и сюжетная история, это только проверка знаний.',
     buttons: [
       { label: 'Отмена', cls: 'btn--outline' },
-      { label: 'Начать тест', cls: 'btn--primary', action: function() { doSkipTest(topicId); } }
+      { label: 'Начать тест', cls: 'btn--primary', action: function() { doSkipTest(topicId, topicTitle); } }
     ]
   });
 }
 
-async function doSkipTest(topicId) {
+async function doSkipTest(topicId, topicTitle) {
   try {
+    // Show generating modal
+    showModal({
+      icon: '⏳', title: 'Создаём тест...',
+      text: 'Подождите несколько секунд, тест готовится.',
+      buttons: []
+    });
+
     var resp = await fetch('/api/children/' + CHILD_ID + '/skip-test', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({topic_id: topicId})
     });
     var data = await resp.json();
-    if (resp.ok) {
-      showModal({
-        icon: '✅', title: 'Тест назначен!',
-        text: 'Ребёнок увидит тест на своей карте уроков.',
-        buttons: [{ label: 'Ок', cls: 'btn--primary' }]
-      });
-      loadProgram();
-    } else {
+    if (!resp.ok) {
+      closeCurrentModal();
       showModal({ icon: '❌', title: 'Ошибка', text: data.error || 'Произошла ошибка', buttons: [{ label: 'Ок', cls: 'btn--primary' }] });
+      return;
     }
+
+    var lessonId = data.lesson_id;
+
+    // Poll until test is generated
+    var ready = false;
+    for (var attempt = 0; attempt < 60; attempt++) {
+      await sleep(2000);
+      try {
+        var pollResp = await fetch('/api/lessons/' + lessonId + '/poll');
+        var pollData = await pollResp.json();
+        if (pollData.status === 'done') { ready = true; break; }
+        if (pollData.status === 'error') break;
+      } catch(e) {}
+    }
+
+    closeCurrentModal();
+
+    if (!ready) {
+      showModal({ icon: '❌', title: 'Ошибка', text: 'Не удалось создать тест. Попробуйте позже.', buttons: [{ label: 'Ок', cls: 'btn--primary' }] });
+      return;
+    }
+
+    // Open fullscreen test overlay
+    openTestOverlay(lessonId, topicTitle);
+
   } catch(e) {
+    closeCurrentModal();
     showModal({ icon: '❌', title: 'Ошибка', text: 'Ошибка соединения', buttons: [{ label: 'Ок', cls: 'btn--primary' }] });
   }
+}
+
+function openTestOverlay(lessonId, topicTitle) {
+  var overlay = document.createElement('div');
+  overlay.id = 'test-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:#F0EDFF;z-index:300;display:flex;flex-direction:column;';
+
+  // Fetch lesson content_url and show in iframe
+  fetch('/api/lessons/' + lessonId + '/poll').then(function(r) { return r.json(); }).then(function(lesson) {
+    var contentUrl = lesson.content_url;
+    if (!contentUrl) {
+      overlay.innerHTML = '<div style="flex:1;display:flex;align-items:center;justify-content:center;font-family:Nunito,sans-serif;font-size:1.2rem;color:#636E72;">Тест не найден</div>';
+      return;
+    }
+
+    overlay.innerHTML =
+      '<div style="padding:16px 20px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,0.06);font-family:Nunito,sans-serif;font-size:1.1rem;font-weight:700;color:#6C5CE7;text-align:center;">Тест: ' + esc(topicTitle) + '</div>' +
+      '<iframe src="' + esc(contentUrl) + '" style="flex:1;border:none;width:100%;" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>';
+  });
+
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+
+  // Listen for test completion
+  window._testOverlayListener = function(event) {
+    if (!event.data || event.data.type !== 'kidion_lesson_complete') return;
+    var correct = event.data.correct;
+    var total = event.data.total || 5;
+
+    // Submit result
+    fetch('/api/lessons/' + lessonId + '/result', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({correct_answers: correct, total_answers: total})
+    }).then(function(r) { return r.json(); }).then(function(result) {
+      showTestResult(correct, total, result);
+    }).catch(function() {
+      showTestResult(correct, total, {});
+    });
+  };
+  window.addEventListener('message', window._testOverlayListener);
+}
+
+function showTestResult(correct, total, result) {
+  var overlay = document.getElementById('test-overlay');
+  if (!overlay) return;
+
+  // Remove listener
+  window.removeEventListener('message', window._testOverlayListener);
+
+  // Show child-friendly "done" screen
+  var passed = correct >= 4;
+
+  overlay.innerHTML =
+    '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Nunito,sans-serif;text-align:center;padding:40px 20px;">' +
+      '<div style="font-size:4rem;margin-bottom:20px;">🎉</div>' +
+      '<div style="font-size:1.8rem;font-weight:900;color:#6C5CE7;margin-bottom:12px;">Тест завершён!</div>' +
+      '<div style="font-size:1.2rem;color:#636E72;margin-bottom:40px;">Позови маму или папу</div>' +
+      '<button id="test-continue-btn" style="padding:14px 40px;background:linear-gradient(135deg,#6C5CE7,#8B7CF7);color:#fff;border:none;border-radius:16px;font-family:Nunito,sans-serif;font-size:1.1rem;font-weight:700;cursor:pointer;">Продолжить</button>' +
+    '</div>';
+
+  document.getElementById('test-continue-btn').addEventListener('click', function() {
+    // Remove overlay
+    overlay.remove();
+    document.body.style.overflow = '';
+
+    // Show parent result
+    if (passed) {
+      showModal({
+        icon: '🎉', title: 'Отлично! Тема пройдена.',
+        text: 'Результат: ' + correct + '/' + total + '. Следующая тема открыта!',
+        buttons: [{ label: 'Отлично!', cls: 'btn--primary' }]
+      });
+    } else {
+      showModal({
+        icon: '📚', title: 'Нужно повторить',
+        text: 'Результат: ' + correct + '/' + total + '. Похоже, эту тему нужно повторить. Создайте уроки, чтобы ребёнок разобрался в материале.',
+        buttons: [{ label: 'Понятно', cls: 'btn--primary' }]
+      });
+    }
+    loadProgram();
+    loadStats();
+  });
 }
 
 function monthClickHandler() {
@@ -922,7 +1036,35 @@ function monthClickHandler() {
   });
 }
 
-document.getElementById('btn-generate-month').addEventListener('click', monthClickHandler);
+function buildMonthBlock(totalGenerated, totalLessons) {
+  var mb = '<div class="month-block" id="month-block">';
+  mb += '<div class="month-block__icon">📅</div>';
+  mb += '<div class="month-block__content">';
+  mb += '<div class="month-block__title">Занятия на месяц</div>';
+
+  if (totalGenerated >= 20) {
+    mb += '<div id="month-action">';
+    mb += '<div class="month-block__done">';
+    mb += '<div class="month-block__done-text">✅ ' + totalGenerated + ' уроков готовы!</div>';
+    mb += '<div style="display:flex; gap:0.75rem; flex-wrap:wrap;">';
+    mb += '<a href="/kid/login?child_id=' + CHILD_ID + '" class="btn btn--primary">✨ Перейти к урокам</a>';
+    mb += '<a href="/api/children/' + CHILD_ID + '/worksheets?subject=' + SUBJECT + '" target="_blank" class="btn btn--outline">🖨 Рабочая тетрадь</a>';
+    mb += '</div></div></div>';
+  } else {
+    mb += '<p class="month-block__text">Создайте сразу 4 темы (20 уроков) — этого хватит на месяц регулярных занятий.</p>';
+    mb += '<div id="month-action">';
+    mb += '<button class="btn btn--accent" id="btn-generate-month">Создать уроки на месяц (400 💎)</button>';
+    if (totalGenerated > 0) {
+      mb += '<div style="margin-top:0.75rem;">';
+      mb += '<a href="/api/children/' + CHILD_ID + '/worksheets?subject=' + SUBJECT + '" target="_blank" class="btn btn--outline btn--sm">🖨 Распечатать готовые листы</a>';
+      mb += '</div>';
+    }
+    mb += '</div>';
+  }
+
+  mb += '</div></div>';
+  return mb;
+}
 
 async function doGenerateMonth() {
   try {

@@ -27,11 +27,11 @@ var CATEGORY_NAMES = {
 };
 
 var CATEGORY_ICONS = {
-  outfit: '👕',
-  accessory: '🗡️',
-  pet: '🐾',
-  background: '🏞️',
-  special: '✨'
+  outfit: '&#128085;',
+  accessory: '&#128481;&#65039;',
+  pet: '&#128062;',
+  background: '&#127956;&#65039;',
+  special: '&#10024;'
 };
 
 var currentStars = 0;
@@ -45,19 +45,53 @@ var currentStars = 0;
     renderCharacterPage(data);
   } catch(e) {
     document.getElementById('character-layout').innerHTML =
-      '<div class="empty-state-kid"><div class="empty-state-icon">🎭</div><div class="empty-state-text">Не удалось загрузить персонажа</div></div>';
+      '<div class="empty-state-kid"><div class="empty-state-icon">&#127917;</div><div class="empty-state-text">Не удалось загрузить персонажа</div></div>';
   }
 })();
+
+function getCharacterBubble(stars) {
+  if (stars >= 30) {
+    var phrases = [
+      'Ого, сколько у нас звездочек!',
+      'Мы так круто выглядим!',
+      'Может, купим что-нибудь новенькое?'
+    ];
+    return phrases[Math.floor(Math.random() * phrases.length)];
+  } else if (stars >= 10) {
+    return 'Еще чуть-чуть, и мы сможем купить кое-что классное!';
+  } else {
+    return 'Пойдем порешаем задачки, чтобы заработать звездочки?';
+  }
+}
 
 function renderCharacterPage(data) {
   var layout = document.getElementById('character-layout');
   var html = '';
+  var charName = data.character_name || 'Искатель';
 
   // Character panel
   html += '<div class="char-panel">';
   html += '<div class="char-panel__image-wrap">';
   var imgSrc = data.character_image_url || '/static/kid/default-character.svg';
   html += '<img src="' + esc(imgSrc) + '?t=' + Date.now() + '" alt="Персонаж" class="char-panel__image" onerror="this.src=\'/static/kid/default-character.svg\'">';
+  html += '</div>';
+
+  // Character name with edit pencil
+  html += '<div class="char-panel__name-row">';
+  html += '<span class="char-panel__name" id="char-name-display">' + esc(charName) + '</span>';
+  html += '<button class="char-panel__name-edit" onclick="editCharacterName()" title="Переименовать">&#9998;&#65039;</button>';
+  html += '</div>';
+
+  // Edit name input (hidden by default)
+  html += '<div class="char-panel__name-edit-form" id="char-name-form" style="display:none">';
+  html += '<input type="text" id="char-name-input" class="char-panel__name-input" maxlength="30" value="' + esc(charName) + '">';
+  html += '<button class="char-panel__name-save" onclick="saveCharacterName()">&#10004;</button>';
+  html += '<button class="char-panel__name-cancel" onclick="cancelEditName()">&#10006;</button>';
+  html += '</div>';
+
+  // Speech bubble
+  html += '<div class="char-bubble">';
+  html += '<div class="char-bubble__text">' + getCharacterBubble(currentStars) + '</div>';
   html += '</div>';
 
   // Equipped items
@@ -75,8 +109,8 @@ function renderCharacterPage(data) {
   // Shop panel
   html += '<div class="shop-panel">';
   html += '<div class="shop-panel__header">';
-  html += '<span class="shop-panel__title">🏪 Магазин</span>';
-  html += '<span class="shop-panel__stars" id="shop-stars">⭐ ' + currentStars + '</span>';
+  html += '<span class="shop-panel__title">&#127978; Магазин</span>';
+  html += '<span class="shop-panel__stars" id="shop-stars">&#11088; ' + currentStars + '</span>';
   html += '</div>';
 
   // Category tabs
@@ -87,7 +121,7 @@ function renderCharacterPage(data) {
       var cat = categories[c];
       var activeClass = c === 0 ? ' shop-tab--active' : '';
       html += '<button class="shop-tab' + activeClass + '" data-cat="' + cat + '" onclick="switchTab(\'' + cat + '\')">';
-      html += (CATEGORY_ICONS[cat] || '🎁') + ' ' + (CATEGORY_NAMES[cat] || cat);
+      html += (CATEGORY_ICONS[cat] || '&#127873;') + ' ' + (CATEGORY_NAMES[cat] || cat);
       html += '</button>';
     }
     html += '</div>';
@@ -105,7 +139,7 @@ function renderCharacterPage(data) {
       html += '</div>';
     }
   } else {
-    html += '<div class="empty-state-kid" style="padding:20px"><div class="empty-state-icon">🏪</div><div class="empty-state-text">Магазин готовится...</div></div>';
+    html += '<div class="empty-state-kid" style="padding:20px"><div class="empty-state-icon">&#127978;</div><div class="empty-state-text">Магазин готовится...</div></div>';
   }
 
   html += '</div>'; // .shop-panel
@@ -118,7 +152,7 @@ function renderShopItem(item) {
   html += '<div class="shop-item__emoji">' + esc(item.emoji) + '</div>';
   html += '<div class="shop-item__info">';
   html += '<div class="shop-item__name">' + esc(item.title_ru) + '</div>';
-  html += '<div class="shop-item__desc">' + esc(item.description_ru) + '</div>';
+  html += '<div class="shop-item__price">&#11088; ' + item.price_stars + '</div>';
   html += '</div>';
 
   if (item.purchased) {
@@ -129,24 +163,65 @@ function renderShopItem(item) {
     }
   } else {
     var canBuy = currentStars >= item.price_stars;
-    html += '<button class="shop-item__btn shop-item__btn--buy' + (canBuy ? '' : ' shop-item__btn--disabled') + '" ' +
-            (canBuy ? 'onclick="buyItem(' + item.id + ')"' : 'disabled') + '>';
-    html += '⭐ ' + item.price_stars;
-    html += '</button>';
+    if (canBuy) {
+      html += '<button class="shop-item__btn shop-item__btn--buy" onclick="buyItem(' + item.id + ')">Купить</button>';
+    } else {
+      html += '<button class="shop-item__btn shop-item__btn--buy shop-item__btn--disabled" onclick="showNotEnoughStars(this)">&#11088; ' + item.price_stars + '</button>';
+    }
   }
 
   html += '</div>';
   return html;
 }
 
+function showNotEnoughStars(btn) {
+  // Show tooltip
+  var existing = btn.parentNode.querySelector('.shop-item__tooltip');
+  if (existing) { existing.remove(); return; }
+
+  var tip = document.createElement('div');
+  tip.className = 'shop-item__tooltip';
+  tip.textContent = 'Нужно еще немного поучиться! Пройди пару уроков, чтобы получить больше звездочек.';
+  btn.parentNode.appendChild(tip);
+  setTimeout(function() { tip.remove(); }, 4000);
+}
+
+function editCharacterName() {
+  document.getElementById('char-name-display').parentNode.style.display = 'none';
+  document.getElementById('char-name-form').style.display = '';
+  document.getElementById('char-name-input').focus();
+  document.getElementById('char-name-input').select();
+}
+
+function cancelEditName() {
+  document.getElementById('char-name-form').style.display = 'none';
+  document.getElementById('char-name-display').parentNode.style.display = '';
+}
+
+async function saveCharacterName() {
+  var input = document.getElementById('char-name-input');
+  var name = (input.value || '').trim();
+  if (!name) name = 'Искатель';
+
+  try {
+    var resp = await fetch('/api/kid/character/name', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: name})
+    });
+    if (resp.ok) {
+      document.getElementById('char-name-display').textContent = name;
+      cancelEditName();
+    }
+  } catch(e) {}
+}
+
 function switchTab(cat) {
-  // Hide all
   var allPanels = document.querySelectorAll('.shop-items');
   for (var i = 0; i < allPanels.length; i++) allPanels[i].style.display = 'none';
-  // Show selected
   var target = document.getElementById('shop-cat-' + cat);
   if (target) target.style.display = '';
-  // Update tab active state
   var tabs = document.querySelectorAll('.shop-tab');
   for (var j = 0; j < tabs.length; j++) {
     tabs[j].classList.toggle('shop-tab--active', tabs[j].getAttribute('data-cat') === cat);
@@ -166,16 +241,13 @@ async function buyItem(itemId) {
 
     if (resp.ok && result.ok) {
       currentStars = result.stars;
-      // Update stars display
       var starsEl = document.getElementById('shop-stars');
-      if (starsEl) starsEl.textContent = '⭐ ' + currentStars;
+      if (starsEl) starsEl.innerHTML = '&#11088; ' + currentStars;
       var navStars = document.getElementById('star-count');
       if (navStars) navStars.textContent = currentStars;
 
-      // Show purchase animation
       showPurchaseAnimation(itemId);
 
-      // Reload character data
       setTimeout(async function() {
         var resp2 = await fetch('/api/kid/character', {credentials: 'same-origin'});
         if (resp2.ok) {
@@ -186,7 +258,7 @@ async function buyItem(itemId) {
       }, 500);
     } else {
       alert(result.message || 'Не удалось купить');
-      if (btn) { btn.disabled = false; btn.textContent = '⭐ ' + currentStars; }
+      if (btn) { btn.disabled = false; btn.textContent = 'Купить'; }
     }
   } catch(e) {
     alert('Ошибка сети');
@@ -202,7 +274,6 @@ async function toggleEquip(itemId, equip) {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({equipped: equip}),
     });
-    // Reload
     var resp = await fetch('/api/kid/character', {credentials: 'same-origin'});
     if (resp.ok) {
       var data = await resp.json();
@@ -222,5 +293,4 @@ function esc(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 </script>
-<div style="text-align:center; padding:8px; font-size:11px; color:#999;">Персонаж создан с помощью ИИ</div>
 {% endblock %}

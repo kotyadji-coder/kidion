@@ -6,9 +6,17 @@
 {% block content %}
 <div class="kid-map">
   <div class="kid-map__header">
-    <a href="/kid/home" class="btn-back-kid">← Назад</a>
+    <a href="/kid/home" class="btn-back-kid">&larr;</a>
     <h1 class="kid-map__title">{{ subject_name }}</h1>
     <div class="kid-map__stats" id="map-stats"></div>
+  </div>
+
+  <div class="map-subtitle">Твой путь приключений!</div>
+
+  <!-- First-visit tooltip -->
+  <div class="map-tooltip" id="map-tooltip" style="display:none">
+    <span class="map-tooltip__text">Жми на открытый уровень, чтобы начать!</span>
+    <button class="map-tooltip__close" onclick="this.parentNode.style.display='none'; localStorage.setItem('map_tooltip_seen','1')">&#10005;</button>
   </div>
 
   <div class="lesson-map" id="lesson-map">
@@ -21,11 +29,16 @@
 <script>
 var SUBJECT = '{{ subject }}';
 
+// Show tooltip on first visit
+if (!localStorage.getItem('map_tooltip_seen')) {
+  document.getElementById('map-tooltip').style.display = '';
+}
+
 (async () => {
   try {
     var resp = await fetch('/api/kid/subject/' + SUBJECT + '/map', {credentials: 'same-origin'});
     if (!resp.ok) {
-      document.getElementById('lesson-map').innerHTML = '<div class="empty-state-kid"><div class="empty-state-icon">📚</div><div class="empty-state-text">Попроси маму или папу открыть этот предмет!</div></div>';
+      document.getElementById('lesson-map').innerHTML = '<div class="empty-state-kid"><div class="empty-state-icon">&#128218;</div><div class="empty-state-text">Попроси маму или папу открыть этот предмет!</div></div>';
       return;
     }
     var data = await resp.json();
@@ -38,7 +51,7 @@ var SUBJECT = '{{ subject }}';
 function renderMap(data) {
   // Stats
   var statsEl = document.getElementById('map-stats');
-  statsEl.innerHTML = '<span>⭐ ' + (data.total_stars || 0) + '</span> · <span>' + (data.completed_lessons || 0) + '/' + (data.total_lessons || 0) + '</span>';
+  statsEl.innerHTML = '<span>&#11088; ' + (data.total_stars || 0) + '</span> &middot; <span>' + (data.completed_lessons || 0) + '/' + (data.total_lessons || 0) + '</span>';
 
   var topics = data.topics || [];
   var mapEl = document.getElementById('lesson-map');
@@ -51,12 +64,15 @@ function renderMap(data) {
     // Topic header
     html += '<div class="map-topic">';
     html += '<div class="map-topic__header">';
-    html += '<span class="map-topic__icon">' + (topic.icon || '📖') + '</span>';
+    html += '<span class="map-topic__icon">' + (topic.icon || '&#128214;') + '</span>';
     html += '<span class="map-topic__title">' + esc(topic.title_ru) + '</span>';
     html += '</div>';
 
     // Lesson nodes (vertical path)
     html += '<div class="map-lessons">';
+    // Vertical connector line
+    html += '<div class="map-path-line"></div>';
+
     for (var j = 0; j < lessons.length; j++) {
       var l = lessons[j];
       var nodeClass = 'map-node map-node--' + l.status;
@@ -64,36 +80,33 @@ function renderMap(data) {
 
       html += '<div class="' + nodeClass + ' ' + offset + '">';
 
-      // Connector line
-      if (j > 0) {
-        html += '<div class="map-connector"></div>';
-      }
-
       html += '<div class="map-node__circle">';
 
       if (l.status === 'completed') {
-        var starsHtml = '';
-        for (var s = 0; s < 5; s++) {
-          starsHtml += '<span class="map-star ' + (s < l.stars_earned ? 'earned' : '') + '">⭐</span>';
-        }
-        html += '<span class="map-node__check">✅</span>';
+        html += '<span class="map-node__check">&#10004;</span>';
         html += '</div>';
         html += '<div class="map-node__info">';
         html += '<div class="map-node__title">' + esc(l.title_ru) + '</div>';
-        html += '<div class="map-node__stars">' + starsHtml + '</div>';
+        // Stars
+        var starsHtml = '<div class="map-node__stars">';
+        for (var s = 0; s < 5; s++) {
+          starsHtml += '<span class="map-star ' + (s < l.stars_earned ? 'earned' : '') + '">&#11088;</span>';
+        }
+        starsHtml += '</div>';
+        html += starsHtml;
         if (l.lesson_id) {
           html += '<a href="/kid/lesson/' + l.lesson_id + '" class="btn-replay-kid">Повторить</a>';
         }
         html += '</div>';
       } else if (l.status === 'available') {
         if (l.lesson_id) {
-          html += '<span class="map-node__play">▶</span>';
+          html += '<span class="map-node__play">&#9654;</span>';
           html += '</div>';
           html += '<div class="map-node__info">';
           html += '<div class="map-node__title">' + esc(l.title_ru) + '</div>';
           html += '<a href="/kid/lesson/' + l.lesson_id + '" class="btn-play-kid">Играть!</a>';
         } else {
-          html += '<span class="map-node__waiting">⏳</span>';
+          html += '<span class="map-node__waiting">&#9203;</span>';
           html += '</div>';
           html += '<div class="map-node__info">';
           html += '<div class="map-node__title">' + esc(l.title_ru) + '</div>';
@@ -101,7 +114,7 @@ function renderMap(data) {
         }
         html += '</div>';
       } else if (l.status === 'test') {
-        html += '<span class="map-node__test">📋</span>';
+        html += '<span class="map-node__test">&#128203;</span>';
         html += '</div>';
         html += '<div class="map-node__info">';
         html += '<div class="map-node__title">Тест: ' + esc(l.title_ru) + '</div>';
@@ -111,7 +124,7 @@ function renderMap(data) {
         html += '</div>';
       } else {
         // locked
-        html += '<span class="map-node__lock">🔒</span>';
+        html += '<span class="map-node__lock">&#128274;</span>';
         html += '</div>';
         html += '<div class="map-node__info">';
         html += '<div class="map-node__title map-node__title--locked">' + esc(l.title_ru) + '</div>';

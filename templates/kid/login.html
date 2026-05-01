@@ -15,55 +15,149 @@
   <main class="kid-main">
     <div class="login-page">
 
-      {% if child %}
-        <!-- Child identified: show personalized login -->
-        <div class="child-welcome">
-          <div class="child-welcome-avatar">{{ child.name[0] | upper }}</div>
-          <div class="child-welcome-name">Привет, {{ child.name }}!</div>
+      <!-- Step 1: Child picker (if multiple children) -->
+      {% if children|length > 1 %}
+      <div id="child-picker">
+        <div class="login-wave">&#128075;</div>
+        <h1 class="login-title">Привет! Выбери себя</h1>
+
+        <div class="child-picker-grid">
+          {% for c in children %}
+          <button class="child-picker-card" data-child-id="{{ c.id }}">
+            {% if c.character_image_url %}
+            <img src="{{ c.character_image_url }}" alt="{{ c.name }}" class="child-picker-card__avatar-img"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+            <div class="child-picker-card__avatar" style="display:none">{{ c.name[0]|upper }}</div>
+            {% else %}
+            <div class="child-picker-card__avatar">{{ c.name[0]|upper }}</div>
+            {% endif %}
+            <div class="child-picker-card__name">{{ c.name }}</div>
+          </button>
+          {% endfor %}
         </div>
-        <p style="color: var(--color-muted); margin-bottom: 28px; font-size: 18px;">Введи свой PIN-код</p>
-        <input type="hidden" id="child-id-input" value="{{ child.id }}">
-      {% else %}
-        <!-- Generic login -->
-        <div class="login-logo">🎓</div>
-        <div class="login-title">Kidion</div>
-        <div class="login-subtitle">Введи свой PIN-код</div>
-        {% if child_id %}
-          <input type="hidden" id="child-id-input" value="{{ child_id }}">
-        {% else %}
-          <input type="hidden" id="child-id-input" value="">
-        {% endif %}
+      </div>
       {% endif %}
 
-      <!-- PIN dots (4 digits) -->
-      <div class="pin-dots">
-        <div class="pin-dot"></div>
-        <div class="pin-dot"></div>
-        <div class="pin-dot"></div>
-        <div class="pin-dot"></div>
-      </div>
+      <!-- Step 2: PIN entry -->
+      <div id="pin-section" {% if children|length > 1 %}style="display:none"{% endif %}>
+        {% if children|length == 1 %}
+        <div class="child-welcome">
+          {% if children[0].character_image_url %}
+          <img src="{{ children[0].character_image_url }}" alt="{{ children[0].name }}" class="child-welcome-avatar-img"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+          <div class="child-welcome-avatar" style="display:none">{{ children[0].name[0]|upper }}</div>
+          {% else %}
+          <div class="child-welcome-avatar">{{ children[0].name[0]|upper }}</div>
+          {% endif %}
+          <div class="child-welcome-name">Привет, {{ children[0].name }}!</div>
+        </div>
+        <input type="hidden" id="child-id-input" value="{{ children[0].id }}">
+        {% elif selected_child %}
+        <div class="child-welcome">
+          {% if selected_child.character_image_url %}
+          <img src="{{ selected_child.character_image_url }}" alt="{{ selected_child.name }}" class="child-welcome-avatar-img"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+          <div class="child-welcome-avatar" style="display:none">{{ selected_child.name[0]|upper }}</div>
+          {% else %}
+          <div class="child-welcome-avatar">{{ selected_child.name[0]|upper }}</div>
+          {% endif %}
+          <div class="child-welcome-name">Привет, {{ selected_child.name }}!</div>
+        </div>
+        <input type="hidden" id="child-id-input" value="{{ selected_child.id }}">
+        {% else %}
+        <div class="login-logo">&#127891;</div>
+        <div class="login-title">Kidion</div>
+        <input type="hidden" id="child-id-input" value="{{ child_id or '' }}">
+        {% endif %}
 
-      <!-- PIN keyboard -->
-      <div class="pin-keyboard">
-        <button class="pin-btn" data-digit="1">1</button>
-        <button class="pin-btn" data-digit="2">2</button>
-        <button class="pin-btn" data-digit="3">3</button>
-        <button class="pin-btn" data-digit="4">4</button>
-        <button class="pin-btn" data-digit="5">5</button>
-        <button class="pin-btn" data-digit="6">6</button>
-        <button class="pin-btn" data-digit="7">7</button>
-        <button class="pin-btn" data-digit="8">8</button>
-        <button class="pin-btn" data-digit="9">9</button>
-        <button class="pin-btn pin-backspace">⌫</button>
-        <button class="pin-btn" data-digit="0">0</button>
-        <button class="pin-btn pin-submit" id="pin-submit-btn">Войти</button>
-      </div>
+        <!-- Back button for multi-child mode -->
+        {% if children|length > 1 %}
+        <button class="pin-back-btn" id="pin-back-btn">&#8592; Назад</button>
+        <div class="child-welcome" id="pin-child-welcome"></div>
+        <input type="hidden" id="child-id-input" value="">
+        {% endif %}
 
-      <div class="pin-error" id="pin-error"></div>
+        <p class="pin-label">Введи свой секретный код</p>
+
+        <!-- PIN dots (4 digits) -->
+        <div class="pin-dots">
+          <div class="pin-dot"></div>
+          <div class="pin-dot"></div>
+          <div class="pin-dot"></div>
+          <div class="pin-dot"></div>
+        </div>
+
+        <!-- PIN keyboard -->
+        <div class="pin-keyboard">
+          <button class="pin-btn" data-digit="1">1</button>
+          <button class="pin-btn" data-digit="2">2</button>
+          <button class="pin-btn" data-digit="3">3</button>
+          <button class="pin-btn" data-digit="4">4</button>
+          <button class="pin-btn" data-digit="5">5</button>
+          <button class="pin-btn" data-digit="6">6</button>
+          <button class="pin-btn" data-digit="7">7</button>
+          <button class="pin-btn" data-digit="8">8</button>
+          <button class="pin-btn" data-digit="9">9</button>
+          <button class="pin-btn pin-backspace">&#9003;</button>
+          <button class="pin-btn" data-digit="0">0</button>
+          <button class="pin-btn pin-submit" id="pin-submit-btn">Войти</button>
+        </div>
+
+        <div class="pin-error" id="pin-error"></div>
+      </div>
 
     </div>
   </main>
 
   <script src="/static/kid/app.js"></script>
+  <script>
+  // Multi-child picker logic
+  (function() {
+    var picker = document.getElementById('child-picker');
+    var pinSection = document.getElementById('pin-section');
+    if (!picker) return;
+
+    var cards = document.querySelectorAll('.child-picker-card');
+    var backBtn = document.getElementById('pin-back-btn');
+    var childIdInput = document.getElementById('child-id-input');
+    var welcomeEl = document.getElementById('pin-child-welcome');
+
+    cards.forEach(function(card) {
+      card.addEventListener('click', function() {
+        var childId = card.dataset.childId;
+        var name = card.querySelector('.child-picker-card__name').textContent;
+        var imgEl = card.querySelector('.child-picker-card__avatar-img');
+        var letterEl = card.querySelector('.child-picker-card__avatar');
+
+        childIdInput.value = childId;
+
+        // Build welcome display
+        var html = '';
+        if (imgEl && imgEl.style.display !== 'none') {
+          html += '<img src="' + imgEl.src + '" alt="' + name + '" class="child-welcome-avatar-img">';
+        } else {
+          html += '<div class="child-welcome-avatar">' + name[0].toUpperCase() + '</div>';
+        }
+        html += '<div class="child-welcome-name">Привет, ' + name + '!</div>';
+        welcomeEl.innerHTML = html;
+
+        picker.style.display = 'none';
+        pinSection.style.display = '';
+      });
+    });
+
+    backBtn.addEventListener('click', function() {
+      pinSection.style.display = 'none';
+      picker.style.display = '';
+      childIdInput.value = '';
+      // Clear PIN state
+      document.querySelectorAll('.pin-dot').forEach(function(d) {
+        d.classList.remove('filled');
+      });
+      var err = document.getElementById('pin-error');
+      if (err) { err.textContent = ''; err.style.display = 'none'; }
+    });
+  })();
+  </script>
 </body>
 </html>
