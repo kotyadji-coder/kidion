@@ -287,6 +287,48 @@
   color: #fff;
 }
 
+/* Month block */
+.month-block {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 1.75rem;
+  margin-top: 1.5rem;
+}
+
+.month-block__icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.month-block__title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 0.35rem;
+}
+
+.month-block__text {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.month-block__done {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.month-block__done-text {
+  font-weight: 700;
+  color: var(--success);
+  font-size: 0.95rem;
+}
+
 /* Skip test ghost button */
 .btn--skip {
   background: transparent;
@@ -374,19 +416,21 @@
   <section class="program-section">
     <div class="program-section__header">
       <h2>Программа</h2>
-      <div class="program-actions">
-        <a href="/api/children/{{ child.id }}/worksheets?subject={{ subject }}" target="_blank"
-         class="btn btn--outline btn--sm" id="btn-print-all" style="display:none">
-        🖨 Распечатать все листы
-      </a>
-      <button class="btn btn--accent btn--sm" id="btn-generate-month" style="display:none">
-          Создать уроки на месяц (400 💎)
-        </button>
-      </div>
     </div>
-    <p id="month-hint" style="display:none; font-size:0.8rem; color:var(--text-muted); margin:-0.5rem 0 1rem;">Вы откроете сразу 4 темы (20 уроков). Этого хватит на целый месяц регулярных занятий.</p>
     <div id="topics-list" class="topics-list">
       <div class="spinner">Загрузка программы...</div>
+    </div>
+
+    <!-- Month block (below topics) -->
+    <div class="month-block" id="month-block" style="display:none;">
+      <div class="month-block__icon">📅</div>
+      <div class="month-block__content">
+        <div class="month-block__title">Занятия на месяц</div>
+        <p class="month-block__text">Создайте сразу 4 темы (20 уроков) — этого хватит на месяц регулярных занятий.</p>
+        <div id="month-action">
+          <button class="btn btn--accent" id="btn-generate-month">Создать уроки на месяц (400 💎)</button>
+        </div>
+      </div>
     </div>
   </section>
 </div>
@@ -487,20 +531,40 @@ async function loadProgram() {
       return;
     }
 
-    document.getElementById('btn-generate-month').style.display = 'inline-flex';
-    document.getElementById('month-hint').style.display = 'block';
+    // Show month block
+    document.getElementById('month-block').style.display = 'flex';
 
-    // Show print-all button if any lessons are generated
-    var anyGenerated = false;
+    // Count all generated lessons across all topics
+    var totalGenerated = 0;
+    var totalLessons = 0;
     for (var ti = 0; ti < topics.length; ti++) {
       var tls = topics[ti].lessons || [];
+      totalLessons += tls.length;
       for (var tli = 0; tli < tls.length; tli++) {
-        if (tls[tli].lesson_id && tls[tli].lesson_status === 'done') { anyGenerated = true; break; }
+        if (tls[tli].lesson_id && tls[tli].lesson_status === 'done') totalGenerated++;
       }
-      if (anyGenerated) break;
     }
-    if (anyGenerated) {
-      document.getElementById('btn-print-all').style.display = 'inline-flex';
+
+    // If all lessons generated (month done) — show print button instead
+    var monthAction = document.getElementById('month-action');
+    if (totalGenerated >= 20) {
+      monthAction.innerHTML =
+        '<div class="month-block__done">' +
+        '<div class="month-block__done-text">✅ ' + totalGenerated + ' уроков готовы!</div>' +
+        '<div style="display:flex; gap:0.75rem; flex-wrap:wrap;">' +
+        '<a href="/kid/login?child_id=' + CHILD_ID + '" class="btn btn--primary">✨ Перейти к урокам</a>' +
+        '<a href="/api/children/' + CHILD_ID + '/worksheets?subject=' + SUBJECT + '" target="_blank" class="btn btn--outline">🖨 Рабочая тетрадь</a>' +
+        '</div>' +
+        '<span style="font-size:0.8rem; color:var(--text-muted)">Все печатные задания одним файлом</span>' +
+        '</div>';
+    } else if (totalGenerated > 0) {
+      // Some generated but not full month — show both
+      monthAction.innerHTML =
+        '<button class="btn btn--accent" id="btn-generate-month">Создать уроки на месяц (400 💎)</button>' +
+        '<div style="margin-top:0.75rem;">' +
+        '<a href="/api/children/' + CHILD_ID + '/worksheets?subject=' + SUBJECT + '" target="_blank" class="btn btn--outline btn--sm">🖨 Распечатать готовые листы</a>' +
+        '</div>';
+      document.getElementById('btn-generate-month').addEventListener('click', monthClickHandler);
     }
 
     var html = '';
@@ -576,7 +640,10 @@ async function loadProgram() {
         html += '<div class="gen-progress__text">Генерация: ' + doneCount + '/' + totalGen + '</div>';
         html += '</div>';
       } else if (doneIds.length > 0 && doneIds.length > completed) {
-        html += '<a href="/kid/login?child_id=' + CHILD_ID + '" class="gen-ready-btn">Уроки готовы — учиться!</a>';
+        html += '<div style="display:flex; gap:0.75rem; padding:0.75rem 1.25rem; flex-wrap:wrap;">';
+        html += '<a href="/kid/login?child_id=' + CHILD_ID + '" class="gen-ready-btn" style="margin:0">✨ Перейти к урокам</a>';
+        html += '<a href="/api/children/' + CHILD_ID + '/worksheets?topic_id=' + t.id + '" target="_blank" class="btn btn--outline btn--sm" style="align-self:center">🖨 Рабочая тетрадь</a>';
+        html += '</div>';
       }
 
       // Lessons list
@@ -795,7 +862,11 @@ async function pollInlineProgress(topicId, lessonIds) {
 
   var el = document.getElementById('gen-progress-' + topicId);
   if (el) {
-    el.outerHTML = '<a href="/kid/login?child_id=' + CHILD_ID + '" class="gen-ready-btn">Уроки готовы — учиться!</a>';
+    el.outerHTML =
+      '<div style="display:flex; gap:0.75rem; padding:0.75rem 1.25rem; flex-wrap:wrap;">' +
+      '<a href="/kid/login?child_id=' + CHILD_ID + '" class="gen-ready-btn" style="margin:0">✨ Перейти к урокам</a>' +
+      '<a href="/api/children/' + CHILD_ID + '/worksheets?topic_id=' + topicId + '" target="_blank" class="btn btn--outline btn--sm" style="align-self:center">🖨 Рабочая тетрадь</a>' +
+      '</div>';
   }
   loadStats();
   loadProgram();
@@ -837,7 +908,7 @@ async function doSkipTest(topicId) {
   }
 }
 
-document.getElementById('btn-generate-month').addEventListener('click', function() {
+function monthClickHandler() {
   var remaining = USER_CRYSTALS - 400;
   showModal({
     icon: '📅',
@@ -849,7 +920,9 @@ document.getElementById('btn-generate-month').addEventListener('click', function
       { label: 'Да, создать!', cls: 'btn--primary', action: doGenerateMonth }
     ]
   });
-});
+}
+
+document.getElementById('btn-generate-month').addEventListener('click', monthClickHandler);
 
 async function doGenerateMonth() {
   try {
@@ -877,18 +950,13 @@ async function doGenerateMonth() {
 }
 
 function showMonthProgress(lessonIds) {
-  var list = document.getElementById('topics-list');
-  var existing = document.getElementById('month-progress');
-  if (existing) existing.remove();
-
-  var el = document.createElement('div');
-  el.id = 'month-progress';
-  el.className = 'gen-progress gen-progress--active';
-  el.style.margin = '0 0 1rem';
-  el.innerHTML =
+  // Show progress inside month-block
+  var monthAction = document.getElementById('month-action');
+  monthAction.innerHTML =
+    '<div class="gen-progress gen-progress--active" id="month-progress">' +
     '<div class="gen-progress__bar-wrap"><div class="gen-progress__bar" style="width:0%"></div></div>' +
-    '<div class="gen-progress__text">Генерация месяца: 0/' + lessonIds.length + '</div>';
-  list.parentElement.insertBefore(el, list);
+    '<div class="gen-progress__text">Генерация: 0/' + lessonIds.length + '</div>' +
+    '</div>';
 
   pollMonthProgress(lessonIds);
 }
@@ -918,12 +986,16 @@ async function pollMonthProgress(lessonIds) {
     }
   }
 
-  var el = document.getElementById('month-progress');
-  if (el) {
-    el.innerHTML = '<a href="/kid/login?child_id=' + CHILD_ID + '" class="gen-ready-btn">Уроки готовы — учиться!</a>';
-    el.className = '';
-    el.style.padding = '0';
-    el.style.margin = '0 0 1rem';
+  // Show done state in month block
+  var monthAction = document.getElementById('month-action');
+  if (monthAction) {
+    monthAction.innerHTML =
+      '<div class="month-block__done">' +
+      '<div class="month-block__done-text">✅ ' + total + ' уроков готовы!</div>' +
+      '<div style="display:flex; gap:0.75rem; flex-wrap:wrap;">' +
+      '<a href="/kid/login?child_id=' + CHILD_ID + '" class="btn btn--primary">✨ Перейти к урокам</a>' +
+      '<a href="/api/children/' + CHILD_ID + '/worksheets?subject=' + SUBJECT + '" target="_blank" class="btn btn--outline">🖨 Рабочая тетрадь</a>' +
+      '</div></div>';
   }
   loadStats();
   loadProgram();
