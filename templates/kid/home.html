@@ -128,6 +128,15 @@
     html += '</div>';
     html += '</a>';
 
+    // AI Chat card
+    html += '<a href="/kid/chat" class="subject-card-kid" style="--accent:#6c5ce7; --gradient:linear-gradient(135deg, #6c5ce7, #a29bfe)">';
+    html += '<div class="subject-card-kid__icon-wrap" style="background:linear-gradient(135deg, #6c5ce7, #fd79a8)">&#128172;</div>';
+    html += '<div class="subject-card-kid__body">';
+    html += '<div class="subject-card-kid__name">Чат с помощником</div>';
+    html += '<div class="subject-card-kid__progress-text">Спроси что угодно!</div>';
+    html += '</div>';
+    html += '</a>';
+
     grid.innerHTML = html;
   } catch(e) {
     document.getElementById('subjects-grid').innerHTML = '<p style="text-align:center;color:#888">Ошибка загрузки</p>';

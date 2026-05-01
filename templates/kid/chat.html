@@ -1,0 +1,100 @@
+{% extends "kid/base.html" %}
+
+{% block title %}Чат — Kidion{% endblock %}
+{% block page_name %}chat{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="/static/kid/chat.css">
+{% endblock %}
+
+{% block content %}
+<div class="chat-layout">
+  <!-- Left: Chat list -->
+  <aside class="chat-sidebar" id="chat-sidebar">
+    <div class="chat-sidebar__header">
+      <span class="chat-sidebar__title">Чаты</span>
+      <button class="chat-sidebar__new" id="btn-new-chat" title="Новый чат">+</button>
+    </div>
+    <div class="chat-sidebar__list" id="chat-list">
+      <!-- Filled by JS -->
+    </div>
+  </aside>
+
+  <!-- Center: Chat window -->
+  <section class="chat-center">
+    <div class="chat-center__header">
+      <button class="chat-toggle-btn" id="btn-toggle-sidebar" title="Чаты">&#9776;</button>
+      <span class="chat-center__title" id="chat-title">Выбери чат</span>
+      <button class="chat-toggle-btn" id="btn-toggle-characters" title="Помощники">&#9881;</button>
+    </div>
+
+    <div class="chat-messages" id="chat-messages">
+      <div class="chat-empty-state" id="chat-empty">
+        <div class="chat-empty-state__icon">&#128172;</div>
+        <div class="chat-empty-state__text">Выбери чат слева или создай новый!</div>
+      </div>
+    </div>
+
+    <div class="chat-input-area" id="chat-input-area" style="display:none">
+      <div class="chat-input-wrap">
+        <label class="chat-attach-btn" id="btn-attach" title="Прикрепить картинку">
+          <input type="file" accept="image/*" id="file-input" hidden>
+          &#128206;
+        </label>
+        <textarea class="chat-textarea" id="chat-textarea" placeholder="Напиши сообщение..." rows="1"></textarea>
+        <button class="chat-send-btn" id="chat-send-btn" title="Отправить" disabled>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+      <div class="chat-attach-preview" id="attach-preview" style="display:none">
+        <img id="attach-thumb" src="" alt="preview">
+        <button class="chat-attach-remove" id="btn-remove-attach">&#10005;</button>
+      </div>
+      <div class="chat-limit-info" id="chat-limit-info"></div>
+    </div>
+  </section>
+
+  <!-- Right: Character selector -->
+  <aside class="chat-characters" id="chat-characters">
+    <div class="chat-characters__title">Помощники</div>
+    <div class="chat-characters__list" id="character-list">
+      {% for key, char in characters.items() %}
+      <button class="character-card {% if key == 'owl' %}character-card--active{% endif %}"
+              data-key="{{ key }}"
+              style="--accent: {{ char.color }}">
+        <span class="character-card__emoji">{{ char.emoji }}</span>
+        <span class="character-card__name">{{ char.name_ru }}</span>
+      </button>
+      {% endfor %}
+    </div>
+    <div class="character-desc" id="character-desc">
+      <div class="character-desc__emoji" id="desc-emoji">&#129417;</div>
+      <div class="character-desc__name" id="desc-name">Мудрая Сова</div>
+      <div class="character-desc__text" id="desc-text">Объясняет сложное простыми словами, помогает с уроками и домашкой</div>
+    </div>
+    {% if not has_subscription %}
+    <div class="chat-sub-banner" id="sub-banner">
+      <div class="chat-sub-banner__text">Бесплатно: <b>5 сообщений в день</b></div>
+      <div class="chat-sub-banner__hint">Безлимит — 300 кристаллов/мес</div>
+    </div>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.KID_CHAT = {
+    childId: {{ child.id }},
+    childName: "{{ child.name }}",
+    hasSubscription: {{ "true" if has_subscription else "false" }},
+    freeLimit: 5,
+    paidLimit: 50,
+    characters: {{ characters_json | safe }},
+  };
+</script>
+<script src="/static/kid/chat.js"></script>
+{% endblock %}

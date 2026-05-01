@@ -43,11 +43,78 @@
     </div>
 
     <div id="buy-error" class="alert alert--error" style="display:none"></div>
+
+    <!-- Chat Subscription -->
+    <div style="margin-top:40px;">
+        <h2 class="page-title" style="font-size:24px;">Чат с нейросетью</h2>
+        <p class="page-subtitle">Безопасный AI-помощник для вашего ребёнка</p>
+
+        <div class="package-card card" id="chat-sub-card" style="max-width:400px;margin:0 auto;">
+            <div class="package-card__crystals">&#128172; Чат-подписка</div>
+            <div class="package-card__name">50 сообщений в день</div>
+            <div class="package-card__price">&#128142; 300 кристаллов / мес</div>
+            <div class="package-card__per" id="chat-sub-status">Загрузка...</div>
+            <button class="btn btn--primary btn--full" id="btn-chat-sub" style="display:none" onclick="buyChatSub()">Подключить</button>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
+// Chat subscription
+(async function() {
+    try {
+        var resp = await fetch('/api/chat/subscription', {credentials: 'same-origin'});
+        var data = await resp.json();
+        var statusEl = document.getElementById('chat-sub-status');
+        var btnEl = document.getElementById('btn-chat-sub');
+        if (data.active) {
+            var expires = new Date(data.expires_at);
+            statusEl.textContent = 'Активна до ' + expires.toLocaleDateString('ru-RU');
+            statusEl.style.color = '#00b894';
+        } else {
+            statusEl.textContent = 'Бесплатно: 5 сообщений в день';
+            btnEl.style.display = '';
+        }
+    } catch(e) {}
+})();
+
+async function buyChatSub() {
+    var btn = document.getElementById('btn-chat-sub');
+    btn.disabled = true;
+    btn.textContent = 'Подключаю...';
+    try {
+        var resp = await fetch('/api/chat/subscribe', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'same-origin'
+        });
+        var data = await resp.json();
+        if (resp.ok) {
+            var statusEl = document.getElementById('chat-sub-status');
+            var expires = new Date(data.expires_at);
+            statusEl.textContent = 'Активна до ' + expires.toLocaleDateString('ru-RU');
+            statusEl.style.color = '#00b894';
+            btn.style.display = 'none';
+            // Update crystals display
+            var crystalsEl = document.querySelector('.crystals-count, .nav-crystals');
+            if (crystalsEl) {
+                var cur = parseInt(crystalsEl.textContent.replace(/\D/g,'')) || 0;
+                crystalsEl.textContent = (cur - 300);
+            }
+        } else {
+            alert(data.message || data.error || 'Ошибка');
+            btn.disabled = false;
+            btn.textContent = 'Подключить';
+        }
+    } catch(e) {
+        alert('Ошибка соединения');
+        btn.disabled = false;
+        btn.textContent = 'Подключить';
+    }
+}
+
 async function buyPackage(packageId) {
     var errorEl = document.getElementById('buy-error');
     errorEl.style.display = 'none';

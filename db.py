@@ -234,6 +234,38 @@ def _init_schema(conn: sqlite3.Connection) -> None:
             created_at  TEXT NOT NULL DEFAULT (datetime('now'))
         );
 
+        CREATE TABLE IF NOT EXISTS kid_chats (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            child_id        INTEGER NOT NULL REFERENCES children(id) ON DELETE CASCADE,
+            character_key   TEXT NOT NULL DEFAULT 'owl',
+            title           TEXT NOT NULL DEFAULT 'Новый чат',
+            created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_kid_chats_child ON kid_chats(child_id);
+
+        CREATE TABLE IF NOT EXISTS kid_chat_messages (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            chat_id         INTEGER NOT NULL REFERENCES kid_chats(id) ON DELETE CASCADE,
+            role            TEXT NOT NULL CHECK(role IN ('user', 'assistant')),
+            content         TEXT NOT NULL,
+            image_url       TEXT,
+            created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_kid_chat_messages_chat ON kid_chat_messages(chat_id);
+
+        CREATE TABLE IF NOT EXISTS chat_subscriptions (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            started_at      TEXT NOT NULL,
+            expires_at      TEXT NOT NULL,
+            created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_chat_subs_user ON chat_subscriptions(user_id);
+
         CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
         CREATE INDEX IF NOT EXISTS idx_users_ref_code ON users(ref_code);
         CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id);
@@ -1540,3 +1572,133 @@ def toggle_equip_item(conn: sqlite3.Connection, child_id: int, item_id: int, equ
     )
     conn.commit()
     return cursor.rowcount == 1
+
+
+# ---------------------------------------------------------------------------
+# Kid Chat operations
+# ---------------------------------------------------------------------------
+
+def create_kid_chat(
+    conn: sqlite3.Connection,
+    child_id: int,
+    character_key: str = "owl",
+    title: str = "Новый чат",
+) -> int:
+    cursor = conn.execute(
+        "INSERT INTO kid_chats (child_id, character_key, title, created_at, updated_at) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (child_id, character_key, title, _now(), _now()),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def get_kid_chat(conn: sqlite3.Connection, chat_id: int) -> dict | None:
+    row = conn.execute("SELECT * FROM kid_chats WHERE id = ?", (chat_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def get_kid_chats_by_child(conn: sqlite3.Connection, child_id: int) -> list[dict]:
+    rows = conn.execute(
+        "SELECT * FROM kid_chats WHERE child_id = ? ORDER BY updated_at DESC",
+        (child_id,),
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def update_kid_chat_title(conn: sqlite3.Connection, chat_id: int, title: str) -> None:
+    conn.execute(
+        "UPDATE kid_chats SET title = ?, updated_at = ? WHERE id = ?",
+        (title, _now(), chat_id),
+    )
+    conn.commit()
+
+
+def update_kid_chat_timestamp(conn: sqlite3.Connection, chat_id: int) -> None:
+    conn.execute("UPDATE kid_chats SET updated_at = ? WHERE id = ?", (_now(), chat_id))
+    conn.commit()
+
+
+def delete_kid_chat(conn: sqlite3.Connection, chat_id: int) -> bool:
+    cursor = conn.execute("DELETE FROM kid_chats WHERE id = ?", (chat_id,))
+    conn.commit()
+    return cursor.rowcount == 1
+
+
+def add_kid_chat_message(
+    conn: sqlite3.Connection,
+    chat_id: int,
+    role: str,
+    content: str,
+    image_url: str | None = None,
+) -> int:
+    cursor = conn.execute(
+        "INSERT INTO kid_chat_messages (chat_id, role, content, image_url, created_at) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (chat_id, role, content, image_url, _now()),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def get_kid_chat_messages(
+    conn: sqlite3.Connection,
+    chat_id: int,
+    limit: int = 30,
+) -> list[dict]:
+    """Get last N messages for a chat, ordered chronologically."""
+    rows = conn.execute(
+        "SELECT * FROM kid_chat_messages WHERE chat_id = ? "
+        "ORDER BY created_at DESC, id DESC LIMIT ?",
+        (chat_id, limit),
+    ).fetchall()
+    # Reverse to get chronological order
+    return [dict(r) for r in reversed(rows)]
+
+
+def count_daily_messages(conn: sqlite3.Connection, child_id: int, today_str: str) -> int:
+    """Count user messages sent by any child of the same parent today."""
+    # Get parent_id
+    child = conn.execute("SELECT parent_id FROM children WHERE id = ?", (child_id,)).fetchone()
+    if not child:
+        return 0
+    parent_id = child[0]
+    # Count messages from all children of this parent
+    row = conn.execute(
+        """SELECT COUNT(*) FROM kid_chat_messages kcm
+           JOIN kid_chats kc ON kc.id = kcm.chat_id
+           JOIN children c ON c.id = kc.child_id
+           WHERE c.parent_id = ? AND kcm.role = 'user'
+           AND kcm.created_at >= ? AND kcm.created_at < ?""",
+        (parent_id, today_str + "T00:00:00", today_str + "T23:59:59.999999"),
+    ).fetchone()
+    return row[0] if row else 0
+
+
+# ---------------------------------------------------------------------------
+# Chat Subscription operations
+# ---------------------------------------------------------------------------
+
+def create_chat_subscription(
+    conn: sqlite3.Connection,
+    user_id: int,
+    started_at: str,
+    expires_at: str,
+) -> int:
+    cursor = conn.execute(
+        "INSERT INTO chat_subscriptions (user_id, started_at, expires_at, created_at) "
+        "VALUES (?, ?, ?, ?)",
+        (user_id, started_at, expires_at, _now()),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def get_active_chat_subscription(conn: sqlite3.Connection, user_id: int) -> dict | None:
+    """Get active subscription (expires_at > now)."""
+    row = conn.execute(
+        "SELECT * FROM chat_subscriptions WHERE user_id = ? AND expires_at > ? "
+        "ORDER BY expires_at DESC LIMIT 1",
+        (user_id, _now()),
+    ).fetchone()
+    return dict(row) if row else None
