@@ -56,9 +56,9 @@
                 <p class="form-group__error" id="password-mismatch" style="display:none">Пароли не совпадают</p>
             </div>
             <div class="form-group" style="margin-top:12px;">
-                <label class="form-group__label" style="font-weight:400; font-size:13px; display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
-                    <input type="checkbox" id="reg-consent" required style="margin-top:3px; flex-shrink:0;">
-                    <span>Я принимаю <a href="/terms" target="_blank">условия использования</a> и <a href="/privacy" target="_blank">политику конфиденциальности</a>, а также подтверждаю, что являюсь родителем или законным представителем ребёнка и даю согласие на обработку его данных</span>
+                <label style="font-weight:400; font-size:13px; display:flex; align-items:flex-start; gap:10px; cursor:pointer; line-height:1.5;">
+                    <input type="checkbox" id="reg-consent" required style="margin-top:2px; flex-shrink:0; width:18px; height:18px;">
+                    <span>Я принимаю <a href="/terms" target="_blank">условия&nbsp;использования</a> и <a href="/privacy" target="_blank">политику&nbsp;конфиденциальности</a>, а&nbsp;также подтверждаю, что являюсь родителем или законным представителем ребёнка и&nbsp;даю согласие на&nbsp;обработку его данных</span>
                 </label>
                 <p class="form-group__error" id="consent-error" style="display:none">Необходимо принять условия</p>
             </div>
@@ -245,7 +245,7 @@
             .then(function (resp) { return resp.json().then(function (data) { return { status: resp.status, data: data }; }); })
             .then(function (result) {
                 if (result.data.ok === true) {
-                    window.location.href = '/chat';
+                    window.location.href = '/dashboard';
                 } else {
                     var code = result.data.error;
                     showError(ERROR_MESSAGES[code] || code || 'Произошла ошибка');
@@ -282,7 +282,7 @@
             .then(function (resp) { return resp.json().then(function (data) { return { status: resp.status, data: data }; }); })
             .then(function (result) {
                 if (result.data.ok === true) {
-                    window.location.href = '/chat';
+                    window.location.href = '/dashboard';
                 } else {
                     var code = result.data.error;
                     showError(ERROR_MESSAGES[code] || code || 'Произошла ошибка');

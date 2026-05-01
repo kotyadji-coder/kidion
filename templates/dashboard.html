@@ -1,55 +1,342 @@
 {% extends "base.html" %}
 {% block title %}Кабинет родителя — Kidion{% endblock %}
+
+{% block head %}
+<style>
+.dashboard {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.dashboard__welcome {
+  margin-bottom: 2rem;
+}
+
+.dashboard__welcome h1 {
+  font-size: 1.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard__welcome p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* Onboarding block */
+.onboarding-block {
+  background: linear-gradient(135deg, var(--primary-light) 0%, #f0e6ff 100%);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.onboarding-block p {
+  color: var(--text);
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.onboarding-block .btn {
+  font-size: 1.05rem;
+  padding: 0.85rem 2rem;
+}
+
+/* Activity block */
+.activity-block {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+  color: var(--text);
+  border-left: 4px solid var(--primary);
+}
+
+/* Child cards */
+.child-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.child-card-v2 {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.child-card-v2:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.child-card-v2__header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.child-card-v2__avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.child-card-v2__avatar img {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.child-card-v2__name {
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+.child-card-v2__meta {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.child-card-v2__stats {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.child-card-v2__stats span {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.child-card-v2__progress {
+  margin-bottom: 1rem;
+}
+
+.child-card-v2__progress-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  margin-bottom: 0.4rem;
+}
+
+.child-card-v2__progress-item .bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(108, 99, 255, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.child-card-v2__progress-item .bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), #a78bfa);
+  border-radius: 999px;
+}
+
+.child-card-v2__actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Add child button */
+.add-child-block {
+  margin-bottom: 2rem;
+}
+
+/* Referral block */
+.referral-block {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+}
+
+.referral-block h3 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.referral-block p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.referral-block__link {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.referral-block__link input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  background: var(--bg);
+  color: var(--text);
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="dashboard">
-  <div class="dashboard__header">
-    <h1>Добрый день!</h1>
-    <div class="dashboard__balance">
-      <span class="crystal-badge">💎 <span id="dash-crystals">{{ user.crystals }}</span></span>
-      <a href="/buy" class="btn btn--accent btn--sm">Пополнить</a>
-    </div>
-  </div>
-
-  <div class="children-grid" id="children-grid">
+  <div id="dashboard-content">
     <div class="spinner">Загрузка...</div>
   </div>
-
-  <a href="/children/new" class="btn btn--primary btn--lg" id="add-child-btn" style="display:none">+ Добавить ребёнка</a>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
+var USER_CRYSTALS = {{ user.crystals }};
+var USER_REF_CODE = '{{ user.ref_code }}';
+
 (async function() {
   var resp = await fetch('/api/children');
   if (!resp.ok) return;
   var children = await resp.json();
-  var grid = document.getElementById('children-grid');
-  var addBtn = document.getElementById('add-child-btn');
+  var container = document.getElementById('dashboard-content');
 
   if (children.length === 0) {
-    grid.innerHTML = '<div class="empty-state"><p>Добавьте первого ребёнка, чтобы начать обучение</p></div>';
-    addBtn.style.display = 'inline-flex';
+    // Empty state — onboarding
+    container.innerHTML =
+      '<div class="dashboard__welcome">' +
+        '<h1>Добро пожаловать в Kidion!</h1>' +
+        '<p>Мы подарили вам 60 кристаллов 💎. Это наша внутренняя валюта — используйте её, чтобы генерировать персонализированные уроки для вашего ребенка.</p>' +
+      '</div>' +
+      '<div class="onboarding-block">' +
+        '<p>Здесь пока пусто. Давайте создадим профиль вашего ребенка, чтобы нейросеть придумала для него уникальную вселенную!</p>' +
+        '<a href="/children/new" class="btn btn--primary">+ Добавить ребенка</a>' +
+      '</div>' +
+      renderReferral();
     return;
   }
 
+  // Has children — full dashboard
   var html = '';
-  for (var i = 0; i < children.length; i++) {
-    var c = children[i];
-    html += '<a href="/children/' + c.id + '" class="child-card">';
-    html += '<div class="child-card__avatar">' + (c.gender === 'girl' ? '👧' : '👦') + '</div>';
-    html += '<div class="child-card__info">';
-    html += '<div class="child-card__name">' + esc(c.name) + '</div>';
-    html += '<div class="child-card__grade">' + c.grade + ' класс</div>';
-    html += '</div>';
-    html += '</a>';
-  }
-  grid.innerHTML = html;
 
+  // Welcome
+  html += '<div class="dashboard__welcome"><h1>Добрый день!</h1></div>';
+
+  // Activity block — show recent activity
+  html += renderActivity(children);
+
+  // Child cards
+  html += '<div class="child-cards">';
+  for (var i = 0; i < children.length; i++) {
+    html += renderChildCard(children[i]);
+  }
+  html += '</div>';
+
+  // Add child button (if < 3)
   if (children.length < 3) {
-    addBtn.style.display = 'inline-flex';
+    html += '<div class="add-child-block"><a href="/children/new" class="btn btn--outline">+ Добавить еще одного ребенка</a></div>';
+  }
+
+  // Referral
+  html += renderReferral();
+
+  container.innerHTML = html;
+
+  // Copy referral link handler
+  var copyBtn = document.getElementById('copy-ref');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function() {
+      var input = document.getElementById('ref-link-input');
+      navigator.clipboard.writeText(input.value);
+      copyBtn.textContent = 'Скопировано!';
+      setTimeout(function() { copyBtn.textContent = 'Скопировать'; }, 2000);
+    });
   }
 })();
+
+function renderActivity(children) {
+  // Find child with highest stars or streak
+  var best = null;
+  for (var i = 0; i < children.length; i++) {
+    if (!best || (children[i].current_streak || 0) > (best.current_streak || 0)) {
+      best = children[i];
+    }
+  }
+  if (!best || !best.current_streak) return '';
+
+  var text = best.name + ' на ударном режиме: 🔥 ' + best.current_streak + ' ' + pluralDays(best.current_streak) + ' подряд!';
+  if (best.stars > 0) {
+    text += ' Заработано ' + best.stars + ' ⭐';
+  }
+  return '<div class="activity-block">' + esc(text) + '</div>';
+}
+
+function renderChildCard(c) {
+  var avatarHtml = '';
+  if (c.character_image_url) {
+    avatarHtml = '<div class="child-card-v2__avatar"><img src="' + esc(c.character_image_url) + '" alt=""></div>';
+  } else {
+    avatarHtml = '<div class="child-card-v2__avatar">' + (c.gender === 'girl' ? '👧' : '👦') + '</div>';
+  }
+
+  var html = '<div class="child-card-v2">';
+  html += '<div class="child-card-v2__header">';
+  html += avatarHtml;
+  html += '<div><div class="child-card-v2__name">' + esc(c.name) + '</div>';
+  html += '<div class="child-card-v2__meta">' + c.grade + ' класс</div></div>';
+  html += '</div>';
+
+  // Stats
+  html += '<div class="child-card-v2__stats">';
+  html += '<div>Баланс: <span>' + (c.stars || 0) + ' ⭐</span></div>';
+  if (c.current_streak > 0) {
+    html += '<div>Ударный режим: <span>🔥 ' + c.current_streak + ' ' + pluralDays(c.current_streak) + '</span></div>';
+  }
+  html += '</div>';
+
+  // Actions
+  html += '<div class="child-card-v2__actions">';
+  html += '<a href="/children/' + c.id + '" class="btn btn--primary btn--sm">Перейти к урокам</a>';
+  html += '<a href="/children/' + c.id + '" class="btn btn--ghost btn--sm">Настройки профиля</a>';
+  html += '</div>';
+  html += '</div>';
+  return html;
+}
+
+function renderReferral() {
+  var link = window.location.origin + '/register?ref=' + USER_REF_CODE;
+  return '<div class="referral-block">' +
+    '<h3>🎁 Подарите друзьям магию знаний!</h3>' +
+    '<p>Поделитесь ссылкой и получите по 60 💎 кристаллов каждый.</p>' +
+    '<div class="referral-block__link">' +
+    '<input type="text" id="ref-link-input" value="' + esc(link) + '" readonly>' +
+    '<button class="btn btn--primary btn--sm" id="copy-ref">Скопировать</button>' +
+    '</div></div>';
+}
+
+function pluralDays(n) {
+  if (n % 10 === 1 && n % 100 !== 11) return 'день';
+  if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return 'дня';
+  return 'дней';
+}
 
 function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');

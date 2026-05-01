@@ -1,41 +1,216 @@
 {% extends "base.html" %}
 
-{% block title %}Купить кристаллы — Kidion{% endblock %}
+{% block title %}Пополнение баланса — Kidion{% endblock %}
+
+{% block head %}
+<style>
+.buy-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.buy-page h1 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin-bottom: 0.25rem;
+}
+
+.buy-page__subtitle {
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+}
+
+/* Packages grid */
+.packages-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+@media (min-width: 768px) {
+  .packages-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.package-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 1.25rem;
+  text-align: center;
+  position: relative;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.package-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.package-card--popular {
+  border-color: var(--primary);
+  border-width: 2px;
+}
+
+.package-card__badge {
+  position: absolute;
+  top: -0.75rem;
+  right: 1rem;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+
+.package-card__crystals {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 0.25rem;
+}
+
+.package-card__lessons {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.package-card__price {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+}
+
+.package-card__per {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+/* Chat section */
+.chat-section {
+  background: linear-gradient(135deg, #f3e8ff 0%, #dbeafe 100%);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem 2rem;
+  margin-bottom: 2rem;
+}
+
+.chat-section h2 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.chat-section__intro {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+  max-width: 700px;
+}
+
+.chat-features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 640px) {
+  .chat-features { grid-template-columns: 1fr; }
+}
+
+.chat-feature {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.chat-feature__icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.chat-feature__title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.chat-feature__text {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Chat subscription card */
+.chat-sub-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  max-width: 500px;
+  box-shadow: var(--shadow);
+}
+
+.chat-sub-card__badge {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.chat-sub-card__tiers {
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  line-height: 1.7;
+}
+
+.chat-sub-card__tiers strong {
+  color: var(--text);
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="buy-page container">
-    <h1 class="page-title">Пополнить баланс</h1>
-    <p class="page-subtitle">Выберите пакет кристаллов</p>
+<div class="buy-page">
+    <h1>Пополнение баланса кристаллов</h1>
+    <p class="buy-page__subtitle">Кристаллы нужны для генерации новых увлекательных уроков. Выбирайте удобный пакет.</p>
 
     <div class="packages-grid">
-        <div class="package-card card" data-package="60_60">
+        <div class="package-card" data-package="60_60">
             <div class="package-card__crystals">💎 60</div>
-            <div class="package-card__name">Стартовый</div>
+            <div class="package-card__lessons">Хватит на ~3 урока</div>
             <div class="package-card__price">60 ₽</div>
             <div class="package-card__per">1 ₽ / кристалл</div>
             <button class="btn btn--primary btn--full" onclick="buyPackage('60_60')">Купить</button>
         </div>
 
-        <div class="package-card card package-card--popular" data-package="360_320">
+        <div class="package-card package-card--popular" data-package="360_320">
             <div class="package-card__badge">Популярный</div>
             <div class="package-card__crystals">💎 360</div>
-            <div class="package-card__name">Базовый</div>
+            <div class="package-card__lessons">Хватит на ~18 уроков</div>
             <div class="package-card__price">320 ₽</div>
             <div class="package-card__per">0.89 ₽ / кристалл</div>
             <button class="btn btn--primary btn--full" onclick="buyPackage('360_320')">Купить</button>
         </div>
 
-        <div class="package-card card" data-package="600_490">
+        <div class="package-card" data-package="600_490">
             <div class="package-card__crystals">💎 600</div>
-            <div class="package-card__name">Продвинутый</div>
+            <div class="package-card__lessons">Хватит на ~30 уроков</div>
             <div class="package-card__price">490 ₽</div>
             <div class="package-card__per">0.82 ₽ / кристалл</div>
             <button class="btn btn--primary btn--full" onclick="buyPackage('600_490')">Купить</button>
         </div>
 
-        <div class="package-card card" data-package="1000_800">
+        <div class="package-card" data-package="1000_800">
             <div class="package-card__crystals">💎 1000</div>
-            <div class="package-card__name">Максимальный</div>
+            <div class="package-card__lessons">Хватит на ~50 уроков</div>
             <div class="package-card__price">800 ₽</div>
             <div class="package-card__per">0.80 ₽ / кристалл</div>
             <button class="btn btn--primary btn--full" onclick="buyPackage('1000_800')">Купить</button>
@@ -44,17 +219,52 @@
 
     <div id="buy-error" class="alert alert--error" style="display:none"></div>
 
-    <!-- Chat Subscription -->
-    <div style="margin-top:40px;">
-        <h2 class="page-title" style="font-size:24px;">Чат с нейросетью</h2>
-        <p class="page-subtitle">Безопасный AI-помощник для вашего ребёнка</p>
+    <!-- Chat Subscription Section -->
+    <div class="chat-section">
+        <h2>🤖 Безопасный AI-помощник: ответит на 1000 «Почему?» и поможет с домашкой</h2>
+        <p class="chat-section__intro">
+            Подарите ребенку умного собеседника, который всегда готов прийти на помощь. Наш ИИ специально настроен для общения с детьми: он не дает готовых ответов, а помогает думать, учит новому и делает это в игровой форме.
+        </p>
 
-        <div class="package-card card" id="chat-sub-card" style="max-width:400px;margin:0 auto;">
-            <div class="package-card__crystals">&#128172; Чат-подписка</div>
-            <div class="package-card__name">50 сообщений в день</div>
-            <div class="package-card__price">&#128142; 300 кристаллов / мес</div>
-            <div class="package-card__per" id="chat-sub-status">Загрузка...</div>
-            <button class="btn btn--primary btn--full" id="btn-chat-sub" style="display:none" onclick="buyChatSub()">Подключить</button>
+        <div class="chat-features">
+            <div class="chat-feature">
+                <span class="chat-feature__icon">📸</span>
+                <div>
+                    <div class="chat-feature__title">Помощь с уроками по фото</div>
+                    <div class="chat-feature__text">Ребёнок застрял на задаче? Пусть сфотографирует её и отправит в чат! Нейросеть не даст готовый ответ, но мягко объяснит теорию и подскажет путь решения.</div>
+                </div>
+            </div>
+            <div class="chat-feature">
+                <span class="chat-feature__icon">🎭</span>
+                <div>
+                    <div class="chat-feature__title">Три уникальных собеседника</div>
+                    <div class="chat-feature__text">Строгий, но добрый Профессор поможет с наукой. Мудрая Сова расскажет сказку. А весёлый Фантазёр придумает игру.</div>
+                </div>
+            </div>
+            <div class="chat-feature">
+                <span class="chat-feature__icon">🛡️</span>
+                <div>
+                    <div class="chat-feature__title">Абсолютная безопасность</div>
+                    <div class="chat-feature__text">Максимальные настройки безопасности (Gemini Safety Filters). Чат блокирует любые темы взрослого контента, насилия, политики и попытки выведать личные данные.</div>
+                </div>
+            </div>
+            <div class="chat-feature">
+                <span class="chat-feature__icon">🧠</span>
+                <div>
+                    <div class="chat-feature__title">Развитие любознательности</div>
+                    <div class="chat-feature__text">«Почему небо синее? Как спят рыбы?» — AI-помощник никогда не устает и готов отвечать на любые вопросы в любое время!</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-sub-card">
+            <div class="chat-sub-card__badge">👨‍👩‍👧 Одна подписка — для всех детей в аккаунте!</div>
+            <div class="chat-sub-card__tiers">
+                <strong>Бесплатный тариф:</strong> 5 сообщений в день (чтобы попробовать).<br>
+                <strong>💬 Чат-подписка:</strong> 50 сообщений в день каждый день.
+            </div>
+            <div id="chat-sub-status" style="font-size:0.9rem; margin-bottom:0.75rem; color:var(--text-muted);">Загрузка...</div>
+            <button class="btn btn--primary" id="btn-chat-sub" style="display:none" onclick="buyChatSub()">Подключить Чат-подписку за 300 💎 / мес</button>
         </div>
     </div>
 </div>
@@ -71,10 +281,10 @@
         var btnEl = document.getElementById('btn-chat-sub');
         if (data.active) {
             var expires = new Date(data.expires_at);
-            statusEl.textContent = 'Активна до ' + expires.toLocaleDateString('ru-RU');
+            statusEl.textContent = 'Подписка активна до ' + expires.toLocaleDateString('ru-RU');
             statusEl.style.color = '#00b894';
         } else {
-            statusEl.textContent = 'Бесплатно: 5 сообщений в день';
+            statusEl.textContent = 'Сейчас: бесплатный тариф (5 сообщений/день)';
             btnEl.style.display = '';
         }
     } catch(e) {}
@@ -94,24 +304,23 @@ async function buyChatSub() {
         if (resp.ok) {
             var statusEl = document.getElementById('chat-sub-status');
             var expires = new Date(data.expires_at);
-            statusEl.textContent = 'Активна до ' + expires.toLocaleDateString('ru-RU');
+            statusEl.textContent = 'Подписка активна до ' + expires.toLocaleDateString('ru-RU');
             statusEl.style.color = '#00b894';
             btn.style.display = 'none';
-            // Update crystals display
-            var crystalsEl = document.querySelector('.crystals-count, .nav-crystals');
+            var crystalsEl = document.getElementById('crystal-count');
             if (crystalsEl) {
-                var cur = parseInt(crystalsEl.textContent.replace(/\D/g,'')) || 0;
-                crystalsEl.textContent = (cur - 300);
+                var cur = parseInt(crystalsEl.textContent) || 0;
+                crystalsEl.textContent = cur - 300;
             }
         } else {
             alert(data.message || data.error || 'Ошибка');
             btn.disabled = false;
-            btn.textContent = 'Подключить';
+            btn.textContent = 'Подключить Чат-подписку за 300 💎 / мес';
         }
     } catch(e) {
         alert('Ошибка соединения');
         btn.disabled = false;
-        btn.textContent = 'Подключить';
+        btn.textContent = 'Подключить Чат-подписку за 300 💎 / мес';
     }
 }
 

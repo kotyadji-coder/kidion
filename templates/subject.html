@@ -3,64 +3,226 @@
 
 {% block head %}
 <style>
-/* Modal overlay */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  z-index: 200;
+.subject-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* Breadcrumb */
+.subject-breadcrumb {
   display: flex;
   align-items: center;
-  justify-content: center;
-  animation: fadeIn 0.2s ease;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
 }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-.modal-box {
-  background: var(--surface);
+.subject-breadcrumb a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.subject-breadcrumb a:hover { color: var(--primary); }
+
+/* Info block (collapsible) */
+.info-block {
+  background: linear-gradient(135deg, var(--primary-light) 0%, #f0e6ff 100%);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  max-width: 420px;
-  width: 90%;
-  padding: 2rem;
-  text-align: center;
-  animation: slideUp 0.25s ease;
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  line-height: 1.6;
 }
-@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-.modal-box__icon {
-  font-size: 2.5rem;
+.info-block__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  line-height: 1;
+}
+.info-block__close:hover { color: var(--text); }
+
+.info-block h3 {
+  font-size: 1rem;
   margin-bottom: 0.75rem;
 }
 
-.modal-box__title {
-  font-size: 1.15rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  color: var(--text);
+.info-block ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.modal-box__text {
-  font-size: 0.95rem;
-  color: var(--text-muted);
+.info-block li {
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+  padding-left: 0;
+}
+
+.info-block__toggle {
+  display: none;
+  background: var(--primary-light);
+  border: 1.5px solid var(--primary);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  color: var(--primary);
+  cursor: pointer;
+  font-family: var(--font);
+  font-weight: 600;
   margin-bottom: 1.5rem;
-  line-height: 1.5;
+}
+.info-block__toggle:hover { background: #e0d6ff; }
+
+/* Stats */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
 }
 
-.modal-box__buttons {
+.stat-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.stat-card__value {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 0.25rem;
+}
+
+.stat-card__label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Program section */
+.program-section__header {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.program-section__header h2 {
+  font-size: 1.3rem;
+}
+
+.program-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Topic cards */
+.topics-list {
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
-  justify-content: center;
 }
 
-.modal-box__buttons .btn {
-  min-width: 120px;
+.topic-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  border-left: 4px solid var(--border);
 }
 
-/* Generation progress bar */
+.topic-card--completed { border-left-color: var(--success); }
+.topic-card--active { border-left-color: var(--primary); }
+.topic-card--locked { border-left-color: var(--border); opacity: 0.85; }
+
+.topic-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.topic-card__header:hover { background: var(--primary-light); }
+
+.topic-card__info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.topic-card__icon { font-size: 1.5rem; }
+
+.topic-card__title { font-weight: 700; font-size: 0.95rem; }
+
+.topic-card__meta { font-size: 0.8rem; color: var(--text-muted); }
+
+.topic-card__chevron {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  transition: transform 0.2s;
+  margin-left: 0.5rem;
+}
+
+.topic-card__chevron.open { transform: rotate(180deg); }
+
+.topic-card__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.topic-card__lessons {
+  padding: 0 1.25rem 1rem;
+}
+
+/* Lesson rows */
+.lesson-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.lesson-row:last-child { border-bottom: none; }
+.lesson-row__icon { font-size: 1rem; }
+.lesson-row__title { font-size: 0.9rem; }
+.lesson-row--locked .lesson-row__title { color: var(--text-muted); }
+
+.lesson-row--clickable {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 0.5rem;
+  margin: 0 -0.5rem;
+  transition: background 0.15s;
+}
+.lesson-row--clickable:hover { background: var(--primary-light); }
+
+.lesson-row--generating .lesson-row__icon {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* Generation progress */
 .gen-progress {
-  margin-top: 0.75rem;
-  padding: 0.75rem 1.25rem;
+  margin: 0.75rem 1.25rem;
+  padding: 0.75rem 1rem;
   background: var(--primary-light);
   border-radius: var(--radius-sm);
   display: flex;
@@ -105,7 +267,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 0.75rem;
+  margin: 0.75rem 1.25rem;
   padding: 0.6rem 1.25rem;
   background: linear-gradient(135deg, var(--success), #16a34a);
   color: #fff;
@@ -125,34 +287,82 @@
   color: #fff;
 }
 
-/* Clickable lesson rows */
-.lesson-row--clickable {
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-  margin: 0 -0.5rem;
-  transition: background 0.15s;
+/* Skip test ghost button */
+.btn--skip {
+  background: transparent;
+  color: var(--text-muted);
+  border-color: var(--border);
+  font-size: 0.8rem;
 }
-
-.lesson-row--clickable:hover {
+.btn--skip:hover {
+  border-color: var(--primary);
+  color: var(--primary);
   background: var(--primary-light);
 }
 
-/* Generating spinner for lesson row */
-.lesson-row--generating .lesson-row__icon {
-  display: inline-block;
-  animation: spin 1s linear infinite;
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
 }
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modal-box {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-width: 460px;
+  width: 90%;
+  padding: 2rem;
+  text-align: center;
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.modal-box__icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+.modal-box__title { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text); }
+.modal-box__text { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.5; text-align: left; }
+.modal-box__buttons { display: flex; gap: 0.75rem; justify-content: center; }
+.modal-box__buttons .btn { min-width: 120px; }
+
+@media (max-width: 600px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .topic-card__header { flex-direction: column; align-items: flex-start; }
+}
 </style>
 {% endblock head %}
 
 {% block content %}
 <div class="subject-page">
-  <div class="subject-page__header">
-    <a href="/children/{{ child.id }}" class="btn btn--ghost btn--sm">&larr; {{ child.name }}</a>
-    <h1>{{ subject_name }}</h1>
+  <!-- Breadcrumb -->
+  <div class="subject-breadcrumb">
+    <a href="/dashboard">Дашборд</a> <span>/</span>
+    <a href="/children/{{ child.id }}">{{ child.name }}</a> <span>/</span>
+    <span>{{ subject_name }}</span>
+  </div>
+
+  <h1 style="margin-bottom:1.25rem;">{{ subject_name }}</h1>
+
+  <!-- Info block -->
+  <button class="info-block__toggle" id="info-toggle" style="display:none;">💡 Как здесь всё устроено?</button>
+  <div class="info-block" id="info-block">
+    <button class="info-block__close" id="info-close">&times;</button>
+    <h3>💡 Как здесь всё устроено?</h3>
+    <p style="font-size:0.9rem; margin-bottom:0.75rem;">Нажмите «Создать уроки», и нейросеть превратит скучную школьную тему в захватывающее приключение для вашего ребенка!</p>
+    <p style="font-size:0.9rem; margin-bottom:0.5rem;">В каждой сгенерированной теме (5 уроков) вас ждут:</p>
+    <ul>
+      <li>📖 <strong>Сюжетная теория</strong> — понятное объяснение правил, вплетенное в уникальную вселенную ребенка</li>
+      <li>💻 <strong>Интерактив</strong> — увлекательные тестовые задания на экране для проверки знаний</li>
+      <li>🖨️ <strong>Печатные квесты</strong> — задания, которые можно распечатать и решать руками</li>
+      <li>⭐ <strong>Мотивация</strong> — за каждый урок ребенок получает звездочки для прокачки персонажа</li>
+    </ul>
+    <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.75rem;">Ребенок уже отлично знает тему? Пройдите бесплатный тест-пропуск, чтобы открыть следующую!</p>
   </div>
 
   <!-- Stats Block -->
@@ -170,26 +380,55 @@
         🖨 Распечатать все листы
       </a>
       <button class="btn btn--accent btn--sm" id="btn-generate-month" style="display:none">
-          Сгенерировать месяц (200 💎)
+          Создать уроки на месяц (400 💎)
         </button>
       </div>
     </div>
+    <p id="month-hint" style="display:none; font-size:0.8rem; color:var(--text-muted); margin:-0.5rem 0 1rem;">Вы откроете сразу 4 темы (20 уроков). Этого хватит на целый месяц регулярных занятий.</p>
     <div id="topics-list" class="topics-list">
       <div class="spinner">Загрузка программы...</div>
     </div>
   </section>
 </div>
 
-<!-- Modal container (inserted dynamically) -->
+<!-- Modal container -->
 <div id="modal-root"></div>
 {% endblock %}
 
 {% block scripts %}
 <script>
 var CHILD_ID = {{ child.id }};
+var CHILD_NAME = '{{ child.name }}';
 var SUBJECT = '{{ subject }}';
 var GRADE = {{ child.grade }};
-var generatingLessons = {}; // lesson_id -> true, tracks active polls
+var USER_CRYSTALS = {{ user.crystals }};
+var generatingLessons = {};
+var firstLoad = true;
+
+// Info block collapse
+(function() {
+  var infoBlock = document.getElementById('info-block');
+  var infoToggle = document.getElementById('info-toggle');
+  var infoClose = document.getElementById('info-close');
+  var visits = parseInt(localStorage.getItem('subject_visits_' + SUBJECT) || '0');
+  visits++;
+  localStorage.setItem('subject_visits_' + SUBJECT, visits);
+
+  if (visits > 5) {
+    infoBlock.style.display = 'none';
+    infoToggle.style.display = 'inline-flex';
+  }
+
+  infoClose.addEventListener('click', function() {
+    infoBlock.style.display = 'none';
+    infoToggle.style.display = 'inline-flex';
+  });
+
+  infoToggle.addEventListener('click', function() {
+    infoBlock.style.display = 'block';
+    infoToggle.style.display = 'none';
+  });
+})();
 
 document.addEventListener('DOMContentLoaded', function() {
   enrollAndLoad();
@@ -229,7 +468,7 @@ async function loadStats() {
     grid.innerHTML =
       '<div class="stat-card"><div class="stat-card__value">' + (data.completed_lessons || 0) + '/' + (data.total_lessons || 0) + '</div><div class="stat-card__label">Пройдено уроков</div></div>' +
       '<div class="stat-card"><div class="stat-card__value">' + esc(currentTopic) + '</div><div class="stat-card__label">Текущая тема</div></div>' +
-      '<div class="stat-card"><div class="stat-card__value">' + (data.total_stars || 0) + '</div><div class="stat-card__label">Заработано звёзд</div></div>';
+      '<div class="stat-card"><div class="stat-card__value">' + (data.total_stars || 0) + ' ⭐</div><div class="stat-card__label">Заработано звёзд</div></div>';
   } catch(e) {
     grid.innerHTML = '<p>Ошибка загрузки</p>';
   }
@@ -249,6 +488,7 @@ async function loadProgram() {
     }
 
     document.getElementById('btn-generate-month').style.display = 'inline-flex';
+    document.getElementById('month-hint').style.display = 'block';
 
     // Show print-all button if any lessons are generated
     var anyGenerated = false;
@@ -264,6 +504,7 @@ async function loadProgram() {
     }
 
     var html = '';
+    var firstActiveExpanded = false;
     for (var i = 0; i < topics.length; i++) {
       var t = topics[i];
       var lessons = t.lessons || [];
@@ -274,13 +515,8 @@ async function loadProgram() {
         if (lessons[j].status === 'completed') completed++;
         else if (lessons[j].status === 'available') available++;
         else locked++;
-        // Track generating lessons
-        if (lessons[j].lesson_id && lessons[j].lesson_status === 'pending') {
-          pendingIds.push(lessons[j].lesson_id);
-        }
-        if (lessons[j].lesson_id && lessons[j].lesson_status === 'done') {
-          doneIds.push(lessons[j].lesson_id);
-        }
+        if (lessons[j].lesson_id && lessons[j].lesson_status === 'pending') pendingIds.push(lessons[j].lesson_id);
+        if (lessons[j].lesson_id && lessons[j].lesson_status === 'done') doneIds.push(lessons[j].lesson_id);
       }
       var totalStars = 0;
       for (var k = 0; k < lessons.length; k++) {
@@ -289,35 +525,48 @@ async function loadProgram() {
 
       var topicStatus = completed === lessons.length ? 'completed' : (available > 0 || completed > 0) ? 'active' : 'locked';
 
+      // Determine if this topic should be auto-expanded
+      var autoExpand = false;
+      if (firstLoad && !firstActiveExpanded && (topicStatus === 'active' || (topicStatus === 'locked' && i === 0))) {
+        autoExpand = true;
+        firstActiveExpanded = true;
+      }
+
       html += '<div class="topic-card topic-card--' + topicStatus + '" id="topic-card-' + t.id + '">';
       html += '<div class="topic-card__header" onclick="toggleTopic(' + i + ')">';
       html += '<div class="topic-card__info">';
-      html += '<span class="topic-card__icon">' + (t.icon || '') + '</span>';
+      html += '<span class="topic-card__icon">' + (t.icon || '📖') + '</span>';
       html += '<div>';
       html += '<div class="topic-card__title">' + esc(t.title_ru) + '</div>';
-      html += '<div class="topic-card__meta">' + completed + '/' + lessons.length + ' уроков · ' + totalStars + '</div>';
+      html += '<div class="topic-card__meta">' + completed + '/' + lessons.length + ' уроков · ' + totalStars + ' ⭐</div>';
       html += '</div></div>';
+
+      // Chevron
+      html += '<div style="display:flex;align-items:center;gap:0.5rem;">';
 
       // Action buttons
       html += '<div class="topic-card__actions">';
       if (topicStatus === 'locked') {
-        html += '<button class="btn btn--sm btn--outline" onclick="event.stopPropagation(); assignSkipTest(' + t.id + ')">Тест для пропуска</button>';
+        html += '<button class="btn btn--sm btn--skip" onclick="event.stopPropagation(); assignSkipTest(' + t.id + ', \'' + esc(t.title_ru).replace(/'/g, "\\'") + '\')" title="Ребенок уже знает этот материал? Пройдите тест-проверку. При успешной сдаче тема будет засчитана.">Тест для пропуска</button>';
       }
       if (doneIds.length > 0) {
         html += '<a href="/api/children/' + CHILD_ID + '/worksheets?topic_id=' + t.id + '" target="_blank" class="btn btn--sm btn--outline" onclick="event.stopPropagation()" style="font-size:0.8rem">🖨 Листы</a>';
       }
-      if (locked > 0 || available > 0) {
-        var ungenerated = 0;
-        for (var m = 0; m < lessons.length; m++) {
-          if (!lessons[m].lesson_id && lessons[m].status !== 'completed') ungenerated++;
-        }
-        if (ungenerated > 0) {
-          html += '<button class="btn btn--sm btn--primary" onclick="event.stopPropagation(); generateTopic(' + t.id + ', ' + ungenerated + ')">Сгенерировать тему (' + (ungenerated * 10) + ' 💎)</button>';
-        }
+      // Generate topic button
+      var ungenerated = 0;
+      for (var m = 0; m < lessons.length; m++) {
+        if (!lessons[m].lesson_id && lessons[m].status !== 'completed') ungenerated++;
       }
+      if (ungenerated > 0 && topicStatus !== 'completed') {
+        var cost = ungenerated * 20;
+        html += '<button class="btn btn--sm btn--primary" onclick="event.stopPropagation(); generateTopic(' + t.id + ', ' + ungenerated + ', \'' + esc(t.title_ru).replace(/'/g, "\\'") + '\')">Создать уроки (' + cost + ' 💎)</button>';
+      }
+      html += '</div>';
+
+      html += '<span class="topic-card__chevron' + (autoExpand ? ' open' : '') + '" id="chevron-' + i + '">▼</span>';
       html += '</div></div>';
 
-      // Generation progress indicator
+      // Generation progress
       if (pendingIds.length > 0) {
         var totalGen = pendingIds.length + doneIds.length;
         var doneCount = doneIds.length;
@@ -327,19 +576,15 @@ async function loadProgram() {
         html += '<div class="gen-progress__text">Генерация: ' + doneCount + '/' + totalGen + '</div>';
         html += '</div>';
       } else if (doneIds.length > 0 && doneIds.length > completed) {
-        // There are generated lessons not yet completed — show "go learn" + print buttons
-        html += '<div style="padding: 0 1.25rem 0.75rem; display:flex; gap:8px; align-items:center; flex-wrap:wrap">';
-        html += '<a href="/kid/login?child_id=' + CHILD_ID + '" class="gen-ready-btn">Уроки готовы. Учиться!</a>';
-        html += '<a href="/api/children/' + CHILD_ID + '/worksheets?topic_id=' + t.id + '" target="_blank" class="btn btn--outline btn--sm" style="font-size:0.85rem">🖨 Распечатать листы</a>';
-        html += '</div>';
+        html += '<a href="/kid/login?child_id=' + CHILD_ID + '" class="gen-ready-btn">Уроки готовы — учиться!</a>';
       }
 
-      // Lessons list (collapsible)
-      html += '<div class="topic-card__lessons" id="topic-lessons-' + i + '" style="display:none">';
+      // Lessons list
+      html += '<div class="topic-card__lessons" id="topic-lessons-' + i + '" style="display:' + (autoExpand ? 'block' : 'none') + '">';
       for (var n = 0; n < lessons.length; n++) {
         var l = lessons[n];
         var statusIcon = l.status === 'completed' ? '✅' : (l.lesson_id && l.lesson_status === 'pending') ? '⏳' : l.status === 'available' ? '🟡' : l.status === 'test' ? '📋' : '🔒';
-        var starsText = l.stars_earned > 0 ? ' · ' + l.stars_earned : '';
+        var starsText = l.stars_earned > 0 ? ' · ' + l.stars_earned + ' ⭐' : '';
         var isClickable = l.lesson_id && l.lesson_status === 'done' && l.status !== 'locked';
         var isGenerating = l.lesson_id && l.lesson_status === 'pending';
         var rowClass = 'lesson-row lesson-row--' + l.status;
@@ -358,8 +603,9 @@ async function loadProgram() {
       html += '</div></div>';
     }
     list.innerHTML = html;
+    firstLoad = false;
 
-    // Start polling for generating lessons
+    // Start polling
     startGenerationPolling();
   } catch(e) {
     list.innerHTML = '<p>Ошибка загрузки</p>';
@@ -379,28 +625,19 @@ function startGenerationPolling() {
 }
 
 async function pollGenerationProgress(topicId, lessonIds, totalCount) {
-  var doneCount = 0;
   var allDone = false;
-
   while (!allDone) {
     await sleep(3000);
-    doneCount = 0;
+    var doneCount = 0;
     allDone = true;
     for (var i = 0; i < lessonIds.length; i++) {
       try {
         var resp = await fetch('/api/lessons/' + lessonIds[i] + '/poll');
         var data = await resp.json();
-        if (data.status === 'done' || data.status === 'error') {
-          doneCount++;
-        } else {
-          allDone = false;
-        }
-      } catch(e) {
-        allDone = false;
-      }
+        if (data.status === 'done' || data.status === 'error') doneCount++;
+        else allDone = false;
+      } catch(e) { allDone = false; }
     }
-
-    // Update progress bar
     var el = document.getElementById('gen-progress-' + topicId);
     if (el) {
       var totalDone = (totalCount - lessonIds.length) + doneCount;
@@ -409,8 +646,6 @@ async function pollGenerationProgress(topicId, lessonIds, totalCount) {
       el.querySelector('.gen-progress__text').textContent = 'Генерация: ' + totalDone + '/' + totalCount;
     }
   }
-
-  // All done — refresh the program view
   delete generatingLessons[topicId];
   loadProgram();
   loadStats();
@@ -420,12 +655,14 @@ function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
 
 function toggleTopic(idx) {
   var el = document.getElementById('topic-lessons-' + idx);
-  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  var chevron = document.getElementById('chevron-' + idx);
+  var isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+  if (chevron) chevron.classList.toggle('open', !isOpen);
 }
 
-// --- Styled Modals ---
+// --- Modals ---
 function showModal(opts) {
-  // opts: { icon, title, text, buttons: [{label, class, action}] }
   var root = document.getElementById('modal-root');
   var overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
@@ -434,7 +671,7 @@ function showModal(opts) {
   var box = document.createElement('div');
   box.className = 'modal-box';
   box.innerHTML = '<div class="modal-box__icon">' + (opts.icon || '') + '</div>' +
-    '<div class="modal-box__title">' + esc(opts.title || '') + '</div>' +
+    '<div class="modal-box__title">' + (opts.title || '') + '</div>' +
     '<div class="modal-box__text">' + (opts.text || '') + '</div>' +
     '<div class="modal-box__buttons" id="modal-buttons"></div>';
 
@@ -461,63 +698,64 @@ function closeCurrentModal() {
   }
 }
 
-function showConfirm(icon, title, text, onConfirm) {
-  showModal({
-    icon: icon,
-    title: title,
-    text: text,
-    buttons: [
-      { label: 'Отмена', cls: 'btn--outline', action: null },
-      { label: 'Да', cls: 'btn--primary', action: onConfirm },
-    ]
-  });
-}
-
-function showAlert(icon, title, text) {
-  showModal({
-    icon: icon,
-    title: title,
-    text: text,
-    buttons: [
-      { label: 'Ок', cls: 'btn--primary', action: null },
-    ]
-  });
-}
-
 // --- Actions ---
-function generateTopic(topicId, count) {
-  showConfirm('💎', 'Генерация уроков', 'Сгенерировать ' + count + ' уроков за <b>' + (count * 10) + ' 💎</b>?', async function() {
-    try {
-      var resp = await fetch('/api/children/' + CHILD_ID + '/generate-topic', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({topic_id: topicId})
-      });
-      var data = await resp.json();
-      if (resp.ok) {
-        // Immediately show progress bar on the topic card
-        showInlineProgress(topicId, data.lesson_ids);
-        loadStats();
-      } else {
-        showAlert('❌', 'Ошибка', data.error === 'insufficient_crystals' ? 'Недостаточно кристаллов' : (data.error || 'Произошла ошибка'));
-      }
-    } catch(e) { showAlert('❌', 'Ошибка', 'Ошибка соединения с сервером'); }
+function generateTopic(topicId, count, topicTitle) {
+  var cost = count * 20;
+  var remaining = USER_CRYSTALS - cost;
+  showModal({
+    icon: '💎',
+    title: 'Создать уроки',
+    text: 'Вы собираетесь открыть тему «' + topicTitle + '».<br><br>' +
+      'Искусственный интеллект создаст ' + count + ' новых уроков специально для ' + esc(CHILD_NAME) + '.<br><br>' +
+      'Списать <b>' + cost + ' 💎</b> со счета?<br>' +
+      '<span style="font-size:0.85rem;color:var(--text-muted)">У вас останется: ' + Math.max(0, remaining) + ' 💎</span>',
+    buttons: [
+      { label: 'Отмена', cls: 'btn--outline' },
+      { label: 'Да, создать уроки!', cls: 'btn--primary', action: function() { doGenerateTopic(topicId); } }
+    ]
   });
+}
+
+async function doGenerateTopic(topicId) {
+  try {
+    var resp = await fetch('/api/children/' + CHILD_ID + '/generate-topic', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({topic_id: topicId})
+    });
+    var data = await resp.json();
+    if (resp.ok) {
+      USER_CRYSTALS -= (data.lesson_ids || []).length * 20;
+      updateCrystalsDisplay();
+      showInlineProgress(topicId, data.lesson_ids);
+      loadStats();
+    } else {
+      showModal({
+        icon: '❌', title: 'Ошибка',
+        text: data.error === 'insufficient_crystals' ? 'Недостаточно кристаллов. <a href="/buy">Пополнить</a>' : (data.error || 'Произошла ошибка'),
+        buttons: [{ label: 'Ок', cls: 'btn--primary' }]
+      });
+    }
+  } catch(e) {
+    showModal({ icon: '❌', title: 'Ошибка', text: 'Ошибка соединения', buttons: [{ label: 'Ок', cls: 'btn--primary' }] });
+  }
+}
+
+function updateCrystalsDisplay() {
+  var el = document.getElementById('crystal-count');
+  if (el) el.textContent = USER_CRYSTALS;
 }
 
 function showInlineProgress(topicId, lessonIds) {
   var card = document.getElementById('topic-card-' + topicId);
   if (!card) { loadProgram(); return; }
 
-  // Remove existing progress/ready elements from card
   var existing = card.querySelector('.gen-progress, .gen-ready-btn');
   if (existing) existing.parentElement.removeChild(existing);
 
-  // Remove generate button from this topic
   var genBtn = card.querySelector('.btn--primary');
   if (genBtn) genBtn.style.display = 'none';
 
-  // Insert progress bar after header
   var header = card.querySelector('.topic-card__header');
   var progressEl = document.createElement('div');
   progressEl.className = 'gen-progress gen-progress--active';
@@ -527,7 +765,6 @@ function showInlineProgress(topicId, lessonIds) {
     '<div class="gen-progress__text">Генерация: 0/' + lessonIds.length + '</div>';
   header.insertAdjacentElement('afterend', progressEl);
 
-  // Start polling these lesson IDs
   pollInlineProgress(topicId, lessonIds);
 }
 
@@ -543,14 +780,9 @@ async function pollInlineProgress(topicId, lessonIds) {
       try {
         var resp = await fetch('/api/lessons/' + lessonIds[i] + '/poll');
         var data = await resp.json();
-        if (data.status === 'done' || data.status === 'error') {
-          doneCount++;
-        } else {
-          allDone = false;
-        }
-      } catch(e) {
-        allDone = false;
-      }
+        if (data.status === 'done' || data.status === 'error') doneCount++;
+        else allDone = false;
+      } catch(e) { allDone = false; }
     }
 
     var el = document.getElementById('gen-progress-' + topicId);
@@ -561,60 +793,90 @@ async function pollInlineProgress(topicId, lessonIds) {
     }
   }
 
-  // All done — replace progress with ready button (stays until user navigates away)
   var el = document.getElementById('gen-progress-' + topicId);
   if (el) {
-    el.outerHTML =
-      '<div style="padding: 0.75rem 1.25rem">' +
-      '<a href="/kid/login?child_id=' + CHILD_ID + '" class="gen-ready-btn">Уроки готовы. Учиться!</a>' +
-      '</div>';
+    el.outerHTML = '<a href="/kid/login?child_id=' + CHILD_ID + '" class="gen-ready-btn">Уроки готовы — учиться!</a>';
   }
   loadStats();
-  // Do NOT call loadProgram() — it would rebuild DOM and wipe the button.
-  // The button stays visible until user leaves the page.
-  // On next visit, loadProgram() will render lessons as clickable links.
+  loadProgram();
 }
 
-function assignSkipTest(topicId) {
-  showConfirm('📋', 'Тест для пропуска', 'Назначить тест для пропуска темы?<br>Тест <b>бесплатный</b>.', async function() {
-    try {
-      var resp = await fetch('/api/children/' + CHILD_ID + '/skip-test', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({topic_id: topicId})
-      });
-      var data = await resp.json();
-      if (resp.ok) {
-        showAlert('✅', 'Тест назначен!', 'Ребёнок увидит его на своей карте.');
-        loadProgram();
-      } else {
-        showAlert('❌', 'Ошибка', data.error || 'Произошла ошибка');
-      }
-    } catch(e) { showAlert('❌', 'Ошибка', 'Ошибка соединения с сервером'); }
+function assignSkipTest(topicId, topicTitle) {
+  showModal({
+    icon: '⏭️',
+    title: 'Пропуск темы: ' + topicTitle,
+    text: 'Чтобы пропустить эту тему и открыть следующие, ребенку нужно правильно решить короткий тест.<br><br>' +
+      '⚠️ <strong>Внимание:</strong> Позовите ребенка к экрану. Сейчас начнётся тест из 5 вопросов по теме «' + topicTitle + '». За этот тест не выдаются печатные материалы и сюжетная история, это только проверка знаний.',
+    buttons: [
+      { label: 'Отмена', cls: 'btn--outline' },
+      { label: 'Начать тест', cls: 'btn--primary', action: function() { doSkipTest(topicId); } }
+    ]
   });
+}
+
+async function doSkipTest(topicId) {
+  try {
+    var resp = await fetch('/api/children/' + CHILD_ID + '/skip-test', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({topic_id: topicId})
+    });
+    var data = await resp.json();
+    if (resp.ok) {
+      showModal({
+        icon: '✅', title: 'Тест назначен!',
+        text: 'Ребёнок увидит тест на своей карте уроков.',
+        buttons: [{ label: 'Ок', cls: 'btn--primary' }]
+      });
+      loadProgram();
+    } else {
+      showModal({ icon: '❌', title: 'Ошибка', text: data.error || 'Произошла ошибка', buttons: [{ label: 'Ок', cls: 'btn--primary' }] });
+    }
+  } catch(e) {
+    showModal({ icon: '❌', title: 'Ошибка', text: 'Ошибка соединения', buttons: [{ label: 'Ок', cls: 'btn--primary' }] });
+  }
 }
 
 document.getElementById('btn-generate-month').addEventListener('click', function() {
-  showConfirm('📅', 'Генерация месяца', 'Сгенерировать 20 уроков (месяц) за <b>200 💎</b>?', async function() {
-    try {
-      var resp = await fetch('/api/children/' + CHILD_ID + '/generate-month', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({subject: SUBJECT})
-      });
-      var data = await resp.json();
-      if (resp.ok) {
-        // Show a global progress bar at the top of the program section
-        showMonthProgress(data.lesson_ids || [], data.lessons_count || 0);
-        loadStats();
-      } else {
-        showAlert('❌', 'Ошибка', data.error === 'insufficient_crystals' ? 'Недостаточно кристаллов' : (data.error || 'Произошла ошибка'));
-      }
-    } catch(e) { showAlert('❌', 'Ошибка', 'Ошибка соединения с сервером'); }
+  var remaining = USER_CRYSTALS - 400;
+  showModal({
+    icon: '📅',
+    title: 'Создать уроки на месяц',
+    text: 'Вы откроете сразу 4 темы (20 уроков) — этого хватит на целый месяц занятий.<br><br>Списать <b>400 💎</b> со счета?<br>' +
+      '<span style="font-size:0.85rem;color:var(--text-muted)">У вас останется: ' + Math.max(0, remaining) + ' 💎</span>',
+    buttons: [
+      { label: 'Отмена', cls: 'btn--outline' },
+      { label: 'Да, создать!', cls: 'btn--primary', action: doGenerateMonth }
+    ]
   });
 });
 
-function showMonthProgress(lessonIds, count) {
+async function doGenerateMonth() {
+  try {
+    var resp = await fetch('/api/children/' + CHILD_ID + '/generate-month', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({subject: SUBJECT})
+    });
+    var data = await resp.json();
+    if (resp.ok) {
+      USER_CRYSTALS -= 400;
+      updateCrystalsDisplay();
+      showMonthProgress(data.lesson_ids || [], data.lessons_count || 0);
+      loadStats();
+    } else {
+      showModal({
+        icon: '❌', title: 'Ошибка',
+        text: data.error === 'insufficient_crystals' ? 'Недостаточно кристаллов. <a href="/buy">Пополнить</a>' : (data.error || 'Произошла ошибка'),
+        buttons: [{ label: 'Ок', cls: 'btn--primary' }]
+      });
+    }
+  } catch(e) {
+    showModal({ icon: '❌', title: 'Ошибка', text: 'Ошибка соединения', buttons: [{ label: 'Ок', cls: 'btn--primary' }] });
+  }
+}
+
+function showMonthProgress(lessonIds) {
   var list = document.getElementById('topics-list');
   var existing = document.getElementById('month-progress');
   if (existing) existing.remove();
@@ -622,7 +884,7 @@ function showMonthProgress(lessonIds, count) {
   var el = document.createElement('div');
   el.id = 'month-progress';
   el.className = 'gen-progress gen-progress--active';
-  el.style.marginBottom = '1rem';
+  el.style.margin = '0 0 1rem';
   el.innerHTML =
     '<div class="gen-progress__bar-wrap"><div class="gen-progress__bar" style="width:0%"></div></div>' +
     '<div class="gen-progress__text">Генерация месяца: 0/' + lessonIds.length + '</div>';
@@ -643,14 +905,9 @@ async function pollMonthProgress(lessonIds) {
       try {
         var resp = await fetch('/api/lessons/' + lessonIds[i] + '/poll');
         var data = await resp.json();
-        if (data.status === 'done' || data.status === 'error') {
-          doneCount++;
-        } else {
-          allDone = false;
-        }
-      } catch(e) {
-        allDone = false;
-      }
+        if (data.status === 'done' || data.status === 'error') doneCount++;
+        else allDone = false;
+      } catch(e) { allDone = false; }
     }
 
     var el = document.getElementById('month-progress');
@@ -663,12 +920,13 @@ async function pollMonthProgress(lessonIds) {
 
   var el = document.getElementById('month-progress');
   if (el) {
-    el.innerHTML =
-      '<a href="/kid/login?child_id=' + CHILD_ID + '" class="gen-ready-btn">Уроки готовы. Учиться!</a>';
+    el.innerHTML = '<a href="/kid/login?child_id=' + CHILD_ID + '" class="gen-ready-btn">Уроки готовы — учиться!</a>';
     el.className = '';
     el.style.padding = '0';
+    el.style.margin = '0 0 1rem';
   }
   loadStats();
+  loadProgram();
 }
 
 function esc(s) {

@@ -599,7 +599,8 @@ def get_children_by_parent(conn: sqlite3.Connection, parent_id: int) -> list[dic
     """SELECT all children WHERE parent_id = ? ORDER BY created_at ASC. Each dict excludes pin_hash."""
     rows = conn.execute(
         "SELECT id, parent_id, name, gender, birth_date, grade, universe, "
-        "difficulty_level, created_at, updated_at FROM children WHERE parent_id = ? ORDER BY created_at ASC",
+        "difficulty_level, stars, character_image_url, universe_description, interests, "
+        "created_at, updated_at FROM children WHERE parent_id = ? ORDER BY created_at ASC",
         (parent_id,),
     ).fetchall()
     return [dict(row) for row in rows]

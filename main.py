@@ -218,7 +218,7 @@ def _clear_session_cookie(response: Response) -> None:
 class ChildCreateRequest(BaseModel):
     name: str
     gender: str
-    birth_date: str
+    birth_date: str = ""
     grade: int
     universe: str = ""
     interests: list[str] = []
@@ -767,6 +767,10 @@ async def list_children(request: Request):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
 
     children = get_children_by_parent(conn, user["id"])
+    # Enrich with streak data for dashboard
+    for child in children:
+        streak = get_streak_by_child(conn, child["id"])
+        child["current_streak"] = streak["current_streak"] if streak else 0
     return JSONResponse(children)
 
 

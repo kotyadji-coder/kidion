@@ -3,8 +3,15 @@
 {% block title %}{{ title }} — Kidion{% endblock %}
 
 {% block content %}
-<div class="legal-page" style="max-width:800px; margin:0 auto; padding:20px 16px 60px; line-height:1.7; font-size:15px; color:#333;">
-  <h1 style="font-size:24px; margin-bottom:24px;">{{ title }}</h1>
+<div class="legal-page" style="max-width:800px; margin:0 auto; padding:32px 20px 60px; line-height:1.8; font-size:15px; color:#333;">
+  <h1 style="font-size:24px; margin-bottom:28px;">{{ title }}</h1>
+  <style>
+    .legal-page h2 { margin-top: 2rem; margin-bottom: 0.75rem; font-size: 1.15rem; }
+    .legal-page h3 { margin-top: 1.25rem; margin-bottom: 0.5rem; font-size: 1rem; }
+    .legal-page p { margin-bottom: 0.75rem; }
+    .legal-page ul { margin: 0.5rem 0 1rem 1.5rem; }
+    .legal-page li { margin-bottom: 0.4rem; }
+  </style>
 
   {% if page == "terms" %}
 

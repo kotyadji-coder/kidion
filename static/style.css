@@ -105,7 +105,8 @@ img {
     color: var(--primary-dark);
 }
 
-.navbar__right {
+.navbar__right,
+.navbar__actions {
     display: flex;
     align-items: center;
     gap: 0.5rem;

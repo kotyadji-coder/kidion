@@ -145,6 +145,41 @@
   display: block;
 }
 
+/* Clickable tags */
+.tag-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.tag-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-family: var(--font);
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  font-weight: 500;
+}
+
+.tag-btn:hover {
+  border-color: var(--primary);
+  background: #e0d6ff;
+}
+
+.tag-btn::after {
+  content: '+';
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
 @media (max-width: 540px) {
   .form-row {
     grid-template-columns: 1fr;
@@ -169,12 +204,12 @@
   <!-- Step 1: Basic info -->
   <div data-step="1" class="active">
     <div class="step-card">
-      <h2>Основные данные</h2>
-      <p class="step-subtitle">Расскажите о ребёнке</p>
+      <h2>Расскажите о ребёнке</h2>
+      <p class="step-subtitle">Эти данные нужны, чтобы подобрать правильную школьную программу.</p>
 
       <div class="form-group">
         <label for="name">Имя ребёнка</label>
-        <input type="text" id="name" required placeholder="Например: Маша">
+        <input type="text" id="name" required placeholder="Андрей">
       </div>
 
       <div class="form-row">
@@ -199,18 +234,18 @@
 
       <div class="form-group">
         <label for="birth_date">Дата рождения</label>
-        <input type="date" id="birth_date" required>
+        <input type="date" id="birth_date">
       </div>
 
       <div class="form-group">
-        <label for="pin_code">PIN-код для входа ребёнка (4 цифры)</label>
+        <label for="pin_code">ПИН-код (4 цифры)</label>
         <input type="password" id="pin_code" minlength="4" maxlength="4" pattern="\d{4}" inputmode="numeric" required placeholder="1234">
-        <div class="hint">Этот PIN ребёнок будет вводить, чтобы войти в свой кабинет</div>
+        <div class="hint">С помощью этого кода ребёнок будет сам входить в свой игровой кабинет. Вы всегда сможете изменить его в настройках.</div>
       </div>
 
       <div class="btn-row">
         <a href="/dashboard" class="btn btn--outline">Отмена</a>
-        <button type="button" class="btn btn--primary" id="btn-next">Далее</button>
+        <button type="button" class="btn btn--primary" id="btn-next">Далее: Создать вселенную</button>
       </div>
     </div>
   </div>
@@ -218,44 +253,58 @@
   <!-- Step 2: Universe questionnaire -->
   <div data-step="2">
     <div class="step-card">
-      <h2>Создаём персональную вселенную</h2>
-      <p class="step-subtitle">Ответы помогут ИИ создать уникальный мир для обучения</p>
+      <h2>Создаём персональную вселенную 🌌</h2>
+      <p class="step-subtitle">Искусственный интеллект проанализирует ваши ответы и создаст уникальный мир, главного героя и магазин наград.</p>
 
       <div class="universe-intro">
-        На основе ответов мы создадим уникальную вселенную, персонажа-проводника и магазин наград.
-        Чем подробнее ответы — тем интереснее будет мир!
+        Чем подробнее вы заполните — тем интереснее будет мир! Можно просто нажимать на теги ниже.
       </div>
 
       <div class="form-group">
-        <label for="favorite_heroes">Любимые герои и персонажи</label>
-        <input type="text" id="favorite_heroes" placeholder="Гарри Поттер, Наруто, Фиксики, Майнкрафт...">
+        <label for="favorite_heroes">1. Любимые герои и персонажи</label>
+        <input type="text" id="favorite_heroes" placeholder="Гарри Поттер, Наруто, Фиксики...">
         <div class="hint">Из мультфильмов, книг, игр — всё, что нравится ребёнку</div>
       </div>
 
       <div class="form-group">
-        <label for="favorite_animals">Любимые животные</label>
-        <input type="text" id="favorite_animals" placeholder="Динозавры, коты, драконы, дельфины...">
+        <label for="favorite_animals">2. Любимые животные</label>
+        <input type="text" id="favorite_animals" placeholder="Динозавры, коты, драконы...">
+        <div class="tag-suggestions">
+          <button type="button" class="tag-btn" data-target="favorite_animals" data-value="Динозавры">Динозавры</button>
+          <button type="button" class="tag-btn" data-target="favorite_animals" data-value="Котики">Котики</button>
+          <button type="button" class="tag-btn" data-target="favorite_animals" data-value="Единороги">Единороги</button>
+          <button type="button" class="tag-btn" data-target="favorite_animals" data-value="Собаки">Собаки</button>
+          <button type="button" class="tag-btn" data-target="favorite_animals" data-value="Драконы">Драконы</button>
+        </div>
       </div>
 
       <div class="form-group">
-        <label for="favorite_activities">Любимые занятия и хобби</label>
-        <input type="text" id="favorite_activities" placeholder="Рисование, футбол, эксперименты, Лего...">
+        <label for="favorite_activities">3. Хобби и увлечения</label>
+        <input type="text" id="favorite_activities" placeholder="Рисование, футбол, лего...">
+        <div class="hint">Чем ребёнок занимается в свободное время</div>
       </div>
 
       <div class="form-group">
-        <label for="dream_world">В каком мире хотел бы оказаться?</label>
-        <input type="text" id="dream_world" placeholder="Космос, подводное царство, волшебный лес...">
-        <div class="hint">Если бы можно было попасть в любое место</div>
+        <label for="dream_world">4. В каком мире ребенок хотел бы оказаться?</label>
+        <input type="text" id="dream_world" placeholder="Космос, подводное царство...">
+        <div class="tag-suggestions">
+          <button type="button" class="tag-btn" data-target="dream_world" data-value="Космос">Космос</button>
+          <button type="button" class="tag-btn" data-target="dream_world" data-value="Подводный мир">Подводный мир</button>
+          <button type="button" class="tag-btn" data-target="dream_world" data-value="Магическая школа">Магическая школа</button>
+          <button type="button" class="tag-btn" data-target="dream_world" data-value="Киберпанк">Киберпанк</button>
+          <button type="button" class="tag-btn" data-target="dream_world" data-value="Средневековье">Средневековье</button>
+        </div>
       </div>
 
       <div class="form-group">
-        <label for="favorite_subject_theme">Что больше всего интересует в учёбе?</label>
-        <input type="text" id="favorite_subject_theme" placeholder="Планеты, роботы, древние цивилизации...">
+        <label for="favorite_subject_theme">5. Что больше всего интересует в учёбе?</label>
+        <input type="text" id="favorite_subject_theme" placeholder="Планеты, роботы, история...">
+        <div class="hint">Какие темы вызывают больше всего вопросов и интереса</div>
       </div>
 
       <div class="btn-row">
         <button type="button" class="btn btn--outline" id="btn-back">Назад</button>
-        <button type="button" class="btn btn--primary" id="btn-create">Создать</button>
+        <button type="button" class="btn btn--primary" id="btn-create">Создать профиль (Бесплатно)</button>
       </div>
     </div>
   </div>
@@ -286,11 +335,9 @@
   // Validate step 1
   document.getElementById('btn-next').addEventListener('click', function() {
     var name = document.getElementById('name').value.trim();
-    var birth = document.getElementById('birth_date').value;
     var pin = document.getElementById('pin_code').value;
 
     if (!name) { document.getElementById('name').focus(); return; }
-    if (!birth) { document.getElementById('birth_date').focus(); return; }
     if (!/^\d{4}$/.test(pin)) { document.getElementById('pin_code').focus(); return; }
 
     showStep(2);
@@ -302,15 +349,32 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
+  // Tag buttons
+  document.querySelectorAll('.tag-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var target = document.getElementById(this.dataset.target);
+      var val = this.dataset.value;
+      var current = target.value.trim();
+      if (current && !current.endsWith(',')) {
+        target.value = current + ', ' + val;
+      } else if (current) {
+        target.value = current + ' ' + val;
+      } else {
+        target.value = val;
+      }
+      target.focus();
+    });
+  });
+
   document.getElementById('btn-create').addEventListener('click', async function() {
     var btn = this;
     btn.disabled = true;
-    btn.textContent = 'Создаём...';
+    btn.textContent = 'Создаём вселенную...';
 
     var data = {
       name: document.getElementById('name').value.trim(),
       gender: document.getElementById('gender').value,
-      birth_date: document.getElementById('birth_date').value,
+      birth_date: document.getElementById('birth_date').value || null,
       grade: parseInt(document.getElementById('grade').value),
       pin_code: document.getElementById('pin_code').value,
       favorite_heroes: document.getElementById('favorite_heroes').value.trim(),
@@ -327,17 +391,18 @@
         body: JSON.stringify(data),
       });
       if (resp.ok) {
-        window.location.href = '/dashboard';
+        var child = await resp.json();
+        window.location.href = '/children/' + child.id;
       } else {
         var err = await resp.json();
         alert(err.error || 'Ошибка при создании');
         btn.disabled = false;
-        btn.textContent = 'Создать';
+        btn.textContent = 'Создать профиль (Бесплатно)';
       }
     } catch(e) {
       alert('Ошибка соединения');
       btn.disabled = false;
-      btn.textContent = 'Создать';
+      btn.textContent = 'Создать профиль (Бесплатно)';
     }
   });
 })();
