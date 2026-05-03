@@ -3,6 +3,10 @@
 {% block title %}Kidion — Главная{% endblock %}
 {% block page_name %}home{% endblock %}
 
+{% block nav_buttons %}
+{# No home button on home page — matches design #}
+{% endblock %}
+
 {% block content %}
 <div class="kid-home">
   <div class="home-layout">
@@ -25,13 +29,13 @@
           <span id="streak-text"></span>
         </div>
 
-        <div class="home-section-title" style="display:none" id="section-title-mobile">Куда отправимся?</div>
+        <div class="home-section-title home-section-title--mobile">Куда отправимся?</div>
       </div>
     </div>
 
     <!-- Right column: Subjects -->
     <div class="home-right">
-      <h2 class="home-section-title" id="section-title-desktop" style="display:none">Куда отправимся?</h2>
+      <h2 class="home-section-title home-section-title--desktop">Куда отправимся?</h2>
       <div class="subjects-grid-kid" id="subjects-grid">
         <div class="spinner"></div>
       </div>
@@ -80,11 +84,14 @@
     // Nav avatar image
     var navAvatar = document.getElementById('nav-avatar');
     if (navAvatar && me.character_image_url) {
-      var navImg = document.createElement('img');
-      navImg.src = me.character_image_url;
-      navImg.onerror = function() { this.remove(); };
-      navAvatar.textContent = '';
-      navAvatar.appendChild(navImg);
+      var navLink = navAvatar.querySelector('a');
+      if (navLink) {
+        navLink.textContent = '';
+        var navImg = document.createElement('img');
+        navImg.src = me.character_image_url;
+        navImg.onerror = function() { this.remove(); navLink.textContent = '{{ child.name[0]|upper }}'; };
+        navLink.appendChild(navImg);
+      }
     }
 
     // Stars
@@ -105,12 +112,6 @@
       }
     }
   } catch(e) {}
-
-  // Show section titles after data loaded
-  var mobileTitle = document.getElementById('section-title-mobile');
-  var desktopTitle = document.getElementById('section-title-desktop');
-  if (mobileTitle) mobileTitle.style.display = '';
-  if (desktopTitle) desktopTitle.style.display = '';
 
   // Load subjects + free lessons count in parallel
   var subjectsPromise = fetch('/api/kid/subjects', {credentials: 'same-origin'}).then(r => r.json());

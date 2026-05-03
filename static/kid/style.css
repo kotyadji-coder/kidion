@@ -776,11 +776,25 @@ body {
   letter-spacing: -0.4px;
 }
 
+.home-section-title--mobile {
+  display: block;
+}
+
+.home-section-title--desktop {
+  display: none;
+}
+
 @media (min-width: 769px) {
   .home-section-title {
     font-size: 36px;
     margin: 0 0 20px;
     letter-spacing: -1px;
+  }
+  .home-section-title--mobile {
+    display: none;
+  }
+  .home-section-title--desktop {
+    display: block;
   }
 }
 
