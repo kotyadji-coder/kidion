@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <meta name="theme-color" content="#6C5CE7">
+  <meta name="theme-color" content="#22C55E">
   <title>Kidion — Вход</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/kid/style.css">
 </head>
 <body data-page="login">
@@ -18,23 +18,33 @@
       <!-- Step 1: Child picker (if multiple children) -->
       {% if children|length > 1 %}
       <div id="child-picker">
-        <div class="login-wave">&#128075;</div>
-        <h1 class="login-title">Привет! Выбери себя</h1>
+        <div class="login-brand">kidion</div>
+        <h1 class="login-title">Кто ты?</h1>
+        <div class="login-subtitle">Выбери себя, чтобы войти</div>
 
         <div class="child-picker-grid">
           {% for c in children %}
           <button class="child-picker-card" data-child-id="{{ c.id }}">
-            {% if c.character_image_url %}
-            <img src="{{ c.character_image_url }}" alt="{{ c.name }}" class="child-picker-card__avatar-img"
-                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-            <div class="child-picker-card__avatar" style="display:none">{{ c.name[0]|upper }}</div>
-            {% else %}
-            <div class="child-picker-card__avatar">{{ c.name[0]|upper }}</div>
-            {% endif %}
-            <div class="child-picker-card__name">{{ c.name }}</div>
+            <div class="child-picker-card__avatar">
+              {% if c.character_image_url %}
+              <img src="{{ c.character_image_url }}" alt="{{ c.name }}" class="child-picker-card__avatar-img"
+                   onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+              <div class="child-picker-card__avatar-placeholder" style="display:none">{{ c.name[0]|upper }}</div>
+              {% else %}
+              <div class="child-picker-card__avatar-placeholder">{{ c.name[0]|upper }}</div>
+              {% endif %}
+            </div>
+            <div class="child-picker-card__body">
+              <div class="child-picker-card__name">{{ c.name }}</div>
+            </div>
+            <div class="child-picker-card__arrow">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7E9786" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 L15 12 L9 18"/></svg>
+            </div>
           </button>
           {% endfor %}
         </div>
+
+        <div class="login-hint">После выбора ты введёшь свой секретный код 🔒</div>
       </div>
       {% endif %}
 
@@ -42,37 +52,42 @@
       <div id="pin-section" {% if children|length > 1 %}style="display:none"{% endif %}>
         {% if children|length == 1 %}
         <div class="child-welcome">
-          {% if children[0].character_image_url %}
-          <img src="{{ children[0].character_image_url }}" alt="{{ children[0].name }}" class="child-welcome-avatar-img"
-               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-          <div class="child-welcome-avatar" style="display:none">{{ children[0].name[0]|upper }}</div>
-          {% else %}
-          <div class="child-welcome-avatar">{{ children[0].name[0]|upper }}</div>
-          {% endif %}
+          <div class="child-welcome-avatar">
+            {% if children[0].character_image_url %}
+            <img src="{{ children[0].character_image_url }}" alt="{{ children[0].name }}" class="child-welcome-avatar-img"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+            <div class="child-welcome-avatar-placeholder" style="display:none">{{ children[0].name[0]|upper }}</div>
+            {% else %}
+            <div class="child-welcome-avatar-placeholder">{{ children[0].name[0]|upper }}</div>
+            {% endif %}
+          </div>
           <div class="child-welcome-name">Привет, {{ children[0].name }}!</div>
         </div>
         <input type="hidden" id="child-id-input" value="{{ children[0].id }}">
         {% elif selected_child %}
         <div class="child-welcome">
-          {% if selected_child.character_image_url %}
-          <img src="{{ selected_child.character_image_url }}" alt="{{ selected_child.name }}" class="child-welcome-avatar-img"
-               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-          <div class="child-welcome-avatar" style="display:none">{{ selected_child.name[0]|upper }}</div>
-          {% else %}
-          <div class="child-welcome-avatar">{{ selected_child.name[0]|upper }}</div>
-          {% endif %}
+          <div class="child-welcome-avatar">
+            {% if selected_child.character_image_url %}
+            <img src="{{ selected_child.character_image_url }}" alt="{{ selected_child.name }}" class="child-welcome-avatar-img"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+            <div class="child-welcome-avatar-placeholder" style="display:none">{{ selected_child.name[0]|upper }}</div>
+            {% else %}
+            <div class="child-welcome-avatar-placeholder">{{ selected_child.name[0]|upper }}</div>
+            {% endif %}
+          </div>
           <div class="child-welcome-name">Привет, {{ selected_child.name }}!</div>
         </div>
         <input type="hidden" id="child-id-input" value="{{ selected_child.id }}">
         {% else %}
-        <div class="login-logo">&#127891;</div>
-        <div class="login-title">Kidion</div>
+        <div class="login-brand">kidion</div>
         <input type="hidden" id="child-id-input" value="{{ child_id or '' }}">
         {% endif %}
 
         <!-- Back button for multi-child mode -->
         {% if children|length > 1 %}
-        <button class="pin-back-btn" id="pin-back-btn">&#8592; Назад</button>
+        <button class="pin-back-btn" id="pin-back-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M15 6 L9 12 L15 18"/></svg>
+        </button>
         <div class="child-welcome" id="pin-child-welcome"></div>
         <input type="hidden" id="child-id-input" value="">
         {% endif %}
@@ -98,9 +113,11 @@
           <button class="pin-btn" data-digit="7">7</button>
           <button class="pin-btn" data-digit="8">8</button>
           <button class="pin-btn" data-digit="9">9</button>
-          <button class="pin-btn pin-backspace">&#9003;</button>
+          <button class="pin-btn pin-backspace">
+            <svg width="28" height="20" viewBox="0 0 30 22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 1 L1 11 L9 21 H29 V1 Z"/><path d="M14 7 L22 15 M22 7 L14 15"/></svg>
+          </button>
           <button class="pin-btn" data-digit="0">0</button>
-          <button class="pin-btn pin-submit" id="pin-submit-btn">Войти</button>
+          <button class="pin-btn pin-submit" id="pin-submit-btn"></button>
         </div>
 
         <div class="pin-error" id="pin-error"></div>
@@ -127,17 +144,18 @@
         var childId = card.dataset.childId;
         var name = card.querySelector('.child-picker-card__name').textContent;
         var imgEl = card.querySelector('.child-picker-card__avatar-img');
-        var letterEl = card.querySelector('.child-picker-card__avatar');
+        var letterEl = card.querySelector('.child-picker-card__avatar-placeholder');
 
         childIdInput.value = childId;
 
         // Build welcome display
-        var html = '';
+        var html = '<div class="child-welcome-avatar">';
         if (imgEl && imgEl.style.display !== 'none') {
           html += '<img src="' + imgEl.src + '" alt="' + name + '" class="child-welcome-avatar-img">';
         } else {
-          html += '<div class="child-welcome-avatar">' + name[0].toUpperCase() + '</div>';
+          html += '<div class="child-welcome-avatar-placeholder">' + name[0].toUpperCase() + '</div>';
         }
+        html += '</div>';
         html += '<div class="child-welcome-name">Привет, ' + name + '!</div>';
         welcomeEl.innerHTML = html;
 

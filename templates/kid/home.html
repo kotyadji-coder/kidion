@@ -5,36 +5,55 @@
 
 {% block content %}
 <div class="kid-home">
-  <!-- Hero: Character + Greeting -->
-  <div class="home-hero">
-    <a href="/kid/character" class="home-hero__character" id="character-link">
-      <div class="home-hero__avatar-placeholder" id="char-avatar">{{ child.name[0]|upper }}</div>
-    </a>
-    <div class="home-hero__text">
-      <h1 class="home-greeting">Привет, {{ child.name }}!</h1>
-      <div id="streak-wrap"></div>
-      <a href="/kid/character" class="home-character-link" id="char-link-text">Мой персонаж</a>
+  <div class="home-layout">
+    <!-- Left column: Character Hero -->
+    <div class="home-left" style="text-align:center; position:relative;">
+      <div class="home-hero">
+        <div class="home-hero__halo"></div>
+
+        <div class="home-hero__speech" id="hero-speech" style="display:none">Готов к новому уроку? ✨</div>
+
+        <a href="/kid/character" class="home-hero__character" id="character-link">
+          <div class="home-hero__character-circle">
+            <div class="home-hero__avatar-placeholder" id="char-avatar">{{ child.name[0]|upper }}</div>
+          </div>
+        </a>
+
+        <!-- Streak badge -->
+        <div class="streak-badge" id="streak-block" style="display:none">
+          <span class="streak-icon">🔥</span>
+          <span id="streak-text"></span>
+        </div>
+
+        <div class="home-section-title" style="display:none" id="section-title-mobile">Куда отправимся?</div>
+      </div>
+    </div>
+
+    <!-- Right column: Subjects -->
+    <div class="home-right">
+      <h2 class="home-section-title" id="section-title-desktop" style="display:none">Куда отправимся?</h2>
+      <div class="subjects-grid-kid" id="subjects-grid">
+        <div class="spinner"></div>
+      </div>
     </div>
   </div>
 
-  <!-- Streak block -->
-  <div class="home-streak-block" id="streak-block" style="display:none">
-    <span class="home-streak-fire">&#128293;</span>
-    <span class="home-streak-text" id="streak-text"></span>
+  <!-- Bottom tab bar (mobile) -->
+  <div class="kid-tab-bar">
+    <a href="/kid/home" class="kid-tab-bar__item kid-tab-bar__item--active">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 L12 3 L21 12 M5 10 V21 H19 V10"/></svg>
+      <span>Дом</span>
+    </a>
+    <a href="/kid/character" class="kid-tab-bar__item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21 Q 4 14 12 14 Q 20 14 20 21"/></svg>
+      <span>Герой</span>
+    </a>
+    <a href="/kid/chat" class="kid-tab-bar__item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5 H21 V17 H13 L7 22 V17 H3 Z"/></svg>
+      <span>Чат</span>
+    </a>
   </div>
-
-  <p class="home-subtitle">Какую миссию пройдем сегодня?</p>
-
-  <div class="subjects-grid-kid" id="subjects-grid">
-    <div class="spinner"></div>
-  </div>
-
-  <!-- Shop button -->
-  <a href="/kid/character" class="home-shop-btn" id="shop-btn">
-    <span class="home-shop-btn__icon">&#128717;&#65039;</span>
-    <span class="home-shop-btn__text">Перейти в магазин</span>
-    <span class="home-shop-btn__hint">Трать звезды тут!</span>
-  </a>
+  <div class="kid-tab-spacer"></div>
 </div>
 {% endblock %}
 
@@ -48,8 +67,9 @@
     // Character image
     var charAvatar = document.getElementById('char-avatar');
     if (charAvatar) {
+      var imgUrl = me.character_image_url || '/static/kid/default-character.svg';
       var img = document.createElement('img');
-      img.src = me.character_image_url || '/static/kid/default-character.svg';
+      img.src = imgUrl;
       img.alt = '{{ child.name }}';
       img.className = 'home-hero__character-img';
       img.onerror = function() { this.src = '/static/kid/default-character.svg'; };
@@ -57,24 +77,40 @@
       charAvatar.parentNode.insertBefore(img, charAvatar);
     }
 
-    // Character name in link
-    if (me.character_name) {
-      var charLink = document.getElementById('char-link-text');
-      if (charLink) charLink.textContent = me.character_name;
+    // Nav avatar image
+    var navAvatar = document.getElementById('nav-avatar');
+    if (navAvatar && me.character_image_url) {
+      var navImg = document.createElement('img');
+      navImg.src = me.character_image_url;
+      navImg.onerror = function() { this.remove(); };
+      navAvatar.textContent = '';
+      navAvatar.appendChild(navImg);
     }
+
+    // Stars
+    var starEl = document.getElementById('star-count');
+    if (starEl) starEl.textContent = me.stars || 0;
+
+    // Speech bubble
+    var speech = document.getElementById('hero-speech');
+    if (speech) speech.style.display = '';
 
     // Streak block
     if (me.current_streak > 0) {
       var streakBlock = document.getElementById('streak-block');
       var streakText = document.getElementById('streak-text');
       if (streakBlock && streakText) {
-        streakText.textContent = 'Ты в игре уже ' + me.current_streak + ' ' + pluralDays(me.current_streak) + ' подряд! Так держать!';
+        streakText.textContent = me.current_streak + ' ' + pluralDays(me.current_streak) + ' подряд!';
         streakBlock.style.display = '';
       }
     }
-    var starEl = document.getElementById('star-count');
-    if (starEl) starEl.textContent = me.stars || 0;
   } catch(e) {}
+
+  // Show section titles after data loaded
+  var mobileTitle = document.getElementById('section-title-mobile');
+  var desktopTitle = document.getElementById('section-title-desktop');
+  if (mobileTitle) mobileTitle.style.display = '';
+  if (desktopTitle) desktopTitle.style.display = '';
 
   // Load subjects + free lessons count in parallel
   var subjectsPromise = fetch('/api/kid/subjects', {credentials: 'same-origin'}).then(r => r.json());
@@ -88,11 +124,11 @@
     var freeLessons = freeData.lessons || [];
     var grid = document.getElementById('subjects-grid');
 
-    // Subject definitions
+    // Subject definitions with new colors
     var allSubjects = [
-      {key: 'math', name: 'Математика', icon: '&#129518;', color: '#6c5ce7', gradient: 'linear-gradient(135deg, #6c5ce7, #a29bfe)'},
-      {key: 'russian', name: 'Русский язык', icon: '&#128221;', color: '#00b894', gradient: 'linear-gradient(135deg, #00b894, #55efc4)'},
-      {key: 'world', name: 'Окруж. мир', icon: '&#127757;', color: '#fdcb6e', gradient: 'linear-gradient(135deg, #f39c12, #fdcb6e)'}
+      {key: 'math', name: 'Математика', icon: '🔢', color: '#22C55E', deep: '#15803D', gradient: 'linear-gradient(135deg, #22C55E, #15803D)'},
+      {key: 'russian', name: 'Русский язык', icon: '✍️', color: '#2DD4BF', deep: '#0EA5A0', gradient: 'linear-gradient(135deg, #2DD4BF, #0EA5A0)'},
+      {key: 'world', name: 'Окруж. мир', icon: '🌍', color: '#A78BFA', deep: '#7C3AED', gradient: 'linear-gradient(135deg, #A78BFA, #7C3AED)'}
     ];
 
     var enrolledMap = {};
@@ -101,59 +137,57 @@
     }
 
     var html = '';
-    var hasAnyLessons = false;
     for (var j = 0; j < allSubjects.length; j++) {
       var s = allSubjects[j];
       var enrolled = enrolledMap[s.key];
       var hasLessons = enrolled && enrolled.total_lessons > 0;
 
       if (hasLessons) {
-        hasAnyLessons = true;
         var completed = enrolled.completed_lessons;
         var total = enrolled.total_lessons;
         var pct = total > 0 ? Math.round(completed / total * 100) : 0;
 
-        html += '<a href="/kid/subject/' + s.key + '" class="subject-card-kid" style="--accent:' + s.color + '; --gradient:' + s.gradient + '">';
+        html += '<a href="/kid/subject/' + s.key + '" class="subject-card-kid" style="--subject-color:' + s.color + '; --subject-deep:' + s.deep + '">';
         html += '<div class="subject-card-kid__icon-wrap" style="background:' + s.gradient + '">' + s.icon + '</div>';
         html += '<div class="subject-card-kid__body">';
         html += '<div class="subject-card-kid__name">' + s.name + '</div>';
-        html += '<div class="subject-card-kid__progress-bar"><div class="subject-card-kid__progress-fill" style="width:' + pct + '%;background:' + s.gradient + '"></div></div>';
+        html += '<div class="subject-card-kid__progress-bar"><div class="subject-card-kid__progress-fill" style="width:' + pct + '%;background:' + s.color + '"></div></div>';
         html += '<div class="subject-card-kid__progress-text">' + completed + ' из ' + total + '</div>';
         html += '</div>';
+        html += '<div class="subject-card-kid__arrow" style="background:' + s.color + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 L15 12 L9 18"/></svg></div>';
         html += '</a>';
       }
-      // Don't show locked subjects — only those with lessons
     }
 
     // Free lessons card
     var freeCount = freeLessons.length;
     if (freeCount > 0) {
-      var freeCompleted = freeLessons.filter(function(l) { return l.stars !== null; }).length;
       var freeReady = freeLessons.filter(function(l) { return l.status === 'done' && l.stars === null; }).length;
 
-      html += '<a href="/kid/free-lessons" class="subject-card-kid" style="--accent:#e17055; --gradient:linear-gradient(135deg, #e17055, #fab1a0)">';
-      html += '<div class="subject-card-kid__icon-wrap" style="background:linear-gradient(135deg, #e17055, #fab1a0)">&#127912;</div>';
+      html += '<a href="/kid/free-lessons" class="subject-card-kid" style="--subject-color:#FF6B5B; --subject-deep:#E8503F">';
+      html += '<div class="subject-card-kid__icon-wrap" style="background:linear-gradient(135deg, #FF6B5B, #E8503F)">🎨</div>';
       html += '<div class="subject-card-kid__body">';
       html += '<div class="subject-card-kid__name">Свободные уроки</div>';
       html += '<div class="subject-card-kid__progress-text">' + freeCount + ' ' + pluralLessons(freeCount);
       if (freeReady > 0) html += ' &middot; ' + freeReady + ' новых';
-      html += '</div>';
-      html += '</div>';
+      html += '</div></div>';
+      html += '<div class="subject-card-kid__arrow" style="background:#FF6B5B"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 L15 12 L9 18"/></svg></div>';
       html += '</a>';
     }
 
     // AI Chat card
-    html += '<a href="/kid/chat" class="subject-card-kid" style="--accent:#6c5ce7; --gradient:linear-gradient(135deg, #6c5ce7, #a29bfe)">';
-    html += '<div class="subject-card-kid__icon-wrap" style="background:linear-gradient(135deg, #6c5ce7, #fd79a8)">&#128172;</div>';
+    html += '<a href="/kid/chat" class="subject-card-kid" style="--subject-color:#0EA5A0; --subject-deep:#0EA5A0">';
+    html += '<div class="subject-card-kid__icon-wrap" style="background:linear-gradient(135deg, #2DD4BF, #0EA5A0)">💬</div>';
     html += '<div class="subject-card-kid__body">';
     html += '<div class="subject-card-kid__name">Чат с помощником</div>';
     html += '<div class="subject-card-kid__progress-text">Спроси что угодно!</div>';
     html += '</div>';
+    html += '<div class="subject-card-kid__arrow" style="background:#2DD4BF"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 L15 12 L9 18"/></svg></div>';
     html += '</a>';
 
     grid.innerHTML = html;
   } catch(e) {
-    document.getElementById('subjects-grid').innerHTML = '<p style="text-align:center;color:#888">Ошибка загрузки</p>';
+    document.getElementById('subjects-grid').innerHTML = '<p style="text-align:center;color:#7E9786">Ошибка загрузки</p>';
   }
 })();
 

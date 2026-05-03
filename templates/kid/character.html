@@ -5,11 +5,6 @@
 
 {% block content %}
 <div class="kid-character">
-  <div class="kid-character__header">
-    <a href="/kid/home" class="btn-back-kid">&larr;</a>
-    <h1 class="kid-character__title">Мой персонаж</h1>
-  </div>
-
   <div class="character-layout" id="character-layout">
     <div class="spinner"></div>
   </div>
@@ -27,11 +22,11 @@ var CATEGORY_NAMES = {
 };
 
 var CATEGORY_ICONS = {
-  outfit: '&#128085;',
-  accessory: '&#128481;&#65039;',
-  pet: '&#128062;',
-  background: '&#127956;&#65039;',
-  special: '&#10024;'
+  outfit: '👕',
+  accessory: '🎩',
+  pet: '🐾',
+  background: '🌈',
+  special: '✨'
 };
 
 var currentStars = 0;
@@ -45,7 +40,7 @@ var currentStars = 0;
     renderCharacterPage(data);
   } catch(e) {
     document.getElementById('character-layout').innerHTML =
-      '<div class="empty-state-kid"><div class="empty-state-icon">&#127917;</div><div class="empty-state-text">Не удалось загрузить персонажа</div></div>';
+      '<div class="empty-state-kid"><div class="empty-state-icon">🎮</div><div class="empty-state-text">Не удалось загрузить персонажа</div></div>';
   }
 })();
 
@@ -60,7 +55,7 @@ function getCharacterBubble(stars) {
   } else if (stars >= 10) {
     return 'Еще чуть-чуть, и мы сможем купить кое-что классное!';
   } else {
-    return 'Пойдем порешаем задачки, чтобы заработать звездочки?';
+    return 'Выбирай подарок! 🎁';
   }
 }
 
@@ -68,78 +63,83 @@ function renderCharacterPage(data) {
   var layout = document.getElementById('character-layout');
   var html = '';
   var charName = data.character_name || 'Искатель';
+  var equippedCount = (data.equipped_items || []).length;
+  var totalItems = 0;
+  var categories = Object.keys(data.shop || {});
+  categories.forEach(function(c) { totalItems += (data.shop[c] || []).length; });
+  var purchasedCount = 0;
+  categories.forEach(function(c) {
+    (data.shop[c] || []).forEach(function(it) { if (it.purchased) purchasedCount++; });
+  });
 
-  // Character panel
+  // Character panel (left)
   html += '<div class="char-panel">';
+  html += '<div class="char-panel__halo"></div>';
+
+  // Speech bubble above character
+  html += '<div class="char-bubble" style="margin-bottom:14px; text-align:center;">';
+  html += '<div class="char-bubble__text">' + getCharacterBubble(currentStars) + '</div>';
+  html += '</div>';
+
   html += '<div class="char-panel__image-wrap">';
   var imgSrc = data.character_image_url || '/static/kid/default-character.svg';
+  html += '<div class="char-panel__image-circle">';
   html += '<img src="' + esc(imgSrc) + '?t=' + Date.now() + '" alt="Персонаж" class="char-panel__image" onerror="this.src=\'/static/kid/default-character.svg\'">';
+  html += '</div>';
   html += '</div>';
 
   // Character name with edit pencil
   html += '<div class="char-panel__name-row">';
   html += '<span class="char-panel__name" id="char-name-display">' + esc(charName) + '</span>';
-  html += '<button class="char-panel__name-edit" onclick="editCharacterName()" title="Переименовать">&#9998;&#65039;</button>';
+  html += '<button class="char-panel__name-edit" onclick="editCharacterName()" title="Переименовать">';
+  html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3 L21 8 L8 21 H3 V16 Z"/></svg>';
+  html += '</button>';
   html += '</div>';
 
   // Edit name input (hidden by default)
   html += '<div class="char-panel__name-edit-form" id="char-name-form" style="display:none">';
   html += '<input type="text" id="char-name-input" class="char-panel__name-input" maxlength="30" value="' + esc(charName) + '">';
-  html += '<button class="char-panel__name-save" onclick="saveCharacterName()">&#10004;</button>';
-  html += '<button class="char-panel__name-cancel" onclick="cancelEditName()">&#10006;</button>';
+  html += '<button class="char-panel__name-save" onclick="saveCharacterName()">✓</button>';
+  html += '<button class="char-panel__name-cancel" onclick="cancelEditName()">✕</button>';
   html += '</div>';
 
-  // Speech bubble
-  html += '<div class="char-bubble">';
-  html += '<div class="char-bubble__text">' + getCharacterBubble(currentStars) + '</div>';
-  html += '</div>';
+  html += '<div class="char-panel__stats">Надето: ' + equippedCount + ' · в коллекции ' + purchasedCount + ' / ' + totalItems + '</div>';
 
-  // Equipped items
-  if (data.equipped_items && data.equipped_items.length > 0) {
-    html += '<div class="char-equipped">';
-    html += '<div class="char-equipped__title">Экипировка:</div>';
-    for (var i = 0; i < data.equipped_items.length; i++) {
-      var eq = data.equipped_items[i];
-      html += '<span class="char-equipped__item">' + esc(eq.emoji) + ' ' + esc(eq.title_ru) + '</span>';
-    }
-    html += '</div>';
-  }
-  html += '</div>';
+  html += '</div>'; // .char-panel
 
-  // Shop panel
+  // Shop panel (right)
   html += '<div class="shop-panel">';
   html += '<div class="shop-panel__header">';
-  html += '<span class="shop-panel__title">&#127978; Магазин</span>';
-  html += '<span class="shop-panel__stars" id="shop-stars">&#11088; ' + currentStars + '</span>';
+  html += '<span class="shop-panel__title">Магазин</span>';
+  html += '<span class="shop-panel__stars" id="shop-stars">⭐ ' + currentStars + '</span>';
   html += '</div>';
 
   // Category tabs
-  var categories = Object.keys(data.shop || {});
   if (categories.length > 0) {
     html += '<div class="shop-tabs" id="shop-tabs">';
     for (var c = 0; c < categories.length; c++) {
       var cat = categories[c];
       var activeClass = c === 0 ? ' shop-tab--active' : '';
       html += '<button class="shop-tab' + activeClass + '" data-cat="' + cat + '" onclick="switchTab(\'' + cat + '\')">';
-      html += (CATEGORY_ICONS[cat] || '&#127873;') + ' ' + (CATEGORY_NAMES[cat] || cat);
+      html += '<span class="shop-tab__icon">' + (CATEGORY_ICONS[cat] || '🎁') + '</span> ';
+      html += (CATEGORY_NAMES[cat] || cat);
       html += '</button>';
     }
     html += '</div>';
 
-    // Items per category
+    // Items per category — now grid layout
     for (var c2 = 0; c2 < categories.length; c2++) {
       var cat2 = categories[c2];
       var items = data.shop[cat2] || [];
       var displayStyle = c2 === 0 ? '' : 'display:none;';
       html += '<div class="shop-items" id="shop-cat-' + cat2 + '" style="' + displayStyle + '">';
       for (var j = 0; j < items.length; j++) {
-        var item = items[j];
-        html += renderShopItem(item);
+        html += renderShopItem(items[j]);
       }
       html += '</div>';
     }
   } else {
-    html += '<div class="empty-state-kid" style="padding:20px"><div class="empty-state-icon">&#127978;</div><div class="empty-state-text">Магазин готовится...</div></div>';
+    html += '<div class="empty-state-kid" style="padding:20px"><div class="empty-state-icon">🏪</div><div class="empty-state-text">Магазин готовится...</div></div>';
   }
 
   html += '</div>'; // .shop-panel
@@ -148,12 +148,14 @@ function renderCharacterPage(data) {
 }
 
 function renderShopItem(item) {
-  var html = '<div class="shop-item' + (item.purchased ? ' shop-item--purchased' : '') + '" id="shop-item-' + item.id + '">';
+  var html = '<div class="shop-item' + (item.purchased && item.equipped ? ' shop-item--purchased' : '') + '" id="shop-item-' + item.id + '">';
+
+  if (item.equipped) {
+    html += '<div class="shop-item__equipped-badge">НАДЕТО</div>';
+  }
+
   html += '<div class="shop-item__emoji">' + esc(item.emoji) + '</div>';
-  html += '<div class="shop-item__info">';
   html += '<div class="shop-item__name">' + esc(item.title_ru) + '</div>';
-  html += '<div class="shop-item__price">&#11088; ' + item.price_stars + '</div>';
-  html += '</div>';
 
   if (item.purchased) {
     if (item.equipped) {
@@ -164,9 +166,9 @@ function renderShopItem(item) {
   } else {
     var canBuy = currentStars >= item.price_stars;
     if (canBuy) {
-      html += '<button class="shop-item__btn shop-item__btn--buy" onclick="buyItem(' + item.id + ')">Купить</button>';
+      html += '<button class="shop-item__btn shop-item__btn--buy" onclick="buyItem(' + item.id + ')">⭐ ' + item.price_stars + '</button>';
     } else {
-      html += '<button class="shop-item__btn shop-item__btn--buy shop-item__btn--disabled" onclick="showNotEnoughStars(this)">&#11088; ' + item.price_stars + '</button>';
+      html += '<button class="shop-item__btn shop-item__btn--disabled" onclick="showNotEnoughStars(this)">⭐ ' + item.price_stars + '</button>';
     }
   }
 
@@ -175,15 +177,14 @@ function renderShopItem(item) {
 }
 
 function showNotEnoughStars(btn) {
-  // Show tooltip
   var existing = btn.parentNode.querySelector('.shop-item__tooltip');
   if (existing) { existing.remove(); return; }
 
   var tip = document.createElement('div');
   tip.className = 'shop-item__tooltip';
-  tip.textContent = 'Нужно еще немного поучиться! Пройди пару уроков, чтобы получить больше звездочек.';
+  tip.textContent = 'Нужно еще немного поучиться!';
   btn.parentNode.appendChild(tip);
-  setTimeout(function() { tip.remove(); }, 4000);
+  setTimeout(function() { tip.remove(); }, 3000);
 }
 
 function editCharacterName() {
@@ -242,7 +243,7 @@ async function buyItem(itemId) {
     if (resp.ok && result.ok) {
       currentStars = result.stars;
       var starsEl = document.getElementById('shop-stars');
-      if (starsEl) starsEl.innerHTML = '&#11088; ' + currentStars;
+      if (starsEl) starsEl.innerHTML = '⭐ ' + currentStars;
       var navStars = document.getElementById('star-count');
       if (navStars) navStars.textContent = currentStars;
 

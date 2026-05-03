@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <meta name="theme-color" content="#6C5CE7">
+  <meta name="theme-color" content="#22C55E">
   <title>Kidion — {{ lesson.topic_title }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/kid/style.css">
   <style>
     body { padding: 0; }
@@ -29,8 +29,9 @@
     .auto-saving {
       text-align: center;
       padding: 16px;
-      color: var(--color-muted, #888);
-      font-size: 16px;
+      color: var(--kk-muted, #7E9786);
+      font-size: 14px;
+      font-weight: 600;
     }
   </style>
 </head>
@@ -40,14 +41,16 @@
 
   <div class="lesson-layout">
     <div class="lesson-topbar">
-      <a href="/kid/home" class="btn-back">←</a>
-      <div style="flex:1">
-        <div class="lesson-topbar-title">{{ lesson.topic_title }}</div>
+      <a href="/kid/home" class="btn-back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M15 6 L9 12 L15 18"/></svg>
+      </a>
+      <div class="lesson-topbar-title">
+        <div class="lesson-topbar-title__subject">{{ lesson.subject if lesson.subject else '' }}</div>
+        <div class="lesson-topbar-title__name">{{ lesson.topic_title }}</div>
       </div>
       {% if lesson.worksheet_url %}
-      <a href="{{ lesson.worksheet_url }}" target="_blank"
-         style="font-size:14px; font-weight:700; color:#6C5CE7; text-decoration:none; white-space:nowrap; padding:6px 12px; border:2px solid #6C5CE7; border-radius:20px;">
-        &#128424; Распечатать квест
+      <a href="{{ lesson.worksheet_url }}" target="_blank" class="btn btn-sm btn-secondary" style="width:auto; font-size:12px;">
+        🖨️ Квест
       </a>
       {% endif %}
     </div>
@@ -60,14 +63,14 @@
       title="{{ lesson.topic_title }}"
       sandbox="allow-scripts allow-same-origin allow-popups"
     ></iframe>
-    <div style="display:flex; align-items:center; justify-content:space-between; padding:4px 16px; font-size:11px; color:#999;">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:4px 16px; font-size:11px; color:#7E9786;">
       <span>Урок создан с помощью ИИ</span>
-      <button onclick="reportLesson()" style="background:none; border:1px solid #ddd; border-radius:12px; padding:2px 10px; font-size:11px; color:#999; cursor:pointer;">Пожаловаться</button>
+      <button onclick="reportLesson()" style="background:none; border:1px solid var(--kk-line); border-radius:12px; padding:2px 10px; font-size:11px; color:#7E9786; cursor:pointer; font-family:inherit;">Пожаловаться</button>
     </div>
     {% else %}
     <div style="flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:16px; padding:40px;">
       <div class="spinner"></div>
-      <p style="color: var(--color-muted); font-size: 18px;">Урок ещё готовится...</p>
+      <p style="color: var(--kk-muted); font-size: 16px; font-weight: 600;">Урок ещё готовится...</p>
     </div>
     {% endif %}
 
@@ -112,8 +115,6 @@
       resultSaved = false;
     }
   });
-
-  // Stub mode: if no tasks, iframe sends postMessage immediately → auto-redirect
 
   async function reportLesson() {
     if (confirm('Пожаловаться на содержание урока?')) {

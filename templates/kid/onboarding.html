@@ -3,28 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <meta name="theme-color" content="#6C5CE7">
+  <meta name="theme-color" content="#22C55E">
   <title>Kidion — Знакомство</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/kid/style.css">
 </head>
 <body data-page="onboarding">
 
   <main class="kid-main">
     <div class="onboarding-page">
+      <div class="onboarding-halo"></div>
+
       <div class="onboarding-character">
-        <img
-          src="{{ child.character_image_url or '/static/kid/default-character.svg' }}"
-          alt="Персонаж"
-          class="onboarding-character__img"
-          onerror="this.src='/static/kid/default-character.svg'"
-        >
+        <div class="onboarding-character__circle">
+          <img
+            src="{{ child.character_image_url or '/static/kid/default-character.svg' }}"
+            alt="Персонаж"
+            class="onboarding-character__img"
+            onerror="this.src='/static/kid/default-character.svg'"
+          >
+        </div>
       </div>
 
       <div class="onboarding-bubble">
-        Привет! Я твой новый друг, и мы будем учиться вместе. Как меня зовут?
+        Привет! Я твой новый друг.<br>Как меня зовут?
       </div>
 
       <div class="onboarding-input-wrap">
@@ -32,14 +36,15 @@
           type="text"
           id="character-name-input"
           class="onboarding-input"
-          placeholder="Напиши имя..."
+          placeholder="Искатель"
           maxlength="30"
           autocomplete="off"
         >
       </div>
 
       <button class="btn btn-primary onboarding-btn" id="onboarding-submit">
-        Поехали!
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M5 12 L10 17 L20 7"/></svg>
+        Это ты! Готово
       </button>
     </div>
   </main>
@@ -67,11 +72,11 @@
           window.location.href = '/kid/home';
         } else {
           btn.disabled = false;
-          btn.textContent = 'Поехали!';
+          btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M5 12 L10 17 L20 7"/></svg> Это ты! Готово';
         }
       } catch(e) {
         btn.disabled = false;
-        btn.textContent = 'Поехали!';
+        btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M5 12 L10 17 L20 7"/></svg> Это ты! Готово';
       }
     });
 

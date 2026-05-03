@@ -3,18 +3,33 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#22C55E">
   <title>{% block title %}Kidion{% endblock %}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/kid/style.css">
   {% block head %}{% endblock %}
 </head>
 <body data-page="{% block page_name %}{% endblock %}">
   {% if child is defined and child %}
   <nav class="kid-nav">
-    <a href="/kid/home" class="kid-nav__home">&#127968;</a>
-    <span class="kid-nav__name">{{ child.name }}</span>
-    <span class="kid-nav__stars">&#11088; <span id="star-count">{{ child.stars if child.stars is defined else 0 }}</span></span>
-    <button class="kid-nav__logout" onclick="kidLogout()">&#128075;</button>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <a href="/kid/character" class="kid-avatar" id="nav-avatar">{{ child.name[0]|upper }}</a>
+      <div>
+        <div class="kid-name-greeting">Привет,</div>
+        <div class="kid-name">{{ child.name }}</div>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <a href="/kid/character" class="kid-nav__stars">⭐ <span id="star-count">{{ child.stars if child.stars is defined else 0 }}</span></a>
+      <a href="/kid/home" class="btn-home" title="Домой">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 L12 3 L21 12"/><path d="M5 10 V21 H19 V10"/></svg>
+      </a>
+      <button class="btn-logout" onclick="kidLogout()" title="Выйти">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21 H5 V3 H9"/><path d="M16 17 L21 12 L16 7"/><path d="M21 12 H9"/></svg>
+      </button>
+    </div>
   </nav>
   {% endif %}
   <main class="kid-main">

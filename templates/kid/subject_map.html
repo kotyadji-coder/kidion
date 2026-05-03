@@ -6,17 +6,21 @@
 {% block content %}
 <div class="kid-map">
   <div class="kid-map__header">
-    <a href="/kid/home" class="btn-back-kid">&larr;</a>
-    <h1 class="kid-map__title">{{ subject_name }}</h1>
+    <a href="/kid/home" class="btn-back-kid">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M15 6 L9 12 L15 18"/></svg>
+    </a>
+    <div class="kid-map__icon" id="map-icon" style="background:linear-gradient(135deg, #22C55E, #15803D)">📚</div>
+    <div style="flex:1; min-width:0;">
+      <div class="kid-map__subject-label">{{ subject_name }}</div>
+      <div class="kid-map__topic-title" id="map-topic-title"></div>
+    </div>
     <div class="kid-map__stats" id="map-stats"></div>
   </div>
-
-  <div class="map-subtitle">Твой путь приключений!</div>
 
   <!-- First-visit tooltip -->
   <div class="map-tooltip" id="map-tooltip" style="display:none">
     <span class="map-tooltip__text">Жми на открытый уровень, чтобы начать!</span>
-    <button class="map-tooltip__close" onclick="this.parentNode.style.display='none'; localStorage.setItem('map_tooltip_seen','1')">&#10005;</button>
+    <button class="map-tooltip__close" onclick="this.parentNode.style.display='none'; localStorage.setItem('map_tooltip_seen','1')">✕</button>
   </div>
 
   <div class="lesson-map" id="lesson-map">
@@ -28,6 +32,19 @@
 {% block scripts %}
 <script>
 var SUBJECT = '{{ subject }}';
+var SUBJECT_COLORS = {
+  math:    { color: '#22C55E', deep: '#15803D', gradient: 'linear-gradient(135deg, #22C55E, #15803D)', icon: '🔢' },
+  russian: { color: '#2DD4BF', deep: '#0EA5A0', gradient: 'linear-gradient(135deg, #2DD4BF, #0EA5A0)', icon: '✍️' },
+  world:   { color: '#A78BFA', deep: '#7C3AED', gradient: 'linear-gradient(135deg, #A78BFA, #7C3AED)', icon: '🌍' }
+};
+
+// Set subject icon color
+var sc = SUBJECT_COLORS[SUBJECT] || SUBJECT_COLORS.math;
+var mapIcon = document.getElementById('map-icon');
+if (mapIcon) {
+  mapIcon.style.background = sc.gradient;
+  mapIcon.textContent = sc.icon;
+}
 
 // Show tooltip on first visit
 if (!localStorage.getItem('map_tooltip_seen')) {
@@ -38,24 +55,30 @@ if (!localStorage.getItem('map_tooltip_seen')) {
   try {
     var resp = await fetch('/api/kid/subject/' + SUBJECT + '/map', {credentials: 'same-origin'});
     if (!resp.ok) {
-      document.getElementById('lesson-map').innerHTML = '<div class="empty-state-kid"><div class="empty-state-icon">&#128218;</div><div class="empty-state-text">Попроси маму или папу открыть этот предмет!</div></div>';
+      document.getElementById('lesson-map').innerHTML = '<div class="empty-state-kid"><div class="empty-state-icon">📚</div><div class="empty-state-text">Попроси маму или папу открыть этот предмет!</div></div>';
       return;
     }
     var data = await resp.json();
     renderMap(data);
   } catch(e) {
-    document.getElementById('lesson-map').innerHTML = '<p style="text-align:center;color:#888">Ошибка загрузки</p>';
+    document.getElementById('lesson-map').innerHTML = '<p style="text-align:center;color:#7E9786">Ошибка загрузки</p>';
   }
 })();
 
 function renderMap(data) {
   // Stats
   var statsEl = document.getElementById('map-stats');
-  statsEl.innerHTML = '<span>&#11088; ' + (data.total_stars || 0) + '</span> &middot; <span>' + (data.completed_lessons || 0) + '/' + (data.total_lessons || 0) + '</span>';
+  statsEl.innerHTML = '<div class="kid-map__stats-number">' + (data.completed_lessons || 0) + ' / ' + (data.total_lessons || 0) + '</div><div class="kid-map__stats-label">уроков</div>';
 
   var topics = data.topics || [];
   var mapEl = document.getElementById('lesson-map');
   var html = '';
+
+  // Set first topic title in header
+  if (topics.length > 0) {
+    var topicTitle = document.getElementById('map-topic-title');
+    if (topicTitle) topicTitle.textContent = topics[0].title_ru || '';
+  }
 
   for (var i = 0; i < topics.length; i++) {
     var topic = topics[i];
@@ -64,13 +87,12 @@ function renderMap(data) {
     // Topic header
     html += '<div class="map-topic">';
     html += '<div class="map-topic__header">';
-    html += '<span class="map-topic__icon">' + (topic.icon || '&#128214;') + '</span>';
+    html += '<span class="map-topic__icon">' + (topic.icon || '📖') + '</span>';
     html += '<span class="map-topic__title">' + esc(topic.title_ru) + '</span>';
     html += '</div>';
 
     // Lesson nodes (vertical path)
     html += '<div class="map-lessons">';
-    // Vertical connector line
     html += '<div class="map-path-line"></div>';
 
     for (var j = 0; j < lessons.length; j++) {
@@ -79,18 +101,16 @@ function renderMap(data) {
       var offset = (j % 2 === 0) ? 'map-node--left' : 'map-node--right';
 
       html += '<div class="' + nodeClass + ' ' + offset + '">';
-
       html += '<div class="map-node__circle">';
 
       if (l.status === 'completed') {
-        html += '<span class="map-node__check">&#10004;</span>';
+        html += '<span class="map-node__check">✓</span>';
         html += '</div>';
         html += '<div class="map-node__info">';
         html += '<div class="map-node__title">' + esc(l.title_ru) + '</div>';
-        // Stars
         var starsHtml = '<div class="map-node__stars">';
         for (var s = 0; s < 5; s++) {
-          starsHtml += '<span class="map-star ' + (s < l.stars_earned ? 'earned' : '') + '">&#11088;</span>';
+          starsHtml += '<span class="map-star ' + (s < l.stars_earned ? 'earned' : '') + '">⭐</span>';
         }
         starsHtml += '</div>';
         html += starsHtml;
@@ -100,41 +120,31 @@ function renderMap(data) {
         html += '</div>';
       } else if (l.status === 'available') {
         if (l.lesson_id) {
-          html += '<span class="map-node__play">&#9654;</span>';
+          html += '<span class="map-node__play">▶</span>';
           html += '</div>';
           html += '<div class="map-node__info">';
           html += '<div class="map-node__title">' + esc(l.title_ru) + '</div>';
           html += '<a href="/kid/lesson/' + l.lesson_id + '" class="btn-play-kid">Играть!</a>';
         } else {
-          html += '<span class="map-node__waiting">&#9203;</span>';
+          html += '<span class="map-node__waiting">⏳</span>';
           html += '</div>';
           html += '<div class="map-node__info">';
           html += '<div class="map-node__title">' + esc(l.title_ru) + '</div>';
           html += '<span class="map-node__hint">Ожидает генерации</span>';
         }
         html += '</div>';
-      } else if (l.status === 'test') {
-        html += '<span class="map-node__test">&#128203;</span>';
-        html += '</div>';
-        html += '<div class="map-node__info">';
-        html += '<div class="map-node__title">Тест: ' + esc(l.title_ru) + '</div>';
-        if (l.lesson_id) {
-          html += '<a href="/kid/lesson/' + l.lesson_id + '" class="btn-play-kid btn-play-kid--test">Пройти тест!</a>';
-        }
-        html += '</div>';
       } else {
-        // locked
-        html += '<span class="map-node__lock">&#128274;</span>';
+        html += '<span class="map-node__lock">🔒</span>';
         html += '</div>';
         html += '<div class="map-node__info">';
         html += '<div class="map-node__title map-node__title--locked">' + esc(l.title_ru) + '</div>';
         html += '</div>';
       }
 
-      html += '</div>'; // .map-node
+      html += '</div>';
     }
-    html += '</div>'; // .map-lessons
-    html += '</div>'; // .map-topic
+    html += '</div>';
+    html += '</div>';
   }
 
   mapEl.innerHTML = html;
