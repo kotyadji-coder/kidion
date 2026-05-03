@@ -4,85 +4,94 @@
 {% block page_name %}chat{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="/static/kid/chat.css?v=2">
+<link rel="stylesheet" href="/static/kid/chat.css?v=3">
 {% endblock %}
 
 {% block content %}
 <div class="chat-layout">
-  <!-- Left: Chat list -->
+  <!-- Left: Character personas (replaces old chat list) -->
   <aside class="chat-sidebar" id="chat-sidebar">
     <div class="chat-sidebar__header">
-      <span class="chat-sidebar__title">Чаты</span>
-      <button class="chat-sidebar__new" id="btn-new-chat" title="Новый чат">+</button>
+      <span class="chat-sidebar__title">Друзья по чату</span>
     </div>
-    <div class="chat-sidebar__list" id="chat-list">
-      <!-- Filled by JS -->
+    <div class="chat-sidebar__personas">
+      {% for key, char in characters.items() %}
+      <button class="chat-persona {% if key == 'owl' %}chat-persona--active{% endif %}"
+              data-key="{{ key }}"
+              style="--persona-color: {{ char.color }}; --persona-bg: {{ char.color }}20;">
+        <div class="chat-persona__avatar" style="background: {{ char.color }}30;">{{ char.emoji }}</div>
+        <div class="chat-persona__info">
+          <div class="chat-persona__name">{{ char.name_ru }}</div>
+          <div class="chat-persona__role">{{ char.description_ru[:30] if char.description_ru else '' }}</div>
+        </div>
+      </button>
+      {% endfor %}
+    </div>
+    <div class="chat-limit-box" id="chat-limit-box">
+      <div class="chat-limit-box__text">Осталось <b id="limit-remaining">5</b> сообщений</div>
+      <div class="chat-limit-box__hint">Лимит обновится завтра утром</div>
     </div>
   </aside>
 
   <!-- Center: Chat window -->
   <section class="chat-center">
     <div class="chat-center__header">
-      <button class="chat-toggle-btn" id="btn-toggle-sidebar" title="Чаты">&#9776;</button>
-      <span class="chat-center__title" id="chat-title">Выбери чат</span>
-      <button class="chat-toggle-btn" id="btn-toggle-characters" title="Помощники">&#9881;</button>
+      <button class="chat-toggle-btn" id="btn-toggle-sidebar" title="Персонажи">☰</button>
+      <div class="chat-center__persona-icon" id="chat-header-icon" style="background: #2DD4BF;">🦉</div>
+      <div>
+        <div class="chat-center__title" id="chat-title">Совушка</div>
+        <div class="chat-center__subtitle" id="chat-subtitle">Объясняет просто</div>
+      </div>
     </div>
 
     <div class="chat-messages" id="chat-messages">
       <div class="chat-empty-state" id="chat-empty">
-        <div class="chat-empty-state__icon">&#128172;</div>
-        <div class="chat-empty-state__text">Выбери чат слева или создай новый!</div>
+        <div class="chat-empty-state__icon">🦉</div>
+        <div class="chat-empty-state__text">Ух-ху! Спроси меня о чём угодно!</div>
       </div>
     </div>
 
-    <div class="chat-input-area" id="chat-input-area" style="display:none">
+    <div class="chat-input-area" id="chat-input-area">
+      <div class="chat-limit-info" id="chat-limit-info">
+        Осталось <b id="limit-info-count">5</b> сообщений сегодня
+      </div>
       <div class="chat-input-wrap">
+        <input type="text" class="chat-input" id="chat-input" placeholder="Напиши вопрос..." autocomplete="off">
         <label class="chat-attach-btn" id="btn-attach" title="Прикрепить картинку">
           <input type="file" accept="image/*" id="file-input" hidden>
-          &#128206;
+          📎
         </label>
-        <textarea class="chat-textarea" id="chat-textarea" placeholder="Напиши сообщение..." rows="1"></textarea>
         <button class="chat-send-btn" id="chat-send-btn" title="Отправить" disabled>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="22" y1="2" x2="11" y2="13"></line>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff">
+            <path d="M3 21 L22 12 L3 3 L3 10 L17 12 L3 14 Z"/>
           </svg>
         </button>
       </div>
       <div class="chat-attach-preview" id="attach-preview" style="display:none">
         <img id="attach-thumb" src="" alt="preview">
-        <button class="chat-attach-remove" id="btn-remove-attach">&#10005;</button>
+        <button class="chat-attach-remove" id="btn-remove-attach">✕</button>
       </div>
-      <div class="chat-limit-info" id="chat-limit-info"></div>
     </div>
   </section>
 
-  <!-- Right: Character selector -->
-  <aside class="chat-characters" id="chat-characters">
-    <div class="chat-characters__title">Помощники</div>
-    <div class="chat-characters__list" id="character-list">
+  <!-- Mobile: persona selector (top bar, shown on narrow screens) -->
+  <div class="chat-mobile-personas" id="chat-mobile-personas">
+    <div style="font-size:11px;font-weight:800;color:var(--kk-muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px;">Сейчас говоришь с</div>
+    <div class="chat-mobile-personas__row">
       {% for key, char in characters.items() %}
-      <button class="character-card {% if key == 'owl' %}character-card--active{% endif %}"
+      <button class="chat-mobile-persona {% if key == 'owl' %}chat-mobile-persona--active{% endif %}"
               data-key="{{ key }}"
-              style="--accent: {{ char.color }}">
-        <span class="character-card__emoji">{{ char.emoji }}</span>
-        <span class="character-card__name">{{ char.name_ru }}</span>
+              style="--persona-color: {{ char.color }}; --persona-bg: {{ char.color }};">
+        <div style="font-size:24px;line-height:1;">{{ char.emoji }}</div>
+        <div style="font-size:11px;font-weight:800;margin-top:4px;">{{ char.name_ru }}</div>
       </button>
       {% endfor %}
     </div>
-    <div class="character-desc" id="character-desc">
-      <div class="character-desc__emoji" id="desc-emoji">&#129417;</div>
-      <div class="character-desc__name" id="desc-name">Мудрая Сова</div>
-      <div class="character-desc__text" id="desc-text">Объясняет сложное простыми словами, помогает с уроками и домашкой</div>
-    </div>
-    {% if not has_subscription %}
-    <div class="chat-sub-banner" id="sub-banner">
-      <div class="chat-sub-banner__text">Бесплатно: <b>5 сообщений в день</b></div>
-      <div class="chat-sub-banner__hint">Безлимит — 300 кристаллов/мес</div>
-    </div>
-    {% endif %}
-  </aside>
+  </div>
 </div>
+
+<!-- Overlay for mobile panels -->
+<div class="chat-overlay" id="chat-overlay"></div>
 {% endblock %}
 
 {% block scripts %}
@@ -96,5 +105,5 @@
     characters: {{ characters_json | safe }},
   };
 </script>
-<script src="/static/kid/chat.js"></script>
+<script src="/static/kid/chat.js?v=3"></script>
 {% endblock %}
