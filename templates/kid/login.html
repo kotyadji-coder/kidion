@@ -2,179 +2,350 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#22C55E">
   <title>Kidion — Вход</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/kid/style.css?v=2">
+  <link rel="stylesheet" href="/static/kid/style.css?v=3">
+  <style>
+    body { margin:0; padding:0; }
+    .login-screen {
+      width: 100%; min-height: 100vh; min-height: 100dvh;
+      background: #fff;
+      font-family: 'Plus Jakarta Sans', -apple-system, system-ui, sans-serif;
+      color: #0F2418;
+      display: flex; flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ── Picker step ── */
+    .picker { padding: 52px 20px 24px; flex:1; }
+    .picker__brand { font-size:11px; font-weight:800; color:#15803D; letter-spacing:2.5px; text-transform:uppercase; text-align:center; margin-bottom:10px; }
+    .picker__title { font-size:32px; font-weight:800; text-align:center; letter-spacing:-1px; margin:0; }
+    .picker__sub   { font-size:14px; color:#7E9786; font-weight:600; text-align:center; margin-top:6px; margin-bottom:28px; }
+
+    .picker__card {
+      display:flex; align-items:center; gap:16px;
+      padding:14px 18px; border-radius:22px; background:#fff;
+      box-shadow: 0 3px 0 rgba(15,36,24,0.08), 0 0 0 1.5px rgba(15,36,24,0.08);
+      margin-bottom:14px; cursor:pointer; border:none; width:100%;
+      font-family:inherit; text-align:left;
+      transition: transform 0.1s;
+    }
+    .picker__card:active { transform:scale(0.97); }
+    .picker__card--first {
+      box-shadow: 0 4px 0 #22C55E, 0 0 0 2.5px #22C55E;
+    }
+    .picker__avatar {
+      width:64px; height:64px; border-radius:50%; background:#F6FAF4;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden;
+    }
+    .picker__avatar img { width:56px; height:56px; border-radius:50%; object-fit:cover; }
+    .picker__avatar-letter {
+      width:56px; height:56px; border-radius:50%;
+      background:linear-gradient(135deg, #FF6B5B, #FFB627);
+      color:#fff; font-size:22px; font-weight:800;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .picker__name { font-size:18px; font-weight:800; letter-spacing:-0.3px; flex:1; }
+    .picker__grade { font-size:12px; color:#7E9786; margin-top:2px; font-weight:600; }
+    .picker__arrow {
+      width:32px; height:32px; border-radius:50%; background:rgba(15,36,24,0.08);
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .picker__card--first .picker__arrow { background:#22C55E; }
+    .picker__card--first .picker__arrow svg path { stroke:#fff; }
+    .picker__hint {
+      margin-top:32px; padding:16px; border-radius:18px; background:#F6FAF4;
+      font-size:13px; color:#3F5F4C; font-weight:600; text-align:center; line-height:1.4;
+    }
+
+    /* ── PIN step ── */
+    .pin-screen {
+      width:100%; min-height:100vh; min-height:100dvh;
+      background:#fff; display:flex; flex-direction:column;
+    }
+    .pin-screen__top {
+      flex:1; display:flex; flex-direction:column; align-items:center;
+      padding-top:40px; position:relative;
+    }
+    .pin-screen__back {
+      position:absolute; top:18px; left:18px;
+      width:38px; height:38px; border-radius:50%; border:none;
+      background:#F6FAF4; display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+    }
+    .pin-screen__avatar {
+      width:110px; height:110px; border-radius:50%;
+      background:#F6FAF4; display:flex; align-items:center; justify-content:center;
+      box-shadow: 0 6px 0 rgba(34,197,94,0.2), 0 0 0 4px #fff, 0 0 0 6px #22C55E;
+      overflow:hidden;
+    }
+    .pin-screen__avatar img { width:94px; height:94px; border-radius:50%; object-fit:cover; }
+    .pin-screen__avatar-letter {
+      width:94px; height:94px; border-radius:50%;
+      background:linear-gradient(135deg, #FF6B5B, #FFB627);
+      color:#fff; font-size:36px; font-weight:800;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .pin-screen__name { font-size:22px; font-weight:800; margin-top:16px; letter-spacing:-0.4px; }
+    .pin-screen__label { font-size:14px; color:#7E9786; margin-top:4px; font-weight:600; }
+
+    .pin-screen__dots {
+      display:flex; gap:14px; justify-content:center; margin-top:24px;
+    }
+    .pin-screen__dot {
+      width:16px; height:16px; border-radius:50%;
+      background:transparent; border:3px solid rgba(126,151,134,0.3);
+      transition: all 0.15s;
+    }
+    .pin-screen__dot.filled {
+      background:#22C55E; border-color:#22C55E;
+      box-shadow: 0 3px 0 #15803D;
+    }
+
+    .pin-screen__keyboard {
+      padding:24px 20px 28px;
+      border-top: 2px solid rgba(15,36,24,0.08);
+    }
+    .pin-screen__keys {
+      display:grid; grid-template-columns:repeat(3,1fr); gap:12px;
+      max-width:300px; margin:0 auto;
+    }
+    .pin-key {
+      height:64px; border-radius:22px; border:none; background:#fff;
+      font-family:inherit; font-size:28px; font-weight:800; color:#0F2418;
+      cursor:pointer;
+      box-shadow: 0 4px 0 rgba(15,36,24,0.08), 0 0 0 1.5px rgba(15,36,24,0.08);
+      display:flex; align-items:center; justify-content:center;
+      transition: transform 0.08s;
+    }
+    .pin-key:active {
+      transform:translateY(3px);
+      box-shadow: 0 1px 0 rgba(15,36,24,0.08), 0 0 0 1.5px rgba(15,36,24,0.08);
+    }
+    .pin-key--backspace {
+      background:transparent; box-shadow:none; color:#7E9786;
+    }
+    .pin-key--backspace:active { box-shadow:none; }
+    .pin-key--submit {
+      background:#22C55E; color:#fff;
+      box-shadow: 0 4px 0 #15803D, 0 6px 16px rgba(34,197,94,0.4);
+    }
+
+    .pin-screen__error {
+      color:#FF6B5B; font-size:14px; font-weight:600; margin-top:16px;
+      min-height:20px; text-align:center;
+    }
+    .pin-screen__forgot {
+      margin-top:14px; text-align:center; font-size:12px; color:#7E9786; font-weight:600;
+    }
+  </style>
 </head>
 <body data-page="login">
 
-  <main class="kid-main">
-    <div class="login-page">
+  {% if children|length > 1 %}
+  <!-- ── STEP 1: CHILD PICKER ── -->
+  <div class="login-screen" id="child-picker">
+    <div class="picker">
+      <div class="picker__brand">kidion</div>
+      <h1 class="picker__title">Кто ты?</h1>
+      <div class="picker__sub">Выбери себя, чтобы войти</div>
 
-      <!-- Step 1: Child picker (if multiple children) -->
-      {% if children|length > 1 %}
-      <div id="child-picker">
-        <div class="login-brand">kidion</div>
-        <h1 class="login-title">Кто ты?</h1>
-        <div class="login-subtitle">Выбери себя, чтобы войти</div>
-
-        <div class="child-picker-grid">
-          {% for c in children %}
-          <button class="child-picker-card" data-child-id="{{ c.id }}">
-            <div class="child-picker-card__avatar">
-              {% if c.character_image_url %}
-              <img src="{{ c.character_image_url }}" alt="{{ c.name }}" class="child-picker-card__avatar-img"
-                   onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-              <div class="child-picker-card__avatar-placeholder" style="display:none">{{ c.name[0]|upper }}</div>
-              {% else %}
-              <div class="child-picker-card__avatar-placeholder">{{ c.name[0]|upper }}</div>
-              {% endif %}
-            </div>
-            <div class="child-picker-card__body">
-              <div class="child-picker-card__name">{{ c.name }}</div>
-            </div>
-            <div class="child-picker-card__arrow">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7E9786" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 L15 12 L9 18"/></svg>
-            </div>
-          </button>
-          {% endfor %}
+      {% for c in children %}
+      <button class="picker__card {% if loop.first %}picker__card--first{% endif %}" data-child-id="{{ c.id }}"
+              data-name="{{ c.name }}" data-img="{{ c.character_image_url or '' }}">
+        <div class="picker__avatar">
+          {% if c.character_image_url %}
+          <img src="{{ c.character_image_url }}" alt="{{ c.name }}"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+          <div class="picker__avatar-letter" style="display:none">{{ c.name[0]|upper }}</div>
+          {% else %}
+          <div class="picker__avatar-letter">{{ c.name[0]|upper }}</div>
+          {% endif %}
         </div>
+        <div style="flex:1">
+          <div class="picker__name">{{ c.name }}</div>
+        </div>
+        <div class="picker__arrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7E9786" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 L15 12 L9 18"/></svg>
+        </div>
+      </button>
+      {% endfor %}
 
-        <div class="login-hint">После выбора ты введёшь свой секретный код 🔒</div>
-      </div>
+      <div class="picker__hint">После выбора ты введёшь свой секретный код 🔒</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── STEP 2: PIN ENTRY ── -->
+  <div class="pin-screen" id="pin-section" {% if children|length > 1 %}style="display:none"{% endif %}>
+    <div class="pin-screen__top">
+      {% if children|length > 1 %}
+      <button class="pin-screen__back" id="pin-back-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F2418" stroke-width="3" stroke-linecap="round"><path d="M15 6 L9 12 L15 18"/></svg>
+      </button>
       {% endif %}
 
-      <!-- Step 2: PIN entry -->
-      <div id="pin-section" {% if children|length > 1 %}style="display:none"{% endif %}>
-        {% if children|length == 1 %}
-        <div class="child-welcome">
-          <div class="child-welcome-avatar">
-            {% if children[0].character_image_url %}
-            <img src="{{ children[0].character_image_url }}" alt="{{ children[0].name }}" class="child-welcome-avatar-img"
-                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-            <div class="child-welcome-avatar-placeholder" style="display:none">{{ children[0].name[0]|upper }}</div>
-            {% else %}
-            <div class="child-welcome-avatar-placeholder">{{ children[0].name[0]|upper }}</div>
-            {% endif %}
-          </div>
-          <div class="child-welcome-name">Привет, {{ children[0].name }}!</div>
-        </div>
-        <input type="hidden" id="child-id-input" value="{{ children[0].id }}">
-        {% elif selected_child %}
-        <div class="child-welcome">
-          <div class="child-welcome-avatar">
-            {% if selected_child.character_image_url %}
-            <img src="{{ selected_child.character_image_url }}" alt="{{ selected_child.name }}" class="child-welcome-avatar-img"
-                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-            <div class="child-welcome-avatar-placeholder" style="display:none">{{ selected_child.name[0]|upper }}</div>
-            {% else %}
-            <div class="child-welcome-avatar-placeholder">{{ selected_child.name[0]|upper }}</div>
-            {% endif %}
-          </div>
-          <div class="child-welcome-name">Привет, {{ selected_child.name }}!</div>
-        </div>
-        <input type="hidden" id="child-id-input" value="{{ selected_child.id }}">
+      {% if children|length == 1 %}
+      <div class="pin-screen__avatar">
+        {% if children[0].character_image_url %}
+        <img src="{{ children[0].character_image_url }}" alt="{{ children[0].name }}"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+        <div class="pin-screen__avatar-letter" style="display:none">{{ children[0].name[0]|upper }}</div>
         {% else %}
-        <div class="login-brand">kidion</div>
-        <input type="hidden" id="child-id-input" value="{{ child_id or '' }}">
+        <div class="pin-screen__avatar-letter">{{ children[0].name[0]|upper }}</div>
         {% endif %}
+      </div>
+      <div class="pin-screen__name">Привет, {{ children[0].name }}!</div>
+      <input type="hidden" id="child-id-input" value="{{ children[0].id }}">
+      {% elif children|length > 1 %}
+      <div class="pin-screen__avatar" id="pin-avatar"></div>
+      <div class="pin-screen__name" id="pin-name"></div>
+      <input type="hidden" id="child-id-input" value="">
+      {% else %}
+      <div style="font-size:11px;font-weight:800;color:#15803D;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:16px;">kidion</div>
+      <input type="hidden" id="child-id-input" value="{{ child_id or '' }}">
+      {% endif %}
 
-        <!-- Back button for multi-child mode -->
-        {% if children|length > 1 %}
-        <button class="pin-back-btn" id="pin-back-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M15 6 L9 12 L15 18"/></svg>
-        </button>
-        <div class="child-welcome" id="pin-child-welcome"></div>
-        <input type="hidden" id="child-id-input" value="">
-        {% endif %}
+      <div class="pin-screen__label">Введи свой секретный код</div>
 
-        <p class="pin-label">Введи свой секретный код</p>
-
-        <!-- PIN dots (4 digits) -->
-        <div class="pin-dots">
-          <div class="pin-dot"></div>
-          <div class="pin-dot"></div>
-          <div class="pin-dot"></div>
-          <div class="pin-dot"></div>
-        </div>
-
-        <!-- PIN keyboard -->
-        <div class="pin-keyboard">
-          <button class="pin-btn" data-digit="1">1</button>
-          <button class="pin-btn" data-digit="2">2</button>
-          <button class="pin-btn" data-digit="3">3</button>
-          <button class="pin-btn" data-digit="4">4</button>
-          <button class="pin-btn" data-digit="5">5</button>
-          <button class="pin-btn" data-digit="6">6</button>
-          <button class="pin-btn" data-digit="7">7</button>
-          <button class="pin-btn" data-digit="8">8</button>
-          <button class="pin-btn" data-digit="9">9</button>
-          <button class="pin-btn pin-backspace">
-            <svg width="28" height="20" viewBox="0 0 30 22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 1 L1 11 L9 21 H29 V1 Z"/><path d="M14 7 L22 15 M22 7 L14 15"/></svg>
-          </button>
-          <button class="pin-btn" data-digit="0">0</button>
-          <button class="pin-btn pin-submit" id="pin-submit-btn"></button>
-        </div>
-
-        <div class="pin-error" id="pin-error"></div>
+      <div class="pin-screen__dots" id="pin-dots">
+        <div class="pin-screen__dot"></div>
+        <div class="pin-screen__dot"></div>
+        <div class="pin-screen__dot"></div>
+        <div class="pin-screen__dot"></div>
       </div>
 
+      <div class="pin-screen__error" id="pin-error"></div>
     </div>
-  </main>
+
+    <div class="pin-screen__keyboard">
+      <div class="pin-screen__keys">
+        <button class="pin-key" data-digit="1">1</button>
+        <button class="pin-key" data-digit="2">2</button>
+        <button class="pin-key" data-digit="3">3</button>
+        <button class="pin-key" data-digit="4">4</button>
+        <button class="pin-key" data-digit="5">5</button>
+        <button class="pin-key" data-digit="6">6</button>
+        <button class="pin-key" data-digit="7">7</button>
+        <button class="pin-key" data-digit="8">8</button>
+        <button class="pin-key" data-digit="9">9</button>
+        <button class="pin-key pin-key--backspace" id="pin-backspace">
+          <svg width="28" height="20" viewBox="0 0 30 22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 1 L1 11 L9 21 H29 V1 Z"/><path d="M14 7 L22 15 M22 7 L14 15"/></svg>
+        </button>
+        <button class="pin-key" data-digit="0">0</button>
+        <button class="pin-key pin-key--submit" id="pin-submit-btn">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 L10 17 L20 7"/></svg>
+        </button>
+      </div>
+      <div class="pin-screen__forgot">Забыл? Попроси маму или папу</div>
+    </div>
+  </div>
 
   <script src="/static/kid/app.js"></script>
   <script>
-  // Multi-child picker logic
   (function() {
+    var pin = '';
+    var dots = document.querySelectorAll('.pin-screen__dot');
+    var errorEl = document.getElementById('pin-error');
+    var childIdInput = document.getElementById('child-id-input');
+
+    // PIN key events (new selectors)
+    document.querySelectorAll('.pin-key[data-digit]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (pin.length >= 4) return;
+        pin += btn.dataset.digit;
+        updateDots();
+      });
+    });
+
+    document.getElementById('pin-backspace').addEventListener('click', function() {
+      pin = pin.slice(0, -1);
+      updateDots();
+      if (errorEl) { errorEl.textContent = ''; }
+    });
+
+    document.getElementById('pin-submit-btn').addEventListener('click', submitPin);
+
+    function updateDots() {
+      dots.forEach(function(d, i) {
+        d.classList.toggle('filled', i < pin.length);
+      });
+    }
+
+    async function submitPin() {
+      if (pin.length < 4) return;
+      var childId = childIdInput.value;
+      if (!childId) { if (errorEl) errorEl.textContent = 'Выбери ребёнка'; return; }
+
+      try {
+        var resp = await fetch('/api/kid/auth', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ child_id: parseInt(childId), pin: pin })
+        });
+        var data = await resp.json();
+        if (resp.ok && data.ok) {
+          window.location.href = data.redirect || '/kid/home';
+        } else {
+          if (errorEl) errorEl.textContent = data.message || 'Неверный код';
+          pin = '';
+          updateDots();
+        }
+      } catch(e) {
+        if (errorEl) errorEl.textContent = 'Ошибка соединения';
+        pin = '';
+        updateDots();
+      }
+    }
+
+    // Multi-child picker logic
     var picker = document.getElementById('child-picker');
     var pinSection = document.getElementById('pin-section');
     if (!picker) return;
 
-    var cards = document.querySelectorAll('.child-picker-card');
-    var backBtn = document.getElementById('pin-back-btn');
-    var childIdInput = document.getElementById('child-id-input');
-    var welcomeEl = document.getElementById('pin-child-welcome');
-
-    cards.forEach(function(card) {
+    document.querySelectorAll('.picker__card').forEach(function(card) {
       card.addEventListener('click', function() {
         var childId = card.dataset.childId;
-        var name = card.querySelector('.child-picker-card__name').textContent;
-        var imgEl = card.querySelector('.child-picker-card__avatar-img');
-        var letterEl = card.querySelector('.child-picker-card__avatar-placeholder');
-
+        var name = card.dataset.name;
+        var imgUrl = card.dataset.img;
         childIdInput.value = childId;
 
-        // Build welcome display
-        var html = '<div class="child-welcome-avatar">';
-        if (imgEl && imgEl.style.display !== 'none') {
-          html += '<img src="' + imgEl.src + '" alt="' + name + '" class="child-welcome-avatar-img">';
-        } else {
-          html += '<div class="child-welcome-avatar-placeholder">' + name[0].toUpperCase() + '</div>';
+        // Build avatar
+        var avatarEl = document.getElementById('pin-avatar');
+        var nameEl = document.getElementById('pin-name');
+        if (avatarEl) {
+          if (imgUrl) {
+            avatarEl.innerHTML = '<img src="' + imgUrl + '" alt="' + name + '" onerror="this.outerHTML=\'<div class=pin-screen__avatar-letter>' + name[0].toUpperCase() + '</div>\'">';
+          } else {
+            avatarEl.innerHTML = '<div class="pin-screen__avatar-letter">' + name[0].toUpperCase() + '</div>';
+          }
         }
-        html += '</div>';
-        html += '<div class="child-welcome-name">Привет, ' + name + '!</div>';
-        welcomeEl.innerHTML = html;
+        if (nameEl) nameEl.textContent = 'Привет, ' + name + '!';
 
         picker.style.display = 'none';
         pinSection.style.display = '';
+        pin = '';
+        updateDots();
       });
     });
 
-    backBtn.addEventListener('click', function() {
-      pinSection.style.display = 'none';
-      picker.style.display = '';
-      childIdInput.value = '';
-      // Clear PIN state
-      document.querySelectorAll('.pin-dot').forEach(function(d) {
-        d.classList.remove('filled');
+    var backBtn = document.getElementById('pin-back-btn');
+    if (backBtn) {
+      backBtn.addEventListener('click', function() {
+        pinSection.style.display = 'none';
+        picker.style.display = '';
+        childIdInput.value = '';
+        pin = '';
+        updateDots();
+        if (errorEl) errorEl.textContent = '';
       });
-      var err = document.getElementById('pin-error');
-      if (err) { err.textContent = ''; err.style.display = 'none'; }
-    });
+    }
   })();
   </script>
 </body>
