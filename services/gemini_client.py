@@ -10,11 +10,15 @@ from services.prompts import (
     GENERATE_IMAGE_PROMPT_PROMPT,
     METHODOLOGIST_PROMPT,
     TUTOR_GAMER_JSON_PROMPT,
+    VISUAL_LAYOUT_PROMPT,
 )
 
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
-REGION = "global"
-MODEL_NAME = "gemini-3.1-pro-preview"
+PRO_REGION = "global"
+LITE_REGION = "us-central1"
+MODEL_STEP1 = "gemini-2.5-pro"
+MODEL_STEP2 = "gemini-3.1-pro-preview"
+FLASH_LITE_MODEL_NAME = "gemini-2.5-flash-lite"
 
 CHILD_SAFETY_SETTINGS = [
     SafetySetting(
@@ -36,19 +40,30 @@ CHILD_SAFETY_SETTINGS = [
 ]
 
 
-def _get_model() -> GenerativeModel:
-    # Stub mode if GOOGLE_CLOUD_PROJECT is not set
+def _init_vertex(location: str):
+    """Initialize Vertex AI with a specific location."""
     if not PROJECT_ID:
-        return None
-
+        return False
     credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     if credentials_path:
         from google.oauth2 import service_account
         credentials = service_account.Credentials.from_service_account_file(credentials_path)
-        vertexai.init(project=PROJECT_ID, location=REGION, credentials=credentials)
+        vertexai.init(project=PROJECT_ID, location=location, credentials=credentials)
     else:
-        vertexai.init(project=PROJECT_ID, location=REGION)
-    return GenerativeModel(MODEL_NAME)
+        vertexai.init(project=PROJECT_ID, location=location)
+    return True
+
+
+def _get_model(model_name: str = None) -> GenerativeModel:
+    if not _init_vertex(PRO_REGION):
+        return None
+    return GenerativeModel(model_name or MODEL_STEP1)
+
+
+def _get_flash_lite_model() -> GenerativeModel:
+    if not _init_vertex(LITE_REGION):
+        return None
+    return GenerativeModel(FLASH_LITE_MODEL_NAME)
 
 
 def _is_blocked_by_safety(response) -> bool:
@@ -82,15 +97,15 @@ def generate_explanation(question: str) -> tuple[str, dict]:
 
     Stub mode: if GOOGLE_CLOUD_PROJECT is not set, returns stub data.
     """
-    model = _get_model()
+    model_step1 = _get_model(MODEL_STEP1)
 
     # Stub mode
-    if model is None:
+    if model_step1 is None:
         return ("stub", _stub_lesson(question))
 
-    # Step 1: methodologist (plain text)
+    # Step 1: methodologist (gemini-2.5-pro)
     step1_prompt = METHODOLOGIST_PROMPT.format(question=question)
-    step1_response = model.generate_content(step1_prompt, safety_settings=CHILD_SAFETY_SETTINGS)
+    step1_response = model_step1.generate_content(step1_prompt, safety_settings=CHILD_SAFETY_SETTINGS)
 
     # Check safety rating
     if _is_blocked_by_safety(step1_response):
@@ -98,12 +113,13 @@ def generate_explanation(question: str) -> tuple[str, dict]:
 
     methodologist_output = step1_response.text.strip()
 
-    # Step 2: tutor-gamer → strict JSON
+    # Step 2: tutor-gamer → strict JSON (gemini-3.1-pro-preview)
+    model_step2 = _get_model(MODEL_STEP2)
     step2_prompt = TUTOR_GAMER_JSON_PROMPT.format(
         question=question,
         methodologist_output=methodologist_output,
     )
-    step2_response = model.generate_content(
+    step2_response = model_step2.generate_content(
         step2_prompt,
         generation_config=GenerationConfig(response_mime_type="application/json"),
         safety_settings=CHILD_SAFETY_SETTINGS,
@@ -120,7 +136,7 @@ def generate_explanation(question: str) -> tuple[str, dict]:
 
 def generate_image_prompt(explanation: str) -> str:
     """Генерирует промт для иллюстрации на основе финального текста урока."""
-    model = _get_model()
+    model = _get_flash_lite_model()
 
     # Stub mode
     if model is None:
@@ -133,7 +149,7 @@ def generate_image_prompt(explanation: str) -> str:
 
 def generate_image_prompt_fallback(explanation: str) -> str:
     """Запасной промт (kids cosplay стратегия) — используется при IMAGE_PROHIBITED_CONTENT."""
-    model = _get_model()
+    model = _get_flash_lite_model()
 
     # Stub mode
     if model is None:
@@ -142,6 +158,90 @@ def generate_image_prompt_fallback(explanation: str) -> str:
     prompt = GENERATE_IMAGE_PROMPT_FALLBACK_PROMPT.format(story=explanation)
     response = model.generate_content(prompt, safety_settings=CHILD_SAFETY_SETTINGS)
     return response.text.strip()
+
+
+def generate_visual_layout(story_blocks: list[dict], topic: str, subject: str,
+                           character_name: str = "Искатель",
+                           character_emoji: str = "🦊") -> list[dict]:
+    """
+    Step 3: Visual Layout (Gemini Flash).
+    Takes story_blocks from Step 2 and returns rich visual_blocks for theory_renderer.
+
+    Stub mode: returns a simple fallback layout.
+    """
+    import logging
+    logger = logging.getLogger("kidion")
+
+    model = _get_flash_lite_model()
+
+    if model is None:
+        return _stub_visual_layout(story_blocks, topic, subject,
+                                   character_name, character_emoji)
+
+    story_blocks_json = json.dumps(story_blocks, ensure_ascii=False, indent=2)
+    prompt = VISUAL_LAYOUT_PROMPT.format(
+        topic=topic,
+        subject=subject,
+        character_name=character_name,
+        character_emoji=character_emoji,
+        story_blocks_json=story_blocks_json,
+    )
+
+    try:
+        response = model.generate_content(
+            prompt,
+            generation_config=GenerationConfig(response_mime_type="application/json"),
+            safety_settings=CHILD_SAFETY_SETTINGS,
+        )
+
+        if _is_blocked_by_safety(response):
+            logger.warning("Visual layout blocked by safety, using fallback")
+            return _stub_visual_layout(story_blocks, topic, subject,
+                                       character_name, character_emoji)
+
+        raw = response.text.strip()
+        # Response is a JSON array
+        cleaned = re.sub(r"^```(?:json)?\s*", "", raw, flags=re.MULTILINE)
+        cleaned = re.sub(r"```\s*$", "", cleaned.strip(), flags=re.MULTILINE)
+        cleaned = cleaned.strip()
+        result = json.loads(cleaned)
+        if isinstance(result, list) and len(result) >= 3:
+            return result
+        logger.warning("Visual layout returned unexpected format, using fallback")
+    except Exception:
+        logger.exception("Visual layout generation failed, using fallback")
+
+    return _stub_visual_layout(story_blocks, topic, subject,
+                               character_name, character_emoji)
+
+
+def _stub_visual_layout(story_blocks: list[dict], topic: str, subject: str,
+                        character_name: str, character_emoji: str) -> list[dict]:
+    """Fallback: convert plain story_blocks into basic visual blocks."""
+    blocks = [
+        {"type": "title", "label": subject, "text": topic,
+         "emoji": story_blocks[0].get("emoji", "📚") if story_blocks else "📚"},
+    ]
+
+    for i, sb in enumerate(story_blocks):
+        text = sb.get("text", "")
+        emoji = sb.get("emoji", "")
+        if i == 0:
+            blocks.append({
+                "type": "speech",
+                "avatar_emoji": character_emoji,
+                "name": character_name,
+                "text": text,
+            })
+        else:
+            blocks.append({"type": "text", "text": text})
+
+    blocks.append({
+        "type": "summary",
+        "title": "Что мы узнали",
+        "items": [sb.get("text", "")[:80] for sb in story_blocks if sb.get("text")],
+    })
+    return blocks
 
 
 _STUB_LESSONS = {
