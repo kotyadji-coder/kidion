@@ -8,18 +8,20 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
 <style>
-  /* Override base styles for this page */
-  body[data-page="subject-map"] { font-family: "Nunito", system-ui, sans-serif; }
+  /* ═══ Hide default kid nav, use custom header ═══ */
+  body[data-page="subject-map"] .kid-nav { display: none; }
   body[data-page="subject-map"] .kid-main { padding: 0; }
   body[data-page="subject-map"] {
+    font-family: "Nunito", system-ui, sans-serif;
     background:
       radial-gradient(1200px 700px at 80% -10%, #ffe2c8 0%, transparent 60%),
       radial-gradient(900px 600px at 0% 20%, #e2d4ff 0%, transparent 55%),
       linear-gradient(180deg, #d6ecff 0%, #eaf3ff 40%, #f6efff 100%);
+    -webkit-font-smoothing: antialiased;
   }
 
-  /* ---------- Tokens ---------- */
-  .smap {
+  /* ═══ TOKENS ═══ */
+  :root {
     --ink: #2a2452;
     --ink-soft: #6b6791;
     --ink-mute: #9b9bbb;
@@ -35,14 +37,16 @@
     --gray: #c5cad6;
     --gray-deep: #8a90a3;
     --r-pill: 999px;
+    --r-card: 28px;
     --shadow-card: 0 6px 0 rgba(42,36,82,0.06), 0 18px 40px -18px rgba(42,36,82,0.18);
   }
 
-  /* ---------- Sky decoration ---------- */
+  * { box-sizing: border-box; }
+
+  /* ═══ SKY DECO ═══ */
   .sky-deco { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
   .cloud {
-    position: absolute; background: #ffffff; border-radius: 100px;
-    opacity: 0.7; filter: blur(0.5px);
+    position: absolute; background: #fff; border-radius: 100px; opacity: 0.7; filter: blur(0.5px);
     box-shadow: 28px -10px 0 -4px #fff, -28px -8px 0 -6px #fff, 52px 0 0 -10px #fff, -52px 0 0 -10px #fff;
   }
   .cloud.c1 { width: 140px; height: 36px; top: 110px; left: 6%; }
@@ -50,236 +54,217 @@
   .cloud.c3 { width: 120px; height: 32px; top: 520px; left: 18%; opacity: 0.45; }
   .cloud.c4 { width: 160px; height: 40px; top: 760px; right: 14%; opacity: 0.5; }
 
-  /* ---------- Program header ---------- */
-  .smap { position: relative; z-index: 1; min-height: calc(100vh - 60px); padding-bottom: 40px; }
-
-  .smap__program {
-    max-width: 1200px; margin: 0 auto; padding: 28px 28px 0; text-align: center;
+  /* ═══ HEADER ═══ */
+  .kh {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    background: rgba(255,255,255,0.72);
+    border-bottom: 1px solid rgba(42,36,82,0.06);
   }
-  .smap__crumbs {
+  .kh-inner {
+    max-width: 1200px; margin: 0 auto; padding: 14px 28px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .kh-logo {
+    display: flex; align-items: center; gap: 10px; text-decoration: none;
+  }
+  .kh-logo-mark {
+    width: 44px; height: 44px; border-radius: 14px;
+    background: linear-gradient(160deg, #ffb05a 0%, #ff7a3a 60%, #e85b1a 100%);
+    display: grid; place-items: center;
+    box-shadow: 0 4px 0 #c4441a, 0 10px 22px -8px rgba(232,91,26,0.6);
+    transform: rotate(-6deg); position: relative;
+  }
+  .kh-logo-mark svg { width: 26px; height: 26px; }
+  .kh-logo-mark::after {
+    content: ""; position: absolute; width: 10px; height: 10px; top: 4px; right: 6px;
+    background: #fff; opacity: 0.6; border-radius: 50%; filter: blur(1px);
+  }
+  .kh-logo-text {
+    font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 24px;
+    letter-spacing: -0.5px; color: var(--ink);
+  }
+  .kh-logo-text .dot { color: var(--accent); }
+
+  .kh-subject {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px 8px 8px; background: var(--paper);
+    border: 1px solid var(--rim); border-radius: var(--r-pill);
+    box-shadow: 0 2px 0 rgba(42,36,82,0.04); cursor: pointer;
+    font-family: "Baloo 2", sans-serif; font-weight: 700; color: var(--ink);
+    font-size: 14px; border: 1px solid var(--rim);
+  }
+  .kh-subject-icon {
+    width: 30px; height: 30px; border-radius: 10px;
+    display: grid; place-items: center;
+  }
+
+  .kh-badges { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+  .kh-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px 6px 6px; background: var(--paper);
+    border-radius: var(--r-pill); border: 1px solid var(--rim);
+    font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 18px;
+    color: var(--ink); box-shadow: 0 2px 0 rgba(42,36,82,0.05);
+  }
+  .kh-badge-ico {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center; color: #fff;
+  }
+  .kh-badge--streak .kh-badge-ico { background: linear-gradient(160deg, #ffb663, #ff6a3d); box-shadow: 0 2px 0 #e84a18; }
+  .kh-badge--stars .kh-badge-ico { background: linear-gradient(160deg, #ffe27a, var(--gold)); box-shadow: 0 2px 0 var(--gold-deep); }
+
+  .kh-right { display: flex; align-items: center; gap: 10px; margin-left: 14px; }
+  .kh-btn {
+    width: 44px; height: 44px; border-radius: 14px;
+    background: var(--paper); border: 1px solid var(--rim);
+    display: grid; place-items: center; cursor: pointer; color: var(--ink);
+    box-shadow: 0 2px 0 rgba(42,36,82,0.05);
+  }
+  .kh-avatar {
+    width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--accent);
+    background: #ffe7d4; cursor: pointer; overflow: hidden;
+    display: grid; place-items: center; box-shadow: 0 3px 0 var(--accent-deep);
+    font-family: "Baloo 2"; font-weight: 800; font-size: 18px; color: var(--accent-deep);
+    text-decoration: none;
+  }
+
+  /* ═══ PROGRAM BLOCK ═══ */
+  .prog {
+    max-width: 1200px; margin: 36px auto 0; padding: 0 28px;
+    text-align: center; position: relative; z-index: 1;
+  }
+  .prog-crumbs {
     display: inline-flex; align-items: center; gap: 8px;
     color: var(--ink-soft); font-weight: 700; font-size: 13px;
     letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 8px;
   }
-  .smap__crumb-dot { width: 4px; height: 4px; background: var(--ink-mute); border-radius: 50%; }
-  .smap__title {
+  .prog-crumbs .dot { width: 4px; height: 4px; background: var(--ink-mute); border-radius: 50%; }
+  .prog h1 {
     font-family: "Baloo 2", sans-serif; font-weight: 800;
-    font-size: clamp(30px, 5vw, 50px); margin: 0; letter-spacing: -1px; color: var(--ink);
+    font-size: clamp(36px, 5vw, 56px); margin: 0; letter-spacing: -1px; color: var(--ink);
   }
-  .smap__title .accent { color: var(--accent); }
-  .smap__subtitle {
-    font-family: "Baloo 2", sans-serif; font-weight: 700;
-    font-size: 18px; color: var(--ink-soft); margin: 6px 0 0;
-  }
-
-  /* Progress bar */
-  .smap__progress-bar {
-    margin: 18px auto 0; max-width: 480px;
+  .prog h1 .accent { color: var(--accent); }
+  .prog-bar {
+    margin: 22px auto 0; max-width: 540px;
     background: var(--paper); border: 1px solid var(--rim);
     border-radius: var(--r-pill); padding: 6px 6px 6px 18px;
     display: flex; align-items: center; gap: 14px;
     box-shadow: var(--shadow-card);
   }
-  .smap__progress-label { font-weight: 800; color: var(--ink-soft); font-size: 13px; white-space: nowrap; }
-  .smap__progress-track {
-    flex: 1; height: 14px; background: #eee5ff; border-radius: var(--r-pill); overflow: hidden; position: relative;
+  .prog-bar .label { font-weight: 800; color: var(--ink-soft); font-size: 14px; }
+  .prog-track {
+    flex: 1; height: 14px; background: #eee5ff;
+    border-radius: var(--r-pill); overflow: hidden; position: relative;
   }
-  .smap__progress-fill {
-    display: block; height: 100%; background: linear-gradient(90deg, #7be0a3, var(--ok));
-    border-radius: var(--r-pill); position: relative; transition: width 0.5s ease;
+  .prog-fill {
+    display: block; height: 100%;
+    background: linear-gradient(90deg, #7be0a3, var(--ok));
+    border-radius: var(--r-pill); position: relative; transition: width 0.5s;
   }
-  .smap__progress-fill::after {
+  .prog-fill::after {
     content: ""; position: absolute; inset: 2px 2px auto 2px; height: 4px;
     border-radius: 4px; background: rgba(255,255,255,0.5);
   }
-  .smap__progress-num {
+  .prog-num {
     background: var(--ok); color: #fff; font-weight: 800;
     padding: 6px 12px; border-radius: var(--r-pill);
-    font-family: "Baloo 2", sans-serif; box-shadow: 0 2px 0 var(--ok-deep); font-size: 13px;
-    white-space: nowrap;
+    font-family: "Baloo 2", sans-serif; box-shadow: 0 2px 0 var(--ok-deep); font-size: 14px;
   }
 
-  /* ---------- Map area ---------- */
-  .smap__map { max-width: 1200px; margin: 28px auto 0; padding: 0 28px; position: relative; z-index: 1; }
+  /* ═══ MAP ═══ */
+  .map-area {
+    max-width: 1200px; margin: 28px auto 120px; padding: 0 28px;
+    position: relative; z-index: 1;
+  }
 
-  /* Island wrapper */
-  .smap__island-wrap { position: relative; margin: 60px 0 0; }
-  .smap__island-wrap:first-child { margin-top: 32px; }
+  /* Island wrapper — tag lives here OUTSIDE overflow:hidden island */
+  .island-wrap { position: relative; margin: 60px 0 0; }
+  .island-wrap:first-child { margin-top: 32px; }
 
-  .smap__island {
+  .island {
     position: relative; padding: 28px 32px 80px;
     border-radius: 56% 44% 52% 48% / 70% 60% 60% 70%;
     box-shadow: inset 0 -18px 0 rgba(0,0,0,0.07), inset 0 6px 0 rgba(255,255,255,0.5), 0 30px 60px -30px rgba(42,36,82,0.25);
     overflow: hidden;
   }
-
-  /* Island colors cycle: mint, peach, lilac */
-  .smap__island--mint  { background: #b6ecc6; }
-  .smap__island--peach { background: #ffd6a8; }
-  .smap__island--lilac { background: #d8c4ff; }
+  .island--mint  { background: #b6ecc6; }
+  .island--peach { background: #ffd6a8; }
+  .island--lilac { background: #d8c4ff; }
 
   /* Grass tufts */
-  .smap__island::before {
+  .island::before {
     content: ""; position: absolute; inset: auto 0 0 0; height: 28px; pointer-events: none;
   }
-  .smap__island--mint::before {
-    background: radial-gradient(10px 8px at 8% 0%, #6fcf8c 60%, transparent 61%), radial-gradient(8px 6px at 22% 4px, #6fcf8c 60%, transparent 61%), radial-gradient(12px 9px at 44% 0%, #6fcf8c 60%, transparent 61%), radial-gradient(8px 6px at 62% 4px, #6fcf8c 60%, transparent 61%), radial-gradient(11px 8px at 78% 0%, #6fcf8c 60%, transparent 61%);
-  }
-  .smap__island--peach::before {
-    background: radial-gradient(10px 8px at 8% 0%, #f3a866 60%, transparent 61%), radial-gradient(8px 6px at 22% 4px, #f3a866 60%, transparent 61%), radial-gradient(12px 9px at 44% 0%, #f3a866 60%, transparent 61%), radial-gradient(8px 6px at 62% 4px, #f3a866 60%, transparent 61%), radial-gradient(11px 8px at 78% 0%, #f3a866 60%, transparent 61%);
-  }
-  .smap__island--lilac::before {
-    background: radial-gradient(10px 8px at 8% 0%, #a888ee 60%, transparent 61%), radial-gradient(8px 6px at 22% 4px, #a888ee 60%, transparent 61%), radial-gradient(12px 9px at 44% 0%, #a888ee 60%, transparent 61%), radial-gradient(8px 6px at 62% 4px, #a888ee 60%, transparent 61%), radial-gradient(11px 8px at 78% 0%, #a888ee 60%, transparent 61%);
-  }
+  .island--mint::before { background: radial-gradient(10px 8px at 8% 0%,#6fcf8c 60%,transparent 61%),radial-gradient(8px 6px at 22% 4px,#6fcf8c 60%,transparent 61%),radial-gradient(12px 9px at 44% 0%,#6fcf8c 60%,transparent 61%),radial-gradient(8px 6px at 62% 4px,#6fcf8c 60%,transparent 61%),radial-gradient(11px 8px at 78% 0%,#6fcf8c 60%,transparent 61%); }
+  .island--peach::before { background: radial-gradient(10px 8px at 8% 0%,#f3a866 60%,transparent 61%),radial-gradient(8px 6px at 22% 4px,#f3a866 60%,transparent 61%),radial-gradient(12px 9px at 44% 0%,#f3a866 60%,transparent 61%),radial-gradient(8px 6px at 62% 4px,#f3a866 60%,transparent 61%),radial-gradient(11px 8px at 78% 0%,#f3a866 60%,transparent 61%); }
+  .island--lilac::before { background: radial-gradient(10px 8px at 8% 0%,#a888ee 60%,transparent 61%),radial-gradient(8px 6px at 22% 4px,#a888ee 60%,transparent 61%),radial-gradient(12px 9px at 44% 0%,#a888ee 60%,transparent 61%),radial-gradient(8px 6px at 62% 4px,#a888ee 60%,transparent 61%),radial-gradient(11px 8px at 78% 0%,#a888ee 60%,transparent 61%); }
 
-  /* Island tag (label) */
-  .smap__island-tag {
+  /* Island tag */
+  .island-tag {
     position: absolute; top: -22px; left: 32px; z-index: 4;
     background: var(--paper); border-radius: var(--r-pill);
     padding: 8px 18px 8px 8px; border: 1px solid var(--rim);
     box-shadow: var(--shadow-card);
     display: inline-flex; align-items: center; gap: 10px;
   }
-  .smap__island-tag .num {
+  .island-tag .num {
     width: 32px; height: 32px; border-radius: 50%;
     display: grid; place-items: center;
     font-family: "Baloo 2"; font-weight: 800; font-size: 16px;
   }
-  .smap__island--mint + .smap__island-tag .num,
-  .smap__island-tag--mint .num { background: linear-gradient(160deg, #ffd479, #f7a93a); color: #5b2a00; box-shadow: 0 2px 0 #b76b00; }
-  .smap__island-tag--peach .num { background: linear-gradient(160deg, #ffb46e, var(--accent)); color: #fff; box-shadow: 0 2px 0 var(--accent-deep); }
-  .smap__island-tag--lilac .num { background: linear-gradient(160deg, #c2a3ff, #a888ee); color: #fff; box-shadow: 0 2px 0 #6a47b8; }
-  .smap__island-tag .name { font-family: "Baloo 2"; font-weight: 800; color: var(--ink); font-size: 15px; }
-  .smap__island-tag .meta { font-weight: 800; color: var(--ink-mute); font-size: 12px; }
+  .island-tag--mint .num { background: linear-gradient(160deg,#ffd479,#f7a93a); color: #5b2a00; box-shadow: 0 2px 0 #b76b00; }
+  .island-tag--peach .num { background: linear-gradient(160deg,#ffb46e,var(--accent)); color: #fff; box-shadow: 0 2px 0 var(--accent-deep); }
+  .island-tag--lilac .num { background: linear-gradient(160deg,#c2a3ff,#a888ee); color: #fff; box-shadow: 0 2px 0 #6a47b8; }
+  .island-tag .name { font-family: "Baloo 2"; font-weight: 800; color: var(--ink); font-size: 16px; }
+  .island-tag .meta { font-weight: 800; color: var(--ink-mute); font-size: 13px; }
 
-  /* ---------- Path & nodes (Desktop: horizontal) ---------- */
-  .smap__path { position: relative; height: 220px; margin-top: 12px; }
-  .smap__path svg {
-    position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;
-  }
-  .smap__path .path-mobile { display: none; }
+  /* ═══ PATH & NODES ═══ */
+  .path { position: relative; height: 220px; margin-top: 12px; }
+  .path svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .path .path-mobile { display: none; }
 
-  .smap__nodes {
-    position: relative; display: grid; grid-template-columns: repeat(var(--node-count, 5), 1fr);
+  .nodes {
+    position: relative; display: grid;
+    grid-template-columns: repeat(var(--cols, 5), 1fr);
     height: 100%; align-items: center;
   }
-  .smap__node-slot { display: grid; place-items: center; position: relative; }
-  .smap__node-slot.up   { transform: translateY(-30px); }
-  .smap__node-slot.down { transform: translateY(30px); }
+  .node-slot { display: grid; place-items: center; position: relative; }
+  .node-slot.up   { transform: translateY(-30px); }
+  .node-slot.down { transform: translateY(30px); }
 
-  /* Lesson node */
-  .smap__node {
-    --node-size: 92px; width: var(--node-size); height: var(--node-size);
+  /* The lesson node */
+  .node {
+    --node-size: 92px;
+    width: var(--node-size); height: var(--node-size);
     position: relative; display: grid; place-items: center;
     cursor: pointer; transition: transform .15s ease; user-select: none;
   }
-  .smap__node:hover { transform: translateY(-2px); }
-  .smap__node:active { transform: translateY(2px); }
+  .node:hover { transform: translateY(-2px); }
+  .node:active { transform: translateY(2px); }
 
-  .smap__disc {
+  .disc {
     width: 100%; height: 100%; border-radius: 50%;
     display: grid; place-items: center; position: relative; color: #fff;
     transition: transform .25s ease;
   }
 
-  /* State: COMPLETED */
-  .smap__node--done .smap__disc {
-    background: radial-gradient(circle at 35% 30%, #ffe27a, var(--gold) 60%, var(--gold-deep) 100%);
-    box-shadow: 0 6px 0 var(--gold-deep), 0 0 0 6px #fff, 0 0 0 8px #ffe27a, 0 18px 32px -14px rgba(233,169,15,0.55);
-  }
-  .smap__node--done .smap__disc::after {
-    content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 70%; height: 70%; border-radius: 50%; border: 3px dashed rgba(255,255,255,0.55); pointer-events: none;
-  }
-  .smap__node--done:hover .smap__disc { transform: rotate(8deg); }
-  .smap__node--done .smap__node-icon { color: #fff; filter: drop-shadow(0 2px 0 var(--gold-deep)); }
-  .smap__ribbon {
-    position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%);
-    display: flex; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.15));
-  }
-  .smap__ribbon .tail { width: 12px; height: 18px; background: var(--ok); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 70%, 0 100%); }
-  .smap__ribbon .tail.right { background: var(--ok-deep); }
-
-  /* State: ACTIVE */
-  .smap__node--active { z-index: 3; }
-  .smap__node--active .smap__disc {
-    background: radial-gradient(circle at 35% 30%, #ffb98a, var(--accent) 55%, var(--accent-deep) 100%);
-    box-shadow: 0 6px 0 var(--accent-deep), 0 0 0 6px #fff, 0 0 0 8px var(--accent-soft), 0 0 40px 8px rgba(255,122,58,0.45);
-    animation: smap-pulse 1.6s ease-in-out infinite;
-  }
-  @keyframes smap-pulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 6px 0 #e85b1a, 0 0 0 6px #fff, 0 0 0 8px #ffd1b8, 0 0 30px 6px rgba(255,122,58,0.45); }
-    50%      { transform: scale(1.06); box-shadow: 0 6px 0 #e85b1a, 0 0 0 6px #fff, 0 0 0 10px #ffd1b8, 0 0 60px 14px rgba(255,122,58,0.7); }
-  }
-  .smap__start-tag {
-    position: absolute; top: -34px; left: 50%; transform: translateX(-50%);
-    background: var(--paper); color: var(--accent);
-    font-family: "Baloo 2"; font-weight: 800; font-size: 13px;
-    padding: 4px 12px; border-radius: var(--r-pill);
-    box-shadow: 0 3px 0 var(--accent-deep); border: 2px solid var(--accent);
-    white-space: nowrap; animation: smap-bobble 1.6s ease-in-out infinite;
-  }
-  .smap__start-tag::after {
-    content: ""; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%) rotate(45deg);
-    width: 10px; height: 10px; background: var(--paper);
-    border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent);
-  }
-  @keyframes smap-bobble {
-    0%, 100% { transform: translate(-50%, 0); }
-    50%      { transform: translate(-50%, -4px); }
-  }
-
-  /* State: FOGGY */
-  .smap__node--foggy .smap__disc {
-    background: radial-gradient(circle at 35% 30%, #ffb98a, var(--accent) 55%, var(--accent-deep) 100%);
-    box-shadow: 0 6px 0 var(--accent-deep), 0 0 0 6px #fff, 0 0 0 8px var(--accent-soft);
-    opacity: 0.92;
-  }
-  .smap__node--foggy::before {
-    content: ""; position: absolute; width: 130%; height: 26px; left: -15%; bottom: -6px;
-    background: #fff; border-radius: 100px;
-    box-shadow: 18px -6px 0 -4px #fff, -22px -8px 0 -6px #fff, 40px -2px 0 -10px #fff, -44px -4px 0 -12px #fff;
-    opacity: 0.92; z-index: 3; pointer-events: none; animation: smap-fog 5s ease-in-out infinite;
-  }
-  .smap__node--foggy::after {
-    content: ""; position: absolute; width: 34px; height: 16px;
-    background: #fff; border-radius: 100px; top: -4px; right: -8px;
-    box-shadow: -12px 4px 0 -2px #fff, 14px 4px 0 -3px #fff;
-    opacity: 0.95; z-index: 3; pointer-events: none;
-  }
-  @keyframes smap-fog {
-    0%, 100% { transform: translateX(-3px); }
-    50%      { transform: translateX(5px); }
-  }
-  .smap__node--foggy .smap__node-icon { color: #fff; opacity: 0.95; }
-
-  /* State: LOCKED */
-  .smap__node--locked .smap__disc {
-    background: radial-gradient(circle at 35% 30%, #e3e7ef, var(--gray) 55%, var(--gray-deep) 100%);
-    box-shadow: 0 6px 0 var(--gray-deep), 0 0 0 6px #fff, 0 0 0 8px #eef0f5;
-    filter: saturate(0.2);
-  }
-  .smap__node--locked .smap__node-icon { color: #6c7388; }
-  .smap__node--locked { cursor: default; }
-
-  /* Icon inside disc */
-  .smap__node-icon {
+  /* Icon absolutely centered inside disc */
+  .node .icon {
     width: 36px; height: 36px; position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%); color: #fff; z-index: 1; display: block;
   }
 
   /* Number badge */
-  .smap__num-badge {
+  .node .num-badge {
     position: absolute; top: -6px; right: -6px; width: 26px; height: 26px;
     background: #fff; color: var(--ink); border-radius: 50%;
     border: 2px solid var(--rim); display: grid; place-items: center;
     font-family: "Baloo 2"; font-weight: 800; font-size: 12px; z-index: 4;
   }
-  .smap__node--active .smap__num-badge { color: var(--accent); border-color: var(--accent); }
-  .smap__node--done .smap__num-badge { background: var(--ok); color: #fff; border-color: #fff; }
 
   /* Label below node */
-  .smap__node-label {
+  .node-label {
     position: absolute; bottom: -34px; left: 50%; transform: translateX(-50%);
     background: rgba(255,255,255,0.8); backdrop-filter: blur(6px);
     padding: 3px 10px; border-radius: var(--r-pill);
@@ -287,120 +272,234 @@
     color: var(--ink-soft); white-space: nowrap; border: 1px solid var(--rim);
   }
 
-  /* ---------- Empty state ---------- */
-  .smap__empty { text-align: center; padding: 80px 20px; }
+  /* ═══ STATE: DONE ═══ */
+  .node.done .disc {
+    background: radial-gradient(circle at 35% 30%, #ffe27a, var(--gold) 60%, var(--gold-deep) 100%);
+    box-shadow: 0 6px 0 var(--gold-deep), 0 0 0 6px #fff, 0 0 0 8px #ffe27a, 0 18px 32px -14px rgba(233,169,15,0.55);
+  }
+  .node.done .disc::after {
+    content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 70%; height: 70%; border-radius: 50%; border: 3px dashed rgba(255,255,255,0.55); pointer-events: none;
+  }
+  .node.done:hover .disc { transform: rotate(8deg); }
+  .node.done .icon { filter: drop-shadow(0 2px 0 var(--gold-deep)); }
+  .node.done .num-badge { background: var(--ok); color: #fff; border-color: #fff; }
+  .ribbon {
+    position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%);
+    display: flex; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.15));
+  }
+  .ribbon .tail { width: 12px; height: 18px; background: var(--ok); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 70%, 0 100%); }
+  .ribbon .tail.right { background: var(--ok-deep); }
 
-  /* ---------- Loading ---------- */
-  .smap__loading { display: flex; justify-content: center; padding: 80px 0; }
+  /* ═══ STATE: ACTIVE ═══ */
+  .node.active { z-index: 3; }
+  .node.active .disc {
+    background: radial-gradient(circle at 35% 30%, #ffb98a, var(--accent) 55%, var(--accent-deep) 100%);
+    box-shadow: 0 6px 0 var(--accent-deep), 0 0 0 6px #fff, 0 0 0 8px var(--accent-soft), 0 0 40px 8px rgba(255,122,58,0.45);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { transform: scale(1); box-shadow: 0 6px 0 var(--accent-deep), 0 0 0 6px #fff, 0 0 0 8px var(--accent-soft), 0 0 30px 6px rgba(255,122,58,0.45); }
+    50%     { transform: scale(1.06); box-shadow: 0 6px 0 var(--accent-deep), 0 0 0 6px #fff, 0 0 0 10px var(--accent-soft), 0 0 60px 14px rgba(255,122,58,0.7); }
+  }
+  .node.active .num-badge { color: var(--accent); border-color: var(--accent); }
+  .start-tag {
+    position: absolute; top: -34px; left: 50%; transform: translateX(-50%);
+    background: var(--paper); color: var(--accent);
+    font-family: "Baloo 2"; font-weight: 800; font-size: 13px;
+    padding: 4px 12px; border-radius: var(--r-pill);
+    box-shadow: 0 3px 0 var(--accent-deep); border: 2px solid var(--accent);
+    white-space: nowrap; animation: bobble 1.6s ease-in-out infinite;
+  }
+  .start-tag::after {
+    content: ""; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%) rotate(45deg);
+    width: 10px; height: 10px; background: var(--paper);
+    border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent);
+  }
+  @keyframes bobble {
+    0%,100% { transform: translate(-50%, 0); }
+    50%     { transform: translate(-50%, -4px); }
+  }
 
-  /* ========== MOBILE ========== */
+  /* ═══ STATE: FOGGY ═══ */
+  .node.foggy .disc {
+    background: radial-gradient(circle at 35% 30%, #ffb98a, var(--accent) 55%, var(--accent-deep) 100%);
+    box-shadow: 0 6px 0 var(--accent-deep), 0 0 0 6px #fff, 0 0 0 8px var(--accent-soft);
+    opacity: 0.92;
+  }
+  .node.foggy::before {
+    content: ""; position: absolute; width: 130%; height: 26px; left: -15%; bottom: -6px;
+    background: #fff; border-radius: 100px;
+    box-shadow: 18px -6px 0 -4px #fff, -22px -8px 0 -6px #fff, 40px -2px 0 -10px #fff, -44px -4px 0 -12px #fff;
+    opacity: 0.92; z-index: 3; pointer-events: none; animation: fogDrift 5s ease-in-out infinite;
+  }
+  .node.foggy::after {
+    content: ""; position: absolute; width: 34px; height: 16px;
+    background: #fff; border-radius: 100px; top: -4px; right: -8px;
+    box-shadow: -12px 4px 0 -2px #fff, 14px 4px 0 -3px #fff;
+    opacity: 0.95; z-index: 3; pointer-events: none;
+  }
+  @keyframes fogDrift {
+    0%,100% { transform: translateX(-3px); }
+    50%     { transform: translateX(5px); }
+  }
+  .node.foggy .icon { color: #fff; opacity: 0.95; }
+
+  /* ═══ STATE: LOCKED ═══ */
+  .node.locked .disc {
+    background: radial-gradient(circle at 35% 30%, #e3e7ef, var(--gray) 55%, var(--gray-deep) 100%);
+    box-shadow: 0 6px 0 var(--gray-deep), 0 0 0 6px #fff, 0 0 0 8px #eef0f5;
+    filter: saturate(0.2);
+  }
+  .node.locked .icon { color: #6c7388; }
+  .node.locked { cursor: default; }
+  .node.locked:hover { transform: none; }
+
+  /* ═══ EMPTY / LOADING ═══ */
+  .map-empty { text-align: center; padding: 80px 20px; color: var(--ink-soft); font-size: 16px; font-weight: 600; }
+
+  /* ═══ RESPONSIVE (MOBILE) ═══ */
   @media (max-width: 860px) {
-    .smap__program { padding: 20px 16px 0; }
-    .smap__title { font-size: 26px; }
-    .smap__subtitle { font-size: 15px; }
-    .smap__map { padding: 0 16px; margin: 16px auto 0; }
+    .kh-inner { padding: 12px 16px; gap: 10px; }
+    .kh-subject { display: none; }
+    .kh-logo-text { font-size: 20px; }
+    .kh-logo-mark { width: 38px; height: 38px; border-radius: 12px; }
+    .kh-badges { gap: 6px; }
+    .kh-badge { font-size: 15px; padding: 3px 10px 3px 3px; }
+    .kh-badge-ico { width: 26px; height: 26px; }
+    .kh-badge-ico svg { width: 14px; height: 14px; }
+    .kh-right { display: none; }
 
-    .smap__island-wrap { margin: 80px 0 0; }
-    .smap__island {
-      padding: 32px 14px 56px; border-radius: 36px;
-    }
-    .smap__island::before { display: none; }
-    .smap__island-tag { left: 50%; transform: translateX(-50%); }
-    .smap__island-tag .meta { display: none; }
+    .prog { margin-top: 24px; padding: 0 16px; }
+    .prog h1 { font-size: 28px; }
 
-    .smap__path { height: auto; min-height: 600px; margin-top: 28px; }
-    .smap__path .path-desktop { display: none; }
-    .smap__path .path-mobile { display: block; }
+    .map-area { padding: 0 16px; margin: 22px auto 60px; }
 
-    .smap__nodes {
+    .island-wrap { margin: 80px 0 0; }
+    .island { padding: 32px 14px 56px; border-radius: 36px; }
+    .island::before { display: none; }
+    .island-tag { left: 50%; transform: translateX(-50%); }
+    .island-tag .meta { display: none; }
+
+    .path { height: auto; margin-top: 28px; }
+    .path .path-desktop { display: none; }
+    .path .path-mobile { display: block; }
+
+    .nodes {
       display: block; position: relative; height: 100%;
-      grid-template-columns: none;
     }
-    .smap__node-slot {
-      position: absolute; transform: translate(-50%, -50%) !important;
+    .node-slot {
+      position: absolute !important; transform: translate(-50%, -50%) !important;
     }
-    /* Positions set dynamically via JS, but fallback: */
-    .smap__node-label { bottom: -28px; font-size: 11px; padding: 2px 8px; }
-    .smap__start-tag { top: -30px; }
+    .node-label { bottom: -28px; font-size: 11px; padding: 2px 8px; }
+    .start-tag { top: -30px; }
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Sky decoration -->
+<!-- Sky -->
 <div class="sky-deco" aria-hidden="true">
-  <div class="cloud c1"></div>
-  <div class="cloud c2"></div>
-  <div class="cloud c3"></div>
-  <div class="cloud c4"></div>
+  <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div><div class="cloud c4"></div>
 </div>
 
-<div class="smap">
-  <!-- Program header -->
-  <div class="smap__program">
-    <div class="smap__crumbs">
-      <span>Программа</span>
-      <span class="smap__crumb-dot"></span>
-      <span>{{ child.grade }} класс</span>
-    </div>
-    <h1 class="smap__title" id="map-title"></h1>
-    <div class="smap__subtitle" id="map-subtitle"></div>
-    <div class="smap__progress-bar">
-      <span class="smap__progress-label">Прогресс</span>
-      <div class="smap__progress-track"><span class="smap__progress-fill" id="progress-fill"></span></div>
-      <span class="smap__progress-num" id="progress-num">0 / 0</span>
-    </div>
-  </div>
+<!-- Custom header (matches design) -->
+<header class="kh">
+  <div class="kh-inner">
+    <a class="kh-logo" href="/kid/home">
+      <span class="kh-logo-mark">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2.5l2.6 5.6 6.1.7-4.6 4.2 1.3 6L12 16.1 6.6 19l1.3-6L3.3 8.8l6.1-.7L12 2.5z" fill="#fff"/></svg>
+      </span>
+      <span class="kh-logo-text">KIDION<span class="dot">.Ru</span></span>
+    </a>
 
-  <!-- Map -->
-  <div class="smap__map" id="lesson-map">
-    <div class="smap__loading"><div class="spinner" style="margin:60px auto;"></div></div>
+    <button class="kh-subject" id="hdr-subject">
+      <span class="kh-subject-icon" id="hdr-subject-icon"></span>
+      <span id="hdr-subject-name">{{ subject_name }}</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="color:var(--ink-mute)"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+
+    <div class="kh-badges">
+      <div class="kh-badge kh-badge--streak" title="Дней подряд">
+        <span class="kh-badge-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3c1.5 3.5-1 4 .5 7 1.7-.6 2.5-2 2.5-3 2 2 4 4 4 7.5A7 7 0 0 1 5 14.5c0-3 1.5-4.5 3-6.5 2 1 2.5 2.5 2 4 1.5-1 2.5-3 2-9z" fill="#fff"/></svg></span>
+        <span id="hdr-streak">0</span>
+      </div>
+      <div class="kh-badge kh-badge--stars" title="Звёзды">
+        <span class="kh-badge-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2.5l2.6 5.6 6.1.7-4.6 4.2 1.3 6L12 16.1 6.6 19l1.3-6L3.3 8.8l6.1-.7L12 2.5z" fill="#fff"/></svg></span>
+        <span id="hdr-stars">{{ child.stars if child.stars is defined else 0 }}</span>
+      </div>
+    </div>
+
+    <div class="kh-right">
+      <a href="/kid/character" class="kh-avatar">{{ child.name[0]|upper }}</a>
+      <a href="/kid/home" class="kh-btn" title="Домой">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 12l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1v-9z" fill="currentColor" style="color:var(--ink-mute)"/></svg>
+      </a>
+    </div>
   </div>
-</div>
+</header>
+
+<!-- Program title -->
+<section class="prog">
+  <div class="prog-crumbs">
+    <span>Программа</span><span class="dot"></span><span>{{ child.grade }} класс</span>
+  </div>
+  <h1 id="prog-title"></h1>
+  <div class="prog-bar">
+    <span class="label">Прогресс</span>
+    <div class="prog-track"><span class="prog-fill" id="prog-fill"></span></div>
+    <span class="prog-num" id="prog-num">— / —</span>
+  </div>
+</section>
+
+<!-- Map -->
+<main class="map-area" id="lesson-map">
+  <div style="text-align:center;padding:60px 0;"><div class="spinner"></div></div>
+</main>
 {% endblock %}
 
 {% block scripts %}
 <script>
 var SUBJECT = '{{ subject }}';
-var SC = {
-  math:    {name:'Математика', icon:'rocket'},
-  russian: {name:'Русский язык', icon:'pen'},
-  world:   {name:'Окр. мир', icon:'globe'}
-}[SUBJECT] || {name:'{{ subject_name }}', icon:'book'};
-
-var ISLAND_COLORS = ['mint','peach','lilac'];
-var NODE_ICONS = {
-  done: '<svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  active: '<svg viewBox="0 0 24 24" fill="none"><path d="M13 5l-2 2 5 5-2 2 2 2 5-5-5-5z" fill="currentColor"/><path d="M7 17l-2-2-2 2 2 2zM5 13l4-4 2 2-4 4z" fill="currentColor"/><path d="M11 11l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
-  foggy: '<svg viewBox="0 0 24 24" fill="none"><path d="M3 5.5C3 4.7 3.7 4 4.5 4H10c1.1 0 2 .9 2 2v13c0-1.1-.9-2-2-2H4.5A1.5 1.5 0 0 1 3 15.5v-10z" fill="currentColor"/><path d="M21 5.5c0-.8-.7-1.5-1.5-1.5H14c-1.1 0-2 .9-2 2v13c0-1.1.9-2 2-2h5.5c.8 0 1.5-.7 1.5-1.5v-10z" fill="currentColor" opacity="0.85"/></svg>',
-  locked: '<svg viewBox="0 0 24 24" fill="none"><rect x="6" y="11" width="12" height="9" rx="2" fill="currentColor"/><path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>'
+var SUBJECTS = {
+  math:    {name:'математика', bg:'linear-gradient(160deg,#c5e8ff,#8dd0ff)', color:'#1466a6'},
+  russian: {name:'русский язык', bg:'linear-gradient(160deg,#c5ffd4,#7be0a3)', color:'#1a6b34'},
+  world:   {name:'окружающий мир', bg:'linear-gradient(160deg,#e2d4ff,#b8a0f0)', color:'#5a3dad'}
 };
+var SUB = SUBJECTS[SUBJECT] || {name:'{{ subject_name|lower }}', bg:'#eee', color:'#333'};
+
+// Set header subject icon color
+var subjIcon = document.getElementById('hdr-subject-icon');
+if (subjIcon) { subjIcon.style.background = SUB.bg; subjIcon.style.width = '30px'; subjIcon.style.height = '30px'; subjIcon.style.borderRadius = '10px'; }
+
+// Set page title
+document.getElementById('prog-title').innerHTML = 'Космическ' + (['русский'].indexOf(SUB.name.split(' ')[0]) >= 0 ? 'ий' : 'ая') + ' <span class="accent">' + esc(SUB.name) + '</span>';
+
+var COLORS = ['mint','peach','lilac'];
 
 (async () => {
   try {
     var resp = await fetch('/api/kid/subject/' + SUBJECT + '/map', {credentials:'same-origin'});
     if (!resp.ok) {
-      document.getElementById('lesson-map').innerHTML = '<div class="smap__empty"><div style="font-size:48px;margin-bottom:12px;">📚</div><div style="font-size:16px;color:#6b6791;font-weight:600;">Попроси маму или папу открыть этот предмет!</div></div>';
+      document.getElementById('lesson-map').innerHTML = '<div class="map-empty"><div style="font-size:48px;margin-bottom:12px;">📚</div>Попроси маму или папу открыть этот предмет!</div>';
       return;
     }
     renderMap(await resp.json());
   } catch(e) {
-    document.getElementById('lesson-map').innerHTML = '<p style="text-align:center;color:#6b6791;padding:40px;">Ошибка загрузки</p>';
+    document.getElementById('lesson-map').innerHTML = '<p style="text-align:center;color:var(--ink-soft);padding:40px;">Ошибка загрузки</p>';
   }
 })();
 
 function renderMap(data) {
-  var completed = data.completed_lessons || 0;
+  var done = data.completed_lessons || 0;
   var total = data.total_lessons || 0;
-  var pct = total > 0 ? Math.round(completed / total * 100) : 0;
+  var pct = total > 0 ? Math.round(done / total * 100) : 0;
 
-  // Title
-  document.getElementById('map-title').innerHTML = 'Космическ' + (SUBJECT === 'russian' ? 'ий' : 'ая') + ' <span class="accent">' + esc(SC.name.toLowerCase()) + '</span>';
-  document.getElementById('map-subtitle').textContent = '';
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-num').textContent = done + ' / ' + total;
 
-  // Progress
-  document.getElementById('progress-fill').style.width = pct + '%';
-  document.getElementById('progress-num').textContent = completed + ' / ' + total;
+  // Streak (from data if available)
+  if (data.streak) document.getElementById('hdr-streak').textContent = data.streak;
 
   var topics = data.topics || [];
   var mapEl = document.getElementById('lesson-map');
@@ -410,137 +509,116 @@ function renderMap(data) {
   for (var i = 0; i < topics.length; i++) {
     var topic = topics[i];
     var lessons = topic.lessons || [];
-    var color = ISLAND_COLORS[i % ISLAND_COLORS.length];
+    var nc = lessons.length;
+    var color = COLORS[i % COLORS.length];
     var topicDone = 0;
-    for (var k = 0; k < lessons.length; k++) { if (lessons[k].status === 'completed') topicDone++; }
+    for (var k = 0; k < nc; k++) { if (lessons[k].status === 'completed') topicDone++; }
+    var meta = topicDone === nc ? 'пройден' : (topicDone > 0 || foundCurrent ? 'текущий' : 'откроется позже');
 
-    var metaText = topicDone === lessons.length ? 'пройден' : (topicDone > 0 ? 'текущий' : 'откроется позже');
-    if (i === 0 || topicDone > 0 || foundCurrent) { /* show normally */ }
-
-    html += '<section class="smap__island-wrap">';
-    html += '<div class="smap__island-tag smap__island-tag--' + color + '">';
-    html += '<span class="num">' + (i + 1) + '</span>';
+    html += '<section class="island-wrap">';
+    html += '<div class="island-tag island-tag--' + color + '">';
+    html += '<span class="num">' + (i+1) + '</span>';
     html += '<span class="name">' + esc(topic.title_ru) + '</span>';
-    html += '<span class="meta">&middot; ' + metaText + '</span>';
+    html += '<span class="meta">&middot; ' + meta + '</span>';
     html += '</div>';
-    html += '<div class="smap__island smap__island--' + color + '">';
-    html += '<div class="smap__path" style="' + (isMobile() ? 'height:' + (lessons.length * 200 + 60) + 'px;' : '') + '">';
+    html += '<div class="island island--' + color + '">';
+    html += '<div class="path"' + (isMobile() ? ' style="height:' + (nc * 200 + 60) + 'px"' : '') + '>';
 
-    // SVG path
-    var nodeCount = lessons.length;
-    html += buildPathSVG(nodeCount);
+    // SVG paths
+    html += buildSVG(nc);
 
-    html += '<div class="smap__nodes" style="--node-count:' + nodeCount + ';">';
+    html += '<div class="nodes" style="--cols:' + nc + ';' + (isMobile() ? 'height:' + (nc * 200 + 60) + 'px' : '') + '">';
 
-    for (var j = 0; j < lessons.length; j++) {
+    for (var j = 0; j < nc; j++) {
       var l = lessons[j];
-      var st = l.status;
+      var st = l.status; // completed, available, locked
       var ds;
-
-      if (st === 'completed') {
-        ds = 'done';
-      } else if (st === 'available' && !foundCurrent) {
-        ds = 'active';
-        foundCurrent = true;
-      } else if (st === 'available') {
-        ds = 'foggy';
-      } else {
-        ds = 'locked';
-      }
+      if (st === 'completed') { ds = 'done'; }
+      else if (st === 'available' && !foundCurrent) { ds = 'active'; foundCurrent = true; }
+      else if (st === 'available') { ds = 'foggy'; }
+      else { ds = 'locked'; }
 
       var upDown = (j % 2 === 0) ? 'up' : 'down';
-      // Mobile positions
-      var mobileStyle = '';
+      var mStyle = '';
       if (isMobile()) {
-        var yPct = 90 - (j * (80 / Math.max(nodeCount - 1, 1)));
+        var yPct = 90 - (j * (80 / Math.max(nc - 1, 1)));
         var xPct = (j % 2 === 0) ? 32 : 68;
-        mobileStyle = 'top:' + yPct + '%;left:' + xPct + '%;';
+        mStyle = ' style="top:' + yPct + '%;left:' + xPct + '%"';
       }
 
-      html += '<div class="smap__node-slot ' + upDown + '" style="' + mobileStyle + '">';
-      html += '<div class="smap__node smap__node--' + ds + '" data-lesson-id="' + (l.lesson_id||'') + '" data-status="' + st + '">';
-      html += '<div class="smap__disc">';
-      html += '<svg class="smap__node-icon" viewBox="0 0 24 24" fill="none">' + getIconContent(ds) + '</svg>';
-      html += '<span class="smap__num-badge">' + (ds === 'done' ? '&#10003;' : (j + 1)) + '</span>';
-      if (ds === 'done') {
-        html += '<span class="smap__ribbon"><span class="tail"></span><span class="tail right"></span></span>';
-      }
+      html += '<div class="node-slot ' + upDown + '"' + mStyle + '>';
+      html += '<div class="node ' + ds + '" data-lid="' + (l.lesson_id||'') + '" data-st="' + st + '">';
+      html += '<div class="disc">';
+      html += '<svg class="icon" viewBox="0 0 24 24" fill="none">' + nodeIcon(ds) + '</svg>';
+      html += '<span class="num-badge">' + (ds === 'done' ? '&#10003;' : (j+1)) + '</span>';
+      if (ds === 'done') html += '<span class="ribbon"><span class="tail"></span><span class="tail right"></span></span>';
       html += '</div>'; // disc
-      if (ds === 'active') {
-        html += '<span class="smap__start-tag">Старт!</span>';
-      }
+      if (ds === 'active') html += '<span class="start-tag">Старт!</span>';
       html += '</div>'; // node
-      html += '<span class="smap__node-label">' + esc(l.title_ru) + '</span>';
+      html += '<span class="node-label">' + esc(l.title_ru) + '</span>';
       html += '</div>'; // node-slot
     }
 
-    html += '</div>'; // nodes
-    html += '</div>'; // path
-    html += '</div>'; // island
-    html += '</section>'; // island-wrap
+    html += '</div></div></div></section>'; // nodes, path, island, island-wrap
   }
 
   mapEl.innerHTML = html;
 
-  // Click handlers
-  mapEl.querySelectorAll('.smap__node').forEach(function(node) {
-    var lid = node.dataset.lessonId;
-    var st = node.dataset.status;
-    node.addEventListener('click', function() {
+  // Clicks
+  mapEl.querySelectorAll('.node').forEach(function(n) {
+    n.addEventListener('click', function() {
+      var lid = n.dataset.lid;
+      var st = n.dataset.st;
       if (lid && (st === 'completed' || st === 'available')) {
         window.location.href = '/kid/lesson/' + lid;
-      } else if (node.classList.contains('smap__node--locked')) {
-        node.animate([{transform:'translateX(0)'},{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'translateX(0)'}], {duration: 260});
-      } else if (node.classList.contains('smap__node--foggy')) {
-        node.animate([{filter:'brightness(1)'},{filter:'brightness(1.15)'},{filter:'brightness(1)'}], {duration: 280});
+      } else if (n.classList.contains('locked')) {
+        n.animate([{transform:'translateX(0)'},{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'translateX(0)'}], {duration:260});
+      } else if (n.classList.contains('foggy')) {
+        n.animate([{filter:'brightness(1)'},{filter:'brightness(1.15)'},{filter:'brightness(1)'}], {duration:280});
+      } else if (n.classList.contains('active')) {
+        n.animate([{transform:'scale(1)'},{transform:'scale(0.94)'},{transform:'scale(1)'}], {duration:180});
       }
     });
   });
 }
 
-function getIconContent(state) {
+function nodeIcon(state) {
   if (state === 'done') return '<path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>';
   if (state === 'active') return '<path d="M13 5l-2 2 5 5-2 2 2 2 5-5-5-5z" fill="currentColor"/><path d="M7 17l-2-2-2 2 2 2zM5 13l4-4 2 2-4 4z" fill="currentColor"/><path d="M11 11l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>';
   if (state === 'foggy') return '<path d="M3 5.5C3 4.7 3.7 4 4.5 4H10c1.1 0 2 .9 2 2v13c0-1.1-.9-2-2-2H4.5A1.5 1.5 0 0 1 3 15.5v-10z" fill="currentColor"/><path d="M21 5.5c0-.8-.7-1.5-1.5-1.5H14c-1.1 0-2 .9-2 2v13c0-1.1.9-2 2-2h5.5c.8 0 1.5-.7 1.5-1.5v-10z" fill="currentColor" opacity="0.85"/>';
   return '<rect x="6" y="11" width="12" height="9" rx="2" fill="currentColor"/><path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
 }
 
-function buildPathSVG(nodeCount) {
-  // Desktop: horizontal wavy path
-  var dW = 1100;
-  var dH = 220;
-  var step = dW / (nodeCount + 1);
+function buildSVG(n) {
+  // Desktop horizontal wavy
+  var W = 1100, H = 220;
+  var step = W / (n + 1);
   var pts = [];
-  for (var i = 0; i < nodeCount; i++) {
-    pts.push({x: step * (i + 1), y: (i % 2 === 0) ? 80 : 140});
-  }
-  var dPath = 'M ' + pts[0].x + ' ' + pts[0].y;
+  for (var i = 0; i < n; i++) pts.push({x: step*(i+1), y: i%2===0 ? 80 : 140});
+  var d = 'M ' + pts[0].x + ' ' + pts[0].y;
   for (var i = 1; i < pts.length; i++) {
-    var cpx = (pts[i-1].x + pts[i].x) / 2;
-    dPath += ' C ' + cpx + ' ' + pts[i-1].y + ', ' + cpx + ' ' + pts[i].y + ', ' + pts[i].x + ' ' + pts[i].y;
+    var cx = (pts[i-1].x + pts[i].x) / 2;
+    d += ' C ' + cx + ' ' + pts[i-1].y + ', ' + cx + ' ' + pts[i].y + ', ' + pts[i].x + ' ' + pts[i].y;
   }
 
-  // Mobile: vertical zigzag path
-  var mH = nodeCount * 200 + 60;
-  var mPts = [];
-  for (var i = 0; i < nodeCount; i++) {
-    var yPct = 0.9 - (i * (0.8 / Math.max(nodeCount - 1, 1)));
-    var xPct = (i % 2 === 0) ? 0.32 : 0.68;
-    mPts.push({x: xPct * 390, y: yPct * mH});
+  // Mobile vertical zigzag
+  var mH = n * 200 + 60;
+  var mp = [];
+  for (var i = 0; i < n; i++) {
+    var yP = 0.9 - (i * 0.8 / Math.max(n-1, 1));
+    mp.push({x: (i%2===0?0.32:0.68)*390, y: yP*mH});
   }
-  var mPath = 'M ' + mPts[0].x + ' ' + mPts[0].y;
-  for (var i = 1; i < mPts.length; i++) {
-    var cpy = (mPts[i-1].y + mPts[i].y) / 2;
-    mPath += ' C ' + mPts[i-1].x + ' ' + cpy + ', ' + mPts[i].x + ' ' + cpy + ', ' + mPts[i].x + ' ' + mPts[i].y;
+  var md = 'M ' + mp[0].x + ' ' + mp[0].y;
+  for (var i = 1; i < mp.length; i++) {
+    var cy = (mp[i-1].y + mp[i].y) / 2;
+    md += ' C ' + mp[i-1].x + ' ' + cy + ', ' + mp[i].x + ' ' + cy + ', ' + mp[i].x + ' ' + mp[i].y;
   }
 
-  var svg = '<svg class="path-desktop" viewBox="0 0 ' + dW + ' ' + dH + '" preserveAspectRatio="none" aria-hidden="true">';
-  svg += '<path d="' + dPath + '" fill="none" stroke="#ffffff" stroke-opacity="0.85" stroke-width="6" stroke-linecap="round" stroke-dasharray="2 16"/>';
-  svg += '</svg>';
-  svg += '<svg class="path-mobile" viewBox="0 0 390 ' + mH + '" preserveAspectRatio="none" aria-hidden="true">';
-  svg += '<path d="' + mPath + '" fill="none" stroke="#ffffff" stroke-opacity="0.85" stroke-width="6" stroke-linecap="round" stroke-dasharray="2 16"/>';
-  svg += '</svg>';
-  return svg;
+  var s = '<svg class="path-desktop" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">';
+  s += '<path d="'+d+'" fill="none" stroke="#fff" stroke-opacity="0.85" stroke-width="6" stroke-linecap="round" stroke-dasharray="2 16"/></svg>';
+  s += '<svg class="path-mobile" viewBox="0 0 390 '+mH+'" preserveAspectRatio="none">';
+  s += '<path d="'+md+'" fill="none" stroke="#fff" stroke-opacity="0.85" stroke-width="6" stroke-linecap="round" stroke-dasharray="2 16"/></svg>';
+  return s;
 }
 
 function isMobile() { return window.innerWidth <= 860; }
