@@ -1,0 +1,424 @@
+{% extends "kid/base.html" %}
+
+{% block title %}{{ subject_name }} — Kidion{% endblock %}
+{% block page_name %}subject-map{% endblock %}
+
+{% block head %}
+<style>
+  body[data-page="subject-map"] .kid-main { padding:0; }
+
+  .smap { background:#fff; min-height:calc(100vh - 60px); }
+
+  /* ── Strip header ── */
+  .smap__strip {
+    display:flex; align-items:center; gap:10px;
+    padding:12px 16px; border-bottom:2px solid rgba(15,36,24,0.08);
+  }
+  .smap__strip-back {
+    width:38px; height:38px; border-radius:50%; border:none;
+    background:#F6FAF4; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; flex-shrink:0; text-decoration:none; color:#0F2418;
+  }
+  .smap__strip-icon {
+    width:38px; height:38px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;
+  }
+  .smap__strip-subject { font-size:14px; font-weight:800; color:#0F2418; letter-spacing:-0.2px; }
+  .smap__strip-stats-inline { font-size:12px; font-weight:700; color:#7E9786; margin-top:2px; }
+
+  /* ── Journey area ── */
+  .smap__journey {
+    position:relative; padding:24px 0 40px; min-height:400px;
+  }
+
+  /* SVG path behind stones */
+  .smap__path {
+    position:absolute; left:0; right:0; top:0; bottom:0;
+    pointer-events:none; z-index:0;
+  }
+
+  /* ── Topic header ── */
+  .smap__topic {
+    display:flex; align-items:center; gap:10px;
+    padding:12px 16px; background:#fff; border-radius:16px;
+    box-shadow: 0 4px 0 rgba(15,36,24,0.08), 0 0 0 1.5px rgba(15,36,24,0.08);
+    margin:0 16px 24px; position:relative; z-index:1;
+  }
+  .smap__topic-icon { font-size:24px; }
+  .smap__topic-title { font-size:16px; font-weight:800; flex:1; }
+  .smap__topic-progress { font-size:12px; font-weight:700; color:#7E9786; flex-shrink:0; }
+
+  /* ── Stone (lesson card) ── */
+  .smap__stones {
+    display:flex; flex-direction:column; align-items:center;
+    position:relative; z-index:1;
+  }
+
+  .smap__row {
+    width:100%; display:flex; padding:8px 0;
+  }
+  .smap__row--left  { justify-content:flex-start; padding-left:10%; }
+  .smap__row--right { justify-content:flex-end;   padding-right:10%; }
+  .smap__row--center { justify-content:center; }
+
+  .smap__stone {
+    position:relative; width:120px; cursor:pointer;
+    transition: transform 0.1s;
+  }
+  .smap__stone:active { transform:scale(0.95); }
+
+  /* Number badge */
+  .smap__badge {
+    position:absolute; left:-8px; top:-8px; z-index:3;
+    width:30px; height:30px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:800;
+    box-shadow: 0 0 0 2.5px #fff;
+  }
+  .smap__badge--done    { background:#F5D67B; color:#5C4813; box-shadow:0 2px 0 #E3C25E, 0 0 0 2.5px #fff; }
+  .smap__badge--current { background:#fff;    color:#3D9256; box-shadow:0 2px 0 #A8D5B8, 0 0 0 2.5px #fff; }
+  .smap__badge--waiting { background:#A8D5B8; color:#fff;    box-shadow:0 2px 0 #7EBF96, 0 0 0 2.5px #fff; }
+  .smap__badge--locked  { background:#C9B8AB; color:#fff;    box-shadow:0 2px 0 #9A8478, 0 0 0 2.5px #fff; }
+
+  /* Card face */
+  .smap__card {
+    border-radius:22px; padding:16px 10px 14px; text-align:center;
+    position:relative; overflow:hidden;
+    height:140px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  }
+
+  /* Done: golden + ribbon */
+  .smap__card--done {
+    background:#FFF9E6;
+    box-shadow: 0 4px 0 #E3C25E, 0 0 0 2px #F5D67B;
+  }
+  .smap__ribbon {
+    position:absolute; top:10px; right:-30px;
+    background:#4ADE80; color:#fff; font-size:8px; font-weight:900;
+    padding:3px 32px; transform:rotate(35deg);
+    letter-spacing:0.8px; z-index:2; box-shadow:0 1px 3px rgba(0,0,0,0.12);
+  }
+
+  /* Current: combo — glow + pulse */
+  .smap__card--current {
+    background:#E8F5EC;
+    box-shadow: 0 6px 0 #A8D5B8, 0 0 0 2.5px #B8E0C8, 0 0 20px rgba(74,222,128,0.4), 0 0 40px rgba(74,222,128,0.15);
+    transform-origin:center bottom;
+    animation: smap-pulse 2s ease-in-out infinite;
+  }
+  @keyframes smap-pulse {
+    0%, 100% { transform:translateY(-12px) scale(1); }
+    50% { transform:translateY(-12px) scale(1.04); }
+  }
+
+  /* Bouncing arrow above current */
+  .smap__arrow {
+    position:absolute; top:-38px; left:50%; z-index:5;
+    animation: smap-arrow 1.2s ease-in-out infinite;
+  }
+  @keyframes smap-arrow {
+    0%, 100% { transform:translateX(-50%) translateY(0); }
+    50% { transform:translateX(-50%) translateY(-8px); }
+  }
+
+  /* Waiting: green lock + blur */
+  .smap__card--waiting {
+    background:#E8F5EC;
+    box-shadow: 0 4px 0 #C2DEC9, 0 0 0 2px #C2DEC9;
+  }
+  .smap__card--waiting .smap__icon { filter:blur(1.5px) opacity(0.5); }
+  .smap__card--waiting .smap__title { color:#7EBF96; }
+
+  /* Locked: grey */
+  .smap__card--locked {
+    background:#F2EAE2;
+    box-shadow: 0 4px 0 #D7C9BC, 0 0 0 2px #D7C9BC;
+  }
+
+  .smap__icon {
+    width:44px; height:44px; font-size:32px; line-height:1;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .smap__icon--locked { filter:grayscale(1) opacity(0.55); }
+
+  .smap__title { font-size:11px; font-weight:800; margin-top:6px; line-height:1.2; letter-spacing:-0.1px; }
+  .smap__title--done    { color:#5C4813; }
+  .smap__title--current { color:#2D6B3F; }
+  .smap__title--locked  { color:#7E9786; }
+
+  .smap__stars { display:flex; gap:2px; justify-content:center; margin-top:6px; }
+
+  .smap__cta {
+    margin-top:4px; font-size:10px; font-weight:800;
+    color:#3D9256; letter-spacing:1px; text-transform:uppercase;
+  }
+
+  /* Hover tooltip for waiting/locked */
+  .smap__tooltip {
+    position:absolute; bottom:100%; left:50%; transform:translateX(-50%);
+    background:#0F2418; color:#fff; font-size:12px; font-weight:700;
+    padding:8px 14px; border-radius:10px; white-space:nowrap;
+    opacity:0; pointer-events:none; transition:opacity 0.2s;
+    margin-bottom:8px; z-index:10;
+  }
+  .smap__tooltip::after {
+    content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%);
+    border:6px solid transparent; border-top-color:#0F2418;
+  }
+  .smap__stone:hover .smap__tooltip { opacity:1; }
+
+  /* Connector dots between stones (mobile: vertical) */
+  .smap__connector {
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    padding:4px 0;
+    position:relative; z-index:0;
+  }
+  .smap__dot {
+    width:5px; height:5px; border-radius:50%;
+    background:#22C55E; opacity:0.3;
+  }
+
+  /* ── Empty ── */
+  .smap__empty { text-align:center; padding:60px 20px; }
+
+  /* ═══════════════════════════════════
+     DESKTOP: horizontal trail layout
+     ═══════════════════════════════════ */
+  @media (min-width: 768px) {
+    .smap { padding:0 24px 40px; }
+
+    /* Topic card */
+    .smap__topic { margin:0 0 20px; padding:14px 24px; border-radius:18px; }
+    .smap__topic-icon { font-size:28px; }
+    .smap__topic-title { font-size:18px; }
+
+    /* Stones row: horizontal, spread across full width */
+    .smap__stones {
+      flex-direction:row; align-items:flex-start; justify-content:center;
+      gap:0; padding:40px 0 32px; flex-wrap:nowrap;
+    }
+
+    /* Align connectors to middle of cards */
+    .smap__connector { margin-top:68px; }
+
+    /* Remove vertical row wrappers on desktop */
+    .smap__row {
+      width:auto; padding:0; display:contents;
+    }
+    .smap__row--left, .smap__row--right, .smap__row--center {
+      justify-content:initial; padding-left:0; padding-right:0;
+    }
+
+    /* Stone sizing — wider */
+    .smap__stone { width:140px; flex-shrink:0; }
+    .smap__card { padding:18px 12px 16px; height:155px; }
+    .smap__icon { font-size:36px; width:48px; height:48px; }
+    .smap__title { font-size:12px; }
+
+    /* Current stone: bigger */
+    .smap__stone--current { width:165px; }
+    .smap__stone--current .smap__card { height:170px; }
+    .smap__stone--current .smap__icon { font-size:38px; width:52px; height:52px; }
+    .smap__stone--current .smap__title { font-size:13px; }
+    .smap__stone--current .smap__cta { font-size:11px; }
+
+    /* Connector: horizontal dots with more spacing */
+    .smap__connector {
+      flex-direction:row; padding:0 8px; align-items:center;
+      align-self:center;
+    }
+    .smap__dot { width:6px; height:6px; }
+
+    /* Spacing between topic sections */
+    .smap__topic { margin:32px 0 20px; }
+    .smap__topic:first-child { margin-top:0; }
+  }
+
+  /* Even wider on large screens */
+  @media (min-width: 1100px) {
+    .smap__stone { width:160px; }
+    .smap__stone--current { width:180px; }
+    .smap__connector { padding:0 12px; }
+    .smap__dot { width:7px; height:7px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="smap">
+  <div class="smap__strip">
+    <a href="/kid/home" class="smap__strip-back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M15 6 L9 12 L15 18"/></svg>
+    </a>
+    <div class="smap__strip-icon" id="map-icon">📚</div>
+    <div style="flex:1;min-width:0;">
+      <div class="smap__strip-subject">{{ subject_name }} &middot; {{ child.grade }} класс</div>
+      <div class="smap__strip-stats-inline" id="map-stats"></div>
+    </div>
+  </div>
+
+  <div id="lesson-map"><div class="spinner" style="margin:60px auto;"></div></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+var SUBJECT = '{{ subject }}';
+var SC = {
+  math:    {color:'#22C55E',deep:'#15803D',grad:'linear-gradient(135deg,#22C55E,#15803D)',icon:'🔢'},
+  russian: {color:'#2DD4BF',deep:'#0EA5A0',grad:'linear-gradient(135deg,#2DD4BF,#0EA5A0)',icon:'✍️'},
+  world:   {color:'#A78BFA',deep:'#7C3AED',grad:'linear-gradient(135deg,#A78BFA,#7C3AED)',icon:'🌍'}
+}[SUBJECT] || {color:'#22C55E',deep:'#15803D',grad:'linear-gradient(135deg,#22C55E,#15803D)',icon:'📚'};
+
+var mapIcon = document.getElementById('map-icon');
+if (mapIcon) { mapIcon.style.background = SC.grad; mapIcon.textContent = SC.icon; }
+
+var ICONS = ['🔢','✏️','➕','➖','🧩','⚖️','✨','📐','🎯','📊','🔬','🌟'];
+
+(async () => {
+  try {
+    var resp = await fetch('/api/kid/subject/' + SUBJECT + '/map', {credentials:'same-origin'});
+    if (!resp.ok) {
+      document.getElementById('lesson-map').innerHTML = '<div class="smap__empty"><div style="font-size:48px;margin-bottom:12px;">📚</div><div style="font-size:16px;color:#7E9786;font-weight:600;">Попроси маму или папу открыть этот предмет!</div></div>';
+      return;
+    }
+    renderMap(await resp.json());
+  } catch(e) {
+    document.getElementById('lesson-map').innerHTML = '<p style="text-align:center;color:#7E9786;padding:40px;">Ошибка загрузки</p>';
+  }
+})();
+
+function renderMap(data) {
+  var statsEl = document.getElementById('map-stats');
+  statsEl.textContent = 'Пройдено ' + (data.completed_lessons||0) + ' из ' + (data.total_lessons||0) + ' уроков';
+
+  var topics = data.topics || [];
+  var mapEl = document.getElementById('lesson-map');
+
+  var html = '';
+  var gi = 0; // global lesson index across topics
+  var foundCurrent = false; // only first available across all topics is "current"
+
+  for (var i = 0; i < topics.length; i++) {
+    var topic = topics[i];
+    var lessons = topic.lessons || [];
+
+    // Count completed in this topic
+    var topicDone = 0;
+    for (var k = 0; k < lessons.length; k++) { if (lessons[k].status === 'completed') topicDone++; }
+
+    html += '<div class="smap__topic"><span class="smap__topic-icon">' + (topic.icon||'📖') + '</span><span class="smap__topic-title">' + esc(topic.title_ru) + '</span><span class="smap__topic-progress">' + topicDone + ' / ' + lessons.length + '</span></div>';
+    html += '<div class="smap__stones">';
+
+    for (var j = 0; j < lessons.length; j++) {
+      var l = lessons[j];
+      var st = l.status; // completed, available, locked
+      var ds;
+
+      if (st === 'completed') {
+        ds = 'done';
+      } else if (st === 'available' && !foundCurrent) {
+        ds = 'current';
+        foundCurrent = true;
+      } else if (st === 'available' || (st === 'locked' && l.lesson_id)) {
+        ds = 'waiting'; // generated but not yet unlocked
+      } else {
+        ds = 'locked';
+      }
+
+      var icon = ICONS[gi % ICONS.length];
+      gi++;
+
+      // Zigzag for mobile: left, right, center for current
+      var sides = ['left','right'];
+      var side = (ds === 'current') ? 'center' : sides[j % 2];
+
+      // Connector dots before each stone (except first)
+      if (j > 0) {
+        html += '<div class="smap__connector"><div class="smap__dot"></div><div class="smap__dot"></div><div class="smap__dot"></div></div>';
+      }
+
+      html += '<div class="smap__row smap__row--' + side + '">';
+      var stoneClass = 'smap__stone' + (ds === 'current' ? ' smap__stone--current' : '');
+      html += '<div class="' + stoneClass + '" data-lesson-id="' + (l.lesson_id||'') + '" data-status="' + st + '">';
+
+      // Tooltip for waiting/locked
+      if (ds === 'waiting') {
+        html += '<div class="smap__tooltip">Сначала пройди предыдущий урок!</div>';
+      } else if (ds === 'locked') {
+        html += '<div class="smap__tooltip">Попроси маму или папу создать этот урок</div>';
+      }
+
+      // Bouncing arrow for current
+      if (ds === 'current') {
+        html += '<div class="smap__arrow"><svg width="28" height="28" viewBox="0 0 24 24" fill="#3D9256"><path d="M12 16l-6-6h4V4h4v6h4l-6 6z"/></svg></div>';
+      }
+
+      // Badge
+      var badgeClass = ds === 'waiting' ? 'waiting' : ds;
+      html += '<div class="smap__badge smap__badge--' + badgeClass + '">';
+      if (ds === 'done') {
+        // Checkmark
+        html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5C4813" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>';
+      } else if (ds === 'locked' || ds === 'waiting') {
+        html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M 8 11 V 7 Q 8 3 12 3 Q 16 3 16 7 V 11" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>';
+      } else {
+        html += (j + 1);
+      }
+      html += '</div>';
+
+      // Card
+      var cardDs = ds === 'waiting' ? 'waiting' : ds;
+      html += '<div class="smap__card smap__card--' + cardDs + '">';
+
+      // Ribbon for done
+      if (ds === 'done') {
+        html += '<div class="smap__ribbon">ГОТОВО</div>';
+      }
+
+      html += '<div class="smap__icon' + (ds==='locked'?' smap__icon--locked':'') + '">' + icon + '</div>';
+      html += '<div class="smap__title smap__title--' + ds + '">' + esc(l.title_ru) + '</div>';
+
+      // Stars: 5 big for done, 5 outline for current
+      if (ds === 'done') {
+        html += '<div class="smap__stars">';
+        for (var s = 0; s < 5; s++) {
+          var earned = s < (l.stars_earned || 0);
+          var c = earned ? '#F5D67B' : 'rgba(15,36,24,0.08)';
+          var sc = earned ? '#E3C25E' : 'rgba(15,36,24,0.08)';
+          html += '<svg width="18" height="18" viewBox="0 0 24 24"><path d="M12 2 L14.5 8.5 L21.5 9.2 L16.2 13.8 L17.8 20.6 L12 17 L6.2 20.6 L7.8 13.8 L2.5 9.2 L9.5 8.5 Z" fill="' + c + '" stroke="' + sc + '" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+        }
+        html += '</div>';
+      }
+
+      if (ds === 'current') {
+        html += '<div class="smap__cta">Начать! &rarr;</div>';
+      }
+
+      html += '</div>'; // card
+      html += '</div>'; // stone
+      html += '</div>'; // row
+    }
+
+    html += '</div>'; // stones
+  }
+
+  mapEl.innerHTML = html;
+
+  // Click handlers
+  mapEl.querySelectorAll('.smap__stone').forEach(function(stone) {
+    var lid = stone.dataset.lessonId;
+    var st = stone.dataset.status;
+    if (lid && (st === 'completed' || st === 'available')) {
+      stone.addEventListener('click', function() {
+        window.location.href = '/kid/lesson/' + lid;
+      });
+    } else {
+      stone.style.cursor = 'default';
+    }
+  });
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+{% endblock %}

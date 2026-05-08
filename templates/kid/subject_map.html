@@ -4,260 +4,358 @@
 {% block page_name %}subject-map{% endblock %}
 
 {% block head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
 <style>
-  body[data-page="subject-map"] .kid-main { padding:0; }
-
-  .smap { background:#fff; min-height:calc(100vh - 60px); }
-
-  /* ── Strip header ── */
-  .smap__strip {
-    display:flex; align-items:center; gap:10px;
-    padding:12px 16px; border-bottom:2px solid rgba(15,36,24,0.08);
-  }
-  .smap__strip-back {
-    width:38px; height:38px; border-radius:50%; border:none;
-    background:#F6FAF4; display:flex; align-items:center; justify-content:center;
-    cursor:pointer; flex-shrink:0; text-decoration:none; color:#0F2418;
-  }
-  .smap__strip-icon {
-    width:38px; height:38px; border-radius:12px;
-    display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;
-  }
-  .smap__strip-subject { font-size:14px; font-weight:800; color:#0F2418; letter-spacing:-0.2px; }
-  .smap__strip-stats-inline { font-size:12px; font-weight:700; color:#7E9786; margin-top:2px; }
-
-  /* ── Journey area ── */
-  .smap__journey {
-    position:relative; padding:24px 0 40px; min-height:400px;
+  /* Override base styles for this page */
+  body[data-page="subject-map"] { font-family: "Nunito", system-ui, sans-serif; }
+  body[data-page="subject-map"] .kid-main { padding: 0; }
+  body[data-page="subject-map"] {
+    background:
+      radial-gradient(1200px 700px at 80% -10%, #ffe2c8 0%, transparent 60%),
+      radial-gradient(900px 600px at 0% 20%, #e2d4ff 0%, transparent 55%),
+      linear-gradient(180deg, #d6ecff 0%, #eaf3ff 40%, #f6efff 100%);
   }
 
-  /* SVG path behind stones */
-  .smap__path {
-    position:absolute; left:0; right:0; top:0; bottom:0;
-    pointer-events:none; z-index:0;
+  /* ---------- Tokens ---------- */
+  .smap {
+    --ink: #2a2452;
+    --ink-soft: #6b6791;
+    --ink-mute: #9b9bbb;
+    --paper: #ffffff;
+    --rim: #e6dfff;
+    --accent: #ff7a3a;
+    --accent-deep: #e85b1a;
+    --accent-soft: #ffd1b8;
+    --ok: #36c46a;
+    --ok-deep: #1aa24f;
+    --gold: #ffc83a;
+    --gold-deep: #e9a90f;
+    --gray: #c5cad6;
+    --gray-deep: #8a90a3;
+    --r-pill: 999px;
+    --shadow-card: 0 6px 0 rgba(42,36,82,0.06), 0 18px 40px -18px rgba(42,36,82,0.18);
   }
 
-  /* ── Topic header ── */
-  .smap__topic {
-    display:flex; align-items:center; gap:10px;
-    padding:12px 16px; background:#fff; border-radius:16px;
-    box-shadow: 0 4px 0 rgba(15,36,24,0.08), 0 0 0 1.5px rgba(15,36,24,0.08);
-    margin:0 16px 24px; position:relative; z-index:1;
+  /* ---------- Sky decoration ---------- */
+  .sky-deco { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .cloud {
+    position: absolute; background: #ffffff; border-radius: 100px;
+    opacity: 0.7; filter: blur(0.5px);
+    box-shadow: 28px -10px 0 -4px #fff, -28px -8px 0 -6px #fff, 52px 0 0 -10px #fff, -52px 0 0 -10px #fff;
   }
-  .smap__topic-icon { font-size:24px; }
-  .smap__topic-title { font-size:16px; font-weight:800; flex:1; }
-  .smap__topic-progress { font-size:12px; font-weight:700; color:#7E9786; flex-shrink:0; }
+  .cloud.c1 { width: 140px; height: 36px; top: 110px; left: 6%; }
+  .cloud.c2 { width: 180px; height: 44px; top: 240px; right: 8%; opacity: 0.5; }
+  .cloud.c3 { width: 120px; height: 32px; top: 520px; left: 18%; opacity: 0.45; }
+  .cloud.c4 { width: 160px; height: 40px; top: 760px; right: 14%; opacity: 0.5; }
 
-  /* ── Stone (lesson card) ── */
-  .smap__stones {
-    display:flex; flex-direction:column; align-items:center;
-    position:relative; z-index:1;
+  /* ---------- Program header ---------- */
+  .smap { position: relative; z-index: 1; min-height: calc(100vh - 60px); padding-bottom: 40px; }
+
+  .smap__program {
+    max-width: 1200px; margin: 0 auto; padding: 28px 28px 0; text-align: center;
   }
-
-  .smap__row {
-    width:100%; display:flex; padding:8px 0;
+  .smap__crumbs {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--ink-soft); font-weight: 700; font-size: 13px;
+    letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 8px;
   }
-  .smap__row--left  { justify-content:flex-start; padding-left:10%; }
-  .smap__row--right { justify-content:flex-end;   padding-right:10%; }
-  .smap__row--center { justify-content:center; }
-
-  .smap__stone {
-    position:relative; width:120px; cursor:pointer;
-    transition: transform 0.1s;
+  .smap__crumb-dot { width: 4px; height: 4px; background: var(--ink-mute); border-radius: 50%; }
+  .smap__title {
+    font-family: "Baloo 2", sans-serif; font-weight: 800;
+    font-size: clamp(30px, 5vw, 50px); margin: 0; letter-spacing: -1px; color: var(--ink);
   }
-  .smap__stone:active { transform:scale(0.95); }
-
-  /* Number badge */
-  .smap__badge {
-    position:absolute; left:-8px; top:-8px; z-index:3;
-    width:30px; height:30px; border-radius:50%;
-    display:flex; align-items:center; justify-content:center;
-    font-size:13px; font-weight:800;
-    box-shadow: 0 0 0 2.5px #fff;
-  }
-  .smap__badge--done    { background:#F5D67B; color:#5C4813; box-shadow:0 2px 0 #E3C25E, 0 0 0 2.5px #fff; }
-  .smap__badge--current { background:#fff;    color:#3D9256; box-shadow:0 2px 0 #A8D5B8, 0 0 0 2.5px #fff; }
-  .smap__badge--waiting { background:#A8D5B8; color:#fff;    box-shadow:0 2px 0 #7EBF96, 0 0 0 2.5px #fff; }
-  .smap__badge--locked  { background:#C9B8AB; color:#fff;    box-shadow:0 2px 0 #9A8478, 0 0 0 2.5px #fff; }
-
-  /* Card face */
-  .smap__card {
-    border-radius:22px; padding:16px 10px 14px; text-align:center;
-    position:relative; overflow:hidden;
-    height:140px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  .smap__title .accent { color: var(--accent); }
+  .smap__subtitle {
+    font-family: "Baloo 2", sans-serif; font-weight: 700;
+    font-size: 18px; color: var(--ink-soft); margin: 6px 0 0;
   }
 
-  /* Done: golden + ribbon */
-  .smap__card--done {
-    background:#FFF9E6;
-    box-shadow: 0 4px 0 #E3C25E, 0 0 0 2px #F5D67B;
+  /* Progress bar */
+  .smap__progress-bar {
+    margin: 18px auto 0; max-width: 480px;
+    background: var(--paper); border: 1px solid var(--rim);
+    border-radius: var(--r-pill); padding: 6px 6px 6px 18px;
+    display: flex; align-items: center; gap: 14px;
+    box-shadow: var(--shadow-card);
   }
+  .smap__progress-label { font-weight: 800; color: var(--ink-soft); font-size: 13px; white-space: nowrap; }
+  .smap__progress-track {
+    flex: 1; height: 14px; background: #eee5ff; border-radius: var(--r-pill); overflow: hidden; position: relative;
+  }
+  .smap__progress-fill {
+    display: block; height: 100%; background: linear-gradient(90deg, #7be0a3, var(--ok));
+    border-radius: var(--r-pill); position: relative; transition: width 0.5s ease;
+  }
+  .smap__progress-fill::after {
+    content: ""; position: absolute; inset: 2px 2px auto 2px; height: 4px;
+    border-radius: 4px; background: rgba(255,255,255,0.5);
+  }
+  .smap__progress-num {
+    background: var(--ok); color: #fff; font-weight: 800;
+    padding: 6px 12px; border-radius: var(--r-pill);
+    font-family: "Baloo 2", sans-serif; box-shadow: 0 2px 0 var(--ok-deep); font-size: 13px;
+    white-space: nowrap;
+  }
+
+  /* ---------- Map area ---------- */
+  .smap__map { max-width: 1200px; margin: 28px auto 0; padding: 0 28px; position: relative; z-index: 1; }
+
+  /* Island wrapper */
+  .smap__island-wrap { position: relative; margin: 60px 0 0; }
+  .smap__island-wrap:first-child { margin-top: 32px; }
+
+  .smap__island {
+    position: relative; padding: 28px 32px 80px;
+    border-radius: 56% 44% 52% 48% / 70% 60% 60% 70%;
+    box-shadow: inset 0 -18px 0 rgba(0,0,0,0.07), inset 0 6px 0 rgba(255,255,255,0.5), 0 30px 60px -30px rgba(42,36,82,0.25);
+    overflow: hidden;
+  }
+
+  /* Island colors cycle: mint, peach, lilac */
+  .smap__island--mint  { background: #b6ecc6; }
+  .smap__island--peach { background: #ffd6a8; }
+  .smap__island--lilac { background: #d8c4ff; }
+
+  /* Grass tufts */
+  .smap__island::before {
+    content: ""; position: absolute; inset: auto 0 0 0; height: 28px; pointer-events: none;
+  }
+  .smap__island--mint::before {
+    background: radial-gradient(10px 8px at 8% 0%, #6fcf8c 60%, transparent 61%), radial-gradient(8px 6px at 22% 4px, #6fcf8c 60%, transparent 61%), radial-gradient(12px 9px at 44% 0%, #6fcf8c 60%, transparent 61%), radial-gradient(8px 6px at 62% 4px, #6fcf8c 60%, transparent 61%), radial-gradient(11px 8px at 78% 0%, #6fcf8c 60%, transparent 61%);
+  }
+  .smap__island--peach::before {
+    background: radial-gradient(10px 8px at 8% 0%, #f3a866 60%, transparent 61%), radial-gradient(8px 6px at 22% 4px, #f3a866 60%, transparent 61%), radial-gradient(12px 9px at 44% 0%, #f3a866 60%, transparent 61%), radial-gradient(8px 6px at 62% 4px, #f3a866 60%, transparent 61%), radial-gradient(11px 8px at 78% 0%, #f3a866 60%, transparent 61%);
+  }
+  .smap__island--lilac::before {
+    background: radial-gradient(10px 8px at 8% 0%, #a888ee 60%, transparent 61%), radial-gradient(8px 6px at 22% 4px, #a888ee 60%, transparent 61%), radial-gradient(12px 9px at 44% 0%, #a888ee 60%, transparent 61%), radial-gradient(8px 6px at 62% 4px, #a888ee 60%, transparent 61%), radial-gradient(11px 8px at 78% 0%, #a888ee 60%, transparent 61%);
+  }
+
+  /* Island tag (label) */
+  .smap__island-tag {
+    position: absolute; top: -22px; left: 32px; z-index: 4;
+    background: var(--paper); border-radius: var(--r-pill);
+    padding: 8px 18px 8px 8px; border: 1px solid var(--rim);
+    box-shadow: var(--shadow-card);
+    display: inline-flex; align-items: center; gap: 10px;
+  }
+  .smap__island-tag .num {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: "Baloo 2"; font-weight: 800; font-size: 16px;
+  }
+  .smap__island--mint + .smap__island-tag .num,
+  .smap__island-tag--mint .num { background: linear-gradient(160deg, #ffd479, #f7a93a); color: #5b2a00; box-shadow: 0 2px 0 #b76b00; }
+  .smap__island-tag--peach .num { background: linear-gradient(160deg, #ffb46e, var(--accent)); color: #fff; box-shadow: 0 2px 0 var(--accent-deep); }
+  .smap__island-tag--lilac .num { background: linear-gradient(160deg, #c2a3ff, #a888ee); color: #fff; box-shadow: 0 2px 0 #6a47b8; }
+  .smap__island-tag .name { font-family: "Baloo 2"; font-weight: 800; color: var(--ink); font-size: 15px; }
+  .smap__island-tag .meta { font-weight: 800; color: var(--ink-mute); font-size: 12px; }
+
+  /* ---------- Path & nodes (Desktop: horizontal) ---------- */
+  .smap__path { position: relative; height: 220px; margin-top: 12px; }
+  .smap__path svg {
+    position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;
+  }
+  .smap__path .path-mobile { display: none; }
+
+  .smap__nodes {
+    position: relative; display: grid; grid-template-columns: repeat(var(--node-count, 5), 1fr);
+    height: 100%; align-items: center;
+  }
+  .smap__node-slot { display: grid; place-items: center; position: relative; }
+  .smap__node-slot.up   { transform: translateY(-30px); }
+  .smap__node-slot.down { transform: translateY(30px); }
+
+  /* Lesson node */
+  .smap__node {
+    --node-size: 92px; width: var(--node-size); height: var(--node-size);
+    position: relative; display: grid; place-items: center;
+    cursor: pointer; transition: transform .15s ease; user-select: none;
+  }
+  .smap__node:hover { transform: translateY(-2px); }
+  .smap__node:active { transform: translateY(2px); }
+
+  .smap__disc {
+    width: 100%; height: 100%; border-radius: 50%;
+    display: grid; place-items: center; position: relative; color: #fff;
+    transition: transform .25s ease;
+  }
+
+  /* State: COMPLETED */
+  .smap__node--done .smap__disc {
+    background: radial-gradient(circle at 35% 30%, #ffe27a, var(--gold) 60%, var(--gold-deep) 100%);
+    box-shadow: 0 6px 0 var(--gold-deep), 0 0 0 6px #fff, 0 0 0 8px #ffe27a, 0 18px 32px -14px rgba(233,169,15,0.55);
+  }
+  .smap__node--done .smap__disc::after {
+    content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 70%; height: 70%; border-radius: 50%; border: 3px dashed rgba(255,255,255,0.55); pointer-events: none;
+  }
+  .smap__node--done:hover .smap__disc { transform: rotate(8deg); }
+  .smap__node--done .smap__node-icon { color: #fff; filter: drop-shadow(0 2px 0 var(--gold-deep)); }
   .smap__ribbon {
-    position:absolute; top:10px; right:-30px;
-    background:#4ADE80; color:#fff; font-size:8px; font-weight:900;
-    padding:3px 32px; transform:rotate(35deg);
-    letter-spacing:0.8px; z-index:2; box-shadow:0 1px 3px rgba(0,0,0,0.12);
+    position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%);
+    display: flex; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.15));
   }
+  .smap__ribbon .tail { width: 12px; height: 18px; background: var(--ok); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 70%, 0 100%); }
+  .smap__ribbon .tail.right { background: var(--ok-deep); }
 
-  /* Current: combo — glow + pulse */
-  .smap__card--current {
-    background:#E8F5EC;
-    box-shadow: 0 6px 0 #A8D5B8, 0 0 0 2.5px #B8E0C8, 0 0 20px rgba(74,222,128,0.4), 0 0 40px rgba(74,222,128,0.15);
-    transform-origin:center bottom;
-    animation: smap-pulse 2s ease-in-out infinite;
+  /* State: ACTIVE */
+  .smap__node--active { z-index: 3; }
+  .smap__node--active .smap__disc {
+    background: radial-gradient(circle at 35% 30%, #ffb98a, var(--accent) 55%, var(--accent-deep) 100%);
+    box-shadow: 0 6px 0 var(--accent-deep), 0 0 0 6px #fff, 0 0 0 8px var(--accent-soft), 0 0 40px 8px rgba(255,122,58,0.45);
+    animation: smap-pulse 1.6s ease-in-out infinite;
   }
   @keyframes smap-pulse {
-    0%, 100% { transform:translateY(-12px) scale(1); }
-    50% { transform:translateY(-12px) scale(1.04); }
+    0%, 100% { transform: scale(1); box-shadow: 0 6px 0 #e85b1a, 0 0 0 6px #fff, 0 0 0 8px #ffd1b8, 0 0 30px 6px rgba(255,122,58,0.45); }
+    50%      { transform: scale(1.06); box-shadow: 0 6px 0 #e85b1a, 0 0 0 6px #fff, 0 0 0 10px #ffd1b8, 0 0 60px 14px rgba(255,122,58,0.7); }
+  }
+  .smap__start-tag {
+    position: absolute; top: -34px; left: 50%; transform: translateX(-50%);
+    background: var(--paper); color: var(--accent);
+    font-family: "Baloo 2"; font-weight: 800; font-size: 13px;
+    padding: 4px 12px; border-radius: var(--r-pill);
+    box-shadow: 0 3px 0 var(--accent-deep); border: 2px solid var(--accent);
+    white-space: nowrap; animation: smap-bobble 1.6s ease-in-out infinite;
+  }
+  .smap__start-tag::after {
+    content: ""; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%) rotate(45deg);
+    width: 10px; height: 10px; background: var(--paper);
+    border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent);
+  }
+  @keyframes smap-bobble {
+    0%, 100% { transform: translate(-50%, 0); }
+    50%      { transform: translate(-50%, -4px); }
   }
 
-  /* Bouncing arrow above current */
-  .smap__arrow {
-    position:absolute; top:-38px; left:50%; z-index:5;
-    animation: smap-arrow 1.2s ease-in-out infinite;
+  /* State: FOGGY */
+  .smap__node--foggy .smap__disc {
+    background: radial-gradient(circle at 35% 30%, #ffb98a, var(--accent) 55%, var(--accent-deep) 100%);
+    box-shadow: 0 6px 0 var(--accent-deep), 0 0 0 6px #fff, 0 0 0 8px var(--accent-soft);
+    opacity: 0.92;
   }
-  @keyframes smap-arrow {
-    0%, 100% { transform:translateX(-50%) translateY(0); }
-    50% { transform:translateX(-50%) translateY(-8px); }
+  .smap__node--foggy::before {
+    content: ""; position: absolute; width: 130%; height: 26px; left: -15%; bottom: -6px;
+    background: #fff; border-radius: 100px;
+    box-shadow: 18px -6px 0 -4px #fff, -22px -8px 0 -6px #fff, 40px -2px 0 -10px #fff, -44px -4px 0 -12px #fff;
+    opacity: 0.92; z-index: 3; pointer-events: none; animation: smap-fog 5s ease-in-out infinite;
   }
-
-  /* Waiting: green lock + blur */
-  .smap__card--waiting {
-    background:#E8F5EC;
-    box-shadow: 0 4px 0 #C2DEC9, 0 0 0 2px #C2DEC9;
+  .smap__node--foggy::after {
+    content: ""; position: absolute; width: 34px; height: 16px;
+    background: #fff; border-radius: 100px; top: -4px; right: -8px;
+    box-shadow: -12px 4px 0 -2px #fff, 14px 4px 0 -3px #fff;
+    opacity: 0.95; z-index: 3; pointer-events: none;
   }
-  .smap__card--waiting .smap__icon { filter:blur(1.5px) opacity(0.5); }
-  .smap__card--waiting .smap__title { color:#7EBF96; }
-
-  /* Locked: grey */
-  .smap__card--locked {
-    background:#F2EAE2;
-    box-shadow: 0 4px 0 #D7C9BC, 0 0 0 2px #D7C9BC;
+  @keyframes smap-fog {
+    0%, 100% { transform: translateX(-3px); }
+    50%      { transform: translateX(5px); }
   }
+  .smap__node--foggy .smap__node-icon { color: #fff; opacity: 0.95; }
 
-  .smap__icon {
-    width:44px; height:44px; font-size:32px; line-height:1;
-    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  /* State: LOCKED */
+  .smap__node--locked .smap__disc {
+    background: radial-gradient(circle at 35% 30%, #e3e7ef, var(--gray) 55%, var(--gray-deep) 100%);
+    box-shadow: 0 6px 0 var(--gray-deep), 0 0 0 6px #fff, 0 0 0 8px #eef0f5;
+    filter: saturate(0.2);
   }
-  .smap__icon--locked { filter:grayscale(1) opacity(0.55); }
+  .smap__node--locked .smap__node-icon { color: #6c7388; }
+  .smap__node--locked { cursor: default; }
 
-  .smap__title { font-size:11px; font-weight:800; margin-top:6px; line-height:1.2; letter-spacing:-0.1px; }
-  .smap__title--done    { color:#5C4813; }
-  .smap__title--current { color:#2D6B3F; }
-  .smap__title--locked  { color:#7E9786; }
-
-  .smap__stars { display:flex; gap:2px; justify-content:center; margin-top:6px; }
-
-  .smap__cta {
-    margin-top:4px; font-size:10px; font-weight:800;
-    color:#3D9256; letter-spacing:1px; text-transform:uppercase;
+  /* Icon inside disc */
+  .smap__node-icon {
+    width: 36px; height: 36px; position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); color: #fff; z-index: 1; display: block;
   }
 
-  /* Hover tooltip for waiting/locked */
-  .smap__tooltip {
-    position:absolute; bottom:100%; left:50%; transform:translateX(-50%);
-    background:#0F2418; color:#fff; font-size:12px; font-weight:700;
-    padding:8px 14px; border-radius:10px; white-space:nowrap;
-    opacity:0; pointer-events:none; transition:opacity 0.2s;
-    margin-bottom:8px; z-index:10;
+  /* Number badge */
+  .smap__num-badge {
+    position: absolute; top: -6px; right: -6px; width: 26px; height: 26px;
+    background: #fff; color: var(--ink); border-radius: 50%;
+    border: 2px solid var(--rim); display: grid; place-items: center;
+    font-family: "Baloo 2"; font-weight: 800; font-size: 12px; z-index: 4;
   }
-  .smap__tooltip::after {
-    content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%);
-    border:6px solid transparent; border-top-color:#0F2418;
-  }
-  .smap__stone:hover .smap__tooltip { opacity:1; }
+  .smap__node--active .smap__num-badge { color: var(--accent); border-color: var(--accent); }
+  .smap__node--done .smap__num-badge { background: var(--ok); color: #fff; border-color: #fff; }
 
-  /* Connector dots between stones (mobile: vertical) */
-  .smap__connector {
-    display:flex; flex-direction:column; align-items:center; gap:6px;
-    padding:4px 0;
-    position:relative; z-index:0;
-  }
-  .smap__dot {
-    width:5px; height:5px; border-radius:50%;
-    background:#22C55E; opacity:0.3;
+  /* Label below node */
+  .smap__node-label {
+    position: absolute; bottom: -34px; left: 50%; transform: translateX(-50%);
+    background: rgba(255,255,255,0.8); backdrop-filter: blur(6px);
+    padding: 3px 10px; border-radius: var(--r-pill);
+    font-family: "Baloo 2"; font-weight: 700; font-size: 12px;
+    color: var(--ink-soft); white-space: nowrap; border: 1px solid var(--rim);
   }
 
-  /* ── Empty ── */
-  .smap__empty { text-align:center; padding:60px 20px; }
+  /* ---------- Empty state ---------- */
+  .smap__empty { text-align: center; padding: 80px 20px; }
 
-  /* ═══════════════════════════════════
-     DESKTOP: horizontal trail layout
-     ═══════════════════════════════════ */
-  @media (min-width: 768px) {
-    .smap { padding:0 24px 40px; }
+  /* ---------- Loading ---------- */
+  .smap__loading { display: flex; justify-content: center; padding: 80px 0; }
 
-    /* Topic card */
-    .smap__topic { margin:0 0 20px; padding:14px 24px; border-radius:18px; }
-    .smap__topic-icon { font-size:28px; }
-    .smap__topic-title { font-size:18px; }
+  /* ========== MOBILE ========== */
+  @media (max-width: 860px) {
+    .smap__program { padding: 20px 16px 0; }
+    .smap__title { font-size: 26px; }
+    .smap__subtitle { font-size: 15px; }
+    .smap__map { padding: 0 16px; margin: 16px auto 0; }
 
-    /* Stones row: horizontal, spread across full width */
-    .smap__stones {
-      flex-direction:row; align-items:flex-start; justify-content:center;
-      gap:0; padding:40px 0 32px; flex-wrap:nowrap;
+    .smap__island-wrap { margin: 80px 0 0; }
+    .smap__island {
+      padding: 32px 14px 56px; border-radius: 36px;
     }
+    .smap__island::before { display: none; }
+    .smap__island-tag { left: 50%; transform: translateX(-50%); }
+    .smap__island-tag .meta { display: none; }
 
-    /* Align connectors to middle of cards */
-    .smap__connector { margin-top:68px; }
+    .smap__path { height: auto; min-height: 600px; margin-top: 28px; }
+    .smap__path .path-desktop { display: none; }
+    .smap__path .path-mobile { display: block; }
 
-    /* Remove vertical row wrappers on desktop */
-    .smap__row {
-      width:auto; padding:0; display:contents;
+    .smap__nodes {
+      display: block; position: relative; height: 100%;
+      grid-template-columns: none;
     }
-    .smap__row--left, .smap__row--right, .smap__row--center {
-      justify-content:initial; padding-left:0; padding-right:0;
+    .smap__node-slot {
+      position: absolute; transform: translate(-50%, -50%) !important;
     }
-
-    /* Stone sizing — wider */
-    .smap__stone { width:140px; flex-shrink:0; }
-    .smap__card { padding:18px 12px 16px; height:155px; }
-    .smap__icon { font-size:36px; width:48px; height:48px; }
-    .smap__title { font-size:12px; }
-
-    /* Current stone: bigger */
-    .smap__stone--current { width:165px; }
-    .smap__stone--current .smap__card { height:170px; }
-    .smap__stone--current .smap__icon { font-size:38px; width:52px; height:52px; }
-    .smap__stone--current .smap__title { font-size:13px; }
-    .smap__stone--current .smap__cta { font-size:11px; }
-
-    /* Connector: horizontal dots with more spacing */
-    .smap__connector {
-      flex-direction:row; padding:0 8px; align-items:center;
-      align-self:center;
-    }
-    .smap__dot { width:6px; height:6px; }
-
-    /* Spacing between topic sections */
-    .smap__topic { margin:32px 0 20px; }
-    .smap__topic:first-child { margin-top:0; }
-  }
-
-  /* Even wider on large screens */
-  @media (min-width: 1100px) {
-    .smap__stone { width:160px; }
-    .smap__stone--current { width:180px; }
-    .smap__connector { padding:0 12px; }
-    .smap__dot { width:7px; height:7px; }
+    /* Positions set dynamically via JS, but fallback: */
+    .smap__node-label { bottom: -28px; font-size: 11px; padding: 2px 8px; }
+    .smap__start-tag { top: -30px; }
   }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- Sky decoration -->
+<div class="sky-deco" aria-hidden="true">
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+  <div class="cloud c3"></div>
+  <div class="cloud c4"></div>
+</div>
+
 <div class="smap">
-  <div class="smap__strip">
-    <a href="/kid/home" class="smap__strip-back">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M15 6 L9 12 L15 18"/></svg>
-    </a>
-    <div class="smap__strip-icon" id="map-icon">📚</div>
-    <div style="flex:1;min-width:0;">
-      <div class="smap__strip-subject">{{ subject_name }} &middot; {{ child.grade }} класс</div>
-      <div class="smap__strip-stats-inline" id="map-stats"></div>
+  <!-- Program header -->
+  <div class="smap__program">
+    <div class="smap__crumbs">
+      <span>Программа</span>
+      <span class="smap__crumb-dot"></span>
+      <span>{{ child.grade }} класс</span>
+    </div>
+    <h1 class="smap__title" id="map-title"></h1>
+    <div class="smap__subtitle" id="map-subtitle"></div>
+    <div class="smap__progress-bar">
+      <span class="smap__progress-label">Прогресс</span>
+      <div class="smap__progress-track"><span class="smap__progress-fill" id="progress-fill"></span></div>
+      <span class="smap__progress-num" id="progress-num">0 / 0</span>
     </div>
   </div>
 
-  <div id="lesson-map"><div class="spinner" style="margin:60px auto;"></div></div>
+  <!-- Map -->
+  <div class="smap__map" id="lesson-map">
+    <div class="smap__loading"><div class="spinner" style="margin:60px auto;"></div></div>
+  </div>
 </div>
 {% endblock %}
 
@@ -265,160 +363,187 @@
 <script>
 var SUBJECT = '{{ subject }}';
 var SC = {
-  math:    {color:'#22C55E',deep:'#15803D',grad:'linear-gradient(135deg,#22C55E,#15803D)',icon:'🔢'},
-  russian: {color:'#2DD4BF',deep:'#0EA5A0',grad:'linear-gradient(135deg,#2DD4BF,#0EA5A0)',icon:'✍️'},
-  world:   {color:'#A78BFA',deep:'#7C3AED',grad:'linear-gradient(135deg,#A78BFA,#7C3AED)',icon:'🌍'}
-}[SUBJECT] || {color:'#22C55E',deep:'#15803D',grad:'linear-gradient(135deg,#22C55E,#15803D)',icon:'📚'};
+  math:    {name:'Математика', icon:'rocket'},
+  russian: {name:'Русский язык', icon:'pen'},
+  world:   {name:'Окр. мир', icon:'globe'}
+}[SUBJECT] || {name:'{{ subject_name }}', icon:'book'};
 
-var mapIcon = document.getElementById('map-icon');
-if (mapIcon) { mapIcon.style.background = SC.grad; mapIcon.textContent = SC.icon; }
-
-var ICONS = ['🔢','✏️','➕','➖','🧩','⚖️','✨','📐','🎯','📊','🔬','🌟'];
+var ISLAND_COLORS = ['mint','peach','lilac'];
+var NODE_ICONS = {
+  done: '<svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  active: '<svg viewBox="0 0 24 24" fill="none"><path d="M13 5l-2 2 5 5-2 2 2 2 5-5-5-5z" fill="currentColor"/><path d="M7 17l-2-2-2 2 2 2zM5 13l4-4 2 2-4 4z" fill="currentColor"/><path d="M11 11l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  foggy: '<svg viewBox="0 0 24 24" fill="none"><path d="M3 5.5C3 4.7 3.7 4 4.5 4H10c1.1 0 2 .9 2 2v13c0-1.1-.9-2-2-2H4.5A1.5 1.5 0 0 1 3 15.5v-10z" fill="currentColor"/><path d="M21 5.5c0-.8-.7-1.5-1.5-1.5H14c-1.1 0-2 .9-2 2v13c0-1.1.9-2 2-2h5.5c.8 0 1.5-.7 1.5-1.5v-10z" fill="currentColor" opacity="0.85"/></svg>',
+  locked: '<svg viewBox="0 0 24 24" fill="none"><rect x="6" y="11" width="12" height="9" rx="2" fill="currentColor"/><path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>'
+};
 
 (async () => {
   try {
     var resp = await fetch('/api/kid/subject/' + SUBJECT + '/map', {credentials:'same-origin'});
     if (!resp.ok) {
-      document.getElementById('lesson-map').innerHTML = '<div class="smap__empty"><div style="font-size:48px;margin-bottom:12px;">📚</div><div style="font-size:16px;color:#7E9786;font-weight:600;">Попроси маму или папу открыть этот предмет!</div></div>';
+      document.getElementById('lesson-map').innerHTML = '<div class="smap__empty"><div style="font-size:48px;margin-bottom:12px;">📚</div><div style="font-size:16px;color:#6b6791;font-weight:600;">Попроси маму или папу открыть этот предмет!</div></div>';
       return;
     }
     renderMap(await resp.json());
   } catch(e) {
-    document.getElementById('lesson-map').innerHTML = '<p style="text-align:center;color:#7E9786;padding:40px;">Ошибка загрузки</p>';
+    document.getElementById('lesson-map').innerHTML = '<p style="text-align:center;color:#6b6791;padding:40px;">Ошибка загрузки</p>';
   }
 })();
 
 function renderMap(data) {
-  var statsEl = document.getElementById('map-stats');
-  statsEl.textContent = 'Пройдено ' + (data.completed_lessons||0) + ' из ' + (data.total_lessons||0) + ' уроков';
+  var completed = data.completed_lessons || 0;
+  var total = data.total_lessons || 0;
+  var pct = total > 0 ? Math.round(completed / total * 100) : 0;
+
+  // Title
+  document.getElementById('map-title').innerHTML = 'Космическ' + (SUBJECT === 'russian' ? 'ий' : 'ая') + ' <span class="accent">' + esc(SC.name.toLowerCase()) + '</span>';
+  document.getElementById('map-subtitle').textContent = '';
+
+  // Progress
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-num').textContent = completed + ' / ' + total;
 
   var topics = data.topics || [];
   var mapEl = document.getElementById('lesson-map');
-
   var html = '';
-  var gi = 0; // global lesson index across topics
-  var foundCurrent = false; // only first available across all topics is "current"
+  var foundCurrent = false;
 
   for (var i = 0; i < topics.length; i++) {
     var topic = topics[i];
     var lessons = topic.lessons || [];
-
-    // Count completed in this topic
+    var color = ISLAND_COLORS[i % ISLAND_COLORS.length];
     var topicDone = 0;
     for (var k = 0; k < lessons.length; k++) { if (lessons[k].status === 'completed') topicDone++; }
 
-    html += '<div class="smap__topic"><span class="smap__topic-icon">' + (topic.icon||'📖') + '</span><span class="smap__topic-title">' + esc(topic.title_ru) + '</span><span class="smap__topic-progress">' + topicDone + ' / ' + lessons.length + '</span></div>';
-    html += '<div class="smap__stones">';
+    var metaText = topicDone === lessons.length ? 'пройден' : (topicDone > 0 ? 'текущий' : 'откроется позже');
+    if (i === 0 || topicDone > 0 || foundCurrent) { /* show normally */ }
+
+    html += '<section class="smap__island-wrap">';
+    html += '<div class="smap__island-tag smap__island-tag--' + color + '">';
+    html += '<span class="num">' + (i + 1) + '</span>';
+    html += '<span class="name">' + esc(topic.title_ru) + '</span>';
+    html += '<span class="meta">&middot; ' + metaText + '</span>';
+    html += '</div>';
+    html += '<div class="smap__island smap__island--' + color + '">';
+    html += '<div class="smap__path" style="' + (isMobile() ? 'height:' + (lessons.length * 200 + 60) + 'px;' : '') + '">';
+
+    // SVG path
+    var nodeCount = lessons.length;
+    html += buildPathSVG(nodeCount);
+
+    html += '<div class="smap__nodes" style="--node-count:' + nodeCount + ';">';
 
     for (var j = 0; j < lessons.length; j++) {
       var l = lessons[j];
-      var st = l.status; // completed, available, locked
+      var st = l.status;
       var ds;
 
       if (st === 'completed') {
         ds = 'done';
       } else if (st === 'available' && !foundCurrent) {
-        ds = 'current';
+        ds = 'active';
         foundCurrent = true;
-      } else if (st === 'available' || (st === 'locked' && l.lesson_id)) {
-        ds = 'waiting'; // generated but not yet unlocked
+      } else if (st === 'available') {
+        ds = 'foggy';
       } else {
         ds = 'locked';
       }
 
-      var icon = ICONS[gi % ICONS.length];
-      gi++;
-
-      // Zigzag for mobile: left, right, center for current
-      var sides = ['left','right'];
-      var side = (ds === 'current') ? 'center' : sides[j % 2];
-
-      // Connector dots before each stone (except first)
-      if (j > 0) {
-        html += '<div class="smap__connector"><div class="smap__dot"></div><div class="smap__dot"></div><div class="smap__dot"></div></div>';
+      var upDown = (j % 2 === 0) ? 'up' : 'down';
+      // Mobile positions
+      var mobileStyle = '';
+      if (isMobile()) {
+        var yPct = 90 - (j * (80 / Math.max(nodeCount - 1, 1)));
+        var xPct = (j % 2 === 0) ? 32 : 68;
+        mobileStyle = 'top:' + yPct + '%;left:' + xPct + '%;';
       }
 
-      html += '<div class="smap__row smap__row--' + side + '">';
-      var stoneClass = 'smap__stone' + (ds === 'current' ? ' smap__stone--current' : '');
-      html += '<div class="' + stoneClass + '" data-lesson-id="' + (l.lesson_id||'') + '" data-status="' + st + '">';
-
-      // Tooltip for waiting/locked
-      if (ds === 'waiting') {
-        html += '<div class="smap__tooltip">Сначала пройди предыдущий урок!</div>';
-      } else if (ds === 'locked') {
-        html += '<div class="smap__tooltip">Попроси маму или папу создать этот урок</div>';
-      }
-
-      // Bouncing arrow for current
-      if (ds === 'current') {
-        html += '<div class="smap__arrow"><svg width="28" height="28" viewBox="0 0 24 24" fill="#3D9256"><path d="M12 16l-6-6h4V4h4v6h4l-6 6z"/></svg></div>';
-      }
-
-      // Badge
-      var badgeClass = ds === 'waiting' ? 'waiting' : ds;
-      html += '<div class="smap__badge smap__badge--' + badgeClass + '">';
+      html += '<div class="smap__node-slot ' + upDown + '" style="' + mobileStyle + '">';
+      html += '<div class="smap__node smap__node--' + ds + '" data-lesson-id="' + (l.lesson_id||'') + '" data-status="' + st + '">';
+      html += '<div class="smap__disc">';
+      html += '<svg class="smap__node-icon" viewBox="0 0 24 24" fill="none">' + getIconContent(ds) + '</svg>';
+      html += '<span class="smap__num-badge">' + (ds === 'done' ? '&#10003;' : (j + 1)) + '</span>';
       if (ds === 'done') {
-        // Checkmark
-        html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5C4813" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>';
-      } else if (ds === 'locked' || ds === 'waiting') {
-        html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M 8 11 V 7 Q 8 3 12 3 Q 16 3 16 7 V 11" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>';
-      } else {
-        html += (j + 1);
+        html += '<span class="smap__ribbon"><span class="tail"></span><span class="tail right"></span></span>';
       }
-      html += '</div>';
-
-      // Card
-      var cardDs = ds === 'waiting' ? 'waiting' : ds;
-      html += '<div class="smap__card smap__card--' + cardDs + '">';
-
-      // Ribbon for done
-      if (ds === 'done') {
-        html += '<div class="smap__ribbon">ГОТОВО</div>';
+      html += '</div>'; // disc
+      if (ds === 'active') {
+        html += '<span class="smap__start-tag">Старт!</span>';
       }
-
-      html += '<div class="smap__icon' + (ds==='locked'?' smap__icon--locked':'') + '">' + icon + '</div>';
-      html += '<div class="smap__title smap__title--' + ds + '">' + esc(l.title_ru) + '</div>';
-
-      // Stars: 5 big for done, 5 outline for current
-      if (ds === 'done') {
-        html += '<div class="smap__stars">';
-        for (var s = 0; s < 5; s++) {
-          var earned = s < (l.stars_earned || 0);
-          var c = earned ? '#F5D67B' : 'rgba(15,36,24,0.08)';
-          var sc = earned ? '#E3C25E' : 'rgba(15,36,24,0.08)';
-          html += '<svg width="18" height="18" viewBox="0 0 24 24"><path d="M12 2 L14.5 8.5 L21.5 9.2 L16.2 13.8 L17.8 20.6 L12 17 L6.2 20.6 L7.8 13.8 L2.5 9.2 L9.5 8.5 Z" fill="' + c + '" stroke="' + sc + '" stroke-width="1.5" stroke-linejoin="round"/></svg>';
-        }
-        html += '</div>';
-      }
-
-      if (ds === 'current') {
-        html += '<div class="smap__cta">Начать! &rarr;</div>';
-      }
-
-      html += '</div>'; // card
-      html += '</div>'; // stone
-      html += '</div>'; // row
+      html += '</div>'; // node
+      html += '<span class="smap__node-label">' + esc(l.title_ru) + '</span>';
+      html += '</div>'; // node-slot
     }
 
-    html += '</div>'; // stones
+    html += '</div>'; // nodes
+    html += '</div>'; // path
+    html += '</div>'; // island
+    html += '</section>'; // island-wrap
   }
 
   mapEl.innerHTML = html;
 
   // Click handlers
-  mapEl.querySelectorAll('.smap__stone').forEach(function(stone) {
-    var lid = stone.dataset.lessonId;
-    var st = stone.dataset.status;
-    if (lid && (st === 'completed' || st === 'available')) {
-      stone.addEventListener('click', function() {
+  mapEl.querySelectorAll('.smap__node').forEach(function(node) {
+    var lid = node.dataset.lessonId;
+    var st = node.dataset.status;
+    node.addEventListener('click', function() {
+      if (lid && (st === 'completed' || st === 'available')) {
         window.location.href = '/kid/lesson/' + lid;
-      });
-    } else {
-      stone.style.cursor = 'default';
-    }
+      } else if (node.classList.contains('smap__node--locked')) {
+        node.animate([{transform:'translateX(0)'},{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'translateX(0)'}], {duration: 260});
+      } else if (node.classList.contains('smap__node--foggy')) {
+        node.animate([{filter:'brightness(1)'},{filter:'brightness(1.15)'},{filter:'brightness(1)'}], {duration: 280});
+      }
+    });
   });
 }
 
+function getIconContent(state) {
+  if (state === 'done') return '<path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>';
+  if (state === 'active') return '<path d="M13 5l-2 2 5 5-2 2 2 2 5-5-5-5z" fill="currentColor"/><path d="M7 17l-2-2-2 2 2 2zM5 13l4-4 2 2-4 4z" fill="currentColor"/><path d="M11 11l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>';
+  if (state === 'foggy') return '<path d="M3 5.5C3 4.7 3.7 4 4.5 4H10c1.1 0 2 .9 2 2v13c0-1.1-.9-2-2-2H4.5A1.5 1.5 0 0 1 3 15.5v-10z" fill="currentColor"/><path d="M21 5.5c0-.8-.7-1.5-1.5-1.5H14c-1.1 0-2 .9-2 2v13c0-1.1.9-2 2-2h5.5c.8 0 1.5-.7 1.5-1.5v-10z" fill="currentColor" opacity="0.85"/>';
+  return '<rect x="6" y="11" width="12" height="9" rx="2" fill="currentColor"/><path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+}
+
+function buildPathSVG(nodeCount) {
+  // Desktop: horizontal wavy path
+  var dW = 1100;
+  var dH = 220;
+  var step = dW / (nodeCount + 1);
+  var pts = [];
+  for (var i = 0; i < nodeCount; i++) {
+    pts.push({x: step * (i + 1), y: (i % 2 === 0) ? 80 : 140});
+  }
+  var dPath = 'M ' + pts[0].x + ' ' + pts[0].y;
+  for (var i = 1; i < pts.length; i++) {
+    var cpx = (pts[i-1].x + pts[i].x) / 2;
+    dPath += ' C ' + cpx + ' ' + pts[i-1].y + ', ' + cpx + ' ' + pts[i].y + ', ' + pts[i].x + ' ' + pts[i].y;
+  }
+
+  // Mobile: vertical zigzag path
+  var mH = nodeCount * 200 + 60;
+  var mPts = [];
+  for (var i = 0; i < nodeCount; i++) {
+    var yPct = 0.9 - (i * (0.8 / Math.max(nodeCount - 1, 1)));
+    var xPct = (i % 2 === 0) ? 0.32 : 0.68;
+    mPts.push({x: xPct * 390, y: yPct * mH});
+  }
+  var mPath = 'M ' + mPts[0].x + ' ' + mPts[0].y;
+  for (var i = 1; i < mPts.length; i++) {
+    var cpy = (mPts[i-1].y + mPts[i].y) / 2;
+    mPath += ' C ' + mPts[i-1].x + ' ' + cpy + ', ' + mPts[i].x + ' ' + cpy + ', ' + mPts[i].x + ' ' + mPts[i].y;
+  }
+
+  var svg = '<svg class="path-desktop" viewBox="0 0 ' + dW + ' ' + dH + '" preserveAspectRatio="none" aria-hidden="true">';
+  svg += '<path d="' + dPath + '" fill="none" stroke="#ffffff" stroke-opacity="0.85" stroke-width="6" stroke-linecap="round" stroke-dasharray="2 16"/>';
+  svg += '</svg>';
+  svg += '<svg class="path-mobile" viewBox="0 0 390 ' + mH + '" preserveAspectRatio="none" aria-hidden="true">';
+  svg += '<path d="' + mPath + '" fill="none" stroke="#ffffff" stroke-opacity="0.85" stroke-width="6" stroke-linecap="round" stroke-dasharray="2 16"/>';
+  svg += '</svg>';
+  return svg;
+}
+
+function isMobile() { return window.innerWidth <= 860; }
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 </script>
 {% endblock %}
