@@ -360,6 +360,23 @@
   .node.locked { cursor: default; }
   .node.locked:hover { transform: none; }
 
+  /* ═══ TOOLTIP ═══ */
+  .node-tooltip {
+    position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: #fff; font-size: 12px; font-weight: 700;
+    font-family: "Baloo 2", sans-serif;
+    padding: 8px 14px; border-radius: 12px; white-space: nowrap;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    z-index: 10;
+  }
+  .node-tooltip::after {
+    content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    border: 6px solid transparent; border-top-color: var(--ink);
+  }
+  .node:hover .node-tooltip { opacity: 1; }
+  /* Don't show tooltip on active (it has start-tag) */
+  .node.active .node-tooltip { display: none; }
+
   /* ═══ EMPTY / LOADING ═══ */
   .map-empty { text-align: center; padding: 80px 20px; color: var(--ink-soft); font-size: 16px; font-weight: 600; }
 
@@ -553,6 +570,10 @@ function renderMap(data) {
 
       html += '<div class="node-slot ' + upDown + '"' + mStyle + '>';
       html += '<div class="node ' + ds + '" data-lid="' + (l.lesson_id||'') + '" data-st="' + st + '">';
+      // Tooltip
+      if (ds === 'done') html += '<div class="node-tooltip">' + esc(l.title_ru) + ' &#10003;</div>';
+      else if (ds === 'foggy') html += '<div class="node-tooltip">Сначала пройди предыдущий урок!</div>';
+      else if (ds === 'locked') html += '<div class="node-tooltip">Попроси маму или папу создать этот урок</div>';
       html += '<div class="disc">';
       if (ds === 'active' && l.icon) {
         html += '<span class="icon icon--emoji">' + esc(l.icon) + '</span>';
