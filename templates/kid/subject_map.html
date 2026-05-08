@@ -571,8 +571,7 @@ function renderMap(data) {
       html += '<div class="node-slot ' + upDown + '"' + mStyle + '>';
       html += '<div class="node ' + ds + '" data-lid="' + (l.lesson_id||'') + '" data-st="' + st + '">';
       // Tooltip
-      if (ds === 'done') html += '<div class="node-tooltip">' + esc(l.title_ru) + ' &#10003;</div>';
-      else if (ds === 'foggy') html += '<div class="node-tooltip">Сначала пройди предыдущий урок!</div>';
+      if (ds === 'foggy') html += '<div class="node-tooltip">Сначала пройди предыдущий урок!</div>';
       else if (ds === 'locked') html += '<div class="node-tooltip">Попроси маму или папу создать этот урок</div>';
       html += '<div class="disc">';
       if (ds === 'active' && l.icon) {
@@ -599,7 +598,9 @@ function renderMap(data) {
     n.addEventListener('click', function() {
       var lid = n.dataset.lid;
       var st = n.dataset.st;
-      if (lid && (st === 'completed' || st === 'available')) {
+      if (lid && st === 'completed') {
+        window.location.href = '/kid/lesson/' + lid;
+      } else if (lid && st === 'available' && n.classList.contains('active')) {
         window.location.href = '/kid/lesson/' + lid;
       } else if (n.classList.contains('locked')) {
         n.animate([{transform:'translateX(0)'},{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'translateX(0)'}], {duration:260});
