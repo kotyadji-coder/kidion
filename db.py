@@ -138,6 +138,7 @@ def _init_schema(conn: sqlite3.Connection) -> None:
             content_url     TEXT,
             print_url       TEXT,
             worksheet_url   TEXT,
+            icon            TEXT,
             plan_id         INTEGER REFERENCES weekly_plans(id),
             enrollment_id   INTEGER REFERENCES curriculum_enrollments(id),
             sequence_number INTEGER NOT NULL DEFAULT 0,
@@ -349,6 +350,12 @@ def _migrate(conn: sqlite3.Connection) -> None:
     cols = [row[1] for row in conn.execute("PRAGMA table_info(lessons)").fetchall()]
     if "worksheet_url" not in cols:
         conn.execute("ALTER TABLE lessons ADD COLUMN worksheet_url TEXT")
+        conn.commit()
+
+    # Add icon column to lessons if missing
+    cols = [row[1] for row in conn.execute("PRAGMA table_info(lessons)").fetchall()]
+    if "icon" not in cols:
+        conn.execute("ALTER TABLE lessons ADD COLUMN icon TEXT")
         conn.commit()
 
 
@@ -727,11 +734,12 @@ def update_lesson_content(
     print_url: str | None,
     status: str,
     worksheet_url: str | None = None,
+    icon: str | None = None,
 ) -> None:
-    """UPDATE lessons SET content_url=?, print_url=?, worksheet_url=?, status=? WHERE id=?"""
+    """UPDATE lessons SET content_url=?, print_url=?, worksheet_url=?, icon=?, status=? WHERE id=?"""
     conn.execute(
-        "UPDATE lessons SET content_url = ?, print_url = ?, worksheet_url = ?, status = ? WHERE id = ?",
-        (content_url, print_url, worksheet_url, status, lesson_id),
+        "UPDATE lessons SET content_url = ?, print_url = ?, worksheet_url = ?, icon = ?, status = ? WHERE id = ?",
+        (content_url, print_url, worksheet_url, icon, status, lesson_id),
     )
     conn.commit()
 
@@ -1373,7 +1381,7 @@ def get_child_progress_for_subject(conn: sqlite3.Connection, child_id: int, subj
     rows = conn.execute(
         """SELECT clp.*, cl.lesson_order, cl.title_ru, cl.prompt_hint,
                   ct.id AS topic_id, ct.theme_order, ct.title_ru AS topic_title, ct.icon,
-                  l.status AS lesson_status
+                  l.status AS lesson_status, l.icon AS lesson_icon
            FROM child_lesson_progress clp
            JOIN curriculum_lessons cl ON cl.id = clp.curriculum_lesson_id
            JOIN curriculum_topics ct ON ct.id = cl.topic_id

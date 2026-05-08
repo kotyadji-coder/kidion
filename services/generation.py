@@ -2,7 +2,7 @@ import uuid
 import logging
 from datetime import date
 
-from services.gemini_client import generate_explanation, generate_image_prompt, generate_image_prompt_fallback
+from services.gemini_client import generate_explanation, generate_image_prompt, generate_image_prompt_fallback, generate_visual_layout
 from services.image_generator import generate_image
 from services.content_generator import save_lesson_html
 
@@ -65,6 +65,16 @@ def generate_lesson_content(lesson_id: int, child: dict, topic: str, subject: st
 
         story_text = "\n".join(b["text"] for b in lesson_json.get("story_blocks", []))
 
+        # Step 3: Visual layout (Gemini Flash) — rich theory blocks
+        character_name = child.get("character_name") or "Искатель"
+        character_emoji = "🦊"
+        visual_blocks = generate_visual_layout(
+            lesson_json.get("story_blocks", []),
+            topic, subject,
+            character_name=character_name,
+            character_emoji=character_emoji,
+        )
+
         try:
             img_prompt = generate_image_prompt(story_text)
             image_bytes = generate_image(img_prompt)
@@ -76,7 +86,8 @@ def generate_lesson_content(lesson_id: int, child: dict, topic: str, subject: st
                 image_bytes = None
 
         content_id = str(uuid.uuid4())[:8]
-        content_url = save_lesson_html(image_bytes, lesson_json, content_id, server_url)
+        content_url = save_lesson_html(image_bytes, lesson_json, content_id, server_url,
+                                       visual_blocks=visual_blocks)
         print_url = f"{server_url}/content/{content_id}_print.html"
 
         # Generate printable worksheet
@@ -87,8 +98,14 @@ def generate_lesson_content(lesson_id: int, child: dict, topic: str, subject: st
         except Exception:
             logger.exception("Worksheet generation failed for lesson %s", lesson_id)
 
+        # Extract emoji from first story block for map icon
+        lesson_icon = None
+        story_blocks = lesson_json.get("story_blocks", [])
+        if story_blocks:
+            lesson_icon = story_blocks[0].get("emoji")
+
         update_lesson_content(conn, lesson_id, content_url, print_url, "done",
-                              worksheet_url=worksheet_url)
+                              worksheet_url=worksheet_url, icon=lesson_icon)
     except Exception as e:
         logger.exception("Generation failed for lesson %s", lesson_id)
         try:

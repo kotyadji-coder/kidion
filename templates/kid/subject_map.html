@@ -254,6 +254,11 @@
     width: 36px; height: 36px; position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%); color: #fff; z-index: 1; display: block;
   }
+  .node .icon--emoji {
+    width: auto; height: auto; font-size: 38px; line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    display: flex; align-items: center; justify-content: center;
+  }
 
   /* Number badge */
   .node .num-badge {
@@ -549,7 +554,11 @@ function renderMap(data) {
       html += '<div class="node-slot ' + upDown + '"' + mStyle + '>';
       html += '<div class="node ' + ds + '" data-lid="' + (l.lesson_id||'') + '" data-st="' + st + '">';
       html += '<div class="disc">';
-      html += '<svg class="icon" viewBox="0 0 24 24" fill="none">' + nodeIcon(ds) + '</svg>';
+      if (ds === 'active' && l.icon) {
+        html += '<span class="icon icon--emoji">' + esc(l.icon) + '</span>';
+      } else {
+        html += '<svg class="icon" viewBox="0 0 24 24" fill="none">' + nodeIcon(ds) + '</svg>';
+      }
       html += '<span class="num-badge">' + (ds === 'done' ? '&#10003;' : (j+1)) + '</span>';
       if (ds === 'done') html += '<span class="ribbon"><span class="tail"></span><span class="tail right"></span></span>';
       html += '</div>'; // disc

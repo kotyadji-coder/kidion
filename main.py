@@ -1782,19 +1782,19 @@ async def enroll_subject(child_id: int, body: EnrollSubjectRequest, request: Req
 
     message = "enrolled" if rows_created > 0 else "already_enrolled"
 
-    # Auto-generate first 4 lessons of the first topic on first enrollment (FREE)
+    # Auto-generate first lesson of the first topic on first enrollment (FREE)
     auto_lesson_ids = []
     if rows_created > 0:
         first_topic = topics[0] if topics else None
         if first_topic:
             first_topic_id = first_topic["id"]
-            # Get first 4 lessons of the first topic (exclude the 5th = test/activity)
+            # Get first lesson of the first topic
             first_lessons = conn.execute(
                 """SELECT clp.id AS progress_id, cl.id AS curriculum_lesson_id, cl.lesson_order, cl.title_ru
                    FROM child_lesson_progress clp
                    JOIN curriculum_lessons cl ON cl.id = clp.curriculum_lesson_id
                    WHERE clp.child_id=? AND cl.topic_id=? AND clp.lesson_id IS NULL
-                   ORDER BY cl.lesson_order LIMIT 4""",
+                   ORDER BY cl.lesson_order LIMIT 1""",
                 (child_id, first_topic_id),
             ).fetchall()
 
@@ -2288,6 +2288,7 @@ async def kid_subject_map(subject: str, request: Request):
             "status": row["status"],
             "stars_earned": row["stars_earned"],
             "lesson_id": row["lesson_id"],
+            "icon": row.get("lesson_icon"),
         })
 
     topics = sorted(topics_map.values(), key=lambda t: t["theme_order"])
@@ -3024,6 +3025,11 @@ async def kid_root(request: Request):
     if child:
         return RedirectResponse(url="/kid/home", status_code=302)
     return RedirectResponse(url="/kid/login", status_code=302)
+
+
+@app.get("/test_lesson_states.html", response_class=HTMLResponse)
+async def test_lesson_states(request: Request):
+    return templates.TemplateResponse(request, "test_lesson_states.html", {})
 
 
 @app.get("/kid/login", response_class=HTMLResponse)
