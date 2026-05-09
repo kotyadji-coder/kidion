@@ -92,7 +92,7 @@
     border: 1px solid var(--rim); border-radius: var(--r-pill);
     box-shadow: 0 2px 0 rgba(42,36,82,0.04); cursor: pointer;
     font-family: "Baloo 2", sans-serif; font-weight: 700; color: var(--ink);
-    font-size: 14px; border: 1px solid var(--rim);
+    font-size: 14px;
   }
   .kh-subject-icon {
     width: 30px; height: 30px; border-radius: 10px;
@@ -106,7 +106,9 @@
     border-radius: var(--r-pill); border: 1px solid var(--rim);
     font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 18px;
     color: var(--ink); box-shadow: 0 2px 0 rgba(42,36,82,0.05);
+    text-decoration: none; cursor: pointer; transition: transform .15s;
   }
+  .kh-badge:hover { transform: translateY(-2px); }
   .kh-badge-ico {
     width: 32px; height: 32px; border-radius: 50%;
     display: grid; place-items: center; color: #fff;
@@ -119,7 +121,7 @@
     width: 44px; height: 44px; border-radius: 14px;
     background: var(--paper); border: 1px solid var(--rim);
     display: grid; place-items: center; cursor: pointer; color: var(--ink);
-    box-shadow: 0 2px 0 rgba(42,36,82,0.05);
+    box-shadow: 0 2px 0 rgba(42,36,82,0.05); text-decoration: none;
   }
   .kh-avatar {
     width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--accent);
@@ -175,10 +177,10 @@
   /* ═══ MAP ═══ */
   .map-area {
     max-width: 1200px; margin: 28px auto 120px; padding: 0 28px;
-    position: relative; z-index: 1;
+    position: relative; z-index: 1; overflow: visible;
   }
 
-  /* Island wrapper — tag lives here OUTSIDE overflow:hidden island */
+  /* Island wrapper */
   .island-wrap { position: relative; margin: 60px 0 0; }
   .island-wrap:first-child { margin-top: 32px; }
 
@@ -186,7 +188,7 @@
     position: relative; padding: 28px 32px 80px;
     border-radius: 56% 44% 52% 48% / 70% 60% 60% 70%;
     box-shadow: inset 0 -18px 0 rgba(0,0,0,0.07), inset 0 6px 0 rgba(255,255,255,0.5), 0 30px 60px -30px rgba(42,36,82,0.25);
-    overflow: hidden;
+    overflow: visible;
   }
   .island--mint  { background: #b6ecc6; }
   .island--peach { background: #ffd6a8; }
@@ -207,27 +209,28 @@
     padding: 8px 18px 8px 8px; border: 1px solid var(--rim);
     box-shadow: var(--shadow-card);
     display: inline-flex; align-items: center; gap: 10px;
+    white-space: nowrap;
   }
   .island-tag .num {
-    width: 32px; height: 32px; border-radius: 50%;
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
     display: grid; place-items: center;
     font-family: "Baloo 2"; font-weight: 800; font-size: 16px;
   }
   .island-tag--mint .num { background: linear-gradient(160deg,#ffd479,#f7a93a); color: #5b2a00; box-shadow: 0 2px 0 #b76b00; }
   .island-tag--peach .num { background: linear-gradient(160deg,#ffb46e,var(--accent)); color: #fff; box-shadow: 0 2px 0 var(--accent-deep); }
   .island-tag--lilac .num { background: linear-gradient(160deg,#c2a3ff,#a888ee); color: #fff; box-shadow: 0 2px 0 #6a47b8; }
-  .island-tag .name { font-family: "Baloo 2"; font-weight: 800; color: var(--ink); font-size: 16px; }
+  .island-tag .name { font-family: "Baloo 2"; font-weight: 800; color: var(--ink); font-size: 16px; white-space: nowrap; }
   .island-tag .meta { font-weight: 800; color: var(--ink-mute); font-size: 13px; }
 
   /* ═══ PATH & NODES ═══ */
-  .path { position: relative; height: 220px; margin-top: 12px; }
+  .path { position: relative; height: 220px; margin-top: 12px; overflow: visible; }
   .path svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
   .path .path-mobile { display: none; }
 
   .nodes {
     position: relative; display: grid;
     grid-template-columns: repeat(var(--cols, 5), 1fr);
-    height: 100%; align-items: center;
+    height: 100%; align-items: center; overflow: visible;
   }
   .node-slot { display: grid; place-items: center; position: relative; }
   .node-slot.up   { transform: translateY(-30px); }
@@ -315,6 +318,7 @@
     padding: 4px 12px; border-radius: var(--r-pill);
     box-shadow: 0 3px 0 var(--accent-deep); border: 2px solid var(--accent);
     white-space: nowrap; animation: bobble 1.6s ease-in-out infinite;
+    z-index: 5;
   }
   .start-tag::after {
     content: ""; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%) rotate(45deg);
@@ -349,6 +353,8 @@
     50%     { transform: translateX(5px); }
   }
   .node.foggy .icon { color: #fff; opacity: 0.95; }
+  .node.foggy { cursor: default; }
+  .node.foggy:hover { transform: none; }
 
   /* ═══ STATE: LOCKED ═══ */
   .node.locked .disc {
@@ -374,11 +380,34 @@
     border: 6px solid transparent; border-top-color: var(--ink);
   }
   .node:hover .node-tooltip { opacity: 1; }
-  /* Don't show tooltip on active (it has start-tag) */
   .node.active .node-tooltip { display: none; }
+
+  /* Edge-aware tooltip: shift left/right if near edge */
+  .node-tooltip--left { left: 0; transform: none; }
+  .node-tooltip--left::after { left: 20px; transform: none; }
+  .node-tooltip--right { left: auto; right: 0; transform: none; }
+  .node-tooltip--right::after { left: auto; right: 20px; transform: none; }
 
   /* ═══ EMPTY / LOADING ═══ */
   .map-empty { text-align: center; padding: 80px 20px; color: var(--ink-soft); font-size: 16px; font-weight: 600; }
+
+  /* ═══ MOBILE BOTTOM TAB BAR ═══ */
+  .m-tabbar {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 60;
+    background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--rim);
+    padding: 8px 14px calc(8px + env(safe-area-inset-bottom));
+    justify-content: space-around; gap: 4px;
+  }
+  .m-tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding: 8px 4px; border-radius: 14px;
+    color: var(--ink-mute); font-family: "Baloo 2"; font-weight: 800; font-size: 11px;
+    text-decoration: none; cursor: pointer;
+  }
+  .m-tab svg { width: 24px; height: 24px; }
+  .m-tab.is-active { color: var(--accent); background: var(--accent-soft); }
 
   /* ═══ RESPONSIVE (MOBILE) ═══ */
   @media (max-width: 860px) {
@@ -395,7 +424,7 @@
     .prog { margin-top: 24px; padding: 0 16px; }
     .prog h1 { font-size: 28px; }
 
-    .map-area { padding: 0 16px; margin: 22px auto 60px; }
+    .map-area { padding: 0 16px; margin: 22px auto 90px; }
 
     .island-wrap { margin: 80px 0 0; }
     .island { padding: 32px 14px 56px; border-radius: 36px; }
@@ -407,14 +436,16 @@
     .path .path-desktop { display: none; }
     .path .path-mobile { display: block; }
 
-    .nodes {
-      display: block; position: relative; height: 100%;
-    }
-    .node-slot {
-      position: absolute !important; transform: translate(-50%, -50%) !important;
-    }
+    .nodes { display: block; position: relative; height: 100%; }
+    .node-slot { position: absolute !important; transform: translate(-50%, -50%) !important; }
     .node-label { bottom: -28px; font-size: 11px; padding: 2px 8px; }
     .start-tag { top: -30px; }
+
+    .m-tabbar { display: flex; }
+    body[data-page="subject-map"] { padding-bottom: 84px; }
+
+    /* Tooltip: don't clip on mobile */
+    .node-tooltip { font-size: 11px; padding: 6px 10px; }
   }
 </style>
 {% endblock %}
@@ -425,7 +456,7 @@
   <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div><div class="cloud c4"></div>
 </div>
 
-<!-- Custom header (matches design) -->
+<!-- Custom header -->
 <header class="kh">
   <div class="kh-inner">
     <a class="kh-logo" href="/kid/home">
@@ -442,14 +473,14 @@
     </button>
 
     <div class="kh-badges">
-      <div class="kh-badge kh-badge--streak" title="Дней подряд">
+      <a href="/kid/home" class="kh-badge kh-badge--streak" title="Дней подряд">
         <span class="kh-badge-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3c1.5 3.5-1 4 .5 7 1.7-.6 2.5-2 2.5-3 2 2 4 4 4 7.5A7 7 0 0 1 5 14.5c0-3 1.5-4.5 3-6.5 2 1 2.5 2.5 2 4 1.5-1 2.5-3 2-9z" fill="#fff"/></svg></span>
         <span id="hdr-streak">0</span>
-      </div>
-      <div class="kh-badge kh-badge--stars" title="Звёзды">
+      </a>
+      <a href="/kid/character" class="kh-badge kh-badge--stars" title="Звёзды">
         <span class="kh-badge-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2.5l2.6 5.6 6.1.7-4.6 4.2 1.3 6L12 16.1 6.6 19l1.3-6L3.3 8.8l6.1-.7L12 2.5z" fill="#fff"/></svg></span>
         <span id="hdr-stars">{{ child.stars if child.stars is defined else 0 }}</span>
-      </div>
+      </a>
     </div>
 
     <div class="kh-right">
@@ -478,6 +509,26 @@
 <main class="map-area" id="lesson-map">
   <div style="text-align:center;padding:60px 0;"><div class="spinner"></div></div>
 </main>
+
+<!-- Mobile bottom tab bar -->
+<nav class="m-tabbar">
+  <a class="m-tab is-active" href="/kid/subject/{{ subject }}">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1v-9z" fill="currentColor"/></svg>
+    Карта
+  </a>
+  <a class="m-tab" href="/kid/character">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="9" width="18" height="11" rx="2" fill="currentColor"/><path d="M3 9c0-3 4-5 9-5s9 2 9 5" fill="currentColor"/></svg>
+    Магазин
+  </a>
+  <a class="m-tab" href="/kid/chat">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z" fill="currentColor"/></svg>
+    Чат
+  </a>
+  <a class="m-tab" href="/kid/home">
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="currentColor"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7" fill="currentColor"/></svg>
+    Профиль
+  </a>
+</nav>
 {% endblock %}
 
 {% block scripts %}
@@ -490,11 +541,9 @@ var SUBJECTS = {
 };
 var SUB = SUBJECTS[SUBJECT] || {name:'{{ subject_name|lower }}', bg:'#eee', color:'#333'};
 
-// Set header subject icon color
 var subjIcon = document.getElementById('hdr-subject-icon');
 if (subjIcon) { subjIcon.style.background = SUB.bg; subjIcon.style.width = '30px'; subjIcon.style.height = '30px'; subjIcon.style.borderRadius = '10px'; }
 
-// Set page title
 document.getElementById('prog-title').innerHTML = 'Космическ' + (['русский'].indexOf(SUB.name.split(' ')[0]) >= 0 ? 'ий' : 'ая') + ' <span class="accent">' + esc(SUB.name) + '</span>';
 
 var COLORS = ['mint','peach','lilac'];
@@ -520,13 +569,13 @@ function renderMap(data) {
   document.getElementById('prog-fill').style.width = pct + '%';
   document.getElementById('prog-num').textContent = done + ' / ' + total;
 
-  // Streak (from data if available)
   if (data.streak) document.getElementById('hdr-streak').textContent = data.streak;
 
   var topics = data.topics || [];
   var mapEl = document.getElementById('lesson-map');
   var html = '';
   var foundCurrent = false;
+  var mobile = isMobile();
 
   for (var i = 0; i < topics.length; i++) {
     var topic = topics[i];
@@ -544,16 +593,15 @@ function renderMap(data) {
     html += '<span class="meta">&middot; ' + meta + '</span>';
     html += '</div>';
     html += '<div class="island island--' + color + '">';
-    html += '<div class="path"' + (isMobile() ? ' style="height:' + (nc * 200 + 60) + 'px"' : '') + '>';
 
-    // SVG paths
-    html += buildSVG(nc);
-
-    html += '<div class="nodes" style="--cols:' + nc + ';' + (isMobile() ? 'height:' + (nc * 200 + 60) + 'px' : '') + '">';
+    var pathH = mobile ? (nc * 190 + 60) : 220;
+    html += '<div class="path" style="height:' + pathH + 'px">';
+    html += buildSVG(nc, pathH);
+    html += '<div class="nodes" style="--cols:' + nc + ';height:' + pathH + 'px">';
 
     for (var j = 0; j < nc; j++) {
       var l = lessons[j];
-      var st = l.status; // completed, available, locked
+      var st = l.status;
       var ds;
       if (st === 'completed') { ds = 'done'; }
       else if (st === 'available' && !foundCurrent) { ds = 'active'; foundCurrent = true; }
@@ -562,18 +610,27 @@ function renderMap(data) {
 
       var upDown = (j % 2 === 0) ? 'up' : 'down';
       var mStyle = '';
-      if (isMobile()) {
-        var yPct = 90 - (j * (80 / Math.max(nc - 1, 1)));
+      if (mobile) {
+        // Mobile: lesson 1 at top (10%), last at bottom (90%)
+        var yPct = 10 + (j * (80 / Math.max(nc - 1, 1)));
         var xPct = (j % 2 === 0) ? 32 : 68;
         mStyle = ' style="top:' + yPct + '%;left:' + xPct + '%"';
       }
 
+      // Tooltip edge awareness
+      var tooltipClass = 'node-tooltip';
+      if (j === 0) tooltipClass += ' node-tooltip--left';
+      else if (j === nc - 1) tooltipClass += ' node-tooltip--right';
+
       html += '<div class="node-slot ' + upDown + '"' + mStyle + '>';
-      html += '<div class="node ' + ds + '" data-lid="' + (l.lesson_id||'') + '" data-st="' + st + '">';
-      // Tooltip
-      if (ds === 'foggy') html += '<div class="node-tooltip">Сначала пройди предыдущий урок!</div>';
-      else if (ds === 'locked') html += '<div class="node-tooltip">Попроси маму или папу создать этот урок</div>';
+      html += '<div class="node ' + ds + '" data-lid="' + (l.lesson_id||'') + '" data-st="' + st + '" data-ds="' + ds + '">';
+
+      // Tooltip (foggy and locked only)
+      if (ds === 'foggy') html += '<div class="' + tooltipClass + '">Сначала пройди предыдущий урок!</div>';
+      else if (ds === 'locked') html += '<div class="' + tooltipClass + '">Попроси старших открыть новый уровень</div>';
+
       html += '<div class="disc">';
+      // Show emoji icon on active if available
       if (ds === 'active' && l.icon) {
         html += '<span class="icon icon--emoji">' + esc(l.icon) + '</span>';
       } else {
@@ -593,21 +650,17 @@ function renderMap(data) {
 
   mapEl.innerHTML = html;
 
-  // Clicks
+  // Click handlers
   mapEl.querySelectorAll('.node').forEach(function(n) {
     n.addEventListener('click', function() {
       var lid = n.dataset.lid;
-      var st = n.dataset.st;
-      if (lid && st === 'completed') {
+      var ds = n.dataset.ds;
+      if (lid && (ds === 'done' || ds === 'active')) {
         window.location.href = '/kid/lesson/' + lid;
-      } else if (lid && st === 'available' && n.classList.contains('active')) {
-        window.location.href = '/kid/lesson/' + lid;
-      } else if (n.classList.contains('locked')) {
+      } else if (ds === 'locked') {
         n.animate([{transform:'translateX(0)'},{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'translateX(0)'}], {duration:260});
-      } else if (n.classList.contains('foggy')) {
+      } else if (ds === 'foggy') {
         n.animate([{filter:'brightness(1)'},{filter:'brightness(1.15)'},{filter:'brightness(1)'}], {duration:280});
-      } else if (n.classList.contains('active')) {
-        n.animate([{transform:'scale(1)'},{transform:'scale(0.94)'},{transform:'scale(1)'}], {duration:180});
       }
     });
   });
@@ -620,7 +673,7 @@ function nodeIcon(state) {
   return '<rect x="6" y="11" width="12" height="9" rx="2" fill="currentColor"/><path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
 }
 
-function buildSVG(n) {
+function buildSVG(n, mobileH) {
   // Desktop horizontal wavy
   var W = 1100, H = 220;
   var step = W / (n + 1);
@@ -632,11 +685,11 @@ function buildSVG(n) {
     d += ' C ' + cx + ' ' + pts[i-1].y + ', ' + cx + ' ' + pts[i].y + ', ' + pts[i].x + ' ' + pts[i].y;
   }
 
-  // Mobile vertical zigzag
-  var mH = n * 200 + 60;
+  // Mobile vertical: lesson 1 at top (10%), last at bottom (90%)
+  var mH = mobileH || (n * 190 + 60);
   var mp = [];
   for (var i = 0; i < n; i++) {
-    var yP = 0.9 - (i * 0.8 / Math.max(n-1, 1));
+    var yP = 0.1 + (i * 0.8 / Math.max(n-1, 1));
     mp.push({x: (i%2===0?0.32:0.68)*390, y: yP*mH});
   }
   var md = 'M ' + mp[0].x + ' ' + mp[0].y;
