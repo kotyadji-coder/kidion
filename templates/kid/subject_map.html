@@ -630,9 +630,10 @@ function renderMap(data) {
       else if (ds === 'locked') html += '<div class="' + tooltipClass + '">Попроси старших открыть новый уровень</div>';
 
       html += '<div class="disc">';
-      // Show emoji icon on active if available
-      if (ds === 'active' && l.icon) {
-        html += '<span class="icon icon--emoji">' + esc(l.icon) + '</span>';
+      // Show emoji icon on active node
+      if (ds === 'active') {
+        var emoji = l.icon || '🚀';
+        html += '<span class="icon icon--emoji">' + emoji + '</span>';
       } else {
         html += '<svg class="icon" viewBox="0 0 24 24" fill="none">' + nodeIcon(ds) + '</svg>';
       }
@@ -652,14 +653,14 @@ function renderMap(data) {
 
   // Click handlers
   mapEl.querySelectorAll('.node').forEach(function(n) {
-    n.addEventListener('click', function() {
+    n.addEventListener('click', function(e) {
+      e.stopPropagation();
       var lid = n.dataset.lid;
-      var ds = n.dataset.ds;
-      if (lid && (ds === 'done' || ds === 'active')) {
+      if (lid && (n.classList.contains('done') || n.classList.contains('active'))) {
         window.location.href = '/kid/lesson/' + lid;
-      } else if (ds === 'locked') {
+      } else if (n.classList.contains('locked')) {
         n.animate([{transform:'translateX(0)'},{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'translateX(0)'}], {duration:260});
-      } else if (ds === 'foggy') {
+      } else if (n.classList.contains('foggy')) {
         n.animate([{filter:'brightness(1)'},{filter:'brightness(1.15)'},{filter:'brightness(1)'}], {duration:280});
       }
     });
