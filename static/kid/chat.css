@@ -6,13 +6,20 @@
 /* ---------- Layout ---------- */
 .chat-layout {
   display: flex;
-  height: calc(100vh - 56px);
+  height: calc(100vh - 62px);
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   overflow: hidden;
   background: #fff;
   position: relative;
+}
+
+@media (max-width: 900px) {
+  .chat-layout {
+    height: calc(100vh - 54px);
+    height: calc(100dvh - 54px);
+  }
 }
 
 body[data-page="chat"] .kid-main {

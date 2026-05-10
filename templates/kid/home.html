@@ -41,7 +41,7 @@
   }
 
   /* Sky deco */
-  .hub-sky { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .hub-sky { position: fixed; inset: 0; pointer-events: none; z-index: -1; }
   .hub-cloud {
     position: absolute; background: #fff; border-radius: 100px; opacity: 0.7;
     box-shadow: 28px -10px 0 -4px #fff, -28px -8px 0 -6px #fff, 52px 0 0 -10px #fff, -52px 0 0 -10px #fff;
@@ -101,14 +101,14 @@
   .hub-gear:hover { transform: translateY(-1px); color: var(--hb-ink-soft); }
 
   .hub-avatar {
-    width: 40px; height: 40px; border-radius: 50%;
+    width: 42px; height: 42px; border-radius: 50%;
     border: 3px solid var(--hb-accent); background: #ffe7d4;
-    display: grid; place-items: center; overflow: hidden;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
     font-family: "Baloo 2"; font-weight: 800; font-size: 16px; color: var(--hb-accent-deep);
     text-decoration: none; box-shadow: 0 2px 0 var(--hb-accent-deep);
-    margin-left: 4px;
+    margin-left: 4px; flex-shrink: 0;
   }
-  .hub-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+  .hub-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
   /* === HERO === */
   .hub-hero {
@@ -231,7 +231,7 @@
   }
   .hub-portal h3 {
     font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 20px;
-    margin: 0 0: 4px; color: var(--hb-ink); letter-spacing: -0.3px;
+    margin: 0 0 4px; color: var(--hb-ink); letter-spacing: -0.3px;
   }
   .hub-portal .progress-row {
     display: flex; align-items: center; gap: 8px; width: 100%; max-width: 180px;
@@ -328,49 +328,51 @@
     .hub-avatar { width: 34px; height: 34px; margin-left: 2px; }
 
     .hub-hero {
-      grid-template-columns: 1fr; gap: 8px; margin-top: 12px; padding: 0 16px;
+      grid-template-columns: 1fr; gap: 16px; margin-top: 20px; padding: 0 20px;
     }
-    .hub-mascot-stage { height: 200px; order: 1; }
-    .hub-mascot-stage::before { width: 200px; height: 200px; }
-    .hub-character { width: 150px; height: 150px; border-width: 5px; }
-    .hub-character-placeholder { font-size: 48px; }
+    .hub-mascot-stage { height: 180px; order: 1; }
+    .hub-mascot-stage::before { width: 180px; height: 180px; }
+    .hub-character { width: 140px; height: 140px; border-width: 4px; }
+    .hub-character-placeholder { font-size: 44px; }
 
     .hub-hero-content { order: 2; text-align: center; display: flex; flex-direction: column; align-items: center; }
     .hub-speech {
-      font-size: 16px; padding: 10px 16px; border-radius: 18px; margin-bottom: 14px; max-width: 100%;
+      font-size: 15px; padding: 12px 18px; border-radius: 18px; margin-bottom: 16px; max-width: 100%;
     }
-    .hub-speech .greeting { font-size: 20px; }
+    .hub-speech .greeting { font-size: 18px; }
     .hub-speech::before { display: none; }
     .hub-speech::after {
       content: ""; position: absolute; top: -9px; left: 50%; transform: translateX(-50%) rotate(45deg);
       width: 14px; height: 14px; background: var(--hb-paper);
       border-left: 1px solid var(--hb-rim); border-top: 1px solid var(--hb-rim);
     }
-    .hub-play { padding: 14px 24px; gap: 12px; border-radius: 24px; }
-    .hub-play-icon { width: 44px; height: 44px; border-width: 2.5px; }
-    .hub-play-icon svg { width: 20px; height: 20px; }
-    .hub-play-text .big { font-size: 30px; }
-    .hub-play-text .sub { font-size: 11px; }
+    .hub-play { padding: 16px 28px; gap: 14px; border-radius: 24px; }
+    .hub-play-icon { width: 46px; height: 46px; border-width: 2.5px; }
+    .hub-play-icon svg { width: 22px; height: 22px; }
+    .hub-play-text .big { font-size: 32px; }
+    .hub-play-text .sub { font-size: 12px; }
 
-    .hub-portals { padding: 0 16px; margin-top: 28px; }
-    .hub-portals-head h2 { font-size: 22px; }
-    .hub-portal-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .hub-portal { padding: 16px 12px 14px; border-radius: 22px; }
-    .hub-portal-disc { width: 80px; height: 80px; border-width: 4px; font-size: 32px; margin-bottom: 10px; }
-    .hub-portal h3 { font-size: 15px; }
+    .hub-portals { padding: 0 20px; margin-top: 32px; }
+    .hub-portals-head h2 { font-size: 20px; }
+    .hub-portals-head .hint { font-size: 12px; }
+    .hub-portal-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .hub-portal { padding: 18px 14px 16px; border-radius: 22px; position: relative; z-index: 2; }
+    .hub-portal-disc { width: 72px; height: 72px; border-width: 4px; font-size: 28px; margin-bottom: 10px; }
+    .hub-portal h3 { font-size: 14px; margin-bottom: 4px; }
     .hub-portal .progress-row { gap: 6px; }
-    .hub-portal .progress { height: 8px; }
+    .hub-portal .progress { height: 7px; }
+    .hub-portal .pct { font-size: 11px; }
     .hub-portal .continue-pin { font-size: 10px; padding: 3px 8px; margin-top: 6px; }
 
-    .hub-shelf { grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px; margin: 28px auto 90px; }
-    .hub-shelf-card { padding: 16px; flex-direction: column; align-items: flex-start; gap: 12px; border-radius: 22px; }
-    .hub-shelf-icon { width: 56px; height: 56px; border-radius: 16px; border-width: 3px; }
-    .hub-shelf-icon svg { width: 30px; height: 30px; }
-    .hub-shelf-title { font-size: 18px; }
+    .hub-shelf { grid-template-columns: 1fr 1fr; gap: 14px; padding: 0 20px; margin: 32px auto 100px; }
+    .hub-shelf-card { padding: 18px 16px; flex-direction: column; align-items: flex-start; gap: 12px; border-radius: 22px; }
+    .hub-shelf-icon { width: 52px; height: 52px; border-radius: 14px; border-width: 3px; }
+    .hub-shelf-icon svg { width: 26px; height: 26px; }
+    .hub-shelf-title { font-size: 17px; }
     .hub-shelf-meta { font-size: 11px; }
 
     .hub-tabbar { display: flex; }
-    body[data-page="home"] { padding-bottom: 80px; }
+    body[data-page="home"] { padding-bottom: 84px; }
   }
 </style>
 {% endblock %}
