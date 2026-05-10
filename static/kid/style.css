@@ -2507,6 +2507,31 @@ body {
   .kid-nav__avatar { width: 42px; height: 42px; font-size: 17px; }
 }
 
+.kid-nav__gear {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--kk-card);
+  border: 1px solid var(--kk-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--kk-muted);
+  box-shadow: 0 2px 0 var(--kk-line);
+  text-decoration: none;
+  transition: transform 0.12s;
+  margin-left: 4px;
+}
+
+.kid-nav__gear:hover {
+  transform: translateY(-1px);
+  color: var(--kk-ink-soft);
+}
+
+@media (min-width: 769px) {
+  .kid-nav__gear { width: 42px; height: 42px; }
+}
+
 /* ---------- Home: Legacy compat classes ---------- */
 .home-profile-card {
   background: transparent;

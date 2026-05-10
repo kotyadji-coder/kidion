@@ -50,7 +50,7 @@
   .hub-cloud.c2 { width: 180px; height: 44px; top: 200px; right: 8%; opacity: 0.5; }
   .hub-cloud.c3 { width: 120px; height: 32px; top: 540px; left: 12%; opacity: 0.5; }
 
-  /* ═══ HEADER ═══ */
+  /* === HEADER === */
   .hub-header {
     position: sticky; top: 0; z-index: 50;
     backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
@@ -91,17 +91,26 @@
   .hub-badge--streak .hub-badge-ico { background: linear-gradient(160deg, #ffb663, #ff6a3d); box-shadow: 0 2px 0 #e84a18; }
   .hub-badge--stars .hub-badge-ico { background: linear-gradient(160deg, #ffe27a, var(--hb-gold)); box-shadow: 0 2px 0 var(--hb-gold-deep); }
 
+  .hub-gear {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: var(--hb-paper); border: 1px solid var(--hb-rim);
+    display: grid; place-items: center; color: var(--hb-ink-mute);
+    box-shadow: 0 2px 0 rgba(42,36,82,0.05); text-decoration: none;
+    transition: transform .12s; cursor: pointer; margin-left: 4px;
+  }
+  .hub-gear:hover { transform: translateY(-1px); color: var(--hb-ink-soft); }
+
   .hub-avatar {
     width: 40px; height: 40px; border-radius: 50%;
     border: 3px solid var(--hb-accent); background: #ffe7d4;
     display: grid; place-items: center; overflow: hidden;
     font-family: "Baloo 2"; font-weight: 800; font-size: 16px; color: var(--hb-accent-deep);
     text-decoration: none; box-shadow: 0 2px 0 var(--hb-accent-deep);
-    margin-left: 8px;
+    margin-left: 4px;
   }
   .hub-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 
-  /* ═══ HERO ═══ */
+  /* === HERO === */
   .hub-hero {
     position: relative; z-index: 1;
     max-width: 1100px; margin: 24px auto 0; padding: 0 20px;
@@ -111,11 +120,11 @@
 
   .hub-mascot-stage {
     position: relative; display: grid; place-items: center;
-    height: 340px;
+    height: 360px;
   }
   .hub-mascot-stage::before {
     content: ""; position: absolute;
-    width: 300px; height: 300px; border-radius: 50%;
+    width: 320px; height: 320px; border-radius: 50%;
     background: radial-gradient(circle, rgba(255,200,150,0.5) 0%, rgba(255,200,150,0.1) 40%, transparent 70%);
     animation: hubHalo 5s ease-in-out infinite;
   }
@@ -123,7 +132,7 @@
 
   .hub-character {
     position: relative; z-index: 2;
-    width: 220px; height: 220px; border-radius: 50%;
+    width: 240px; height: 240px; border-radius: 50%;
     overflow: hidden; display: grid; place-items: center;
     background: radial-gradient(circle at 40% 30%, #ffd2a3 0%, #ff9a3a 60%, #e85b1a 100%);
     border: 6px solid #fff;
@@ -146,6 +155,7 @@
     font-family: "Baloo 2", sans-serif; font-weight: 700; font-size: 20px;
     color: var(--hb-ink); margin-bottom: 20px; position: relative; max-width: 420px; line-height: 1.3;
   }
+  .hub-speech .greeting { display: block; font-size: 24px; font-weight: 800; margin-bottom: 4px; }
   .hub-speech::before {
     content: ""; position: absolute; bottom: 16px; left: -12px;
     width: 16px; height: 16px; background: var(--hb-paper);
@@ -184,7 +194,7 @@
   .hub-play-text .big { font-size: 42px; letter-spacing: -1px; text-shadow: 0 2px 0 rgba(60,120,40,0.25); }
   .hub-play-text .sub { font-size: 13px; margin-top: 6px; opacity: 0.9; font-weight: 700; }
 
-  /* ═══ PORTALS ═══ */
+  /* === PORTALS === */
   .hub-portals {
     position: relative; z-index: 1;
     max-width: 1100px; margin: 48px auto 0; padding: 0 20px;
@@ -221,7 +231,7 @@
   }
   .hub-portal h3 {
     font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 20px;
-    margin: 0 0 6px; color: var(--hb-ink); letter-spacing: -0.3px;
+    margin: 0 0: 4px; color: var(--hb-ink); letter-spacing: -0.3px;
   }
   .hub-portal .progress-row {
     display: flex; align-items: center; gap: 8px; width: 100%; max-width: 180px;
@@ -235,58 +245,59 @@
   }
 
   .hub-portal .continue-pin {
-    position: absolute; top: 12px; right: 12px;
+    display: inline-block; margin-top: 8px;
     background: var(--hb-accent); color: #fff;
-    font-family: "Baloo 2"; font-weight: 800; font-size: 11px;
-    padding: 3px 9px; border-radius: var(--hb-r-pill);
-    box-shadow: 0 2px 0 var(--hb-accent-deep); text-transform: uppercase; letter-spacing: 0.3px;
+    font-family: "Baloo 2"; font-weight: 800; font-size: 12px;
+    padding: 4px 12px; border-radius: var(--hb-r-pill);
+    box-shadow: 0 2px 0 var(--hb-accent-deep); letter-spacing: 0.3px;
   }
 
-  /* ═══ SHELF ═══ */
+  /* === SHELF === */
   .hub-shelf {
     position: relative; z-index: 1;
-    max-width: 1100px; margin: 48px auto 0; padding: 0 20px;
+    max-width: 1100px; margin: 48px auto 80px; padding: 0 20px;
     display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
   }
   .hub-shelf-card {
-    position: relative; border-radius: 28px; padding: 20px 22px;
+    position: relative; border-radius: 28px; padding: 24px 26px;
     cursor: pointer; transition: transform .15s;
-    display: flex; align-items: center; gap: 18px;
+    display: flex; align-items: center; gap: 20px;
     overflow: hidden; text-decoration: none;
   }
-  .hub-shelf-card:hover { transform: translateY(-3px); }
+  .hub-shelf-card:hover { transform: translateY(-4px); }
 
   .hub-shelf-card--shop {
     background: linear-gradient(160deg, #fff1c8, #ffd479);
-    box-shadow: 0 6px 0 #b76b00, 0 20px 40px -16px rgba(183,107,0,0.35);
+    box-shadow: 0 8px 0 #b76b00, 0 24px 50px -16px rgba(183,107,0,0.4);
     color: #5b2a00;
   }
   .hub-shelf-card--chat {
-    background: linear-gradient(160deg, #b8f0e8, #2DD4BF);
-    box-shadow: 0 6px 0 #0a7a74, 0 20px 40px -16px rgba(14,165,160,0.35);
+    background: linear-gradient(160deg, #c8b8ff, #9b6dff);
+    box-shadow: 0 8px 0 #5a35b8, 0 24px 50px -16px rgba(155,109,255,0.4);
     color: #fff;
   }
 
   .hub-shelf-icon {
-    width: 72px; height: 72px; border-radius: 20px;
-    background: rgba(255,255,255,0.35); border: 3px solid rgba(255,255,255,0.6);
+    width: 80px; height: 80px; border-radius: 22px;
+    background: rgba(255,255,255,0.3); border: 4px solid rgba(255,255,255,0.5);
     display: grid; place-items: center; flex-shrink: 0;
   }
-  .hub-shelf-icon svg { width: 36px; height: 36px; filter: drop-shadow(0 2px 0 rgba(0,0,0,0.08)); }
+  .hub-shelf-icon svg { width: 40px; height: 40px; filter: drop-shadow(0 2px 0 rgba(0,0,0,0.1)); }
   .hub-shelf-card--shop .hub-shelf-icon { color: #5b2a00; background: linear-gradient(160deg, #fff1c8, #ffb648); }
-  .hub-shelf-card--chat .hub-shelf-icon { color: #fff; background: linear-gradient(160deg, #7ee8d8, #14a89e); }
+  .hub-shelf-card--chat .hub-shelf-icon { color: #fff; background: linear-gradient(160deg, #c4a8ff, #7c4dff); }
 
-  .hub-shelf-text { display: flex; flex-direction: column; gap: 3px; }
+  .hub-shelf-text { display: flex; flex-direction: column; gap: 4px; }
   .hub-shelf-title {
-    font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 24px;
-    letter-spacing: -0.3px; line-height: 1; text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+    font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 26px;
+    letter-spacing: -0.3px; line-height: 1.1;
   }
-  .hub-shelf-card--chat .hub-shelf-title { text-shadow: 0 1px 0 rgba(0,0,0,0.1); }
+  .hub-shelf-card--shop .hub-shelf-title { text-shadow: 0 1px 0 rgba(255,255,255,0.4); }
+  .hub-shelf-card--chat .hub-shelf-title { text-shadow: 0 1px 0 rgba(0,0,0,0.15); }
   .hub-shelf-meta {
-    font-family: "Baloo 2"; font-weight: 700; font-size: 13px; opacity: 0.8;
+    font-family: "Baloo 2"; font-weight: 700; font-size: 14px; opacity: 0.8;
   }
 
-  /* ═══ MOBILE TAB BAR ═══ */
+  /* === MOBILE TAB BAR === */
   .hub-tabbar {
     display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 60;
     background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -303,7 +314,7 @@
   .hub-tab svg { width: 24px; height: 24px; }
   .hub-tab.is-active { color: var(--hb-accent); background: var(--hb-accent-soft); }
 
-  /* ═══ MOBILE ═══ */
+  /* === MOBILE === */
   @media (max-width: 860px) {
     .hub-header-inner { padding: 10px 14px; gap: 8px; }
     .hub-logo-mark { width: 32px; height: 32px; border-radius: 9px; }
@@ -312,20 +323,23 @@
     .hub-badge { font-size: 14px; padding: 4px 10px 4px 4px; gap: 5px; }
     .hub-badge-ico { width: 24px; height: 24px; }
     .hub-badge-ico svg { width: 12px; height: 12px; }
-    .hub-avatar { width: 34px; height: 34px; margin-left: 4px; }
+    .hub-gear { width: 34px; height: 34px; border-radius: 10px; }
+    .hub-gear svg { width: 18px; height: 18px; }
+    .hub-avatar { width: 34px; height: 34px; margin-left: 2px; }
 
     .hub-hero {
       grid-template-columns: 1fr; gap: 8px; margin-top: 12px; padding: 0 16px;
     }
-    .hub-mascot-stage { height: 220px; order: 1; }
-    .hub-mascot-stage::before { width: 220px; height: 220px; }
-    .hub-character { width: 160px; height: 160px; border-width: 5px; }
-    .hub-character-placeholder { font-size: 52px; }
+    .hub-mascot-stage { height: 200px; order: 1; }
+    .hub-mascot-stage::before { width: 200px; height: 200px; }
+    .hub-character { width: 150px; height: 150px; border-width: 5px; }
+    .hub-character-placeholder { font-size: 48px; }
 
     .hub-hero-content { order: 2; text-align: center; display: flex; flex-direction: column; align-items: center; }
     .hub-speech {
       font-size: 16px; padding: 10px 16px; border-radius: 18px; margin-bottom: 14px; max-width: 100%;
     }
+    .hub-speech .greeting { font-size: 20px; }
     .hub-speech::before { display: none; }
     .hub-speech::after {
       content: ""; position: absolute; top: -9px; left: 50%; transform: translateX(-50%) rotate(45deg);
@@ -340,17 +354,18 @@
 
     .hub-portals { padding: 0 16px; margin-top: 28px; }
     .hub-portals-head h2 { font-size: 22px; }
-    .hub-portal-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+    .hub-portal-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .hub-portal { padding: 16px 12px 14px; border-radius: 22px; }
     .hub-portal-disc { width: 80px; height: 80px; border-width: 4px; font-size: 32px; margin-bottom: 10px; }
-    .hub-portal h3 { font-size: 16px; }
+    .hub-portal h3 { font-size: 15px; }
     .hub-portal .progress-row { gap: 6px; }
     .hub-portal .progress { height: 8px; }
+    .hub-portal .continue-pin { font-size: 10px; padding: 3px 8px; margin-top: 6px; }
 
-    .hub-shelf { grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px; margin-top: 28px; }
-    .hub-shelf-card { padding: 14px; flex-direction: column; align-items: flex-start; gap: 10px; border-radius: 22px; }
-    .hub-shelf-icon { width: 52px; height: 52px; border-radius: 16px; }
-    .hub-shelf-icon svg { width: 28px; height: 28px; }
+    .hub-shelf { grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px; margin: 28px auto 90px; }
+    .hub-shelf-card { padding: 16px; flex-direction: column; align-items: flex-start; gap: 12px; border-radius: 22px; }
+    .hub-shelf-icon { width: 56px; height: 56px; border-radius: 16px; border-width: 3px; }
+    .hub-shelf-icon svg { width: 30px; height: 30px; }
     .hub-shelf-title { font-size: 18px; }
     .hub-shelf-meta { font-size: 11px; }
 
@@ -368,7 +383,7 @@
   <div class="hub-cloud c3"></div>
 </div>
 
-<!-- ═══ HEADER ═══ -->
+<!-- === HEADER === -->
 <header class="hub-header">
   <div class="hub-header-inner">
     <a class="hub-logo" href="/kid/home">
@@ -390,10 +405,16 @@
     </div>
 
     <a href="/kid/character" class="hub-avatar" id="nav-avatar">{{ child.name[0]|upper }}</a>
+    <a href="/dashboard" class="hub-gear" title="Кабинет родителя">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </a>
   </div>
 </header>
 
-<!-- ═══ HERO — Character + Speech + PLAY ═══ -->
+<!-- === HERO — Character + Speech + PLAY === -->
 <section class="hub-hero">
   <div class="hub-mascot-stage">
     <a href="/kid/character" class="hub-character" id="character-link">
@@ -403,7 +424,8 @@
 
   <div class="hub-hero-content">
     <div class="hub-speech" id="hero-speech">
-      <strong>Привет, {{ child.name }}!</strong> Продолжим наше приключение?
+      <span class="greeting">Привет, {{ child.name }}!</span>
+      Продолжим наше приключение?
     </div>
     <a href="#" class="hub-play" id="play-btn">
       <span class="hub-play-icon">
@@ -417,7 +439,7 @@
   </div>
 </section>
 
-<!-- ═══ SUBJECT PORTALS ═══ -->
+<!-- === SUBJECT PORTALS === -->
 <section class="hub-portals">
   <div class="hub-portals-head">
     <h2>Миры</h2>
@@ -428,7 +450,7 @@
   </div>
 </section>
 
-<!-- ═══ BOTTOM SHELF: Shop + Chat ═══ -->
+<!-- === BOTTOM SHELF: Shop + AI Chat === -->
 <section class="hub-shelf">
   <a href="/kid/character" class="hub-shelf-card hub-shelf-card--shop">
     <span class="hub-shelf-icon">
@@ -446,21 +468,34 @@
   <a href="/kid/chat" class="hub-shelf-card hub-shelf-card--chat">
     <span class="hub-shelf-icon">
       <svg viewBox="0 0 24 24" fill="none">
-        <path d="M3 5h18v12H13l-6 5v-5H3V5z" fill="currentColor"/>
+        <circle cx="12" cy="12" r="9" fill="currentColor" opacity="0.3"/>
+        <circle cx="12" cy="12" r="5" fill="currentColor"/>
+        <circle cx="7" cy="7" r="2" fill="currentColor" opacity="0.7"/>
+        <circle cx="17" cy="7" r="2" fill="currentColor" opacity="0.7"/>
+        <circle cx="7" cy="17" r="2" fill="currentColor" opacity="0.7"/>
+        <circle cx="17" cy="17" r="2" fill="currentColor" opacity="0.7"/>
+        <line x1="12" y1="12" x2="7" y2="7" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+        <line x1="12" y1="12" x2="17" y2="7" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+        <line x1="12" y1="12" x2="7" y2="17" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+        <line x1="12" y1="12" x2="17" y2="17" stroke="currentColor" stroke-width="1" opacity="0.5"/>
       </svg>
     </span>
     <span class="hub-shelf-text">
-      <span class="hub-shelf-title">Чат с помощником</span>
-      <span class="hub-shelf-meta">Спроси что угодно!</span>
+      <span class="hub-shelf-title">Нейросеть для детей</span>
+      <span class="hub-shelf-meta">Чат с помощником</span>
     </span>
   </a>
 </section>
 
-<!-- ═══ MOBILE TAB BAR ═══ -->
+<!-- === MOBILE TAB BAR === -->
 <nav class="hub-tabbar">
   <a class="hub-tab is-active" href="/kid/home">
     <svg viewBox="0 0 24 24" fill="none"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1v-9z" fill="currentColor"/></svg>
-    Главная
+    Домой
+  </a>
+  <a class="hub-tab" href="/kid/character">
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="currentColor"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7" fill="currentColor"/></svg>
+    Герой
   </a>
   <a class="hub-tab" href="/kid/character">
     <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="9" width="18" height="11" rx="2" fill="currentColor"/><path d="M3 9c0-3 4-5 9-5s9 2 9 5" fill="currentColor"/></svg>
@@ -469,10 +504,6 @@
   <a class="hub-tab" href="/kid/chat">
     <svg viewBox="0 0 24 24" fill="none"><path d="M3 5h18v12H13l-6 5v-5H3V5z" fill="currentColor"/></svg>
     Чат
-  </a>
-  <a class="hub-tab" href="/kid/character">
-    <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="currentColor"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7" fill="currentColor"/></svg>
-    Герой
   </a>
 </nav>
 {% endblock %}
@@ -525,6 +556,7 @@
   var allSubjects = [
     {key:'math', name:'Математика', icon:'🚀', color:'#ff9a3a', deep:'#e85b1a'},
     {key:'russian', name:'Русский язык', icon:'📖', color:'#4cb5ff', deep:'#1f7fc9'},
+    {key:'english', name:'Английский язык', icon:'🌍', color:'#36c46a', deep:'#1aa24f'},
     {key:'world', name:'Окруж. мир', icon:'🧩', color:'#b181ff', deep:'#7a4ad6'}
   ];
 
@@ -553,25 +585,30 @@
     playSub.textContent = 'Скоро начнём!';
   }
 
-  // Build portals
+  // Build portals — always show all subjects, enrolled ones with progress
   var grid = document.getElementById('portal-grid');
   var html = '';
 
   for (var k = 0; k < allSubjects.length; k++) {
     var s = allSubjects[k];
     var enrolled = enrolledMap[s.key];
-    if (!enrolled || enrolled.total_lessons === 0) continue;
+    var hasLessons = enrolled && enrolled.total_lessons > 0;
 
-    var completed = enrolled.completed_lessons;
-    var total = enrolled.total_lessons;
+    var completed = hasLessons ? enrolled.completed_lessons : 0;
+    var total = hasLessons ? enrolled.total_lessons : 0;
     var pct = total > 0 ? Math.round(completed / total * 100) : 0;
-    var isFirst = (k === 0 && playSubject && playSubject.key === s.key);
 
-    html += '<a class="hub-portal" href="/kid/subject/' + s.key + '">';
-    if (isFirst) html += '<span class="continue-pin">Продолжить</span>';
+    html += '<a class="hub-portal" href="/kid/subject/' + s.key + '" style="position:relative">';
     html += '<span class="hub-portal-disc" style="background:radial-gradient(circle at 35% 30%, ' + s.color + '88, ' + s.color + ' 55%, ' + s.deep + ' 100%); box-shadow: 0 6px 0 ' + s.deep + ', 0 20px 40px -14px ' + s.color + '66;">' + s.icon + '</span>';
     html += '<h3>' + s.name + '</h3>';
-    html += '<div class="progress-row"><div class="progress"><span style="width:' + pct + '%; background:linear-gradient(90deg,' + s.color + '88,' + s.color + ')"></span></div><span class="pct">' + pct + '%</span></div>';
+    if (hasLessons) {
+      html += '<div class="progress-row"><div class="progress"><span style="width:' + pct + '%; background:linear-gradient(90deg,' + s.color + '88,' + s.color + ')"></span></div><span class="pct">' + pct + '%</span></div>';
+      if (playSubject && playSubject.key === s.key) {
+        html += '<span class="continue-pin">Продолжить</span>';
+      }
+    } else {
+      html += '<div class="progress-row"><span class="pct" style="opacity:0.5">Скоро</span></div>';
+    }
     html += '</a>';
   }
 
