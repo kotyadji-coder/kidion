@@ -6,14 +6,27 @@
 /* ---------- Layout ---------- */
 .chat-layout {
   display: flex;
-  height: calc(100vh - 60px);
-  height: calc(100dvh - 60px);
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   overflow: hidden;
   background: #fff;
   position: relative;
+  /* Fill remaining space below nav */
+  height: calc(100vh - 60px);
+  height: calc(100dvh - 60px);
+}
+
+body[data-page="chat"] {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+body[data-page="chat"] .kid-nav {
+  flex-shrink: 0;
 }
 
 body[data-page="chat"] .kid-main {
@@ -21,12 +34,13 @@ body[data-page="chat"] .kid-main {
   max-width: 100%;
   flex: 1;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-body[data-page="chat"] {
-  height: 100vh;
-  height: 100dvh;
-  overflow: hidden;
+body[data-page="chat"] .chat-layout {
+  flex: 1;
+  height: auto;
 }
 
 /* ---------- Left Sidebar: Personas ---------- */

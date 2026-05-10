@@ -240,6 +240,7 @@
     position: relative; display: grid; place-items: center;
     cursor: pointer; transition: transform .15s ease; user-select: none;
     -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+    text-decoration: none; color: inherit;
   }
   .node:hover { transform: translateY(-2px); }
   .node:active { transform: translateY(2px); }
@@ -409,15 +410,19 @@
 
   /* ═══ RESPONSIVE (MOBILE) ═══ */
   @media (max-width: 860px) {
-    .kh-inner { padding: 12px 16px; gap: 10px; }
+    .kh-inner { padding: 10px 14px; gap: 8px; }
     .kh-subject { display: none; }
-    .kh-logo-text { font-size: 20px; }
-    .kh-logo-mark { width: 38px; height: 38px; border-radius: 12px; }
+    .kh-logo-mark { width: 32px; height: 32px; border-radius: 9px; }
+    .kh-logo-mark svg { width: 16px; height: 16px; }
+    .kh-logo-text { font-size: 17px; }
     .kh-badges { gap: 6px; }
-    .kh-badge { font-size: 15px; padding: 3px 10px 3px 3px; }
-    .kh-badge-ico { width: 26px; height: 26px; }
-    .kh-badge-ico svg { width: 14px; height: 14px; }
-    .kh-right { display: flex; }
+    .kh-badge { font-size: 14px; padding: 4px 10px 4px 4px; gap: 5px; }
+    .kh-badge-ico { width: 24px; height: 24px; }
+    .kh-badge-ico svg { width: 12px; height: 12px; }
+    .kh-right { display: flex; gap: 6px; margin-left: 8px; }
+    .kh-btn { width: 34px; height: 34px; border-radius: 10px; }
+    .kh-btn svg { width: 18px; height: 18px; }
+    .kh-avatar { width: 34px; height: 34px; font-size: 14px; }
 
     .prog { margin-top: 24px; padding: 0 16px; }
     .prog h1 { font-size: 28px; }
@@ -624,7 +629,10 @@ function renderMap(data) {
       else if (j === nc - 1) tooltipClass += ' node-tooltip--right';
 
       html += '<div class="node-slot ' + upDown + '"' + mStyle + '>';
-      html += '<div class="node ' + ds + '" data-lid="' + (l.lesson_id||'') + '" data-st="' + st + '" data-ds="' + ds + '">';
+      // Use <a> for clickable nodes (done/active), <div> for others
+      var nodeTag = (ds === 'done' || ds === 'active') && l.lesson_id ? 'a' : 'div';
+      var nodeHref = nodeTag === 'a' ? ' href="/kid/lesson/' + l.lesson_id + '"' : '';
+      html += '<' + nodeTag + ' class="node ' + ds + '" data-lid="' + (l.lesson_id||'') + '"' + nodeHref + '>';
 
       // Tooltip (foggy and locked only)
       if (ds === 'foggy') html += '<div class="' + tooltipClass + '">Сначала пройди предыдущий урок!</div>';
@@ -642,7 +650,7 @@ function renderMap(data) {
       if (ds === 'done') html += '<span class="ribbon"><span class="tail"></span><span class="tail right"></span></span>';
       html += '</div>'; // disc
       if (ds === 'active') html += '<span class="start-tag">Старт!</span>';
-      html += '</div>'; // node
+      html += '</' + nodeTag + '>'; // node
       html += '<span class="node-label">' + esc(l.title_ru) + '</span>';
       html += '</div>'; // node-slot
     }
