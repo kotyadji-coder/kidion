@@ -4,220 +4,594 @@
 {% block page_name %}home{% endblock %}
 
 {% block nav_buttons %}
-{# No home button on home page — matches design #}
+{# No extra nav buttons on home #}
+{% endblock %}
+
+{% block head %}
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  /* Hide default kid-nav, use custom hub header */
+  body[data-page="home"] .kid-nav { display: none; }
+  body[data-page="home"] .kid-main { padding: 0; max-width: 100%; }
+  body[data-page="home"] {
+    font-family: "Nunito", system-ui, sans-serif;
+    background:
+      radial-gradient(1200px 700px at 80% -10%, #ffe2c8 0%, transparent 60%),
+      radial-gradient(900px 600px at 0% 20%, #e2d4ff 0%, transparent 55%),
+      linear-gradient(180deg, #d6ecff 0%, #eaf3ff 40%, #f6efff 100%);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Tokens */
+  :root {
+    --hb-ink: #2a2452;
+    --hb-ink-soft: #6b6791;
+    --hb-ink-mute: #9b9bbb;
+    --hb-paper: #ffffff;
+    --hb-rim: #e6dfff;
+    --hb-accent: #ff7a3a;
+    --hb-accent-deep: #e85b1a;
+    --hb-accent-soft: #ffd1b8;
+    --hb-ok: #36c46a;
+    --hb-ok-deep: #1aa24f;
+    --hb-gold: #ffc83a;
+    --hb-gold-deep: #e9a90f;
+    --hb-r-pill: 999px;
+    --hb-shadow: 0 6px 0 rgba(42,36,82,0.06), 0 18px 40px -18px rgba(42,36,82,0.18);
+  }
+
+  /* Sky deco */
+  .hub-sky { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .hub-cloud {
+    position: absolute; background: #fff; border-radius: 100px; opacity: 0.7;
+    box-shadow: 28px -10px 0 -4px #fff, -28px -8px 0 -6px #fff, 52px 0 0 -10px #fff, -52px 0 0 -10px #fff;
+  }
+  .hub-cloud.c1 { width: 140px; height: 36px; top: 110px; left: 6%; }
+  .hub-cloud.c2 { width: 180px; height: 44px; top: 200px; right: 8%; opacity: 0.5; }
+  .hub-cloud.c3 { width: 120px; height: 32px; top: 540px; left: 12%; opacity: 0.5; }
+
+  /* ═══ HEADER ═══ */
+  .hub-header {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    background: rgba(255,255,255,0.75);
+    border-bottom: 1px solid rgba(42,36,82,0.06);
+  }
+  .hub-header-inner {
+    max-width: 1100px; margin: 0 auto; padding: 12px 20px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .hub-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+  .hub-logo-mark {
+    width: 38px; height: 38px; border-radius: 11px;
+    background: linear-gradient(135deg, #22C55E, #2DD4BF);
+    display: grid; place-items: center;
+    box-shadow: 0 3px 8px rgba(34,197,94,0.3);
+  }
+  .hub-logo-text {
+    font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 20px;
+    letter-spacing: -0.5px; color: var(--hb-ink);
+  }
+  .hub-logo-text .dot { color: #22C55E; }
+
+  .hub-badges { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+  .hub-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px 5px 5px; background: var(--hb-paper);
+    border-radius: var(--hb-r-pill); border: 1px solid var(--hb-rim);
+    font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 17px;
+    color: var(--hb-ink); box-shadow: 0 2px 0 rgba(42,36,82,0.05);
+    text-decoration: none; transition: transform .12s;
+  }
+  .hub-badge:hover { transform: translateY(-1px); }
+  .hub-badge-ico {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: grid; place-items: center; color: #fff;
+  }
+  .hub-badge--streak .hub-badge-ico { background: linear-gradient(160deg, #ffb663, #ff6a3d); box-shadow: 0 2px 0 #e84a18; }
+  .hub-badge--stars .hub-badge-ico { background: linear-gradient(160deg, #ffe27a, var(--hb-gold)); box-shadow: 0 2px 0 var(--hb-gold-deep); }
+
+  .hub-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 3px solid var(--hb-accent); background: #ffe7d4;
+    display: grid; place-items: center; overflow: hidden;
+    font-family: "Baloo 2"; font-weight: 800; font-size: 16px; color: var(--hb-accent-deep);
+    text-decoration: none; box-shadow: 0 2px 0 var(--hb-accent-deep);
+    margin-left: 8px;
+  }
+  .hub-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+  /* ═══ HERO ═══ */
+  .hub-hero {
+    position: relative; z-index: 1;
+    max-width: 1100px; margin: 24px auto 0; padding: 0 20px;
+    display: grid; grid-template-columns: 1fr 1.1fr;
+    align-items: center; gap: 24px;
+  }
+
+  .hub-mascot-stage {
+    position: relative; display: grid; place-items: center;
+    height: 340px;
+  }
+  .hub-mascot-stage::before {
+    content: ""; position: absolute;
+    width: 300px; height: 300px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,200,150,0.5) 0%, rgba(255,200,150,0.1) 40%, transparent 70%);
+    animation: hubHalo 5s ease-in-out infinite;
+  }
+  @keyframes hubHalo { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+
+  .hub-character {
+    position: relative; z-index: 2;
+    width: 220px; height: 220px; border-radius: 50%;
+    overflow: hidden; display: grid; place-items: center;
+    background: radial-gradient(circle at 40% 30%, #ffd2a3 0%, #ff9a3a 60%, #e85b1a 100%);
+    border: 6px solid #fff;
+    box-shadow: 0 12px 40px -10px rgba(232,91,26,0.4);
+    animation: hubFloat 3.6s ease-in-out infinite;
+    text-decoration: none;
+  }
+  @keyframes hubFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  .hub-character img {
+    width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+  }
+  .hub-character-placeholder {
+    font-family: "Baloo 2"; font-weight: 800; font-size: 72px; color: #fff;
+  }
+
+  .hub-hero-content { position: relative; z-index: 2; }
+  .hub-speech {
+    display: inline-block; background: var(--hb-paper); border: 1px solid var(--hb-rim);
+    border-radius: 22px; padding: 14px 20px; box-shadow: var(--hb-shadow);
+    font-family: "Baloo 2", sans-serif; font-weight: 700; font-size: 20px;
+    color: var(--hb-ink); margin-bottom: 20px; position: relative; max-width: 420px; line-height: 1.3;
+  }
+  .hub-speech::before {
+    content: ""; position: absolute; bottom: 16px; left: -12px;
+    width: 16px; height: 16px; background: var(--hb-paper);
+    border-left: 1px solid var(--hb-rim); border-bottom: 1px solid var(--hb-rim);
+    transform: rotate(45deg); border-radius: 0 0 0 5px;
+  }
+
+  .hub-play {
+    display: inline-flex; align-items: center; gap: 16px;
+    padding: 20px 36px; border: none; cursor: pointer;
+    background: linear-gradient(180deg, #c8eba6 0%, #95d57a 55%, #6ebd5a 100%);
+    color: #fff; border-radius: 28px;
+    box-shadow: inset 0 4px 0 rgba(255,255,255,0.4), inset 0 -7px 0 rgba(0,0,0,0.12),
+      0 8px 0 #4f9d44, 0 20px 40px -12px rgba(110,189,90,0.4);
+    font-family: "Baloo 2", sans-serif; font-weight: 800;
+    transition: transform .12s, box-shadow .12s;
+    text-decoration: none; position: relative; overflow: hidden;
+  }
+  .hub-play::before {
+    content: ""; position: absolute; top: 4px; left: 4px; right: 4px; height: 28%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.35), transparent);
+    border-radius: 24px 24px 50% 50%; pointer-events: none;
+  }
+  .hub-play:hover { transform: translateY(-2px); }
+  .hub-play:active {
+    transform: translateY(6px);
+    box-shadow: inset 0 4px 0 rgba(255,255,255,0.3), inset 0 -3px 0 rgba(0,0,0,0.12),
+      0 2px 0 #4f9d44, 0 6px 14px -4px rgba(110,189,90,0.4);
+  }
+  .hub-play-icon {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: rgba(255,255,255,0.25); border: 3px solid #fff;
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .hub-play-text { display: flex; flex-direction: column; line-height: 1; text-align: left; }
+  .hub-play-text .big { font-size: 42px; letter-spacing: -1px; text-shadow: 0 2px 0 rgba(60,120,40,0.25); }
+  .hub-play-text .sub { font-size: 13px; margin-top: 6px; opacity: 0.9; font-weight: 700; }
+
+  /* ═══ PORTALS ═══ */
+  .hub-portals {
+    position: relative; z-index: 1;
+    max-width: 1100px; margin: 48px auto 0; padding: 0 20px;
+  }
+  .hub-portals-head {
+    display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px;
+  }
+  .hub-portals-head h2 {
+    font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 26px;
+    letter-spacing: -0.4px; margin: 0; color: var(--hb-ink);
+  }
+  .hub-portals-head .hint {
+    font-weight: 700; color: var(--hb-ink-mute); font-size: 14px;
+  }
+
+  .hub-portal-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+  }
+
+  .hub-portal {
+    position: relative; background: var(--hb-paper); border: 1px solid var(--hb-rim);
+    border-radius: 28px; padding: 22px 18px 18px;
+    cursor: pointer; transition: transform .15s, box-shadow .15s;
+    box-shadow: var(--hb-shadow); display: flex; flex-direction: column; align-items: center;
+    text-align: center; text-decoration: none; color: inherit; overflow: hidden;
+  }
+  .hub-portal:hover { transform: translateY(-4px); box-shadow: 0 8px 0 rgba(42,36,82,0.06), 0 26px 50px -18px rgba(42,36,82,0.22); }
+
+  .hub-portal-disc {
+    width: 120px; height: 120px; border-radius: 50%;
+    display: grid; place-items: center; position: relative; z-index: 1;
+    margin-bottom: 14px; border: 6px solid #fff; font-size: 48px;
+  }
+  .hub-portal h3 {
+    font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 20px;
+    margin: 0 0 6px; color: var(--hb-ink); letter-spacing: -0.3px;
+  }
+  .hub-portal .progress-row {
+    display: flex; align-items: center; gap: 8px; width: 100%; max-width: 180px;
+  }
+  .hub-portal .progress {
+    flex: 1; height: 10px; background: #eee5ff; border-radius: var(--hb-r-pill); overflow: hidden;
+  }
+  .hub-portal .progress span { display: block; height: 100%; border-radius: var(--hb-r-pill); }
+  .hub-portal .pct {
+    font-family: "Baloo 2"; font-weight: 800; font-size: 13px; color: var(--hb-ink-soft);
+  }
+
+  .hub-portal .continue-pin {
+    position: absolute; top: 12px; right: 12px;
+    background: var(--hb-accent); color: #fff;
+    font-family: "Baloo 2"; font-weight: 800; font-size: 11px;
+    padding: 3px 9px; border-radius: var(--hb-r-pill);
+    box-shadow: 0 2px 0 var(--hb-accent-deep); text-transform: uppercase; letter-spacing: 0.3px;
+  }
+
+  /* ═══ SHELF ═══ */
+  .hub-shelf {
+    position: relative; z-index: 1;
+    max-width: 1100px; margin: 48px auto 0; padding: 0 20px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+  }
+  .hub-shelf-card {
+    position: relative; border-radius: 28px; padding: 20px 22px;
+    cursor: pointer; transition: transform .15s;
+    display: flex; align-items: center; gap: 18px;
+    overflow: hidden; text-decoration: none;
+  }
+  .hub-shelf-card:hover { transform: translateY(-3px); }
+
+  .hub-shelf-card--shop {
+    background: linear-gradient(160deg, #fff1c8, #ffd479);
+    box-shadow: 0 6px 0 #b76b00, 0 20px 40px -16px rgba(183,107,0,0.35);
+    color: #5b2a00;
+  }
+  .hub-shelf-card--chat {
+    background: linear-gradient(160deg, #b8f0e8, #2DD4BF);
+    box-shadow: 0 6px 0 #0a7a74, 0 20px 40px -16px rgba(14,165,160,0.35);
+    color: #fff;
+  }
+
+  .hub-shelf-icon {
+    width: 72px; height: 72px; border-radius: 20px;
+    background: rgba(255,255,255,0.35); border: 3px solid rgba(255,255,255,0.6);
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .hub-shelf-icon svg { width: 36px; height: 36px; filter: drop-shadow(0 2px 0 rgba(0,0,0,0.08)); }
+  .hub-shelf-card--shop .hub-shelf-icon { color: #5b2a00; background: linear-gradient(160deg, #fff1c8, #ffb648); }
+  .hub-shelf-card--chat .hub-shelf-icon { color: #fff; background: linear-gradient(160deg, #7ee8d8, #14a89e); }
+
+  .hub-shelf-text { display: flex; flex-direction: column; gap: 3px; }
+  .hub-shelf-title {
+    font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 24px;
+    letter-spacing: -0.3px; line-height: 1; text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .hub-shelf-card--chat .hub-shelf-title { text-shadow: 0 1px 0 rgba(0,0,0,0.1); }
+  .hub-shelf-meta {
+    font-family: "Baloo 2"; font-weight: 700; font-size: 13px; opacity: 0.8;
+  }
+
+  /* ═══ MOBILE TAB BAR ═══ */
+  .hub-tabbar {
+    display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 60;
+    background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--hb-rim);
+    padding: 8px 14px calc(8px + env(safe-area-inset-bottom));
+    justify-content: space-around;
+  }
+  .hub-tab {
+    flex: 1; display: grid; place-items: center; gap: 2px;
+    padding: 8px 4px; border-radius: 14px;
+    color: var(--hb-ink-mute); font-family: "Baloo 2"; font-weight: 800; font-size: 11px;
+    text-decoration: none;
+  }
+  .hub-tab svg { width: 24px; height: 24px; }
+  .hub-tab.is-active { color: var(--hb-accent); background: var(--hb-accent-soft); }
+
+  /* ═══ MOBILE ═══ */
+  @media (max-width: 860px) {
+    .hub-header-inner { padding: 10px 14px; gap: 8px; }
+    .hub-logo-mark { width: 32px; height: 32px; border-radius: 9px; }
+    .hub-logo-mark svg { width: 16px; height: 16px; }
+    .hub-logo-text { font-size: 17px; }
+    .hub-badge { font-size: 14px; padding: 4px 10px 4px 4px; gap: 5px; }
+    .hub-badge-ico { width: 24px; height: 24px; }
+    .hub-badge-ico svg { width: 12px; height: 12px; }
+    .hub-avatar { width: 34px; height: 34px; margin-left: 4px; }
+
+    .hub-hero {
+      grid-template-columns: 1fr; gap: 8px; margin-top: 12px; padding: 0 16px;
+    }
+    .hub-mascot-stage { height: 220px; order: 1; }
+    .hub-mascot-stage::before { width: 220px; height: 220px; }
+    .hub-character { width: 160px; height: 160px; border-width: 5px; }
+    .hub-character-placeholder { font-size: 52px; }
+
+    .hub-hero-content { order: 2; text-align: center; display: flex; flex-direction: column; align-items: center; }
+    .hub-speech {
+      font-size: 16px; padding: 10px 16px; border-radius: 18px; margin-bottom: 14px; max-width: 100%;
+    }
+    .hub-speech::before { display: none; }
+    .hub-speech::after {
+      content: ""; position: absolute; top: -9px; left: 50%; transform: translateX(-50%) rotate(45deg);
+      width: 14px; height: 14px; background: var(--hb-paper);
+      border-left: 1px solid var(--hb-rim); border-top: 1px solid var(--hb-rim);
+    }
+    .hub-play { padding: 14px 24px; gap: 12px; border-radius: 24px; }
+    .hub-play-icon { width: 44px; height: 44px; border-width: 2.5px; }
+    .hub-play-icon svg { width: 20px; height: 20px; }
+    .hub-play-text .big { font-size: 30px; }
+    .hub-play-text .sub { font-size: 11px; }
+
+    .hub-portals { padding: 0 16px; margin-top: 28px; }
+    .hub-portals-head h2 { font-size: 22px; }
+    .hub-portal-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+    .hub-portal { padding: 16px 12px 14px; border-radius: 22px; }
+    .hub-portal-disc { width: 80px; height: 80px; border-width: 4px; font-size: 32px; margin-bottom: 10px; }
+    .hub-portal h3 { font-size: 16px; }
+    .hub-portal .progress-row { gap: 6px; }
+    .hub-portal .progress { height: 8px; }
+
+    .hub-shelf { grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px; margin-top: 28px; }
+    .hub-shelf-card { padding: 14px; flex-direction: column; align-items: flex-start; gap: 10px; border-radius: 22px; }
+    .hub-shelf-icon { width: 52px; height: 52px; border-radius: 16px; }
+    .hub-shelf-icon svg { width: 28px; height: 28px; }
+    .hub-shelf-title { font-size: 18px; }
+    .hub-shelf-meta { font-size: 11px; }
+
+    .hub-tabbar { display: flex; }
+    body[data-page="home"] { padding-bottom: 80px; }
+  }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="kid-home">
-  <div class="home-layout">
-    <!-- Left column: Character Hero -->
-    <div class="home-left" style="text-align:center; position:relative;">
-      <div class="home-hero">
-        <div class="home-hero__halo"></div>
-
-        <div class="home-hero__speech" id="hero-speech" style="display:none">Готов к новому уроку? ✨</div>
-
-        <a href="/kid/character" class="home-hero__character" id="character-link">
-          <div class="home-hero__character-circle">
-            <div class="home-hero__avatar-placeholder" id="char-avatar">{{ child.name[0]|upper }}</div>
-          </div>
-        </a>
-
-        <!-- Streak badge -->
-        <div class="streak-badge" id="streak-block" style="display:none">
-          <span class="streak-icon">🔥</span>
-          <span id="streak-text"></span>
-        </div>
-
-        <div class="home-section-title home-section-title--mobile">Куда отправимся?</div>
-      </div>
-    </div>
-
-    <!-- Right column: Subjects -->
-    <div class="home-right">
-      <h2 class="home-section-title home-section-title--desktop">Куда отправимся?</h2>
-      <div class="subjects-grid-kid" id="subjects-grid">
-        <div class="spinner"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bottom shelf: Shop + Chat -->
-  <div class="home-shelf">
-    <a href="/kid/character" class="home-shelf__card home-shelf__card--shop">
-      <span class="home-shelf__icon">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-          <path d="M12 2.5l2.6 5.6 6.1.7-4.6 4.2 1.3 6L12 16.1 6.6 19l1.3-6L3.3 8.8l6.1-.7L12 2.5z" fill="#fff"/>
-        </svg>
-      </span>
-      <span class="home-shelf__text">
-        <span class="home-shelf__title">Магазин</span>
-        <span class="home-shelf__meta">Тратить звёзды</span>
-      </span>
-    </a>
-    <a href="/kid/chat" class="home-shelf__card home-shelf__card--chat">
-      <span class="home-shelf__icon">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-          <path d="M3 5h18v12H13l-6 5v-5H3V5z" fill="#fff"/>
-        </svg>
-      </span>
-      <span class="home-shelf__text">
-        <span class="home-shelf__title">Чат с помощником</span>
-        <span class="home-shelf__meta">Спроси что угодно!</span>
-      </span>
-    </a>
-  </div>
-
-  <!-- Bottom tab bar (mobile) -->
-  <div class="kid-tab-bar">
-    <a href="/kid/home" class="kid-tab-bar__item kid-tab-bar__item--active">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 L12 3 L21 12 M5 10 V21 H19 V10"/></svg>
-      <span>Дом</span>
-    </a>
-    <a href="/kid/character" class="kid-tab-bar__item">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21 Q 4 14 12 14 Q 20 14 20 21"/></svg>
-      <span>Герой</span>
-    </a>
-    <a href="/kid/chat" class="kid-tab-bar__item">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5 H21 V17 H13 L7 22 V17 H3 Z"/></svg>
-      <span>Чат</span>
-    </a>
-  </div>
-  <div class="kid-tab-spacer"></div>
+<!-- Sky decoration -->
+<div class="hub-sky" aria-hidden="true">
+  <div class="hub-cloud c1"></div>
+  <div class="hub-cloud c2"></div>
+  <div class="hub-cloud c3"></div>
 </div>
+
+<!-- ═══ HEADER ═══ -->
+<header class="hub-header">
+  <div class="hub-header-inner">
+    <a class="hub-logo" href="/kid/home">
+      <span class="hub-logo-mark">
+        <svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="3" fill="#fff"/><circle cx="4" cy="6" r="1.6" fill="#fff"/><circle cx="16" cy="6" r="1.6" fill="#fff"/><circle cx="4" cy="14" r="1.6" fill="#fff"/><circle cx="16" cy="14" r="1.6" fill="#fff"/><g stroke="#fff" stroke-width="1" opacity=".6"><line x1="10" y1="10" x2="4" y2="6"/><line x1="10" y1="10" x2="16" y2="6"/><line x1="10" y1="10" x2="4" y2="14"/><line x1="10" y1="10" x2="16" y2="14"/></g></svg>
+      </span>
+      <span class="hub-logo-text">kidion<span class="dot">.ru</span></span>
+    </a>
+
+    <div class="hub-badges">
+      <a href="/kid/home" class="hub-badge hub-badge--streak" title="Дней подряд">
+        <span class="hub-badge-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 3c1.5 3.5-1 4 .5 7 1.7-.6 2.5-2 2.5-3 2 2 4 4 4 7.5A7 7 0 0 1 5 14.5c0-3 1.5-4.5 3-6.5 2 1 2.5 2.5 2 4 1.5-1 2.5-3 2-9z" fill="#fff"/></svg></span>
+        <span id="hdr-streak">0</span>
+      </a>
+      <a href="/kid/character" class="hub-badge hub-badge--stars" title="Звёзды">
+        <span class="hub-badge-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2.5l2.6 5.6 6.1.7-4.6 4.2 1.3 6L12 16.1 6.6 19l1.3-6L3.3 8.8l6.1-.7L12 2.5z" fill="#fff"/></svg></span>
+        <span id="star-count">{{ child.stars if child.stars is defined else 0 }}</span>
+      </a>
+    </div>
+
+    <a href="/kid/character" class="hub-avatar" id="nav-avatar">{{ child.name[0]|upper }}</a>
+  </div>
+</header>
+
+<!-- ═══ HERO — Character + Speech + PLAY ═══ -->
+<section class="hub-hero">
+  <div class="hub-mascot-stage">
+    <a href="/kid/character" class="hub-character" id="character-link">
+      <span class="hub-character-placeholder" id="char-avatar">{{ child.name[0]|upper }}</span>
+    </a>
+  </div>
+
+  <div class="hub-hero-content">
+    <div class="hub-speech" id="hero-speech">
+      <strong>Привет, {{ child.name }}!</strong> Продолжим наше приключение?
+    </div>
+    <a href="#" class="hub-play" id="play-btn">
+      <span class="hub-play-icon">
+        <svg viewBox="0 0 24 24" fill="none" width="26" height="26"><path d="M7 5l12 7-12 7V5z" fill="#fff"/></svg>
+      </span>
+      <span class="hub-play-text">
+        <span class="big">ИГРАТЬ!</span>
+        <span class="sub" id="play-sub">Загрузка...</span>
+      </span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══ SUBJECT PORTALS ═══ -->
+<section class="hub-portals">
+  <div class="hub-portals-head">
+    <h2>Миры</h2>
+    <span class="hint">Выбери, куда отправиться</span>
+  </div>
+  <div class="hub-portal-grid" id="portal-grid">
+    <div style="text-align:center;padding:40px;color:var(--hb-ink-mute)">Загрузка...</div>
+  </div>
+</section>
+
+<!-- ═══ BOTTOM SHELF: Shop + Chat ═══ -->
+<section class="hub-shelf">
+  <a href="/kid/character" class="hub-shelf-card hub-shelf-card--shop">
+    <span class="hub-shelf-icon">
+      <svg viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="9" width="18" height="11" rx="2" fill="currentColor"/>
+        <path d="M3 9c0-3 4-5 9-5s9 2 9 5" fill="currentColor"/>
+        <rect x="10" y="11" width="4" height="5" rx="1" fill="rgba(0,0,0,0.25)"/>
+      </svg>
+    </span>
+    <span class="hub-shelf-text">
+      <span class="hub-shelf-title">Магазин</span>
+      <span class="hub-shelf-meta">Тратить звёзды</span>
+    </span>
+  </a>
+  <a href="/kid/chat" class="hub-shelf-card hub-shelf-card--chat">
+    <span class="hub-shelf-icon">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M3 5h18v12H13l-6 5v-5H3V5z" fill="currentColor"/>
+      </svg>
+    </span>
+    <span class="hub-shelf-text">
+      <span class="hub-shelf-title">Чат с помощником</span>
+      <span class="hub-shelf-meta">Спроси что угодно!</span>
+    </span>
+  </a>
+</section>
+
+<!-- ═══ MOBILE TAB BAR ═══ -->
+<nav class="hub-tabbar">
+  <a class="hub-tab is-active" href="/kid/home">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1v-9z" fill="currentColor"/></svg>
+    Главная
+  </a>
+  <a class="hub-tab" href="/kid/character">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="9" width="18" height="11" rx="2" fill="currentColor"/><path d="M3 9c0-3 4-5 9-5s9 2 9 5" fill="currentColor"/></svg>
+    Магазин
+  </a>
+  <a class="hub-tab" href="/kid/chat">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M3 5h18v12H13l-6 5v-5H3V5z" fill="currentColor"/></svg>
+    Чат
+  </a>
+  <a class="hub-tab" href="/kid/character">
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="currentColor"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7" fill="currentColor"/></svg>
+    Герой
+  </a>
+</nav>
 {% endblock %}
 
 {% block scripts %}
 <script>
 (async () => {
-  // Load character + streak + stars
+  var me, subjects, freeLessons;
+
+  // Load all data
   try {
-    var me = await fetch('/api/kid/me', {credentials: 'same-origin'}).then(r => r.json());
+    var [meRes, subRes, freeRes] = await Promise.all([
+      fetch('/api/kid/me', {credentials:'same-origin'}).then(r => r.json()),
+      fetch('/api/kid/subjects', {credentials:'same-origin'}).then(r => r.json()),
+      fetch('/api/kid/free-lessons', {credentials:'same-origin'}).then(r => r.json())
+    ]);
+    me = meRes;
+    subjects = (subRes.subjects || []);
+    freeLessons = (freeRes.lessons || []);
+  } catch(e) { return; }
 
-    // Character image
-    var charAvatar = document.getElementById('char-avatar');
-    if (charAvatar) {
-      var imgUrl = me.character_image_url || '/static/kid/default-character.svg';
-      var img = document.createElement('img');
-      img.src = imgUrl;
-      img.alt = '{{ child.name }}';
-      img.className = 'home-hero__character-img';
-      img.onerror = function() { this.src = '/static/kid/default-character.svg'; };
-      charAvatar.style.display = 'none';
-      charAvatar.parentNode.insertBefore(img, charAvatar);
-    }
-
-    // Nav avatar image
-    var navAvatar = document.getElementById('nav-avatar');
-    if (navAvatar && me.character_image_url) {
-      navAvatar.textContent = '';
-      var navImg = document.createElement('img');
-      navImg.src = me.character_image_url;
-      navImg.onerror = function() { this.remove(); navAvatar.textContent = '{{ child.name[0]|upper }}'; };
-      navAvatar.appendChild(navImg);
-    }
-
-    // Stars
-    var starEl = document.getElementById('star-count');
-    if (starEl) starEl.textContent = me.stars || 0;
-
-    // Speech bubble
-    var speech = document.getElementById('hero-speech');
-    if (speech) speech.style.display = '';
-
-    // Streak — update nav badge + hero block
-    var navStreak = document.getElementById('nav-streak');
-    if (navStreak) navStreak.textContent = me.current_streak || 0;
-    if (me.current_streak > 0) {
-      var streakBlock = document.getElementById('streak-block');
-      var streakText = document.getElementById('streak-text');
-      if (streakBlock && streakText) {
-        streakText.textContent = me.current_streak + ' ' + pluralDays(me.current_streak) + ' подряд!';
-        streakBlock.style.display = '';
-      }
-    }
-  } catch(e) {}
-
-  // Load subjects + free lessons count in parallel
-  var subjectsPromise = fetch('/api/kid/subjects', {credentials: 'same-origin'}).then(r => r.json());
-  var freePromise = fetch('/api/kid/free-lessons', {credentials: 'same-origin'}).then(r => r.json());
-
-  try {
-    var results = await Promise.all([subjectsPromise, freePromise]);
-    var subjectsData = results[0];
-    var freeData = results[1];
-    var subjects = subjectsData.subjects || [];
-    var freeLessons = freeData.lessons || [];
-    var grid = document.getElementById('subjects-grid');
-
-    // Subject definitions with new colors
-    var allSubjects = [
-      {key: 'math', name: 'Математика', icon: '🔢', color: '#22C55E', deep: '#15803D', gradient: 'linear-gradient(135deg, #22C55E, #15803D)'},
-      {key: 'russian', name: 'Русский язык', icon: '✍️', color: '#2DD4BF', deep: '#0EA5A0', gradient: 'linear-gradient(135deg, #2DD4BF, #0EA5A0)'},
-      {key: 'world', name: 'Окруж. мир', icon: '🌍', color: '#A78BFA', deep: '#7C3AED', gradient: 'linear-gradient(135deg, #A78BFA, #7C3AED)'}
-    ];
-
-    var enrolledMap = {};
-    for (var i = 0; i < subjects.length; i++) {
-      enrolledMap[subjects[i].subject] = subjects[i];
-    }
-
-    var html = '';
-    for (var j = 0; j < allSubjects.length; j++) {
-      var s = allSubjects[j];
-      var enrolled = enrolledMap[s.key];
-      var hasLessons = enrolled && enrolled.total_lessons > 0;
-
-      if (hasLessons) {
-        var completed = enrolled.completed_lessons;
-        var total = enrolled.total_lessons;
-        var pct = total > 0 ? Math.round(completed / total * 100) : 0;
-
-        html += '<a href="/kid/subject/' + s.key + '" class="subject-card-kid" style="--subject-color:' + s.color + '; --subject-deep:' + s.deep + '">';
-        html += '<div class="subject-card-kid__icon-wrap" style="background:' + s.gradient + '">' + s.icon + '</div>';
-        html += '<div class="subject-card-kid__body">';
-        html += '<div class="subject-card-kid__name">' + s.name + '</div>';
-        html += '<div class="subject-card-kid__progress-bar"><div class="subject-card-kid__progress-fill" style="width:' + pct + '%;background:' + s.color + '"></div></div>';
-        html += '<div class="subject-card-kid__progress-text">' + completed + ' из ' + total + '</div>';
-        html += '</div>';
-        html += '<div class="subject-card-kid__arrow" style="background:' + s.color + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 L15 12 L9 18"/></svg></div>';
-        html += '</a>';
-      }
-    }
-
-    // Free lessons card
-    var freeCount = freeLessons.length;
-    if (freeCount > 0) {
-      var freeReady = freeLessons.filter(function(l) { return l.status === 'done' && l.stars === null; }).length;
-
-      html += '<a href="/kid/free-lessons" class="subject-card-kid" style="--subject-color:#FF6B5B; --subject-deep:#E8503F">';
-      html += '<div class="subject-card-kid__icon-wrap" style="background:linear-gradient(135deg, #FF6B5B, #E8503F)">🎨</div>';
-      html += '<div class="subject-card-kid__body">';
-      html += '<div class="subject-card-kid__name">Свободные уроки</div>';
-      html += '<div class="subject-card-kid__progress-text">' + freeCount + ' ' + pluralLessons(freeCount);
-      if (freeReady > 0) html += ' &middot; ' + freeReady + ' новых';
-      html += '</div></div>';
-      html += '<div class="subject-card-kid__arrow" style="background:#FF6B5B"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 L15 12 L9 18"/></svg></div>';
-      html += '</a>';
-    }
-
-
-    grid.innerHTML = html;
-  } catch(e) {
-    document.getElementById('subjects-grid').innerHTML = '<p style="text-align:center;color:#7E9786">Ошибка загрузки</p>';
+  // Character image
+  var charEl = document.getElementById('char-avatar');
+  if (charEl && me.character_image_url) {
+    var img = document.createElement('img');
+    img.src = me.character_image_url;
+    img.alt = '{{ child.name }}';
+    img.onerror = function() { this.remove(); charEl.style.display = ''; };
+    charEl.style.display = 'none';
+    charEl.parentNode.insertBefore(img, charEl);
   }
-})();
 
-function esc(str) {
-  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
+  // Nav avatar
+  var navAvatar = document.getElementById('nav-avatar');
+  if (navAvatar && me.character_image_url) {
+    navAvatar.textContent = '';
+    var navImg = document.createElement('img');
+    navImg.src = me.character_image_url;
+    navImg.onerror = function() { this.remove(); navAvatar.textContent = '{{ child.name[0]|upper }}'; };
+    navAvatar.appendChild(navImg);
+  }
+
+  // Stars + streak
+  var starEl = document.getElementById('star-count');
+  if (starEl) starEl.textContent = me.stars || 0;
+  var streakEl = document.getElementById('hdr-streak');
+  if (streakEl) streakEl.textContent = me.current_streak || 0;
+
+  // PLAY button — link to first active subject
+  var allSubjects = [
+    {key:'math', name:'Математика', icon:'🚀', color:'#ff9a3a', deep:'#e85b1a'},
+    {key:'russian', name:'Русский язык', icon:'📖', color:'#4cb5ff', deep:'#1f7fc9'},
+    {key:'world', name:'Окруж. мир', icon:'🧩', color:'#b181ff', deep:'#7a4ad6'}
+  ];
+
+  var enrolledMap = {};
+  for (var i = 0; i < subjects.length; i++) enrolledMap[subjects[i].subject] = subjects[i];
+
+  // Find first enrolled subject for PLAY button
+  var playSubject = null;
+  for (var j = 0; j < allSubjects.length; j++) {
+    if (enrolledMap[allSubjects[j].key] && enrolledMap[allSubjects[j].key].total_lessons > 0) {
+      playSubject = allSubjects[j];
+      break;
+    }
+  }
+
+  var playBtn = document.getElementById('play-btn');
+  var playSub = document.getElementById('play-sub');
+  if (playSubject) {
+    playBtn.href = '/kid/subject/' + playSubject.key;
+    playSub.textContent = playSubject.name;
+  } else if (freeLessons.length > 0) {
+    playBtn.href = '/kid/free-lessons';
+    playSub.textContent = 'Свободные уроки';
+  } else {
+    playBtn.href = '/kid/home';
+    playSub.textContent = 'Скоро начнём!';
+  }
+
+  // Build portals
+  var grid = document.getElementById('portal-grid');
+  var html = '';
+
+  for (var k = 0; k < allSubjects.length; k++) {
+    var s = allSubjects[k];
+    var enrolled = enrolledMap[s.key];
+    if (!enrolled || enrolled.total_lessons === 0) continue;
+
+    var completed = enrolled.completed_lessons;
+    var total = enrolled.total_lessons;
+    var pct = total > 0 ? Math.round(completed / total * 100) : 0;
+    var isFirst = (k === 0 && playSubject && playSubject.key === s.key);
+
+    html += '<a class="hub-portal" href="/kid/subject/' + s.key + '">';
+    if (isFirst) html += '<span class="continue-pin">Продолжить</span>';
+    html += '<span class="hub-portal-disc" style="background:radial-gradient(circle at 35% 30%, ' + s.color + '88, ' + s.color + ' 55%, ' + s.deep + ' 100%); box-shadow: 0 6px 0 ' + s.deep + ', 0 20px 40px -14px ' + s.color + '66;">' + s.icon + '</span>';
+    html += '<h3>' + s.name + '</h3>';
+    html += '<div class="progress-row"><div class="progress"><span style="width:' + pct + '%; background:linear-gradient(90deg,' + s.color + '88,' + s.color + ')"></span></div><span class="pct">' + pct + '%</span></div>';
+    html += '</a>';
+  }
+
+  // Free lessons portal
+  if (freeLessons.length > 0) {
+    html += '<a class="hub-portal" href="/kid/free-lessons">';
+    html += '<span class="hub-portal-disc" style="background:radial-gradient(circle at 35% 30%, #ff9a8a, #FF6B5B 55%, #E8503F 100%); box-shadow: 0 6px 0 #E8503F, 0 20px 40px -14px rgba(255,107,91,0.4);">🎨</span>';
+    html += '<h3>Свободные</h3>';
+    html += '<div class="progress-row"><span class="pct">' + freeLessons.length + ' ' + pluralLessons(freeLessons.length) + '</span></div>';
+    html += '</a>';
+  }
+
+  grid.innerHTML = html || '<p style="text-align:center;color:var(--hb-ink-mute);padding:20px">Предметы скоро появятся!</p>';
+})();
 
 function pluralDays(n) {
   if (n % 10 === 1 && n % 100 !== 11) return 'день';
   if ([2,3,4].indexOf(n % 10) !== -1 && [12,13,14].indexOf(n % 100) === -1) return 'дня';
   return 'дней';
 }
-
 function pluralLessons(n) {
   if (n % 10 === 1 && n % 100 !== 11) return 'урок';
   if ([2,3,4].indexOf(n % 10) !== -1 && [12,13,14].indexOf(n % 100) === -1) return 'урока';
