@@ -42,6 +42,32 @@
     </div>
   </div>
 
+  <!-- Bottom shelf: Shop + Chat -->
+  <div class="home-shelf">
+    <a href="/kid/character" class="home-shelf__card home-shelf__card--shop">
+      <span class="home-shelf__icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2.5l2.6 5.6 6.1.7-4.6 4.2 1.3 6L12 16.1 6.6 19l1.3-6L3.3 8.8l6.1-.7L12 2.5z" fill="#fff"/>
+        </svg>
+      </span>
+      <span class="home-shelf__text">
+        <span class="home-shelf__title">Магазин</span>
+        <span class="home-shelf__meta">Тратить звёзды</span>
+      </span>
+    </a>
+    <a href="/kid/chat" class="home-shelf__card home-shelf__card--chat">
+      <span class="home-shelf__icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+          <path d="M3 5h18v12H13l-6 5v-5H3V5z" fill="#fff"/>
+        </svg>
+      </span>
+      <span class="home-shelf__text">
+        <span class="home-shelf__title">Чат с помощником</span>
+        <span class="home-shelf__meta">Спроси что угодно!</span>
+      </span>
+    </a>
+  </div>
+
   <!-- Bottom tab bar (mobile) -->
   <div class="kid-tab-bar">
     <a href="/kid/home" class="kid-tab-bar__item kid-tab-bar__item--active">
@@ -84,14 +110,11 @@
     // Nav avatar image
     var navAvatar = document.getElementById('nav-avatar');
     if (navAvatar && me.character_image_url) {
-      var navLink = navAvatar.querySelector('a');
-      if (navLink) {
-        navLink.textContent = '';
-        var navImg = document.createElement('img');
-        navImg.src = me.character_image_url;
-        navImg.onerror = function() { this.remove(); navLink.textContent = '{{ child.name[0]|upper }}'; };
-        navLink.appendChild(navImg);
-      }
+      navAvatar.textContent = '';
+      var navImg = document.createElement('img');
+      navImg.src = me.character_image_url;
+      navImg.onerror = function() { this.remove(); navAvatar.textContent = '{{ child.name[0]|upper }}'; };
+      navAvatar.appendChild(navImg);
     }
 
     // Stars
@@ -102,7 +125,9 @@
     var speech = document.getElementById('hero-speech');
     if (speech) speech.style.display = '';
 
-    // Streak block
+    // Streak — update nav badge + hero block
+    var navStreak = document.getElementById('nav-streak');
+    if (navStreak) navStreak.textContent = me.current_streak || 0;
     if (me.current_streak > 0) {
       var streakBlock = document.getElementById('streak-block');
       var streakText = document.getElementById('streak-text');
@@ -176,15 +201,6 @@
       html += '</a>';
     }
 
-    // AI Chat card
-    html += '<a href="/kid/chat" class="subject-card-kid" style="--subject-color:#0EA5A0; --subject-deep:#0EA5A0">';
-    html += '<div class="subject-card-kid__icon-wrap" style="background:linear-gradient(135deg, #2DD4BF, #0EA5A0)">💬</div>';
-    html += '<div class="subject-card-kid__body">';
-    html += '<div class="subject-card-kid__name">Чат с помощником</div>';
-    html += '<div class="subject-card-kid__progress-text">Спроси что угодно!</div>';
-    html += '</div>';
-    html += '<div class="subject-card-kid__arrow" style="background:#2DD4BF"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 L15 12 L9 18"/></svg></div>';
-    html += '</a>';
 
     grid.innerHTML = html;
   } catch(e) {
