@@ -134,9 +134,9 @@
     position: relative; z-index: 2;
     width: 240px; height: 240px; border-radius: 50%;
     overflow: hidden; display: grid; place-items: center;
-    background: radial-gradient(circle at 40% 30%, #ffd2a3 0%, #ff9a3a 60%, #e85b1a 100%);
+    background: #f0e6ff;
     border: 6px solid #fff;
-    box-shadow: 0 12px 40px -10px rgba(232,91,26,0.4);
+    box-shadow: 0 12px 40px -10px rgba(120,80,200,0.3);
     animation: hubFloat 3.6s ease-in-out infinite;
     text-decoration: none;
   }
@@ -420,7 +420,9 @@
       </a>
     </div>
 
-    <a href="/kid/character" class="hub-avatar" id="nav-avatar">{{ child.name[0]|upper }}</a>
+    <a href="/kid/character" class="hub-avatar" id="nav-avatar">
+      <img src="{{ child.character_image_url or '/static/kid/default-character.svg' }}" alt="{{ child.name }}" onerror="this.style.display='none';this.parentNode.textContent='{{ child.name[0]|upper }}'">
+    </a>
     <a href="/dashboard" class="hub-gear" title="Кабинет родителя">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3"/>
@@ -434,7 +436,7 @@
 <section class="hub-hero">
   <div class="hub-mascot-stage">
     <a href="/kid/character" class="hub-character" id="character-link">
-      <span class="hub-character-placeholder" id="char-avatar">{{ child.name[0]|upper }}</span>
+      <img src="{{ child.character_image_url or '/static/kid/default-character.svg' }}" alt="{{ child.name }}" id="char-img" onerror="this.src='/static/kid/default-character.svg'">
     </a>
   </div>
 
@@ -541,26 +543,15 @@
     freeLessons = (freeRes.lessons || []);
   } catch(e) { return; }
 
-  // Character image (hero circle)
-  var charEl = document.getElementById('char-avatar');
-  var charUrl = me.character_image_url || '/static/kid/default-character.svg';
-  if (charEl) {
-    var img = document.createElement('img');
-    img.src = charUrl;
-    img.alt = '{{ child.name }}';
-    img.onerror = function() { this.src = '/static/kid/default-character.svg'; };
-    charEl.style.display = 'none';
-    charEl.parentNode.insertBefore(img, charEl);
-  }
-
-  // Nav avatar (header)
-  var navAvatar = document.getElementById('nav-avatar');
-  if (navAvatar) {
-    navAvatar.textContent = '';
-    var navImg = document.createElement('img');
-    navImg.src = charUrl;
-    navImg.onerror = function() { this.remove(); navAvatar.textContent = '{{ child.name[0]|upper }}'; };
-    navAvatar.appendChild(navImg);
+  // Update character image if API has a newer URL
+  if (me.character_image_url) {
+    var charImg = document.getElementById('char-img');
+    if (charImg) charImg.src = me.character_image_url;
+    var navAvatar = document.getElementById('nav-avatar');
+    if (navAvatar) {
+      var navImg = navAvatar.querySelector('img');
+      if (navImg) navImg.src = me.character_image_url;
+    }
   }
 
   // Stars + streak

@@ -417,7 +417,7 @@
     .kh-badge { font-size: 15px; padding: 3px 10px 3px 3px; }
     .kh-badge-ico { width: 26px; height: 26px; }
     .kh-badge-ico svg { width: 14px; height: 14px; }
-    .kh-right { display: none; }
+    .kh-right { display: flex; }
 
     .prog { margin-top: 24px; padding: 0 16px; }
     .prog h1 { font-size: 28px; }
@@ -652,18 +652,28 @@ function renderMap(data) {
 
   mapEl.innerHTML = html;
 
-  // Click handlers
+  // Click handlers — use both click and touchend for mobile compatibility
+  function handleNodeTap(n) {
+    var lid = n.dataset.lid;
+    if (lid && (n.classList.contains('done') || n.classList.contains('active'))) {
+      window.location.href = '/kid/lesson/' + lid;
+    } else if (n.classList.contains('locked')) {
+      n.animate([{transform:'translateX(0)'},{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'translateX(0)'}], {duration:260});
+    } else if (n.classList.contains('foggy')) {
+      n.animate([{filter:'brightness(1)'},{filter:'brightness(1.15)'},{filter:'brightness(1)'}], {duration:280});
+    }
+  }
   mapEl.querySelectorAll('.node').forEach(function(n) {
+    n.setAttribute('role', 'button');
+    n.setAttribute('tabindex', '0');
+    var tapped = false;
+    n.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      if (!tapped) { tapped = true; handleNodeTap(n); setTimeout(function(){tapped=false;},300); }
+    });
     n.addEventListener('click', function(e) {
       e.stopPropagation();
-      var lid = n.dataset.lid;
-      if (lid && (n.classList.contains('done') || n.classList.contains('active'))) {
-        window.location.href = '/kid/lesson/' + lid;
-      } else if (n.classList.contains('locked')) {
-        n.animate([{transform:'translateX(0)'},{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'translateX(0)'}], {duration:260});
-      } else if (n.classList.contains('foggy')) {
-        n.animate([{filter:'brightness(1)'},{filter:'brightness(1.15)'},{filter:'brightness(1)'}], {duration:280});
-      }
+      handleNodeTap(n);
     });
   });
 }

@@ -6,7 +6,8 @@
 /* ---------- Layout ---------- */
 .chat-layout {
   display: flex;
-  height: calc(100vh - 62px);
+  height: calc(100vh - 60px);
+  height: calc(100dvh - 60px);
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
@@ -15,16 +16,17 @@
   position: relative;
 }
 
-@media (max-width: 900px) {
-  .chat-layout {
-    height: calc(100vh - 54px);
-    height: calc(100dvh - 54px);
-  }
-}
-
 body[data-page="chat"] .kid-main {
   padding: 0;
   max-width: 100%;
+  flex: 1;
+  overflow: hidden;
+}
+
+body[data-page="chat"] {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 /* ---------- Left Sidebar: Personas ---------- */
