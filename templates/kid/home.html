@@ -166,18 +166,18 @@
   .hub-play {
     display: inline-flex; align-items: center; gap: 18px;
     padding: 24px 44px; border: none; cursor: pointer;
-    background: linear-gradient(180deg, #a8e6ff 0%, #38bdf8 40%, #0ea5e9 100%);
+    background: linear-gradient(180deg, #86efac 0%, #22c55e 40%, #16a34a 100%);
     color: #fff; border-radius: 32px;
     box-shadow: inset 0 5px 0 rgba(255,255,255,0.5), inset 0 -8px 0 rgba(0,0,0,0.15),
-      0 10px 0 #0369a1, 0 24px 50px -12px rgba(14,165,233,0.5);
+      0 10px 0 #15803d, 0 24px 50px -12px rgba(34,197,94,0.5);
     font-family: "Baloo 2", sans-serif; font-weight: 800;
     transition: transform .15s, box-shadow .15s;
     text-decoration: none; position: relative; overflow: hidden;
     animation: hubPlayPulse 2.5s ease-in-out infinite;
   }
   @keyframes hubPlayPulse {
-    0%,100% { box-shadow: inset 0 5px 0 rgba(255,255,255,0.5), inset 0 -8px 0 rgba(0,0,0,0.15), 0 10px 0 #0369a1, 0 24px 50px -12px rgba(14,165,233,0.5); }
-    50% { box-shadow: inset 0 5px 0 rgba(255,255,255,0.5), inset 0 -8px 0 rgba(0,0,0,0.15), 0 10px 0 #0369a1, 0 28px 60px -10px rgba(14,165,233,0.65), 0 0 30px rgba(56,189,248,0.3); }
+    0%,100% { box-shadow: inset 0 5px 0 rgba(255,255,255,0.5), inset 0 -8px 0 rgba(0,0,0,0.15), 0 10px 0 #15803d, 0 24px 50px -12px rgba(34,197,94,0.5); }
+    50% { box-shadow: inset 0 5px 0 rgba(255,255,255,0.5), inset 0 -8px 0 rgba(0,0,0,0.15), 0 10px 0 #15803d, 0 28px 60px -10px rgba(34,197,94,0.65), 0 0 30px rgba(134,239,172,0.3); }
   }
   .hub-play::before {
     content: ""; position: absolute; top: 4px; left: 4px; right: 4px; height: 30%;
@@ -195,7 +195,7 @@
   .hub-play:active {
     transform: translateY(6px) scale(0.98);
     box-shadow: inset 0 4px 0 rgba(255,255,255,0.3), inset 0 -3px 0 rgba(0,0,0,0.15),
-      0 2px 0 #0369a1, 0 6px 14px -4px rgba(14,165,233,0.5);
+      0 2px 0 #15803d, 0 6px 14px -4px rgba(34,197,94,0.5);
     animation: none;
   }
   .hub-play-icon {
@@ -205,7 +205,7 @@
     box-shadow: 0 0 20px rgba(255,255,255,0.3);
   }
   .hub-play-text { display: flex; flex-direction: column; line-height: 1; text-align: left; position: relative; z-index: 1; }
-  .hub-play-text .big { font-size: 38px; letter-spacing: -1px; text-shadow: 0 3px 0 rgba(3,105,161,0.4), 0 0 20px rgba(255,255,255,0.3); }
+  .hub-play-text .big { font-size: 48px; letter-spacing: -1px; text-shadow: 0 3px 0 rgba(21,128,61,0.4), 0 0 20px rgba(255,255,255,0.3); }
   .hub-play-text .sub { font-size: 14px; margin-top: 8px; opacity: 0.9; font-weight: 700; }
 
   /* === PORTALS === */
@@ -363,7 +363,7 @@
     .hub-play { padding: 18px 30px; gap: 14px; border-radius: 26px; }
     .hub-play-icon { width: 48px; height: 48px; border-width: 2.5px; }
     .hub-play-icon svg { width: 22px; height: 22px; }
-    .hub-play-text .big { font-size: 26px; }
+    .hub-play-text .big { font-size: 34px; }
     .hub-play-text .sub { font-size: 12px; }
 
     .hub-portals { padding: 0 20px; margin-top: 32px; }
@@ -448,7 +448,7 @@
         <svg viewBox="0 0 24 24" fill="none" width="26" height="26"><polygon points="14.121,14.121 7.05,16.95 9.879,9.879 16.95,7.05" fill="#fff"/><circle cx="12" cy="12" r="2" fill="rgba(14,165,233,0.6)"/><circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="1.5" fill="none" opacity="0.5"/></svg>
       </span>
       <span class="hub-play-text">
-        <span class="big">ИССЛЕДОВАТЬ!</span>
+        <span class="big">В ПУТЬ!</span>
         <span class="sub" id="play-sub">Загрузка...</span>
       </span>
     </a>
@@ -497,7 +497,7 @@
       </svg>
     </span>
     <span class="hub-shelf-text">
-      <span class="hub-shelf-title">Нейросеть для детей</span>
+      <span class="hub-shelf-title">Нейросеть<br>для детей</span>
       <span class="hub-shelf-meta">Чат с помощником</span>
     </span>
   </a>

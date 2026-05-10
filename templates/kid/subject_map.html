@@ -227,6 +227,7 @@
     position: relative; display: grid;
     grid-template-columns: repeat(var(--cols, 5), 1fr);
     height: 100%; align-items: center; overflow: visible;
+    z-index: 2;
   }
   .node-slot { display: grid; place-items: center; position: relative; }
   .node-slot.up   { transform: translateY(-30px); }
@@ -238,6 +239,7 @@
     width: var(--node-size); height: var(--node-size);
     position: relative; display: grid; place-items: center;
     cursor: pointer; transition: transform .15s ease; user-select: none;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
   }
   .node:hover { transform: translateY(-2px); }
   .node:active { transform: translateY(2px); }
@@ -511,21 +513,21 @@
 
 <!-- Mobile bottom tab bar -->
 <nav class="m-tabbar">
-  <a class="m-tab is-active" href="/kid/subject/{{ subject }}">
+  <a class="m-tab" href="/kid/home">
     <svg viewBox="0 0 24 24" fill="none"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1v-9z" fill="currentColor"/></svg>
-    Карта
+    Домой
+  </a>
+  <a class="m-tab" href="/kid/character">
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="currentColor"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7" fill="currentColor"/></svg>
+    Герой
   </a>
   <a class="m-tab" href="/kid/character">
     <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="9" width="18" height="11" rx="2" fill="currentColor"/><path d="M3 9c0-3 4-5 9-5s9 2 9 5" fill="currentColor"/></svg>
     Магазин
   </a>
   <a class="m-tab" href="/kid/chat">
-    <svg viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z" fill="currentColor"/></svg>
+    <svg viewBox="0 0 24 24" fill="none"><path d="M3 5h18v12H13l-6 5v-5H3V5z" fill="currentColor"/></svg>
     Чат
-  </a>
-  <a class="m-tab" href="/kid/home">
-    <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="currentColor"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7" fill="currentColor"/></svg>
-    Профиль
   </a>
 </nav>
 {% endblock %}
