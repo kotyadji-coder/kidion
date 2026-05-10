@@ -164,35 +164,49 @@
   }
 
   .hub-play {
-    display: inline-flex; align-items: center; gap: 16px;
-    padding: 20px 36px; border: none; cursor: pointer;
-    background: linear-gradient(180deg, #c8eba6 0%, #95d57a 55%, #6ebd5a 100%);
-    color: #fff; border-radius: 28px;
-    box-shadow: inset 0 4px 0 rgba(255,255,255,0.4), inset 0 -7px 0 rgba(0,0,0,0.12),
-      0 8px 0 #4f9d44, 0 20px 40px -12px rgba(110,189,90,0.4);
+    display: inline-flex; align-items: center; gap: 18px;
+    padding: 24px 44px; border: none; cursor: pointer;
+    background: linear-gradient(180deg, #a8e6ff 0%, #38bdf8 40%, #0ea5e9 100%);
+    color: #fff; border-radius: 32px;
+    box-shadow: inset 0 5px 0 rgba(255,255,255,0.5), inset 0 -8px 0 rgba(0,0,0,0.15),
+      0 10px 0 #0369a1, 0 24px 50px -12px rgba(14,165,233,0.5);
     font-family: "Baloo 2", sans-serif; font-weight: 800;
-    transition: transform .12s, box-shadow .12s;
+    transition: transform .15s, box-shadow .15s;
     text-decoration: none; position: relative; overflow: hidden;
+    animation: hubPlayPulse 2.5s ease-in-out infinite;
+  }
+  @keyframes hubPlayPulse {
+    0%,100% { box-shadow: inset 0 5px 0 rgba(255,255,255,0.5), inset 0 -8px 0 rgba(0,0,0,0.15), 0 10px 0 #0369a1, 0 24px 50px -12px rgba(14,165,233,0.5); }
+    50% { box-shadow: inset 0 5px 0 rgba(255,255,255,0.5), inset 0 -8px 0 rgba(0,0,0,0.15), 0 10px 0 #0369a1, 0 28px 60px -10px rgba(14,165,233,0.65), 0 0 30px rgba(56,189,248,0.3); }
   }
   .hub-play::before {
-    content: ""; position: absolute; top: 4px; left: 4px; right: 4px; height: 28%;
-    background: linear-gradient(180deg, rgba(255,255,255,0.35), transparent);
-    border-radius: 24px 24px 50% 50%; pointer-events: none;
+    content: ""; position: absolute; top: 4px; left: 4px; right: 4px; height: 30%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.45), transparent);
+    border-radius: 28px 28px 50% 50%; pointer-events: none;
   }
-  .hub-play:hover { transform: translateY(-2px); }
+  .hub-play::after {
+    content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,0.15) 60deg, transparent 120deg);
+    animation: hubPlayShine 4s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes hubPlayShine { to { transform: rotate(360deg); } }
+  .hub-play:hover { transform: translateY(-3px) scale(1.02); animation: none; }
   .hub-play:active {
-    transform: translateY(6px);
-    box-shadow: inset 0 4px 0 rgba(255,255,255,0.3), inset 0 -3px 0 rgba(0,0,0,0.12),
-      0 2px 0 #4f9d44, 0 6px 14px -4px rgba(110,189,90,0.4);
+    transform: translateY(6px) scale(0.98);
+    box-shadow: inset 0 4px 0 rgba(255,255,255,0.3), inset 0 -3px 0 rgba(0,0,0,0.15),
+      0 2px 0 #0369a1, 0 6px 14px -4px rgba(14,165,233,0.5);
+    animation: none;
   }
   .hub-play-icon {
-    width: 52px; height: 52px; border-radius: 50%;
-    background: rgba(255,255,255,0.25); border: 3px solid #fff;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: rgba(255,255,255,0.2); border: 3px solid rgba(255,255,255,0.7);
     display: grid; place-items: center; flex-shrink: 0;
+    box-shadow: 0 0 20px rgba(255,255,255,0.3);
   }
-  .hub-play-text { display: flex; flex-direction: column; line-height: 1; text-align: left; }
-  .hub-play-text .big { font-size: 42px; letter-spacing: -1px; text-shadow: 0 2px 0 rgba(60,120,40,0.25); }
-  .hub-play-text .sub { font-size: 13px; margin-top: 6px; opacity: 0.9; font-weight: 700; }
+  .hub-play-text { display: flex; flex-direction: column; line-height: 1; text-align: left; position: relative; z-index: 1; }
+  .hub-play-text .big { font-size: 38px; letter-spacing: -1px; text-shadow: 0 3px 0 rgba(3,105,161,0.4), 0 0 20px rgba(255,255,255,0.3); }
+  .hub-play-text .sub { font-size: 14px; margin-top: 8px; opacity: 0.9; font-weight: 700; }
 
   /* === PORTALS === */
   .hub-portals {
@@ -346,10 +360,10 @@
       width: 14px; height: 14px; background: var(--hb-paper);
       border-left: 1px solid var(--hb-rim); border-top: 1px solid var(--hb-rim);
     }
-    .hub-play { padding: 16px 28px; gap: 14px; border-radius: 24px; }
-    .hub-play-icon { width: 46px; height: 46px; border-width: 2.5px; }
+    .hub-play { padding: 18px 30px; gap: 14px; border-radius: 26px; }
+    .hub-play-icon { width: 48px; height: 48px; border-width: 2.5px; }
     .hub-play-icon svg { width: 22px; height: 22px; }
-    .hub-play-text .big { font-size: 32px; }
+    .hub-play-text .big { font-size: 26px; }
     .hub-play-text .sub { font-size: 12px; }
 
     .hub-portals { padding: 0 20px; margin-top: 32px; }
@@ -431,10 +445,10 @@
     </div>
     <a href="#" class="hub-play" id="play-btn">
       <span class="hub-play-icon">
-        <svg viewBox="0 0 24 24" fill="none" width="26" height="26"><path d="M7 5l12 7-12 7V5z" fill="#fff"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" width="26" height="26"><polygon points="14.121,14.121 7.05,16.95 9.879,9.879 16.95,7.05" fill="#fff"/><circle cx="12" cy="12" r="2" fill="rgba(14,165,233,0.6)"/><circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="1.5" fill="none" opacity="0.5"/></svg>
       </span>
       <span class="hub-play-text">
-        <span class="big">ИГРАТЬ!</span>
+        <span class="big">ИССЛЕДОВАТЬ!</span>
         <span class="sub" id="play-sub">Загрузка...</span>
       </span>
     </a>
