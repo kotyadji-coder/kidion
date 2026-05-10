@@ -525,23 +525,24 @@
     freeLessons = (freeRes.lessons || []);
   } catch(e) { return; }
 
-  // Character image
+  // Character image (hero circle)
   var charEl = document.getElementById('char-avatar');
-  if (charEl && me.character_image_url) {
+  var charUrl = me.character_image_url || '/static/kid/default-character.svg';
+  if (charEl) {
     var img = document.createElement('img');
-    img.src = me.character_image_url;
+    img.src = charUrl;
     img.alt = '{{ child.name }}';
-    img.onerror = function() { this.remove(); charEl.style.display = ''; };
+    img.onerror = function() { this.src = '/static/kid/default-character.svg'; };
     charEl.style.display = 'none';
     charEl.parentNode.insertBefore(img, charEl);
   }
 
-  // Nav avatar
+  // Nav avatar (header)
   var navAvatar = document.getElementById('nav-avatar');
-  if (navAvatar && me.character_image_url) {
+  if (navAvatar) {
     navAvatar.textContent = '';
     var navImg = document.createElement('img');
-    navImg.src = me.character_image_url;
+    navImg.src = charUrl;
     navImg.onerror = function() { this.remove(); navAvatar.textContent = '{{ child.name[0]|upper }}'; };
     navAvatar.appendChild(navImg);
   }
