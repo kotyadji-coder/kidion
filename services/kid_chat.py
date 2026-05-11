@@ -1,8 +1,7 @@
 """
 kid_chat.py — Safe AI chat for children using Gemini.
 
-Characters (personas) are different system prompts on top of the same Gemini model.
-Each character has a unique personality and style of communication.
+Single assistant character: Spark — a friendly learning companion.
 """
 
 import json
@@ -12,28 +11,10 @@ import re
 
 logger = logging.getLogger("kidion")
 
-CHARACTERS = {
-    "owl": {
-        "key": "owl",
-        "emoji": "\U0001f989",
-        "name_ru": "Мудрая Сова",
-        "description_ru": "Объясняет сложное простыми словами, помогает с уроками и домашкой",
-        "color": "#6C5CE7",
-    },
-    "dreamer": {
-        "key": "dreamer",
-        "emoji": "\U0001f3a8",
-        "name_ru": "Фантазёр",
-        "description_ru": "Придумывает истории, помогает с творчеством и фантазией",
-        "color": "#FD79A8",
-    },
-    "professor": {
-        "key": "professor",
-        "emoji": "\U0001f52c",
-        "name_ru": "Профессор Почему",
-        "description_ru": "Отвечает на вопросы «почему?», рассказывает интересные факты о науке и мире",
-        "color": "#00B894",
-    },
+SPARK = {
+    "key": "spark",
+    "name_ru": "Спарк",
+    "avatar_url": "/static/kid/img/spark.png",
 }
 
 _SAFETY_BASE = """
@@ -50,29 +31,14 @@ _SAFETY_BASE = """
 10. Длина ответа: до 200 слов. Если тема сложная — разбей на части и предложи продолжить.
 """
 
-_CHARACTER_PROMPTS = {
-    "owl": f"""
-Ты — Мудрая Сова, дружелюбный помощник-учитель для детей на платформе Kidion.
-Твой характер: спокойный, терпеливый, мудрый. Ты объясняешь сложные вещи простыми словами.
-Ты любишь хвалить ребёнка за хорошие вопросы.
-Стиль общения: "Отличный вопрос! Давай разберёмся вместе..."
+_SPARK_PROMPT = f"""
+Ты — Спарк, дружелюбный помощник для детей на платформе Kidion.
+Ты маленький огонёк в очках и фиолетовой мантии — любознательный, весёлый и всегда готов помочь.
+Ты умеешь объяснять сложное простыми словами, придумывать истории и рассказывать интересные факты.
+Ты любишь хвалить ребёнка за хорошие вопросы и поддерживать интерес к учёбе.
+Стиль общения: тёплый, дружелюбный, с юмором. "Отличный вопрос! Давай разберёмся вместе!"
 {_SAFETY_BASE}
-""",
-    "dreamer": f"""
-Ты — Фантазёр, творческий помощник для детей на платформе Kidion.
-Твой характер: весёлый, творческий, вдохновляющий. Ты обожаешь истории, рисование и воображение.
-Ты помогаешь придумывать сказки, стихи, персонажей и творческие проекты.
-Стиль общения: "Ого, какая классная идея! А давай добавим..."
-{_SAFETY_BASE}
-""",
-    "professor": f"""
-Ты — Профессор Почему, научный помощник для детей на платформе Kidion.
-Твой характер: любопытный, увлечённый, восторженный. Ты обожаешь науку и интересные факты.
-Ты объясняешь, как устроен мир, через опыты и примеры из жизни.
-Стиль общения: "Ух ты, знаешь что? Оказывается..."
-{_SAFETY_BASE}
-""",
-}
+"""
 
 # Patterns that could be prompt injection from child input
 _INJECTION_PATTERNS = [
@@ -95,43 +61,7 @@ def sanitize_message(text: str) -> str:
     return clean.strip()
 
 
-def generate_chat_title(first_message: str) -> str:
-    """Generate a short chat title from first message using Gemini, or fallback."""
-    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    if not project:
-        # Stub mode
-        words = first_message.split()[:4]
-        return " ".join(words) if words else "Новый чат"
-
-    try:
-        import vertexai
-        from vertexai.generative_models import GenerativeModel
-
-        credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-        if credentials_path:
-            from google.oauth2 import service_account
-            credentials = service_account.Credentials.from_service_account_file(credentials_path)
-            vertexai.init(project=project, location="global", credentials=credentials)
-        else:
-            vertexai.init(project=project, location="global")
-
-        model = GenerativeModel("gemini-2.5-flash-preview-05-20")
-        prompt = (
-            f"Придумай короткое название (2-4 слова) для детского чата, "
-            f"который начинается с сообщения: \"{first_message[:200]}\". "
-            f"Ответь ТОЛЬКО названием, без кавычек и пояснений."
-        )
-        response = model.generate_content(prompt)
-        title = response.text.strip()[:60]
-        return title if title else "Новый чат"
-    except Exception as e:
-        logger.warning("Failed to generate chat title: %s", e)
-        words = first_message.split()[:4]
-        return " ".join(words) if words else "Новый чат"
-
-
 def generate_chat_response(
-    character_key: str,
     messages: list[dict],
     child_name: str = "",
 ) -> str:
@@ -141,17 +71,14 @@ def generate_chat_response(
     messages: list of {"role": "user"|"assistant", "content": "..."}
     Returns the assistant's response text.
     """
-    if character_key not in _CHARACTER_PROMPTS:
-        character_key = "owl"
-
-    system_prompt = _CHARACTER_PROMPTS[character_key]
+    system_prompt = _SPARK_PROMPT
     if child_name:
         system_prompt += f"\nИмя ребёнка: {child_name}. Можешь иногда обращаться по имени."
 
     project = os.environ.get("GOOGLE_CLOUD_PROJECT")
     if not project:
         # Stub mode
-        return _stub_response(character_key, messages[-1]["content"] if messages else "")
+        return _stub_response(messages[-1]["content"] if messages else "")
 
     try:
         import vertexai
@@ -205,11 +132,6 @@ def generate_chat_response(
         return "Упс, что-то пошло не так. Попробуй ещё раз через минутку! 🔧"
 
 
-def _stub_response(character_key: str, message: str) -> str:
+def _stub_response(message: str) -> str:
     """Return a stub response for testing without Gemini."""
-    responses = {
-        "owl": "Отличный вопрос! Давай разберёмся вместе. Это очень интересная тема! 🦉",
-        "dreamer": "Ого, какая классная идея! Давай придумаем целую историю про это! 🎨",
-        "professor": "Ух ты, знаешь что? Это связано с очень интересным научным фактом! 🔬",
-    }
-    return responses.get(character_key, responses["owl"])
+    return "Отличный вопрос! Давай разберёмся вместе. Это очень интересная тема! ✨"

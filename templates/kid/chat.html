@@ -1,6 +1,6 @@
 {% extends "kid/base.html" %}
 
-{% block title %}Чат — Kidion{% endblock %}
+{% block title %}Спарк — Kidion{% endblock %}
 {% block page_name %}chat{% endblock %}
 
 {% block head %}
@@ -8,7 +8,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
 <style>
-  /* ═══ Hide default kid nav, use custom header ═══ */
   body[data-page="chat"] .kid-nav { display: none; }
   body[data-page="chat"] .kid-main { padding: 0; max-width: 100%; }
   body[data-page="chat"] {
@@ -34,12 +33,14 @@
     --ch-gold-deep: #e9a90f;
     --ch-cream: #f8f6ff;
     --ch-line: rgba(42,36,82,0.08);
+    --ch-spark: #FF8C42;
+    --ch-spark-deep: #E06A1A;
     --ch-r-pill: 999px;
   }
 
   * { box-sizing: border-box; }
 
-  /* ═══ HEADER (matches hub-header from home.html) ═══ */
+  /* ═══ HEADER ═══ */
   .ch-header {
     position: sticky; top: 0; z-index: 50; flex-shrink: 0;
     backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
@@ -47,23 +48,33 @@
     border-bottom: 1px solid var(--ch-line);
   }
   .ch-header-inner {
-    max-width: 1200px; margin: 0 auto; padding: 10px 16px;
+    max-width: 600px; margin: 0 auto; padding: 10px 16px;
     display: flex; align-items: center; gap: 10px;
   }
-  .ch-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
-  .ch-logo-mark {
-    width: 32px; height: 32px; border-radius: 9px;
-    background: linear-gradient(135deg, #22C55E, #2DD4BF);
-    display: grid; place-items: center;
-    box-shadow: 0 2px 6px rgba(34,197,94,0.3);
+  .ch-back {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--ch-cream); border: none;
+    display: grid; place-items: center; cursor: pointer;
+    color: var(--ch-ink); text-decoration: none; flex-shrink: 0;
   }
-  .ch-logo-text {
+  .ch-spark-header {
+    display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;
+  }
+  .ch-spark-avatar {
+    width: 40px; height: 40px; border-radius: 50%; overflow: hidden;
+    flex-shrink: 0; background: #FFF3E0;
+    box-shadow: 0 2px 8px rgba(255,140,66,0.3);
+  }
+  .ch-spark-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .ch-spark-name {
     font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 17px;
-    letter-spacing: -0.5px; color: var(--ch-ink);
+    color: var(--ch-ink);
   }
-  .ch-logo-text .dot { color: #22C55E; }
+  .ch-spark-status {
+    font-size: 11px; color: var(--ch-ink-mute); font-weight: 600;
+  }
 
-  .ch-badges { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+  .ch-badges { display: flex; align-items: center; gap: 6px; }
   .ch-badge {
     display: inline-flex; align-items: center; gap: 5px;
     padding: 4px 10px 4px 4px; background: var(--ch-paper);
@@ -77,118 +88,66 @@
     width: 24px; height: 24px; border-radius: 50%;
     display: grid; place-items: center; color: #fff;
   }
-  .ch-badge--streak .ch-badge-ico { background: linear-gradient(160deg, #ffb663, #ff6a3d); box-shadow: 0 2px 0 #e84a18; }
   .ch-badge--stars .ch-badge-ico { background: linear-gradient(160deg, #ffe27a, var(--ch-gold)); box-shadow: 0 2px 0 var(--ch-gold-deep); }
 
-  .ch-avatar {
-    width: 34px; height: 34px; border-radius: 50%;
-    border: 2.5px solid var(--ch-accent); background: #ffe7d4;
-    display: flex; align-items: center; justify-content: center; overflow: hidden;
-    font-family: "Baloo 2"; font-weight: 800; font-size: 14px; color: var(--ch-accent-deep);
-    text-decoration: none; box-shadow: 0 2px 0 var(--ch-accent-deep);
-    margin-left: 4px; flex-shrink: 0;
-  }
-  .ch-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .ch-gear {
-    width: 34px; height: 34px; border-radius: 10px;
-    background: var(--ch-paper); border: 1px solid var(--ch-rim);
-    display: grid; place-items: center; color: var(--ch-ink-mute);
-    box-shadow: 0 2px 0 rgba(42,36,82,0.05); text-decoration: none;
-    margin-left: 2px;
-  }
-
-  /* ═══ CHAT BODY (flex:1, contains sidebar + center) ═══ */
-  .ch-body {
-    flex: 1; min-height: 0; display: flex; overflow: hidden;
-    max-width: 1200px; width: 100%; margin: 0 auto;
-    background: #fff;
-  }
-
-  /* ═══ SIDEBAR ═══ */
-  .ch-sidebar {
-    width: 280px; flex-shrink: 0;
-    border-right: 1px solid var(--ch-line);
-    display: flex; flex-direction: column;
-    background: var(--ch-cream); padding: 16px 14px;
-  }
-  .ch-sidebar__title {
-    font-size: 11px; font-weight: 800; color: var(--ch-ink-mute);
-    text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;
-  }
-  .ch-sidebar__personas { display: flex; flex-direction: column; gap: 8px; flex: 1; }
-
-  .ch-persona {
-    display: flex; align-items: center; gap: 10px; padding: 10px;
-    border-radius: 14px; border: none; background: transparent;
-    cursor: pointer; font-family: "Nunito", sans-serif; width: 100%; text-align: left;
+  .ch-new-btn {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--ch-cream); border: 1px solid var(--ch-rim);
+    display: grid; place-items: center; cursor: pointer;
+    color: var(--ch-ink-mute); flex-shrink: 0;
     transition: background 0.15s;
   }
-  .ch-persona:hover { background: #fff; }
-  .ch-persona--active {
-    background: #fff;
-    box-shadow: 0 3px 0 var(--persona-color), 0 0 0 2px var(--persona-color);
-  }
-  .ch-persona__avatar {
-    width: 44px; height: 44px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px; flex-shrink: 0;
-  }
-  .ch-persona__name { font-size: 14px; font-weight: 800; color: var(--ch-ink); }
-  .ch-persona__role {
-    font-size: 11px; color: var(--ch-ink-mute); font-weight: 600;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
+  .ch-new-btn:hover { background: #ede8ff; color: var(--ch-ink); }
 
-  .ch-limit-box {
-    margin-top: auto; padding: 12px; border-radius: 14px;
-    background: #fff; border: 1.5px dashed var(--ch-ok);
+  /* ═══ CHAT BODY ═══ */
+  .ch-body {
+    flex: 1; min-height: 0; display: flex; flex-direction: column;
+    max-width: 600px; width: 100%; margin: 0 auto;
+    background: #fff; overflow: hidden;
   }
-  .ch-limit-box__text { font-size: 12px; font-weight: 800; color: var(--ch-ok-deep); margin-bottom: 2px; }
-  .ch-limit-box__hint { font-size: 11px; color: var(--ch-ink-soft); font-weight: 600; }
-
-  /* ═══ CENTER: Chat window ═══ */
-  .ch-center {
-    flex: 1; display: flex; flex-direction: column;
-    min-width: 0; min-height: 0; overflow: hidden;
-  }
-
-  .ch-center__header {
-    display: flex; align-items: center; gap: 10px;
-    padding: 12px 20px; border-bottom: 1px solid var(--ch-line);
-    background: #fff; flex-shrink: 0;
-  }
-  .ch-toggle-btn {
-    display: none; width: 34px; height: 34px; border-radius: 10px;
-    border: none; background: var(--ch-cream); font-size: 16px;
-    cursor: pointer; align-items: center; justify-content: center; flex-shrink: 0;
-  }
-  .ch-center__icon {
-    width: 40px; height: 40px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px; flex-shrink: 0;
-  }
-  .ch-center__title { font-size: 15px; font-weight: 800; color: var(--ch-ink); }
-  .ch-center__subtitle { font-size: 11px; color: var(--ch-ink-mute); font-weight: 600; }
 
   /* Messages */
   .chat-messages {
     flex: 1; min-height: 0; overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 20px; display: flex; flex-direction: column; gap: 10px;
+    padding: 20px 16px; display: flex; flex-direction: column; gap: 10px;
   }
   .chat-messages::-webkit-scrollbar { width: 4px; }
   .chat-messages::-webkit-scrollbar-thumb { background: rgba(42,36,82,0.1); border-radius: 2px; }
 
+  /* Empty state */
   .chat-empty-state {
     flex: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; color: var(--ch-ink-mute);
+    align-items: center; justify-content: center; padding: 40px 20px;
   }
-  .chat-empty-state__icon { font-size: 48px; margin-bottom: 10px; }
-  .chat-empty-state__text { font-size: 16px; font-weight: 700; }
+  .chat-empty__avatar {
+    width: 100px; height: 100px; border-radius: 50%; overflow: hidden;
+    margin-bottom: 16px; background: #FFF3E0;
+    box-shadow: 0 4px 16px rgba(255,140,66,0.25);
+  }
+  .chat-empty__avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .chat-empty__title {
+    font-family: "Baloo 2", sans-serif; font-size: 20px; font-weight: 800;
+    color: var(--ch-ink); margin-bottom: 6px;
+  }
+  .chat-empty__text {
+    font-size: 14px; color: var(--ch-ink-soft); font-weight: 600;
+    text-align: center; line-height: 1.5;
+  }
+  .chat-empty__hints {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; justify-content: center;
+  }
+  .chat-empty__hint {
+    padding: 8px 14px; border-radius: var(--ch-r-pill);
+    background: var(--ch-cream); border: 1px solid var(--ch-rim);
+    font-size: 13px; font-weight: 700; color: var(--ch-ink-soft);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .chat-empty__hint:hover { background: #ede8ff; color: var(--ch-ink); }
 
   /* Message bubbles */
   .chat-msg {
-    display: flex; gap: 8px; max-width: 76%;
+    display: flex; gap: 8px; max-width: 82%;
     animation: msg-in 0.25s ease-out; align-items: flex-end;
   }
   @keyframes msg-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -199,16 +158,22 @@
   .chat-msg__avatar {
     width: 30px; height: 30px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 16px; flex-shrink: 0;
+    flex-shrink: 0; overflow: hidden;
   }
   .chat-msg--user .chat-msg__avatar {
     background: linear-gradient(135deg, #FF6B5B, #FFB627); color: white;
     font-weight: 800; font-size: 13px;
   }
+  .chat-msg--assistant .chat-msg__avatar {
+    background: #FFF3E0;
+  }
+  .chat-msg--assistant .chat-msg__avatar img {
+    width: 100%; height: 100%; object-fit: cover;
+  }
 
   .chat-msg__bubble {
     padding: 10px 14px; border-radius: 16px; font-size: 14px;
-    line-height: 1.4; font-weight: 600; word-break: break-word; max-width: 100%;
+    line-height: 1.5; font-weight: 600; word-break: break-word; max-width: 100%;
   }
   .chat-msg--user .chat-msg__bubble {
     background: var(--ch-ok); color: white;
@@ -239,26 +204,27 @@
     padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
     border-top: 1px solid var(--ch-line); background: #fff; flex-shrink: 0;
   }
-  .chat-limit-info { font-size: 11px; color: var(--ch-ink-mute); font-weight: 700; margin-bottom: 6px; }
+  .chat-limit-info { font-size: 11px; color: var(--ch-ink-mute); font-weight: 700; margin-bottom: 6px; text-align: center; }
   .chat-limit-info b { color: var(--ch-ok-deep); }
 
   .chat-input-wrap { display: flex; gap: 8px; align-items: center; }
   .chat-input {
     flex: 1; padding: 10px 14px; border-radius: var(--ch-r-pill);
-    border: none; background: var(--ch-cream); font-size: 14px;
+    border: none; background: var(--ch-cream); font-size: 15px;
     font-family: "Nunito", sans-serif; font-weight: 600; outline: none; color: var(--ch-ink);
   }
   .chat-input::placeholder { color: var(--ch-ink-mute); }
-  .chat-attach-btn { cursor: pointer; font-size: 18px; flex-shrink: 0; display: flex; align-items: center; }
+
   .chat-send-btn {
-    width: 40px; height: 40px; border-radius: 50%; border: none;
-    background: var(--ch-ok); color: white; cursor: pointer;
+    width: 42px; height: 42px; border-radius: 50%; border: none;
+    background: var(--ch-spark); color: white; cursor: pointer;
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    box-shadow: 0 3px 0 var(--ch-ok-deep); transition: transform 0.1s, opacity 0.2s;
+    box-shadow: 0 3px 0 var(--ch-spark-deep); transition: transform 0.1s, opacity 0.2s;
   }
   .chat-send-btn:disabled { opacity: 0.4; cursor: default; }
-  .chat-send-btn:not(:disabled):active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ch-ok-deep); }
+  .chat-send-btn:not(:disabled):active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ch-spark-deep); }
 
+  .chat-attach-btn { cursor: pointer; font-size: 18px; flex-shrink: 0; display: flex; align-items: center; }
   .chat-attach-preview {
     display: flex; align-items: center; gap: 8px; margin-top: 6px;
     padding: 6px; background: var(--ch-cream); border-radius: 10px;
@@ -267,20 +233,6 @@
   .chat-attach-remove {
     background: none; border: none; cursor: pointer;
     font-size: 14px; color: var(--ch-ink-mute); padding: 4px 8px; border-radius: 6px;
-  }
-
-  /* ═══ Mobile persona selector ═══ */
-  .ch-mobile-personas { display: none; }
-  .ch-mobile-personas__row { display: flex; gap: 6px; }
-  .ch-mobile-persona {
-    flex: 1; padding: 8px 6px; border-radius: 14px; text-align: center;
-    background: #fff; color: var(--ch-ink); border: none;
-    font-family: "Nunito", sans-serif; cursor: pointer;
-    box-shadow: 0 2px 0 var(--ch-line), 0 0 0 1.5px var(--ch-line); transition: all 0.15s;
-  }
-  .ch-mobile-persona--active {
-    background: var(--persona-bg); color: #fff;
-    box-shadow: 0 3px 0 var(--persona-color);
   }
 
   /* ═══ MOBILE TAB BAR ═══ */
@@ -298,152 +250,87 @@
     text-decoration: none;
   }
   .ch-tab svg { width: 24px; height: 24px; }
-  .ch-tab.is-active { color: var(--ch-accent); background: var(--ch-accent-soft); }
+  .ch-tab.is-active { color: var(--ch-spark); background: rgba(255,140,66,0.12); }
 
-  /* Overlay */
-  .ch-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 250; }
-  .ch-overlay.active { display: block; }
-
-  /* ═══ MOBILE ═══ */
   @media (max-width: 900px) {
-    .ch-sidebar {
-      display: none; position: fixed; left: 0; top: 0; bottom: 0;
-      z-index: 300; width: 260px;
-      box-shadow: 4px 0 20px rgba(0,0,0,0.15);
-    }
-    .ch-sidebar.open { display: flex; }
-    .ch-toggle-btn { display: flex; }
-    .ch-mobile-personas {
-      display: block; padding: 10px 16px 8px; flex-shrink: 0;
-      border-bottom: 1px solid var(--ch-line);
-    }
-    .ch-center__header { padding: 10px 14px; }
-    .chat-messages { padding: 14px; }
-    .chat-msg { max-width: 90%; }
     .ch-tabbar { display: flex; }
     .chat-input-area { padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); }
-
-    /* Ensure chat fills between header and tabbar */
-    .ch-body { margin-bottom: 0; }
     body[data-page="chat"] { padding-bottom: 68px; }
+    .ch-body { margin-bottom: 0; }
+    .chat-msg { max-width: 90%; }
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- ═══ Custom hub-style header ═══ -->
+<!-- ═══ Header: back + Spark info + stars + new chat ═══ -->
 <header class="ch-header">
   <div class="ch-header-inner">
-    <a class="ch-logo" href="/kid/home">
-      <span class="ch-logo-mark">
-        <svg width="16" height="16" viewBox="0 0 20 20"><circle cx="10" cy="10" r="3" fill="#fff"/><circle cx="4" cy="6" r="1.6" fill="#fff"/><circle cx="16" cy="6" r="1.6" fill="#fff"/><circle cx="4" cy="14" r="1.6" fill="#fff"/><circle cx="16" cy="14" r="1.6" fill="#fff"/><g stroke="#fff" stroke-width="1" opacity=".6"><line x1="10" y1="10" x2="4" y2="6"/><line x1="10" y1="10" x2="16" y2="6"/><line x1="10" y1="10" x2="4" y2="14"/><line x1="10" y1="10" x2="16" y2="14"/></g></svg>
-      </span>
-      <span class="ch-logo-text">kidion<span class="dot">.ru</span></span>
+    <a class="ch-back" href="/kid/home" title="Домой">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
     </a>
 
+    <div class="ch-spark-header">
+      <div class="ch-spark-avatar">
+        <img src="/static/kid/img/spark.png" alt="Спарк">
+      </div>
+      <div>
+        <div class="ch-spark-name">Спарк</div>
+        <div class="ch-spark-status">Твой помощник</div>
+      </div>
+    </div>
+
     <div class="ch-badges">
-      <a href="/kid/home" class="ch-badge ch-badge--streak" title="Дней подряд">
-        <span class="ch-badge-ico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 3c1.5 3.5-1 4 .5 7 1.7-.6 2.5-2 2.5-3 2 2 4 4 4 7.5A7 7 0 0 1 5 14.5c0-3 1.5-4.5 3-6.5 2 1 2.5 2.5 2 4 1.5-1 2.5-3 2-9z" fill="#fff"/></svg></span>
-        <span id="hdr-streak">0</span>
-      </a>
       <a href="/kid/character" class="ch-badge ch-badge--stars" title="Звёзды">
         <span class="ch-badge-ico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2.5l2.6 5.6 6.1.7-4.6 4.2 1.3 6L12 16.1 6.6 19l1.3-6L3.3 8.8l6.1-.7L12 2.5z" fill="#fff"/></svg></span>
         <span id="hdr-stars">{{ child.stars if child.stars is defined else 0 }}</span>
       </a>
     </div>
 
-    <a href="/kid/character" class="ch-avatar">
-      {% if child.character_image_url %}
-        <img src="{{ child.character_image_url }}" alt="{{ child.name }}" onerror="this.style.display='none';this.parentNode.textContent='{{ child.name[0]|upper }}'">
-      {% else %}
-        {{ child.name[0]|upper }}
-      {% endif %}
-    </a>
-    <a href="/dashboard" class="ch-gear" title="Кабинет родителя">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-    </a>
+    <button class="ch-new-btn" id="btn-new-chat" title="Начать заново">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+    </button>
   </div>
 </header>
 
 <!-- ═══ Chat body ═══ -->
 <div class="ch-body">
-  <!-- Left: Persona sidebar (desktop) -->
-  <aside class="ch-sidebar" id="chat-sidebar">
-    <div class="ch-sidebar__title">Друзья по чату</div>
-    <div class="ch-sidebar__personas">
-      {% for key, char in characters.items() %}
-      <button class="ch-persona {% if key == 'owl' %}ch-persona--active{% endif %}"
-              data-key="{{ key }}"
-              style="--persona-color: {{ char.color }}; --persona-bg: {{ char.color }}20;">
-        <div class="ch-persona__avatar" style="background: {{ char.color }}30;">{{ char.emoji }}</div>
-        <div>
-          <div class="ch-persona__name">{{ char.name_ru }}</div>
-          <div class="ch-persona__role">{{ char.description_ru[:30] if char.description_ru else '' }}</div>
-        </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-empty-state" id="chat-empty">
+      <div class="chat-empty__avatar">
+        <img src="/static/kid/img/spark.png" alt="Спарк">
+      </div>
+      <div class="chat-empty__title">Привет! Я Спарк!</div>
+      <div class="chat-empty__text">Я знаю много интересного и всегда готов помочь. Спроси меня о чём угодно!</div>
+      <div class="chat-empty__hints">
+        <button class="chat-empty__hint" data-text="Расскажи интересный факт">Интересный факт</button>
+        <button class="chat-empty__hint" data-text="Помоги с домашкой">Помощь с уроками</button>
+        <button class="chat-empty__hint" data-text="Придумай историю">Придумай историю</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-input-area" id="chat-input-area">
+    <div class="chat-limit-info" id="chat-limit-info">
+      Осталось <b id="limit-info-count">5</b> сообщений сегодня
+    </div>
+    <div class="chat-input-wrap">
+      <input type="text" class="chat-input" id="chat-input" placeholder="Напиши Спарку..." autocomplete="off">
+      <label class="chat-attach-btn" id="btn-attach" title="Прикрепить картинку">
+        <input type="file" accept="image/*" id="file-input" hidden>
+        📎
+      </label>
+      <button class="chat-send-btn" id="chat-send-btn" title="Отправить" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
+          <path d="M3 21 L22 12 L3 3 L3 10 L17 12 L3 14 Z"/>
+        </svg>
       </button>
-      {% endfor %}
     </div>
-    <div class="ch-limit-box" id="chat-limit-box">
-      <div class="ch-limit-box__text">Осталось <b id="limit-remaining">5</b> сообщений</div>
-      <div class="ch-limit-box__hint">Лимит обновится завтра утром</div>
+    <div class="chat-attach-preview" id="attach-preview" style="display:none">
+      <img id="attach-thumb" src="" alt="preview">
+      <button class="chat-attach-remove" id="btn-remove-attach">✕</button>
     </div>
-  </aside>
-
-  <!-- Center: Chat -->
-  <section class="ch-center">
-    <div class="ch-center__header">
-      <button class="ch-toggle-btn" id="btn-toggle-sidebar" title="Персонажи">☰</button>
-      <div class="ch-center__icon" id="chat-header-icon" style="background: #2DD4BF;">🦉</div>
-      <div>
-        <div class="ch-center__title" id="chat-title">Совушка</div>
-        <div class="ch-center__subtitle" id="chat-subtitle">Объясняет просто</div>
-      </div>
-    </div>
-
-    <!-- Mobile persona selector -->
-    <div class="ch-mobile-personas" id="chat-mobile-personas">
-      <div style="font-size:10px;font-weight:800;color:var(--ch-ink-mute);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px;">Сейчас говоришь с</div>
-      <div class="ch-mobile-personas__row">
-        {% for key, char in characters.items() %}
-        <button class="ch-mobile-persona {% if key == 'owl' %}ch-mobile-persona--active{% endif %}"
-                data-key="{{ key }}"
-                style="--persona-color: {{ char.color }}; --persona-bg: {{ char.color }};">
-          <div style="font-size:22px;line-height:1;">{{ char.emoji }}</div>
-          <div style="font-size:10px;font-weight:800;margin-top:3px;">{{ char.name_ru }}</div>
-        </button>
-        {% endfor %}
-      </div>
-    </div>
-
-    <div class="chat-messages" id="chat-messages">
-      <div class="chat-empty-state" id="chat-empty">
-        <div class="chat-empty-state__icon">🦉</div>
-        <div class="chat-empty-state__text">Ух-ху! Спроси меня о чём угодно!</div>
-      </div>
-    </div>
-
-    <div class="chat-input-area" id="chat-input-area">
-      <div class="chat-limit-info" id="chat-limit-info">
-        Осталось <b id="limit-info-count">5</b> сообщений сегодня
-      </div>
-      <div class="chat-input-wrap">
-        <input type="text" class="chat-input" id="chat-input" placeholder="Напиши вопрос..." autocomplete="off">
-        <label class="chat-attach-btn" id="btn-attach" title="Прикрепить картинку">
-          <input type="file" accept="image/*" id="file-input" hidden>
-          📎
-        </label>
-        <button class="chat-send-btn" id="chat-send-btn" title="Отправить" disabled>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
-            <path d="M3 21 L22 12 L3 3 L3 10 L17 12 L3 14 Z"/>
-          </svg>
-        </button>
-      </div>
-      <div class="chat-attach-preview" id="attach-preview" style="display:none">
-        <img id="attach-thumb" src="" alt="preview">
-        <button class="chat-attach-remove" id="btn-remove-attach">✕</button>
-      </div>
-    </div>
-  </section>
+  </div>
 </div>
 
 <!-- Mobile tab bar -->
@@ -465,21 +352,17 @@
     Чат
   </a>
 </nav>
-
-<!-- Overlay for mobile sidebar -->
-<div class="ch-overlay" id="chat-overlay"></div>
 {% endblock %}
 
 {% block scripts %}
 <script>
   window.KID_CHAT = {
-    childId: {{ child.id }},
     childName: "{{ child.name }}",
+    chatId: {{ chat_id }},
     hasSubscription: {{ "true" if has_subscription else "false" }},
     freeLimit: 5,
     paidLimit: 50,
-    characters: {{ characters_json | safe }},
   };
 </script>
-<script src="/static/kid/chat.js?v=4"></script>
+<script src="/static/kid/chat.js?v=5"></script>
 {% endblock %}

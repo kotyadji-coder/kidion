@@ -43,7 +43,7 @@ kidion/
 │   ├── content_generator.py   # Saves lesson HTML/PNG/JSON to content/
 │   ├── curricula.py           # Load/search curriculum JSON files
 │   ├── universe.py            # Universe/character/shop generation (Gemini)
-│   ├── kid_chat.py            # Safe AI chat: 3 characters, safety prompts, Gemini 2.5 Flash
+│   ├── kid_chat.py            # Spark AI chat: single character, safety prompts, Gemini 2.5 Flash
 │   └── worksheet/             # Printable worksheet generation (from metodist)
 │       ├── models.py           # Pydantic models: 24 task types + 3 activities
 │       ├── prompts.py          # Prompts for worksheet/activity generation
@@ -62,11 +62,11 @@ kidion/
 │   ├── home.html              # Kid home: character avatar + subjects + streak + shop btn
 │   ├── character.html         # RPG character page + star shop + name editing + speech bubble
 │   ├── subject_map.html       # Duolingo-style vertical lesson map with tooltip
-│   ├── chat.html              # AI chat: 3-column layout (chats, messages, characters)
+│   ├── chat.html              # Spark AI chat (single assistant, simple layout)
 │   ├── lesson.html            # Lesson iframe + auto-score via postMessage
 │   └── result.html            # Stars animation + confetti + shop button
 ├── static/kid/style.css       # Kid CSS (Nunito, pastels, mobile-first)
-├── static/kid/chat.css        # Chat page CSS (3-column responsive)
+├── static/kid/img/spark.png   # Spark avatar image
 ├── static/kid/chat.js         # Chat page JS (CRUD, send, typing, attachments)
 ├── content/                   # Generated lesson HTML/PNG + characters/ (gitignored)
 ├── content/characters/        # Generated character PNGs: {child_id}.png
@@ -139,11 +139,12 @@ All generation functions return predefined defaults when `GOOGLE_CLOUD_PROJECT` 
 
 ## Kid AI Chat System
 
-### Characters (personas)
-3 AI characters with different system prompts, all using Gemini 2.5 Flash:
-- **Owl** (`owl`) — teacher, explains things simply
-- **Dreamer** (`dreamer`) — creative, helps with stories and art
-- **Professor** (`professor`) — science facts, answers "why?" questions
+### Spark — Single AI Assistant
+One universal character **Spark** (friendly fire creature in glasses and purple robe). Avatar: `static/kid/img/spark.png`.
+- Single chat per child, auto-created on first visit
+- No chat list, no character selection — just open and talk
+- DB keeps only last 30 messages (auto-trimmed on insert)
+- "New conversation" button clears message history
 
 ### Safety
 - Strict system prompt: no violence, politics, adult content, no personal data requests
@@ -157,13 +158,14 @@ All generation functions return predefined defaults when `GOOGLE_CLOUD_PROJECT` 
 - Limits counted across all children of the same parent
 - Subscription bought on `/buy` page (parent auth)
 
-### Chat Context
-- Last 30 messages sent to Gemini as conversation history
-- Auto-title generated after first message via separate Gemini call
+### Chat API
+- `GET /api/kid/chat` — get chat + messages + limits
+- `POST /api/kid/chat/send` — send message, get AI response
+- `POST /api/kid/chat/clear` — clear history (new conversation)
 
 ## Key Business Logic
 
-- **Crystals:** 60 on registration (120 with referral). Prices: 1 lesson=20, 1 topic (5 lessons)=100, 1 month (20 lessons)=400. Skip test=FREE. **First 4 lessons per subject=FREE** (auto-generated on first enrollment).
+- **Crystals:** 60 on registration (120 with referral). Prices: 1 lesson=20, 1 topic (5 lessons)=100, 1 month (20 lessons)=400. Skip test=FREE. **First 1 lesson per subject=FREE** (auto-generated on first enrollment).
 - **Stars:** +1 per correct task (5 tasks = 5 max per lesson).
 - **Packages:** 60/60 rub, 360/320 rub, 600/490 rub, 1000/800 rub
 - **Adaptive difficulty** (1-3): auto-adjusts based on last 2 lesson results
@@ -185,7 +187,7 @@ All generation functions return predefined defaults when `GOOGLE_CLOUD_PROJECT` 
 - Data: `GET /api/kid/me` (includes character_image_url, universe_description), `/lessons`, `/lessons/{id}`, `/subjects`, `/subject/{s}/map`, `/free-lessons`
 - Actions: `POST /api/kid/lessons/{curriculum_lesson_id}/start`
 - **Character & Shop:** `GET /api/kid/character`, `POST /api/kid/character/name`, `POST /api/kid/shop/buy/{item_id}`, `POST /api/kid/shop/equip/{item_id}`
-- **Chat:** `GET /api/kid/chats`, `POST /api/kid/chats`, `DELETE /api/kid/chats/{id}`, `GET /api/kid/chats/{id}/messages`, `POST /api/kid/chats/{id}/send`
+- **Chat:** `GET /api/kid/chat`, `POST /api/kid/chat/send`, `POST /api/kid/chat/clear`
 
 ### Payments & Lessons (parent auth)
 - `POST /api/lessons/generate`, `POST /api/lessons/generate-topic`, `GET /api/lessons/{id}/poll`, `POST /api/lessons/{id}/result`

@@ -94,12 +94,10 @@ from db import (
     initialize_child_progress,
     update_lesson_progress_status,
     # Kid chat
-    create_kid_chat,
+    get_or_create_spark_chat,
     get_kid_chat,
-    get_kid_chats_by_child,
-    update_kid_chat_title,
     update_kid_chat_timestamp,
-    delete_kid_chat,
+    clear_kid_chat_messages,
     add_kid_chat_message,
     get_kid_chat_messages,
     count_daily_messages,
@@ -110,7 +108,7 @@ from payments import PACKAGES, create_yookassa_payment, handle_webhook
 from referral import generate_ref_code, process_registration_referral
 import services.generation
 from services.universe import generate_universe, generate_character_image, generate_shop_items
-from services.kid_chat import CHARACTERS as CHAT_CHARACTERS, sanitize_message, generate_chat_response, generate_chat_title
+from services.kid_chat import SPARK as CHAT_SPARK, sanitize_message, generate_chat_response
 
 
 def _sanitize_interests(interests: list[str]) -> list[str]:
@@ -3179,114 +3177,76 @@ async def kid_chat_page(request: Request):
     if templates is None:
         return HTMLResponse("<h1>Chat</h1>")
 
-    import json as _json
-
     # Check subscription via parent
     parent_id = child["parent_id"]
     has_sub = get_active_chat_subscription(conn, parent_id) is not None
 
-    # Characters dict for template
-    characters_json = _json.dumps(
-        {k: {"emoji": v["emoji"], "name_ru": v["name_ru"], "description_ru": v["description_ru"], "color": v["color"]}
-         for k, v in CHAT_CHARACTERS.items()},
-        ensure_ascii=False,
-    )
+    # Get or create the single Spark chat
+    chat = get_or_create_spark_chat(conn, child["id"])
 
     return templates.TemplateResponse(
         request,
         "kid/chat.html",
         {
             "child": child,
-            "characters": CHAT_CHARACTERS,
-            "characters_json": characters_json,
+            "chat_id": chat["id"],
             "has_subscription": has_sub,
         },
     )
 
 
 # ---------------------------------------------------------------------------
-# Kid Chat API endpoints
+# Kid Chat API endpoints (single Spark chat)
 # ---------------------------------------------------------------------------
 
-@app.get("/api/kid/chats")
-async def kid_chats_list(request: Request):
-    conn = get_db_connection()
-    child = get_current_child(request, conn)
-    if not child:
-        return JSONResponse({"error": "unauthorized"}, status_code=401)
-    chats = get_kid_chats_by_child(conn, child["id"])
-    return JSONResponse({"chats": chats})
-
-
-@app.post("/api/kid/chats")
-async def kid_chat_create(request: Request):
+@app.get("/api/kid/chat")
+async def kid_chat_get(request: Request):
+    """Get the single Spark chat and its messages."""
     conn = get_db_connection()
     child = get_current_child(request, conn)
     if not child:
         return JSONResponse({"error": "unauthorized"}, status_code=401)
 
-    body = await request.json()
-    character_key = body.get("character_key", "owl")
-    if character_key not in CHAT_CHARACTERS:
-        character_key = "owl"
+    chat = get_or_create_spark_chat(conn, child["id"])
+    messages = get_kid_chat_messages(conn, chat["id"], limit=30)
 
-    chat_id = create_kid_chat(conn, child["id"], character_key)
-    chat = get_kid_chat(conn, chat_id)
-    return JSONResponse({"chat": chat}, status_code=201)
-
-
-@app.delete("/api/kid/chats/{chat_id}")
-async def kid_chat_delete(chat_id: int, request: Request):
-    conn = get_db_connection()
-    child = get_current_child(request, conn)
-    if not child:
-        return JSONResponse({"error": "unauthorized"}, status_code=401)
-
-    chat = get_kid_chat(conn, chat_id)
-    if not chat or chat["child_id"] != child["id"]:
-        return JSONResponse({"error": "not_found"}, status_code=404)
-
-    delete_kid_chat(conn, chat_id)
-    return JSONResponse({"ok": True})
-
-
-@app.get("/api/kid/chats/{chat_id}/messages")
-async def kid_chat_messages(chat_id: int, request: Request):
-    conn = get_db_connection()
-    child = get_current_child(request, conn)
-    if not child:
-        return JSONResponse({"error": "unauthorized"}, status_code=401)
-
-    chat = get_kid_chat(conn, chat_id)
-    if not chat or chat["child_id"] != child["id"]:
-        return JSONResponse({"error": "not_found"}, status_code=404)
-
-    messages = get_kid_chat_messages(conn, chat_id, limit=30)
     from datetime import date
     today_str = date.today().isoformat()
     daily_count = count_daily_messages(conn, child["id"], today_str)
-
     parent_id = child["parent_id"]
     has_sub = get_active_chat_subscription(conn, parent_id) is not None
     daily_limit = 50 if has_sub else 5
 
     return JSONResponse({
+        "chat_id": chat["id"],
         "messages": messages,
         "daily_count": daily_count,
         "daily_limit": daily_limit,
     })
 
 
-@app.post("/api/kid/chats/{chat_id}/send")
-async def kid_chat_send(chat_id: int, request: Request):
+@app.post("/api/kid/chat/clear")
+async def kid_chat_clear(request: Request):
+    """Clear chat history (new conversation)."""
     conn = get_db_connection()
     child = get_current_child(request, conn)
     if not child:
         return JSONResponse({"error": "unauthorized"}, status_code=401)
 
-    chat = get_kid_chat(conn, chat_id)
-    if not chat or chat["child_id"] != child["id"]:
-        return JSONResponse({"error": "not_found"}, status_code=404)
+    chat = get_or_create_spark_chat(conn, child["id"])
+    clear_kid_chat_messages(conn, chat["id"])
+    return JSONResponse({"ok": True})
+
+
+@app.post("/api/kid/chat/send")
+async def kid_chat_send(request: Request):
+    conn = get_db_connection()
+    child = get_current_child(request, conn)
+    if not child:
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+
+    chat = get_or_create_spark_chat(conn, child["id"])
+    chat_id = chat["id"]
 
     # Check daily limit
     from datetime import date
@@ -3313,7 +3273,6 @@ async def kid_chat_send(chat_id: int, request: Request):
         message_text = form.get("message", "")
         image_file = form.get("image")
         if image_file and hasattr(image_file, "read"):
-            # Save image
             import uuid
             os.makedirs("content/chat_images", exist_ok=True)
             ext = os.path.splitext(image_file.filename)[1] or ".png"
@@ -3342,7 +3301,6 @@ async def kid_chat_send(chat_id: int, request: Request):
 
     # Generate AI response
     response_text = generate_chat_response(
-        chat["character_key"],
         context,
         child_name=child["name"],
     )
@@ -3351,19 +3309,10 @@ async def kid_chat_send(chat_id: int, request: Request):
     add_kid_chat_message(conn, chat_id, "assistant", response_text)
     update_kid_chat_timestamp(conn, chat_id)
 
-    # Auto-title on first user message
-    title_update = None
-    user_messages = [m for m in history if m["role"] == "user"]
-    if len(user_messages) <= 1:
-        new_title = generate_chat_title(message_text)
-        update_kid_chat_title(conn, chat_id, new_title)
-        title_update = new_title
-
     new_daily_count = daily_count + 1
 
     return JSONResponse({
         "response": response_text,
-        "title": title_update,
         "daily_count": new_daily_count,
         "daily_limit": daily_limit,
     })

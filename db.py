@@ -1613,8 +1613,8 @@ def toggle_equip_item(conn: sqlite3.Connection, child_id: int, item_id: int, equ
 def create_kid_chat(
     conn: sqlite3.Connection,
     child_id: int,
-    character_key: str = "owl",
-    title: str = "Новый чат",
+    character_key: str = "spark",
+    title: str = "Спарк",
 ) -> int:
     cursor = conn.execute(
         "INSERT INTO kid_chats (child_id, character_key, title, created_at, updated_at) "
@@ -1623,6 +1623,18 @@ def create_kid_chat(
     )
     conn.commit()
     return cursor.lastrowid
+
+
+def get_or_create_spark_chat(conn: sqlite3.Connection, child_id: int) -> dict:
+    """Get existing Spark chat for child, or create one. Returns chat dict."""
+    row = conn.execute(
+        "SELECT * FROM kid_chats WHERE child_id = ? ORDER BY updated_at DESC LIMIT 1",
+        (child_id,),
+    ).fetchone()
+    if row:
+        return dict(row)
+    chat_id = create_kid_chat(conn, child_id, "spark", "Спарк")
+    return dict(conn.execute("SELECT * FROM kid_chats WHERE id = ?", (chat_id,)).fetchone())
 
 
 def get_kid_chat(conn: sqlite3.Connection, chat_id: int) -> dict | None:
@@ -1638,14 +1650,6 @@ def get_kid_chats_by_child(conn: sqlite3.Connection, child_id: int) -> list[dict
     return [dict(r) for r in rows]
 
 
-def update_kid_chat_title(conn: sqlite3.Connection, chat_id: int, title: str) -> None:
-    conn.execute(
-        "UPDATE kid_chats SET title = ?, updated_at = ? WHERE id = ?",
-        (title, _now(), chat_id),
-    )
-    conn.commit()
-
-
 def update_kid_chat_timestamp(conn: sqlite3.Connection, chat_id: int) -> None:
     conn.execute("UPDATE kid_chats SET updated_at = ? WHERE id = ?", (_now(), chat_id))
     conn.commit()
@@ -1655,6 +1659,12 @@ def delete_kid_chat(conn: sqlite3.Connection, chat_id: int) -> bool:
     cursor = conn.execute("DELETE FROM kid_chats WHERE id = ?", (chat_id,))
     conn.commit()
     return cursor.rowcount == 1
+
+
+def clear_kid_chat_messages(conn: sqlite3.Connection, chat_id: int) -> None:
+    """Delete all messages in a chat (used for 'new conversation')."""
+    conn.execute("DELETE FROM kid_chat_messages WHERE chat_id = ?", (chat_id,))
+    conn.commit()
 
 
 def add_kid_chat_message(
@@ -1670,7 +1680,26 @@ def add_kid_chat_message(
         (chat_id, role, content, image_url, _now()),
     )
     conn.commit()
+    # Trim to keep only last 30 messages
+    _trim_chat_messages(conn, chat_id, max_messages=30)
     return cursor.lastrowid
+
+
+def _trim_chat_messages(conn: sqlite3.Connection, chat_id: int, max_messages: int = 30) -> None:
+    """Keep only the last N messages in a chat, delete older ones."""
+    count = conn.execute(
+        "SELECT COUNT(*) FROM kid_chat_messages WHERE chat_id = ?", (chat_id,)
+    ).fetchone()[0]
+    if count <= max_messages:
+        return
+    conn.execute(
+        "DELETE FROM kid_chat_messages WHERE id IN ("
+        "  SELECT id FROM kid_chat_messages WHERE chat_id = ? "
+        "  ORDER BY created_at ASC, id ASC LIMIT ?"
+        ")",
+        (chat_id, count - max_messages),
+    )
+    conn.commit()
 
 
 def get_kid_chat_messages(

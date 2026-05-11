@@ -1,24 +1,15 @@
 /**
- * Kidion — Kid Chat JS (v3)
- * One chat per character persona (owl, dreamer, professor)
+ * Kidion — Kid Chat JS (v5)
+ * Single Spark chat per child
  */
 
 (function() {
   const CFG = window.KID_CHAT || {};
-  const chars = CFG.characters || {};
-
-  let currentCharacter = 'owl';
-  let chatIdByCharacter = {}; // { owl: 123, dreamer: 456, ... }
-  let currentChatId = null;
   let sending = false;
   let attachedFile = null;
 
   // DOM
   const chatMessages = document.getElementById('chat-messages');
-  const chatTitle = document.getElementById('chat-title');
-  const chatSubtitle = document.getElementById('chat-subtitle');
-  const chatHeaderIcon = document.getElementById('chat-header-icon');
-  const inputArea = document.getElementById('chat-input-area');
   const chatInput = document.getElementById('chat-input');
   const sendBtn = document.getElementById('chat-send-btn');
   const fileInput = document.getElementById('file-input');
@@ -26,20 +17,13 @@
   const attachThumb = document.getElementById('attach-thumb');
   const btnRemoveAttach = document.getElementById('btn-remove-attach');
   const limitInfoCount = document.getElementById('limit-info-count');
-  const limitRemaining = document.getElementById('limit-remaining');
+  const btnNewChat = document.getElementById('btn-new-chat');
 
-  // Sidebar & mobile
-  const sidebar = document.getElementById('chat-sidebar');
-  const btnSidebar = document.getElementById('btn-toggle-sidebar');
-  const overlay = document.getElementById('chat-overlay');
-
-  // --- Init ---
-  loadChats().then(() => {
-    selectCharacter('owl');
-  });
+  // Init
+  loadChat();
   setupEvents();
 
-  // --- API ---
+  // --- API helper ---
   async function api(url, method, body) {
     const opts = { method, credentials: 'same-origin', headers: {} };
     if (body instanceof FormData) {
@@ -52,107 +36,57 @@
     return { status: res.status, data: await res.json() };
   }
 
-  // --- Load all chats and map by character ---
-  async function loadChats() {
+  // --- Load chat messages ---
+  async function loadChat() {
     try {
-      const { data } = await api('/api/kid/chats', 'GET');
-      const chats = data.chats || [];
-      // Map: take the most recent chat for each character
-      chatIdByCharacter = {};
-      chats.forEach(c => {
-        if (!chatIdByCharacter[c.character_key]) {
-          chatIdByCharacter[c.character_key] = c.id;
-        }
-      });
-    } catch (e) {
-      console.error('Failed to load chats:', e);
-    }
-  }
-
-  // --- Select character ---
-  async function selectCharacter(key) {
-    currentCharacter = key;
-    const info = chars[key] || chars.owl || {};
-
-    // Update header
-    if (chatTitle) chatTitle.textContent = info.name_ru || key;
-    if (chatSubtitle) chatSubtitle.textContent = info.description_ru ? info.description_ru.substring(0, 40) : '';
-    if (chatHeaderIcon) {
-      chatHeaderIcon.textContent = info.emoji || '🦉';
-      chatHeaderIcon.style.background = info.color || '#2DD4BF';
-    }
-
-    // Update active states
-    document.querySelectorAll('.ch-persona, .ch-mobile-persona').forEach(el => {
-      const isActive = el.dataset.key === key;
-      el.classList.toggle('ch-persona--active', isActive);
-      el.classList.toggle('ch-mobile-persona--active', isActive);
-    });
-
-    // Open or create chat
-    if (chatIdByCharacter[key]) {
-      await openChat(chatIdByCharacter[key]);
-    } else {
-      // Create a new chat for this character
-      try {
-        const { status, data } = await api('/api/kid/chats', 'POST', { character_key: key });
-        if (status === 200 || status === 201) {
-          chatIdByCharacter[key] = data.chat.id;
-          await openChat(data.chat.id);
-        }
-      } catch (e) {
-        showEmptyState(info);
-      }
-    }
-
-    closePanels();
-  }
-
-  // --- Open chat ---
-  async function openChat(chatId) {
-    currentChatId = chatId;
-    try {
-      const { data } = await api('/api/kid/chats/' + chatId + '/messages', 'GET');
+      const { data } = await api('/api/kid/chat', 'GET');
       renderMessages(data.messages || []);
       updateLimit(data.daily_count, data.daily_limit);
     } catch (e) {
-      const info = chars[currentCharacter] || {};
-      showEmptyState(info);
+      console.error('Failed to load chat:', e);
     }
-  }
-
-  function showEmptyState(info) {
-    if (!chatMessages) return;
-    chatMessages.innerHTML =
-      '<div class="chat-empty-state">' +
-      '<div class="chat-empty-state__icon">' + (info.emoji || '💬') + '</div>' +
-      '<div class="chat-empty-state__text">Привет! Я ' + escHtml(info.name_ru || '') + '. Спроси меня о чём угодно!</div>' +
-      '</div>';
   }
 
   function renderMessages(messages) {
     if (!chatMessages) return;
     if (messages.length === 0) {
-      showEmptyState(chars[currentCharacter] || {});
+      showEmptyState();
       return;
     }
+    const emptyEl = chatMessages.querySelector('.chat-empty-state');
+    if (emptyEl) emptyEl.remove();
     chatMessages.innerHTML = messages.map(renderMessage).join('');
     scrollToBottom();
+  }
+
+  function showEmptyState() {
+    if (!chatMessages) return;
+    chatMessages.innerHTML =
+      '<div class="chat-empty-state" id="chat-empty">' +
+      '<div class="chat-empty__avatar"><img src="/static/kid/img/spark.png" alt="Спарк"></div>' +
+      '<div class="chat-empty__title">Привет! Я Спарк!</div>' +
+      '<div class="chat-empty__text">Я знаю много интересного и всегда готов помочь. Спроси меня о чём угодно!</div>' +
+      '<div class="chat-empty__hints">' +
+      '<button class="chat-empty__hint" data-text="Расскажи интересный факт">Интересный факт</button>' +
+      '<button class="chat-empty__hint" data-text="Помоги с домашкой">Помощь с уроками</button>' +
+      '<button class="chat-empty__hint" data-text="Придумай историю">Придумай историю</button>' +
+      '</div></div>';
+    bindHints();
   }
 
   function renderMessage(msg) {
     const isUser = msg.role === 'user';
     const cls = isUser ? 'chat-msg--user' : 'chat-msg--assistant';
-    const charInfo = chars[currentCharacter] || {};
-    const avatar = isUser ? CFG.childName.charAt(0).toUpperCase() : (charInfo.emoji || '🦉');
-    const avatarBg = isUser ? '' : (' style="background:' + (charInfo.color || '#2DD4BF') + ';"');
+    const avatar = isUser
+      ? '<div class="chat-msg__avatar">' + CFG.childName.charAt(0).toUpperCase() + '</div>'
+      : '<div class="chat-msg__avatar"><img src="/static/kid/img/spark.png" alt="Спарк"></div>';
     const time = formatTime(msg.created_at);
     const imgHtml = msg.image_url
       ? '<img class="chat-msg__image" src="' + escAttr(msg.image_url) + '" alt="image">'
       : '';
 
     return '<div class="chat-msg ' + cls + '">' +
-      '<div class="chat-msg__avatar"' + avatarBg + '>' + avatar + '</div>' +
+      avatar +
       '<div>' +
       imgHtml +
       '<div class="chat-msg__bubble">' + formatContent(msg.content) + '</div>' +
@@ -161,11 +95,10 @@
   }
 
   function showTyping() {
-    const info = chars[currentCharacter] || {};
     const el = document.createElement('div');
     el.className = 'chat-msg chat-msg--assistant';
     el.id = 'typing-indicator';
-    el.innerHTML = '<div class="chat-msg__avatar" style="background:' + (info.color || '#2DD4BF') + ';">' + (info.emoji || '🦉') + '</div>' +
+    el.innerHTML = '<div class="chat-msg__avatar"><img src="/static/kid/img/spark.png" alt="Спарк"></div>' +
       '<div class="chat-msg__bubble chat-typing">' +
       '<span class="chat-typing__dot"></span><span class="chat-typing__dot"></span><span class="chat-typing__dot"></span>' +
       '</div>';
@@ -179,35 +112,25 @@
   }
 
   // --- Send message ---
-  async function sendMessage() {
+  async function sendMessage(text) {
     if (sending) return;
-    const text = (chatInput.value || '').trim();
+    text = text || (chatInput.value || '').trim();
     if (!text && !attachedFile) return;
-
-    // Ensure we have a chat
-    if (!currentChatId) {
-      try {
-        const { status, data } = await api('/api/kid/chats', 'POST', { character_key: currentCharacter });
-        if (status === 200 || status === 201) {
-          chatIdByCharacter[currentCharacter] = data.chat.id;
-          currentChatId = data.chat.id;
-        } else return;
-      } catch (e) { return; }
-    }
 
     sending = true;
     sendBtn.disabled = true;
 
+    // Remove empty state
+    const emptyEl = chatMessages.querySelector('.chat-empty-state');
+    if (emptyEl) emptyEl.remove();
+
     // Show user message
-    const userMsg = {
+    chatMessages.insertAdjacentHTML('beforeend', renderMessage({
       role: 'user',
       content: text,
       image_url: attachedFile ? URL.createObjectURL(attachedFile) : null,
       created_at: new Date().toISOString(),
-    };
-    const emptyEl = chatMessages.querySelector('.chat-empty-state');
-    if (emptyEl) emptyEl.remove();
-    chatMessages.insertAdjacentHTML('beforeend', renderMessage(userMsg));
+    }));
     scrollToBottom();
 
     chatInput.value = '';
@@ -220,9 +143,9 @@
         const fd = new FormData();
         fd.append('message', text);
         fd.append('image', attachedFile);
-        result = await api('/api/kid/chats/' + currentChatId + '/send', 'POST', fd);
+        result = await api('/api/kid/chat/send', 'POST', fd);
       } else {
-        result = await api('/api/kid/chats/' + currentChatId + '/send', 'POST', { message: text });
+        result = await api('/api/kid/chat/send', 'POST', { message: text });
       }
 
       hideTyping();
@@ -239,10 +162,10 @@
         }
       } else if (result.status === 429) {
         chatMessages.insertAdjacentHTML('beforeend',
-          '<div class="chat-msg chat-msg--assistant"><div class="chat-msg__avatar">' +
-          ((chars[currentCharacter] || {}).emoji || '🦉') + '</div>' +
+          '<div class="chat-msg chat-msg--assistant">' +
+          '<div class="chat-msg__avatar"><img src="/static/kid/img/spark.png" alt="Спарк"></div>' +
           '<div class="chat-msg__bubble" style="background:#FFF3E0;color:#E8503F;">' +
-          escHtml(result.data.message || 'Лимит сообщений на сегодня исчерпан') +
+          escHtml(result.data.message || 'На сегодня сообщения закончились!') +
           '</div></div>');
         scrollToBottom();
       }
@@ -254,14 +177,18 @@
     updateSendBtn();
   }
 
+  // --- New conversation ---
+  async function clearChat() {
+    try {
+      await api('/api/kid/chat/clear', 'POST');
+      showEmptyState();
+    } catch (e) {
+      console.error('Failed to clear chat:', e);
+    }
+  }
+
   // --- Events ---
   function setupEvents() {
-    // Character selection (sidebar + mobile)
-    document.querySelectorAll('.ch-persona, .ch-mobile-persona').forEach(el => {
-      el.addEventListener('click', () => selectCharacter(el.dataset.key));
-    });
-
-    // Input
     chatInput.addEventListener('input', updateSendBtn);
     chatInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
@@ -270,9 +197,9 @@
       }
     });
 
-    sendBtn.addEventListener('click', sendMessage);
+    sendBtn.addEventListener('click', () => sendMessage());
 
-    // File
+    // File attach
     fileInput.addEventListener('change', () => {
       const file = fileInput.files[0];
       if (!file) return;
@@ -289,17 +216,22 @@
 
     btnRemoveAttach.addEventListener('click', clearAttach);
 
-    // Mobile sidebar toggle
-    if (btnSidebar) {
-      btnSidebar.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-        overlay.classList.toggle('active', sidebar.classList.contains('open'));
-      });
+    // New conversation button
+    if (btnNewChat) {
+      btnNewChat.addEventListener('click', clearChat);
     }
 
-    if (overlay) {
-      overlay.addEventListener('click', closePanels);
-    }
+    // Quick hint buttons
+    bindHints();
+  }
+
+  function bindHints() {
+    document.querySelectorAll('.chat-empty__hint').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const text = btn.dataset.text;
+        if (text) sendMessage(text);
+      });
+    });
   }
 
   // --- Helpers ---
@@ -318,12 +250,6 @@
   function updateLimit(count, limit) {
     const remaining = Math.max(0, (limit || 5) - (count || 0));
     if (limitInfoCount) limitInfoCount.textContent = remaining;
-    if (limitRemaining) limitRemaining.textContent = remaining;
-  }
-
-  function closePanels() {
-    sidebar.classList.remove('open');
-    overlay.classList.remove('active');
   }
 
   function scrollToBottom() {
