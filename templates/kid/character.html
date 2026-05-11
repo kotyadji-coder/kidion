@@ -127,9 +127,9 @@ var CATEGORY_NAMES = {
   outfit: 'Одежда',
   accessory: 'Аксессуары',
   pet: 'Питомцы',
-  background: 'Фоны',
-  special: 'Особое'
+  background: 'Фоны'
 };
+var HIDDEN_CATEGORIES = {special: true};
 
 var CATEGORY_ICONS = {
   outfit: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 7l4-3h2a2 2 0 0 0 4 0h2l4 3-2 4-3-1v9H7v-9l-3 1z" fill="currentColor"/></svg>',
@@ -173,7 +173,7 @@ function renderPage(data) {
   updateBalance();
 
   // Category tabs
-  var categories = Object.keys(shopData);
+  var categories = Object.keys(shopData).filter(function(c) { return !HIDDEN_CATEGORIES[c]; });
   if (categories.length > 0) {
     currentCat = categories[0];
     renderCategoryTabs(categories);
