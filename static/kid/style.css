@@ -2120,14 +2120,14 @@ body[data-page="character"] .kid-main { padding: 0; max-width: none; }
   flex: 0 0 auto;
   display: inline-flex; align-items: center; gap: 6px;
   padding: 7px 14px 7px 8px;
-  background: rgba(255,255,255,0.72);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255,255,255,0.6);
   border-radius: 999px;
   font-family: var(--font); font-weight: 700; font-size: 13px;
   color: var(--kk-ink); cursor: pointer;
-  box-shadow: 0 2px 0 rgba(42,36,82,0.12);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
 }
 .char-scene-chip__swatch {
   width: 18px; height: 18px; border-radius: 50%;
@@ -2171,8 +2171,8 @@ body[data-page="character"] .kid-main { padding: 0; max-width: none; }
 /* --- Character image --- */
 .char-image-wrap {
   position: absolute; inset: 0; z-index: 3;
-  display: grid; place-items: end center;
-  padding-bottom: 10px;
+  display: grid; place-items: center center;
+  padding-top: 60px;
 }
 .char-image-float {
   position: relative;
@@ -2318,6 +2318,8 @@ body[data-page="character"] .kid-main { padding: 0; max-width: none; }
   cursor: pointer;
   transition: transform .12s ease;
   font-family: var(--font);
+  display: flex; flex-direction: column; align-items: center;
+  overflow: hidden;
 }
 .char-item:hover { transform: translateY(-2px); }
 .char-item:active { transform: translateY(0); }
@@ -2325,14 +2327,16 @@ body[data-page="character"] .kid-main { padding: 0; max-width: none; }
 .char-item__art {
   position: relative;
   height: 78px;
-  margin: 0 auto 6px;
+  margin: 0 0 6px;
   width: 100%;
+  max-width: 100%;
   border-radius: 14px;
   background:
     radial-gradient(circle at 30% 30%, rgba(255,255,255,0.7), transparent 70%),
     linear-gradient(160deg, #fff 0%, #f0e8ff 100%);
   display: grid; place-items: center;
   overflow: hidden;
+  flex-shrink: 0;
 }
 .char-item__emoji { font-size: 36px; line-height: 1; }
 
@@ -2343,6 +2347,8 @@ body[data-page="character"] .kid-main { padding: 0; max-width: none; }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  width: 100%;
+  max-width: 100%;
   margin-bottom: 2px;
 }
 .char-item__price {
@@ -2531,13 +2537,13 @@ body[data-page="character"] .kid-main { padding: 0; max-width: none; }
 
   .char-scene-rail {
     top: 80px;
-    justify-content: flex-start;
+    justify-content: center;
     padding: 0 28px;
   }
   .char-scene-chip { font-size: 14px; padding: 9px 18px 9px 10px; }
   .char-scene-chip__swatch { width: 22px; height: 22px; }
 
-  .char-image-wrap { padding-bottom: 60px; align-items: center; }
+  .char-image-wrap { padding-top: 80px; }
   .char-image { width: 280px; height: 280px; border-radius: 32px; }
 
   .char-shop {
