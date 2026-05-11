@@ -2571,7 +2571,11 @@ body[data-page="character"] .kid-main { padding: 0; max-width: none; }
     box-shadow: 0 2px 0 rgba(42,36,82,0.06);
   }
 
-  .char-cat-rail { padding: 6px 24px 14px; gap: 10px; }
+  .char-cat-rail {
+    padding: 6px 24px 14px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
   .char-cat {
     flex: 0 0 auto;
     font-size: 14px;
@@ -2586,10 +2590,13 @@ body[data-page="character"] .kid-main { padding: 0; max-width: none; }
     gap: 14px;
     padding: 4px 24px 24px;
   }
-  .char-item { padding: 14px 12px 12px; border-radius: 22px; }
-  .char-item__art { height: 110px; border-radius: 18px; }
+  .char-item {
+    padding: 14px 12px 12px; border-radius: 22px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .char-item__art { height: 110px; border-radius: 18px; width: 100%; }
   .char-item__emoji { font-size: 48px; }
-  .char-item__name { font-size: 14px; height: 18px; }
+  .char-item__name { font-size: 14px; width: 100%; }
   .char-item__price { font-size: 16px; padding: 4px 14px 4px 5px; gap: 5px; }
   .char-item__star { width: 22px; height: 22px; }
   .char-item__star svg { width: 12px; height: 12px; }
