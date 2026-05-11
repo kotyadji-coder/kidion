@@ -4,19 +4,6 @@
    ============================================================ */
 
 /* ---------- Layout ---------- */
-.chat-layout {
-  display: flex;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  overflow: hidden;
-  background: #fff;
-  position: relative;
-  /* Fill remaining space below nav */
-  height: calc(100vh - 60px);
-  height: calc(100dvh - 60px);
-}
-
 body[data-page="chat"] {
   height: 100vh;
   height: 100dvh;
@@ -33,14 +20,19 @@ body[data-page="chat"] .kid-main {
   padding: 0;
   max-width: 100%;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
 
-body[data-page="chat"] .chat-layout {
-  flex: 1;
-  height: auto;
+.chat-layout {
+  display: flex;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #fff;
+  position: relative;
+  height: 100%;
+  overflow: hidden;
 }
 
 /* ---------- Left Sidebar: Personas ---------- */
@@ -158,6 +150,8 @@ body[data-page="chat"] .chat-layout {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .chat-center__header {
@@ -209,7 +203,9 @@ body[data-page="chat"] .chat-layout {
 /* Messages */
 .chat-messages {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 24px 28px;
   display: flex;
   flex-direction: column;

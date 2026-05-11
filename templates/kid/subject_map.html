@@ -488,9 +488,6 @@
 
     <div class="kh-right">
       <a href="/kid/character" class="kh-avatar">{{ child.name[0]|upper }}</a>
-      <a href="/kid/home" class="kh-btn" title="Домой">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 12l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1v-9z" fill="currentColor" style="color:var(--ink-mute)"/></svg>
-      </a>
       <a href="/dashboard" class="kh-btn" title="Кабинет родителя" style="color:var(--ink-mute)">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </a>
@@ -660,28 +657,14 @@ function renderMap(data) {
 
   mapEl.innerHTML = html;
 
-  // Click handlers — use both click and touchend for mobile compatibility
-  function handleNodeTap(n) {
-    var lid = n.dataset.lid;
-    if (lid && (n.classList.contains('done') || n.classList.contains('active'))) {
-      window.location.href = '/kid/lesson/' + lid;
-    } else if (n.classList.contains('locked')) {
-      n.animate([{transform:'translateX(0)'},{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'translateX(0)'}], {duration:260});
-    } else if (n.classList.contains('foggy')) {
-      n.animate([{filter:'brightness(1)'},{filter:'brightness(1.15)'},{filter:'brightness(1)'}], {duration:280});
-    }
-  }
-  mapEl.querySelectorAll('.node').forEach(function(n) {
-    n.setAttribute('role', 'button');
-    n.setAttribute('tabindex', '0');
-    var tapped = false;
-    n.addEventListener('touchend', function(e) {
-      e.preventDefault();
-      if (!tapped) { tapped = true; handleNodeTap(n); setTimeout(function(){tapped=false;},300); }
-    });
-    n.addEventListener('click', function(e) {
-      e.stopPropagation();
-      handleNodeTap(n);
+  // Feedback on non-clickable nodes (foggy/locked shake)
+  mapEl.querySelectorAll('.node.locked, .node.foggy').forEach(function(n) {
+    n.addEventListener('click', function() {
+      if (n.classList.contains('locked')) {
+        n.animate([{transform:'translateX(0)'},{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'translateX(0)'}], {duration:260});
+      } else {
+        n.animate([{filter:'brightness(1)'},{filter:'brightness(1.15)'},{filter:'brightness(1)'}], {duration:280});
+      }
     });
   });
 }
