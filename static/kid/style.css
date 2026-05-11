@@ -2237,26 +2237,17 @@ body[data-page="character"] .kid-main { padding: 0; max-width: none; }
   color: var(--kk-ink);
 }
 .char-shop__toggle {
-  border: 0;
-  background: var(--kk-cream);
-  color: var(--kk-ink-soft);
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-family: var(--font);
-  font-weight: 700; font-size: 12px;
-  cursor: pointer;
-  display: inline-flex; align-items: center; gap: 6px;
-  border: 1px solid var(--kk-line);
+  display: none;
 }
-.char-shop__toggle svg { width: 12px; height: 12px; transition: transform .2s ease; }
-.char-shop--collapsed .char-shop__toggle svg { transform: rotate(180deg); }
+/* collapse toggle hidden — removed from mobile */
 
 .char-shop__desktop-balance { display: none; }
 
-/* Category tabs — equal-width row, always all visible */
+/* Category tabs — wrap into rows, no scroll */
 .char-cat-rail {
   display: flex; gap: 6px;
   padding: 8px 16px 12px;
+  flex-wrap: wrap;
 }
 .char-cat {
   flex: 1 1 0;
