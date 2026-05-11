@@ -631,8 +631,14 @@ function renderMap(data) {
 
       html += '<div class="node-slot ' + upDown + '"' + mStyle + '>';
       // Use <a> for clickable nodes (done/active), <div> for others
-      var nodeTag = (ds === 'done' || ds === 'active') && l.lesson_id ? 'a' : 'div';
-      var nodeHref = nodeTag === 'a' ? ' href="/kid/lesson/' + l.lesson_id + '"' : '';
+      var isClickable = ds === 'done' || ds === 'active';
+      var nodeTag = isClickable ? 'a' : 'div';
+      var nodeHref = '';
+      if (isClickable && l.lesson_id) {
+        nodeHref = ' href="/kid/lesson/' + l.lesson_id + '"';
+      } else if (isClickable) {
+        nodeHref = ' href="#" data-start-clid="' + l.curriculum_lesson_id + '"';
+      }
       html += '<' + nodeTag + ' class="node ' + ds + '" data-lid="' + (l.lesson_id||'') + '"' + nodeHref + '>';
 
       // Tooltip (foggy and locked only)
@@ -661,13 +667,40 @@ function renderMap(data) {
 
   mapEl.innerHTML = html;
 
-  // Mobile tap fix: delegate clicks to force navigation on <a> nodes
+  // Click handler: navigate to lesson or start generation if no lesson_id
   mapEl.addEventListener('click', function(e) {
     var node = e.target.closest('a.node');
-    if (node && node.href) {
-      e.preventDefault();
-      e.stopPropagation();
-      window.location.href = node.href;
+    if (!node) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    var clid = node.getAttribute('data-start-clid');
+    if (clid) {
+      // No lesson generated yet — call start API
+      node.style.pointerEvents = 'none';
+      node.querySelector('.start-tag') && (node.querySelector('.start-tag').textContent = 'Загрузка...');
+      fetch('/api/kid/lessons/' + clid + '/start', {method:'POST', credentials:'same-origin'})
+        .then(function(r) { return r.json().then(function(d) { return {status:r.status, data:d}; }); })
+        .then(function(res) {
+          if (res.data.lesson_id) {
+            window.location.href = '/kid/lesson/' + res.data.lesson_id;
+          } else if (res.status === 402) {
+            alert(res.data.message || 'Попроси родителей добавить кристаллы!');
+            node.style.pointerEvents = '';
+            if (node.querySelector('.start-tag')) node.querySelector('.start-tag').textContent = 'Старт!';
+          } else {
+            alert('Ошибка: ' + (res.data.error || 'попробуй ещё раз'));
+            node.style.pointerEvents = '';
+            if (node.querySelector('.start-tag')) node.querySelector('.start-tag').textContent = 'Старт!';
+          }
+        })
+        .catch(function() {
+          alert('Ошибка сети, попробуй ещё раз');
+          node.style.pointerEvents = '';
+          if (node.querySelector('.start-tag')) node.querySelector('.start-tag').textContent = 'Старт!';
+        });
+    } else if (node.getAttribute('data-lid')) {
+      window.location.href = '/kid/lesson/' + node.getAttribute('data-lid');
     }
   });
 
