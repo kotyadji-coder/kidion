@@ -2112,25 +2112,25 @@ body[data-page="character"] .kid-main { padding: 0; max-width: none; }
 .char-scene-rail {
   position: absolute; top: 66px;
   left: 0; right: 0; z-index: 6;
-  display: flex; gap: 8px; padding: 0 16px;
-  overflow-x: auto; scrollbar-width: none;
+  display: flex; gap: 6px; padding: 0 16px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
-.char-scene-rail::-webkit-scrollbar { display: none; }
 .char-scene-chip {
   flex: 0 0 auto;
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 7px 14px 7px 8px;
-  background: rgba(255,255,255,0.88);
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 10px 6px 6px;
+  background: rgba(255,255,255,0.92);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1.5px solid rgba(255,255,255,0.6);
   border-radius: 999px;
-  font-family: var(--font); font-weight: 700; font-size: 13px;
+  font-family: var(--font); font-weight: 700; font-size: 11px;
   color: var(--kk-ink); cursor: pointer;
   box-shadow: 0 2px 6px rgba(0,0,0,0.12);
 }
 .char-scene-chip__swatch {
-  width: 18px; height: 18px; border-radius: 50%;
+  width: 16px; height: 16px; border-radius: 50%;
   border: 2px solid #fff; flex: 0 0 auto;
 }
 .char-scene-chip__swatch--forest { background: linear-gradient(160deg, #b6e89a, #4fa46c); }
