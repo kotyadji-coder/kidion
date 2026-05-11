@@ -440,7 +440,11 @@
     .path .path-mobile { display: block; }
 
     .nodes { display: block; position: relative; height: 100%; }
-    .node-slot { position: absolute !important; transform: translate(-50%, -50%) !important; }
+    .node-slot {
+      position: absolute !important; transform: translate(-50%, -50%) !important;
+      width: 100px; height: 140px; /* explicit dimensions for reliable tap targets */
+    }
+    .node-slot .node { position: relative; z-index: 2; }
     .node-label { bottom: -28px; font-size: 11px; padding: 2px 8px; }
     .start-tag { top: -30px; }
 
@@ -656,6 +660,16 @@ function renderMap(data) {
   }
 
   mapEl.innerHTML = html;
+
+  // Mobile tap fix: delegate clicks to force navigation on <a> nodes
+  mapEl.addEventListener('click', function(e) {
+    var node = e.target.closest('a.node');
+    if (node && node.href) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = node.href;
+    }
+  });
 
   // Feedback on non-clickable nodes (foggy/locked shake)
   mapEl.querySelectorAll('.node.locked, .node.foggy').forEach(function(n) {

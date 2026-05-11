@@ -83,10 +83,10 @@
     }
 
     // Update active states
-    document.querySelectorAll('.chat-persona, .chat-mobile-persona').forEach(el => {
+    document.querySelectorAll('.ch-persona, .ch-mobile-persona').forEach(el => {
       const isActive = el.dataset.key === key;
-      el.classList.toggle('chat-persona--active', isActive);
-      el.classList.toggle('chat-mobile-persona--active', isActive);
+      el.classList.toggle('ch-persona--active', isActive);
+      el.classList.toggle('ch-mobile-persona--active', isActive);
     });
 
     // Open or create chat
@@ -257,7 +257,7 @@
   // --- Events ---
   function setupEvents() {
     // Character selection (sidebar + mobile)
-    document.querySelectorAll('.chat-persona, .chat-mobile-persona').forEach(el => {
+    document.querySelectorAll('.ch-persona, .ch-mobile-persona').forEach(el => {
       el.addEventListener('click', () => selectCharacter(el.dataset.key));
     });
 
