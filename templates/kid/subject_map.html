@@ -8,8 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
 <style>
-  /* ═══ Hide default kid nav, use custom header ═══ */
-  body[data-page="subject-map"] .kid-nav { display: none; }
+  /* ═══ Kid nav transparent over the map ═══ */
   body[data-page="subject-map"] .kid-main { padding: 0; }
   body[data-page="subject-map"] {
     font-family: "Nunito", system-ui, sans-serif;
@@ -517,25 +516,6 @@
   <div style="text-align:center;padding:60px 0;"><div class="spinner"></div></div>
 </main>
 
-<!-- Mobile bottom tab bar -->
-<nav class="m-tabbar">
-  <a class="m-tab" href="/kid/home">
-    <svg viewBox="0 0 24 24" fill="none"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1v-9z" fill="currentColor"/></svg>
-    Домой
-  </a>
-  <a class="m-tab" href="/kid/character">
-    <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="currentColor"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7" fill="currentColor"/></svg>
-    Герой
-  </a>
-  <a class="m-tab" href="/kid/character">
-    <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="9" width="18" height="11" rx="2" fill="currentColor"/><path d="M3 9c0-3 4-5 9-5s9 2 9 5" fill="currentColor"/></svg>
-    Магазин
-  </a>
-  <a class="m-tab" href="/kid/chat">
-    <svg viewBox="0 0 24 24" fill="none"><path d="M3 5h18v12H13l-6 5v-5H3V5z" fill="currentColor"/></svg>
-    Чат
-  </a>
-</nav>
 {% endblock %}
 
 {% block scripts %}

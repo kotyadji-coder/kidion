@@ -1859,6 +1859,7 @@ body[data-page="character"] .kid-nav__back { background: rgba(255,255,255,0.85);
 body[data-page="character"] .kid-nav__logo { display: none; }
 body[data-page="character"] .kid-nav__badge { background: rgba(255,255,255,0.85); backdrop-filter: blur(8px); border-color: rgba(255,255,255,0.4); box-shadow: 0 3px 0 rgba(42,36,82,0.18); }
 body[data-page="character"] .kid-nav__avatar { box-shadow: 0 3px 0 rgba(42,36,82,0.18); }
+body[data-page="character"] .kid-nav__gear { color: #fff; }
 body[data-page="character"] .kid-main { padding: 0; max-width: none; }
 
 /* App shell */
@@ -2086,7 +2087,7 @@ body[data-page="character"] .kid-main { padding: 0; max-width: none; }
 
 /* --- Scene chips rail --- */
 .char-scene-rail {
-  position: absolute; top: 66px;
+  position: absolute; top: 100px;
   left: 0; right: 0; z-index: 6;
   display: flex; gap: 6px; padding: 0 16px;
   justify-content: center;
