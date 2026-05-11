@@ -1,13 +1,123 @@
 {% extends "kid/base.html" %}
 
-{% block title %}Мой персонаж — Kidion{% endblock %}
+{% block title %}Mой персонаж — Kidion{% endblock %}
 {% block page_name %}character{% endblock %}
 
 {% block content %}
-<div class="kid-character">
-  <div class="character-layout" id="character-layout">
-    <div class="spinner"></div>
-  </div>
+<div class="char-app" id="char-app">
+
+  <!-- ============ STAGE ============ -->
+  <section class="char-stage" id="char-stage">
+    <!-- Scene backgrounds -->
+    <div class="char-scene char-scene--forest char-scene--active" data-scene="forest">
+      <div class="char-scene__sun"></div>
+      <div class="char-scene__hill char-scene__hill--1"></div>
+      <div class="char-scene__hill char-scene__hill--2"></div>
+      <div class="char-scene__tree char-scene__tree--1"></div>
+      <div class="char-scene__tree char-scene__tree--2"></div>
+      <div class="char-scene__tree char-scene__tree--3"></div>
+    </div>
+    <div class="char-scene char-scene--space" data-scene="space">
+      <div class="char-scene__planet"></div>
+      <div class="char-scene__moon"></div>
+      <div class="char-scene__star" style="top:10%;left:10%"></div>
+      <div class="char-scene__star" style="top:18%;left:42%;animation-delay:.6s"></div>
+      <div class="char-scene__star" style="top:14%;left:70%;animation-delay:.3s"></div>
+      <div class="char-scene__star" style="top:38%;left:28%;animation-delay:.9s"></div>
+      <div class="char-scene__star" style="top:64%;left:60%;animation-delay:.8s"></div>
+    </div>
+    <div class="char-scene char-scene--room" data-scene="room">
+      <div class="char-scene__window"></div>
+      <div class="char-scene__lamp"></div>
+      <div class="char-scene__floor"></div>
+    </div>
+    <div class="char-scene char-scene--castle" data-scene="castle">
+      <div class="char-scene__tower char-scene__tower--l"><div class="char-scene__flag"></div></div>
+      <div class="char-scene__tower char-scene__tower--m"><div class="char-scene__flag"></div><div class="char-scene__door"></div></div>
+      <div class="char-scene__tower char-scene__tower--r"><div class="char-scene__flag"></div></div>
+    </div>
+
+    <!-- Sparkle FX -->
+    <div class="char-fx" id="char-fx">
+      <div class="char-fx__spark char-fx__spark--1"></div>
+      <div class="char-fx__spark char-fx__spark--2"></div>
+      <div class="char-fx__spark char-fx__spark--3"></div>
+      <div class="char-fx__spark char-fx__spark--4"></div>
+    </div>
+
+    <!-- Top bar -->
+    <header class="char-top">
+      <a href="/kid/home" class="char-top__back">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M14 6l-6 6 6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <div class="char-top__name" id="char-top-name">
+        <span class="char-top__name-text" id="char-name-display"></span>
+        <button class="char-top__name-edit" onclick="editCharacterName()" title="Rename">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3 L21 8 L8 21 H3 V16 Z"/></svg>
+        </button>
+      </div>
+      <div class="char-top__name-form" id="char-name-form" style="display:none">
+        <input type="text" id="char-name-input" class="char-top__name-input" maxlength="30">
+        <button class="char-top__name-btn char-top__name-btn--save" onclick="saveCharacterName()">&#10003;</button>
+        <button class="char-top__name-btn char-top__name-btn--cancel" onclick="cancelEditName()">&#10005;</button>
+      </div>
+      <div class="char-balance" id="char-balance">
+        <span class="char-balance__ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.6 5.6 6.1.7-4.6 4.2 1.3 6L12 16.1 6.6 19l1.3-6L3.3 8.8l6.1-.7L12 2.5z"/></svg></span>
+        <span id="char-balance-val">0</span>
+      </div>
+    </header>
+
+    <!-- Scene selector chips -->
+    <div class="char-scene-rail" id="char-scene-rail">
+      <button class="char-scene-chip char-scene-chip--active" data-scene="forest"><span class="char-scene-chip__swatch char-scene-chip__swatch--forest"></span>Лес</button>
+      <button class="char-scene-chip" data-scene="space"><span class="char-scene-chip__swatch char-scene-chip__swatch--space"></span>Космос</button>
+      <button class="char-scene-chip" data-scene="room"><span class="char-scene-chip__swatch char-scene-chip__swatch--room"></span>Комната</button>
+      <button class="char-scene-chip" data-scene="castle"><span class="char-scene-chip__swatch char-scene-chip__swatch--castle"></span>Замок</button>
+    </div>
+
+    <!-- Purchase burst -->
+    <div class="char-burst" id="char-burst"></div>
+
+    <!-- Character image -->
+    <div class="char-image-wrap">
+      <div class="char-image-float" id="char-image-float">
+        <img src="/static/kid/default-character.svg" alt="character" class="char-image" id="char-image" onerror="this.src='/static/kid/default-character.svg'">
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ============ SHOP SHEET ============ -->
+  <section class="char-shop" id="char-shop">
+    <div class="char-shop__handle" id="char-shop-handle"></div>
+
+    <div class="char-shop__head">
+      <h2 class="char-shop__title">Магазин</h2>
+      <div class="char-shop__desktop-balance" id="char-desktop-balance">
+        <span class="char-balance__ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.6 5.6 6.1.7-4.6 4.2 1.3 6L12 16.1 6.6 19l1.3-6L3.3 8.8l6.1-.7L12 2.5z"/></svg></span>
+        <span id="char-desktop-balance-val">0</span>
+      </div>
+      <button class="char-shop__toggle" id="char-shop-toggle">
+        <span id="char-shop-toggle-label">Свернуть</span>
+        <svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+    <!-- Category tabs -->
+    <div class="char-cat-rail" id="char-cat-rail"></div>
+
+    <!-- Item grid -->
+    <div class="char-grid" id="char-grid">
+      <div class="spinner"></div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Toast -->
+<div class="char-toast" id="char-toast">
+  <span class="char-toast__ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.6 5.6 6.1.7-4.6 4.2 1.3 6L12 16.1 6.6 19l1.3-6L3.3 8.8l6.1-.7L12 2.5z"/></svg></span>
+  <span id="char-toast-text"></span>
 </div>
 {% endblock %}
 
@@ -22,14 +132,17 @@ var CATEGORY_NAMES = {
 };
 
 var CATEGORY_ICONS = {
-  outfit: '👕',
-  accessory: '🎩',
-  pet: '🐾',
-  background: '🌈',
-  special: '✨'
+  outfit: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 7l4-3h2a2 2 0 0 0 4 0h2l4 3-2 4-3-1v9H7v-9l-3 1z" fill="currentColor"/></svg>',
+  accessory: '<svg viewBox="0 0 24 24" fill="none"><circle cx="7" cy="12" r="4" stroke="currentColor" stroke-width="2"/><circle cx="17" cy="12" r="4" stroke="currentColor" stroke-width="2"/><path d="M11 12h2" stroke="currentColor" stroke-width="2"/></svg>',
+  pet: '<svg viewBox="0 0 24 24" fill="none"><circle cx="6" cy="9" r="2" fill="currentColor"/><circle cx="18" cy="9" r="2" fill="currentColor"/><circle cx="9" cy="5" r="1.8" fill="currentColor"/><circle cx="15" cy="5" r="1.8" fill="currentColor"/><path d="M12 11c4 0 6 3 6 5s-2 3-6 3-6-1-6-3 2-5 6-5z" fill="currentColor"/></svg>',
+  background: '<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 16l5-5 4 4 3-3 6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/><circle cx="9" cy="10" r="1.5" fill="currentColor"/></svg>',
+  special: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 2.5l2.6 5.6 6.1.7-4.6 4.2 1.3 6L12 16.1 6.6 19l1.3-6L3.3 8.8l6.1-.7L12 2.5z" fill="currentColor"/></svg>'
 };
 
 var currentStars = 0;
+var currentCat = '';
+var shopData = {};
+var toastTimer;
 
 (async () => {
   try {
@@ -37,173 +150,235 @@ var currentStars = 0;
     if (!resp.ok) throw new Error('Failed to load');
     var data = await resp.json();
     currentStars = data.stars || 0;
-    renderCharacterPage(data);
+    renderPage(data);
   } catch(e) {
-    document.getElementById('character-layout').innerHTML =
-      '<div class="empty-state-kid"><div class="empty-state-icon">🎮</div><div class="empty-state-text">Не удалось загрузить персонажа</div></div>';
+    document.getElementById('char-grid').innerHTML =
+      '<div class="char-empty"><div class="char-empty__pic">&#127918;</div><div class="char-empty__title">Не удалось загрузить</div></div>';
   }
 })();
 
-function getCharacterBubble(stars) {
-  if (stars >= 30) {
-    var phrases = [
-      'Ого, сколько у нас звездочек!',
-      'Мы так круто выглядим!',
-      'Может, купим что-нибудь новенькое?'
-    ];
-    return phrases[Math.floor(Math.random() * phrases.length)];
-  } else if (stars >= 10) {
-    return 'Еще чуть-чуть, и мы сможем купить кое-что классное!';
-  } else {
-    return 'Выбирай подарок! 🎁';
-  }
-}
-
-function renderCharacterPage(data) {
-  var layout = document.getElementById('character-layout');
-  var html = '';
+function renderPage(data) {
   var charName = data.character_name || 'Искатель';
-  var equippedCount = (data.equipped_items || []).length;
-  var totalItems = 0;
-  var categories = Object.keys(data.shop || {});
-  categories.forEach(function(c) { totalItems += (data.shop[c] || []).length; });
-  var purchasedCount = 0;
-  categories.forEach(function(c) {
-    (data.shop[c] || []).forEach(function(it) { if (it.purchased) purchasedCount++; });
-  });
+  shopData = data.shop || {};
 
-  // Character panel (left)
-  html += '<div class="char-panel">';
-  html += '<div class="char-panel__halo"></div>';
+  // Character name
+  document.getElementById('char-name-display').textContent = charName;
+  document.getElementById('char-name-input').value = charName;
 
-  // Speech bubble above character
-  html += '<div class="char-bubble" style="margin-bottom:14px; text-align:center;">';
-  html += '<div class="char-bubble__text">' + getCharacterBubble(currentStars) + '</div>';
-  html += '</div>';
-
-  html += '<div class="char-panel__image-wrap">';
+  // Character image
   var imgSrc = data.character_image_url || '/static/kid/default-character.svg';
-  html += '<div class="char-panel__image-circle">';
-  html += '<img src="' + esc(imgSrc) + '?t=' + Date.now() + '" alt="Персонаж" class="char-panel__image" onerror="this.src=\'/static/kid/default-character.svg\'">';
-  html += '</div>';
-  html += '</div>';
+  document.getElementById('char-image').src = imgSrc + '?t=' + Date.now();
 
-  // Character name with edit pencil
-  html += '<div class="char-panel__name-row">';
-  html += '<span class="char-panel__name" id="char-name-display">' + esc(charName) + '</span>';
-  html += '<button class="char-panel__name-edit" onclick="editCharacterName()" title="Переименовать">';
-  html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3 L21 8 L8 21 H3 V16 Z"/></svg>';
-  html += '</button>';
-  html += '</div>';
-
-  // Edit name input (hidden by default)
-  html += '<div class="char-panel__name-edit-form" id="char-name-form" style="display:none">';
-  html += '<input type="text" id="char-name-input" class="char-panel__name-input" maxlength="30" value="' + esc(charName) + '">';
-  html += '<button class="char-panel__name-save" onclick="saveCharacterName()">✓</button>';
-  html += '<button class="char-panel__name-cancel" onclick="cancelEditName()">✕</button>';
-  html += '</div>';
-
-  html += '<div class="char-panel__stats">Надето: ' + equippedCount + ' · в коллекции ' + purchasedCount + ' / ' + totalItems + '</div>';
-
-  html += '</div>'; // .char-panel
-
-  // Shop panel (right)
-  html += '<div class="shop-panel">';
-  html += '<div class="shop-panel__header">';
-  html += '<span class="shop-panel__title">Магазин</span>';
-  html += '<span class="shop-panel__stars" id="shop-stars">⭐ ' + currentStars + '</span>';
-  html += '</div>';
+  // Stars balance
+  updateBalance();
 
   // Category tabs
+  var categories = Object.keys(shopData);
   if (categories.length > 0) {
-    html += '<div class="shop-tabs" id="shop-tabs">';
-    for (var c = 0; c < categories.length; c++) {
-      var cat = categories[c];
-      var activeClass = c === 0 ? ' shop-tab--active' : '';
-      html += '<button class="shop-tab' + activeClass + '" data-cat="' + cat + '" onclick="switchTab(\'' + cat + '\')">';
-      html += '<span class="shop-tab__icon">' + (CATEGORY_ICONS[cat] || '🎁') + '</span> ';
-      html += (CATEGORY_NAMES[cat] || cat);
-      html += '</button>';
-    }
-    html += '</div>';
-
-    // Items per category — now grid layout
-    for (var c2 = 0; c2 < categories.length; c2++) {
-      var cat2 = categories[c2];
-      var items = data.shop[cat2] || [];
-      var displayStyle = c2 === 0 ? '' : 'display:none;';
-      html += '<div class="shop-items" id="shop-cat-' + cat2 + '" style="' + displayStyle + '">';
-      for (var j = 0; j < items.length; j++) {
-        html += renderShopItem(items[j]);
-      }
-      html += '</div>';
-    }
+    currentCat = categories[0];
+    renderCategoryTabs(categories);
+    renderGrid();
   } else {
-    html += '<div class="empty-state-kid" style="padding:20px"><div class="empty-state-icon">🏪</div><div class="empty-state-text">Магазин готовится...</div></div>';
+    document.getElementById('char-cat-rail').innerHTML = '';
+    document.getElementById('char-grid').innerHTML =
+      '<div class="char-empty"><div class="char-empty__pic">&#127978;</div><div class="char-empty__title">Магазин готовится...</div><p class="char-empty__text">Скоро здесь появятся новые штуки!</p></div>';
   }
 
-  html += '</div>'; // .shop-panel
-
-  layout.innerHTML = html;
+  // Init scene rail
+  initSceneRail();
+  // Init shop collapse
+  initShopToggle();
 }
 
-function renderShopItem(item) {
-  var html = '<div class="shop-item' + (item.purchased && item.equipped ? ' shop-item--purchased' : '') + '" id="shop-item-' + item.id + '">';
-
-  if (item.equipped) {
-    html += '<div class="shop-item__equipped-badge">НАДЕТО</div>';
-  }
-
-  html += '<div class="shop-item__emoji">' + esc(item.emoji) + '</div>';
-  html += '<div class="shop-item__name">' + esc(item.title_ru) + '</div>';
-
-  if (item.purchased) {
-    if (item.equipped) {
-      html += '<button class="shop-item__btn shop-item__btn--equipped" onclick="toggleEquip(' + item.id + ', false)">Снять</button>';
-    } else {
-      html += '<button class="shop-item__btn shop-item__btn--equip" onclick="toggleEquip(' + item.id + ', true)">Надеть</button>';
-    }
-  } else {
-    var canBuy = currentStars >= item.price_stars;
-    if (canBuy) {
-      html += '<button class="shop-item__btn shop-item__btn--buy" onclick="buyItem(' + item.id + ')">⭐ ' + item.price_stars + '</button>';
-    } else {
-      html += '<button class="shop-item__btn shop-item__btn--disabled" onclick="showNotEnoughStars(this)">⭐ ' + item.price_stars + '</button>';
-    }
-  }
-
-  html += '</div>';
-  return html;
+function updateBalance() {
+  document.getElementById('char-balance-val').textContent = currentStars;
+  document.getElementById('char-desktop-balance-val').textContent = currentStars;
+  var navStars = document.getElementById('star-count');
+  if (navStars) navStars.textContent = currentStars;
 }
 
-function showNotEnoughStars(btn) {
-  var existing = btn.parentNode.querySelector('.shop-item__tooltip');
-  if (existing) { existing.remove(); return; }
+function renderCategoryTabs(categories) {
+  var rail = document.getElementById('char-cat-rail');
+  var html = '';
+  for (var i = 0; i < categories.length; i++) {
+    var cat = categories[i];
+    var active = cat === currentCat ? ' char-cat--active' : '';
+    var icon = CATEGORY_ICONS[cat] || CATEGORY_ICONS.special;
+    var newCount = 0;
+    (shopData[cat] || []).forEach(function(it) { if (!it.purchased) newCount++; });
+    html += '<button class="char-cat' + active + '" data-cat="' + cat + '" onclick="switchCategory(\'' + cat + '\')">';
+    html += '<span class="char-cat__ico">' + icon + '</span>';
+    html += (CATEGORY_NAMES[cat] || cat);
+    if (newCount > 0) html += '<span class="char-cat__badge">' + newCount + '</span>';
+    html += '</button>';
+  }
+  rail.innerHTML = html;
+}
 
-  var tip = document.createElement('div');
-  tip.className = 'shop-item__tooltip';
-  tip.textContent = 'Нужно еще немного поучиться!';
-  btn.parentNode.appendChild(tip);
-  setTimeout(function() { tip.remove(); }, 3000);
+function renderGrid() {
+  var grid = document.getElementById('char-grid');
+  var items = shopData[currentCat] || [];
+
+  if (!items.length) {
+    grid.innerHTML = '<div class="char-empty"><div class="char-empty__pic">&#10024;</div><div class="char-empty__title">Скоро здесь появятся новые штуки!</div><p class="char-empty__text">Возвращайся завтра.</p></div>';
+    return;
+  }
+
+  var html = '';
+  for (var i = 0; i < items.length; i++) {
+    var it = items[i];
+    var state = 'buy';
+    if (it.purchased && it.equipped) state = 'equipped';
+    else if (it.purchased) state = 'owned';
+    else if (currentStars < it.price_stars) state = 'locked';
+
+    html += '<button class="char-item char-item--' + state + '" data-id="' + it.id + '" onclick="onItemClick(' + it.id + ')">';
+
+    // State badges
+    if (state === 'equipped') {
+      html += '<span class="char-item__ribbon">Надето</span>';
+    }
+    if (state === 'owned') {
+      html += '<span class="char-item__check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12l4 4 10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
+    }
+    if (state === 'locked') {
+      html += '<span class="char-item__lock"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="11" width="12" height="9" rx="2"/><path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="2.5" fill="none"/></svg></span>';
+    }
+
+    // Art area with emoji
+    html += '<span class="char-item__art"><span class="char-item__emoji">' + esc(it.emoji) + '</span></span>';
+
+    // Name
+    html += '<span class="char-item__name">' + esc(it.title_ru) + '</span>';
+
+    // Bottom action
+    if (state === 'buy') {
+      html += '<span class="char-item__price"><span class="char-item__star"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.6 5.6 6.1.7-4.6 4.2 1.3 6L12 16.1 6.6 19l1.3-6L3.3 8.8l6.1-.7L12 2.5z"/></svg></span>' + it.price_stars + '</span>';
+    } else if (state === 'locked') {
+      html += '<span class="char-item__price char-item__price--locked"><span class="char-item__star"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.6 5.6 6.1.7-4.6 4.2 1.3 6L12 16.1 6.6 19l1.3-6L3.3 8.8l6.1-.7L12 2.5z"/></svg></span>' + it.price_stars + '</span>';
+    } else if (state === 'owned') {
+      html += '<span class="char-item__equip-btn">Надеть</span>';
+    } else if (state === 'equipped') {
+      html += '<span class="char-item__equipped-label"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12l4 4 10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>Надето</span>';
+    }
+
+    html += '</button>';
+  }
+  grid.innerHTML = html;
+}
+
+function switchCategory(cat) {
+  currentCat = cat;
+  var tabs = document.querySelectorAll('.char-cat');
+  for (var i = 0; i < tabs.length; i++) {
+    tabs[i].classList.toggle('char-cat--active', tabs[i].getAttribute('data-cat') === cat);
+  }
+  renderGrid();
+}
+
+async function onItemClick(itemId) {
+  var items = shopData[currentCat] || [];
+  var item = null;
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].id === itemId) { item = items[i]; break; }
+  }
+  if (!item) return;
+
+  if (item.purchased && item.equipped) {
+    // Unequip
+    await toggleEquip(itemId, false);
+    return;
+  }
+  if (item.purchased && !item.equipped) {
+    // Equip
+    await toggleEquip(itemId, true);
+    return;
+  }
+  if (!item.purchased && currentStars < item.price_stars) {
+    // Not enough stars
+    showToast('Нужно ещё немного поучиться!');
+    shakeItem(itemId);
+    return;
+  }
+  // Buy
+  await buyItem(itemId);
+}
+
+async function buyItem(itemId) {
+  var btn = document.querySelector('.char-item[data-id="' + itemId + '"]');
+  if (btn) btn.style.pointerEvents = 'none';
+
+  try {
+    var resp = await fetch('/api/kid/shop/buy/' + itemId, {
+      method: 'POST',
+      credentials: 'same-origin',
+    });
+    var result = await resp.json();
+
+    if (resp.ok && result.ok) {
+      currentStars = result.stars;
+      updateBalance();
+      celebrate();
+      showToast('Куплено и надето!');
+      setTimeout(reloadData, 400);
+    } else {
+      showToast(result.message || 'Не удалось купить');
+      if (btn) btn.style.pointerEvents = '';
+    }
+  } catch(e) {
+    showToast('Ошибка сети');
+    if (btn) btn.style.pointerEvents = '';
+  }
+}
+
+async function toggleEquip(itemId, equip) {
+  try {
+    await fetch('/api/kid/shop/equip/' + itemId, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({equipped: equip}),
+    });
+    showToast(equip ? 'Надето!' : 'Снято');
+    reloadData();
+  } catch(e) {}
+}
+
+async function reloadData() {
+  try {
+    var resp = await fetch('/api/kid/character', {credentials: 'same-origin'});
+    if (resp.ok) {
+      var data = await resp.json();
+      currentStars = data.stars || 0;
+      shopData = data.shop || {};
+      updateBalance();
+      // Update image (may have changed after equip)
+      var imgSrc = data.character_image_url || '/static/kid/default-character.svg';
+      document.getElementById('char-image').src = imgSrc + '?t=' + Date.now();
+      renderGrid();
+      // Re-render category tabs to update badge counts
+      renderCategoryTabs(Object.keys(shopData));
+    }
+  } catch(e) {}
 }
 
 function editCharacterName() {
-  document.getElementById('char-name-display').parentNode.style.display = 'none';
-  document.getElementById('char-name-form').style.display = '';
-  document.getElementById('char-name-input').focus();
-  document.getElementById('char-name-input').select();
+  document.getElementById('char-top-name').style.display = 'none';
+  document.getElementById('char-name-form').style.display = 'flex';
+  var inp = document.getElementById('char-name-input');
+  inp.focus();
+  inp.select();
 }
 
 function cancelEditName() {
   document.getElementById('char-name-form').style.display = 'none';
-  document.getElementById('char-name-display').parentNode.style.display = '';
+  document.getElementById('char-top-name').style.display = '';
 }
 
 async function saveCharacterName() {
   var input = document.getElementById('char-name-input');
   var name = (input.value || '').trim();
   if (!name) name = 'Искатель';
-
   try {
     var resp = await fetch('/api/kid/character/name', {
       method: 'POST',
@@ -218,76 +393,65 @@ async function saveCharacterName() {
   } catch(e) {}
 }
 
-function switchTab(cat) {
-  var allPanels = document.querySelectorAll('.shop-items');
-  for (var i = 0; i < allPanels.length; i++) allPanels[i].style.display = 'none';
-  var target = document.getElementById('shop-cat-' + cat);
-  if (target) target.style.display = '';
-  var tabs = document.querySelectorAll('.shop-tab');
-  for (var j = 0; j < tabs.length; j++) {
-    tabs[j].classList.toggle('shop-tab--active', tabs[j].getAttribute('data-cat') === cat);
+function initSceneRail() {
+  var chips = document.querySelectorAll('.char-scene-chip');
+  for (var i = 0; i < chips.length; i++) {
+    chips[i].addEventListener('click', function() {
+      var scene = this.getAttribute('data-scene');
+      // Toggle active chip
+      for (var j = 0; j < chips.length; j++) {
+        chips[j].classList.toggle('char-scene-chip--active', chips[j] === this);
+      }
+      // Toggle scene backgrounds
+      var scenes = document.querySelectorAll('.char-scene');
+      for (var k = 0; k < scenes.length; k++) {
+        scenes[k].classList.toggle('char-scene--active', scenes[k].getAttribute('data-scene') === scene);
+      }
+    });
   }
 }
 
-async function buyItem(itemId) {
-  var btn = document.querySelector('#shop-item-' + itemId + ' .shop-item__btn--buy');
-  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+function initShopToggle() {
+  var shop = document.getElementById('char-shop');
+  var toggle = document.getElementById('char-shop-toggle');
+  var handle = document.getElementById('char-shop-handle');
+  var label = document.getElementById('char-shop-toggle-label');
 
-  try {
-    var resp = await fetch('/api/kid/shop/buy/' + itemId, {
-      method: 'POST',
-      credentials: 'same-origin',
-    });
-    var result = await resp.json();
-
-    if (resp.ok && result.ok) {
-      currentStars = result.stars;
-      var starsEl = document.getElementById('shop-stars');
-      if (starsEl) starsEl.innerHTML = '⭐ ' + currentStars;
-      var navStars = document.getElementById('star-count');
-      if (navStars) navStars.textContent = currentStars;
-
-      showPurchaseAnimation(itemId);
-
-      setTimeout(async function() {
-        var resp2 = await fetch('/api/kid/character', {credentials: 'same-origin'});
-        if (resp2.ok) {
-          var data = await resp2.json();
-          currentStars = data.stars || 0;
-          renderCharacterPage(data);
-        }
-      }, 500);
-    } else {
-      alert(result.message || 'Не удалось купить');
-      if (btn) { btn.disabled = false; btn.textContent = 'Купить'; }
-    }
-  } catch(e) {
-    alert('Ошибка сети');
-    if (btn) btn.disabled = false;
+  function toggleShop() {
+    var collapsed = shop.classList.toggle('char-shop--collapsed');
+    label.textContent = collapsed ? 'Развернуть' : 'Свернуть';
   }
+  toggle.addEventListener('click', toggleShop);
+  handle.addEventListener('click', toggleShop);
 }
 
-async function toggleEquip(itemId, equip) {
-  try {
-    await fetch('/api/kid/shop/equip/' + itemId, {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({equipped: equip}),
-    });
-    var resp = await fetch('/api/kid/character', {credentials: 'same-origin'});
-    if (resp.ok) {
-      var data = await resp.json();
-      renderCharacterPage(data);
-    }
-  } catch(e) {}
+function showToast(text) {
+  var toast = document.getElementById('char-toast');
+  document.getElementById('char-toast-text').textContent = text;
+  toast.classList.add('char-toast--on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { toast.classList.remove('char-toast--on'); }, 1800);
 }
 
-function showPurchaseAnimation(itemId) {
-  var el = document.getElementById('shop-item-' + itemId);
+function celebrate() {
+  var burst = document.getElementById('char-burst');
+  burst.innerHTML = '<span class="char-burst__ring"></span>';
+  burst.classList.add('char-burst--on');
+  // Sparkle effect
+  document.getElementById('char-fx').classList.add('char-fx--on');
+  setTimeout(function() {
+    burst.classList.remove('char-burst--on');
+    document.getElementById('char-fx').classList.remove('char-fx--on');
+  }, 1200);
+}
+
+function shakeItem(itemId) {
+  var el = document.querySelector('.char-item[data-id="' + itemId + '"]');
   if (!el) return;
-  el.classList.add('shop-item--just-bought');
-  setTimeout(function() { el.classList.remove('shop-item--just-bought'); }, 800);
+  el.animate(
+    [{transform:'translateX(0)'},{transform:'translateX(-5px)'},{transform:'translateX(5px)'},{transform:'translateX(0)'}],
+    {duration: 260}
+  );
 }
 
 function esc(str) {
