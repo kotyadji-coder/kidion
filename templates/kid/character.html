@@ -45,11 +45,8 @@
       <div class="char-fx__spark char-fx__spark--4"></div>
     </div>
 
-    <!-- Top bar -->
+    <!-- Character name bar -->
     <header class="char-top">
-      <a href="/kid/home" class="char-top__back">
-        <svg viewBox="0 0 24 24" fill="none"><path d="M14 6l-6 6 6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </a>
       <div class="char-top__name" id="char-top-name">
         <span class="char-top__name-text" id="char-name-display"></span>
         <button class="char-top__name-edit" onclick="editCharacterName()" title="Rename">
@@ -60,10 +57,6 @@
         <input type="text" id="char-name-input" class="char-top__name-input" maxlength="30">
         <button class="char-top__name-btn char-top__name-btn--save" onclick="saveCharacterName()">&#10003;</button>
         <button class="char-top__name-btn char-top__name-btn--cancel" onclick="cancelEditName()">&#10005;</button>
-      </div>
-      <div class="char-balance" id="char-balance">
-        <span class="char-balance__ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.6 5.6 6.1.7-4.6 4.2 1.3 6L12 16.1 6.6 19l1.3-6L3.3 8.8l6.1-.7L12 2.5z"/></svg></span>
-        <span id="char-balance-val">0</span>
       </div>
     </header>
 
@@ -93,10 +86,6 @@
 
     <div class="char-shop__head">
       <h2 class="char-shop__title">Магазин</h2>
-      <div class="char-shop__desktop-balance" id="char-desktop-balance">
-        <span class="char-balance__ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.6 5.6 6.1.7-4.6 4.2 1.3 6L12 16.1 6.6 19l1.3-6L3.3 8.8l6.1-.7L12 2.5z"/></svg></span>
-        <span id="char-desktop-balance-val">0</span>
-      </div>
       <button class="char-shop__toggle" id="char-shop-toggle">
         <span id="char-shop-toggle-label">Свернуть</span>
         <svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -191,8 +180,6 @@ function renderPage(data) {
 }
 
 function updateBalance() {
-  document.getElementById('char-balance-val').textContent = currentStars;
-  document.getElementById('char-desktop-balance-val').textContent = currentStars;
   var navStars = document.getElementById('star-count');
   if (navStars) navStars.textContent = currentStars;
 }
