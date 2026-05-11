@@ -203,12 +203,12 @@ function renderCategoryTabs(categories) {
   for (var i = 0; i < categories.length; i++) {
     var cat = categories[i];
     var active = cat === currentCat ? ' char-cat--active' : '';
-    var icon = CATEGORY_ICONS[cat] || CATEGORY_ICONS.special;
+    var icon = CATEGORY_ICONS[cat] || CATEGORY_ICONS.background;
     var newCount = 0;
     (shopData[cat] || []).forEach(function(it) { if (!it.purchased) newCount++; });
     html += '<button class="char-cat' + active + '" data-cat="' + cat + '" onclick="switchCategory(\'' + cat + '\')">';
     html += '<span class="char-cat__ico">' + icon + '</span>';
-    html += (CATEGORY_NAMES[cat] || cat);
+    html += '<span class="char-cat__label">' + (CATEGORY_NAMES[cat] || cat) + '</span>';
     if (newCount > 0) html += '<span class="char-cat__badge">' + newCount + '</span>';
     html += '</button>';
   }
