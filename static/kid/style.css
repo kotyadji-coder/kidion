@@ -2298,10 +2298,9 @@ body[data-page="character"] .kid-main { padding: 0; max-width: none; }
 /* Item grid */
 .char-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
   padding: 4px 16px 8px;
-  overflow: hidden;
 }
 
 .char-item {
@@ -2543,7 +2542,8 @@ body[data-page="character"] .kid-main { padding: 0; max-width: none; }
     box-shadow: -12px 0 40px -20px rgba(42,36,82,0.2);
     padding: 24px 0 28px;
     height: 100vh; min-height: 720px;
-    overflow-y: auto;
+    overflow-x: hidden;
+    overflow-y: scroll;
     transform: none !important;
     display: flex; flex-direction: column;
   }
