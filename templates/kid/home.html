@@ -286,9 +286,9 @@
     display: grid; place-items: center; flex-shrink: 0;
     border: none;
   }
-  .hub-shelf-icon svg { width: 28px; height: 28px; }
-  .hub-shelf-card--shop .hub-shelf-icon { color: #d97706; background: #fef3c7; }
-  .hub-shelf-card--chat .hub-shelf-icon { color: #7c3aed; background: #ede9fe; }
+  .hub-shelf-icon svg { width: 32px; height: 32px; }
+  .hub-shelf-card--shop .hub-shelf-icon { background: #fff7ed; }
+  .hub-shelf-card--chat .hub-shelf-icon { background: #ede9fe; padding: 0; overflow: hidden; }
 
   .hub-shelf-text { display: flex; flex-direction: column; gap: 2px; }
   .hub-shelf-title {
@@ -460,9 +460,9 @@
   <a href="/kid/character" class="hub-shelf-card hub-shelf-card--shop">
     <span class="hub-shelf-icon">
       <svg viewBox="0 0 24 24" fill="none">
-        <rect x="3" y="9" width="18" height="11" rx="2" fill="currentColor"/>
-        <path d="M3 9c0-3 4-5 9-5s9 2 9 5" fill="currentColor"/>
-        <rect x="10" y="11" width="4" height="5" rx="1" fill="rgba(0,0,0,0.25)"/>
+        <path d="M6 2L3 7v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-3-5H6z" fill="#f59e0b"/>
+        <path d="M3 7h18" stroke="#d97706" stroke-width="1.5"/>
+        <path d="M16 10a4 4 0 0 1-8 0" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
       </svg>
     </span>
     <span class="hub-shelf-text">
@@ -471,19 +471,8 @@
     </span>
   </a>
   <a href="/kid/chat" class="hub-shelf-card hub-shelf-card--chat">
-    <span class="hub-shelf-icon">
-      <svg viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="9" fill="currentColor" opacity="0.3"/>
-        <circle cx="12" cy="12" r="5" fill="currentColor"/>
-        <circle cx="7" cy="7" r="2" fill="currentColor" opacity="0.7"/>
-        <circle cx="17" cy="7" r="2" fill="currentColor" opacity="0.7"/>
-        <circle cx="7" cy="17" r="2" fill="currentColor" opacity="0.7"/>
-        <circle cx="17" cy="17" r="2" fill="currentColor" opacity="0.7"/>
-        <line x1="12" y1="12" x2="7" y2="7" stroke="currentColor" stroke-width="1" opacity="0.5"/>
-        <line x1="12" y1="12" x2="17" y2="7" stroke="currentColor" stroke-width="1" opacity="0.5"/>
-        <line x1="12" y1="12" x2="7" y2="17" stroke="currentColor" stroke-width="1" opacity="0.5"/>
-        <line x1="12" y1="12" x2="17" y2="17" stroke="currentColor" stroke-width="1" opacity="0.5"/>
-      </svg>
+    <span class="hub-shelf-icon hub-shelf-icon--spark">
+      <img src="/static/kid/img/spark.png" alt="Spark" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">
     </span>
     <span class="hub-shelf-text">
       <span class="hub-shelf-title">Нейросеть<br>для детей</span>

@@ -2120,10 +2120,10 @@ body[data-page="character"] .kid-main { padding: 0; max-width: none; }
 /* --- Scene chips rail --- */
 .char-scene-rail {
   position: absolute; top: 10px;
-  left: 56px; right: 0; z-index: 6;
-  display: flex; gap: 6px; padding: 0 12px;
+  left: 0; right: 0; z-index: 6;
+  display: flex; gap: 6px; padding: 0 16px;
   justify-content: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 .char-scene-chip {
   flex: 0 0 auto;
