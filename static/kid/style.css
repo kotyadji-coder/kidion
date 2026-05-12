@@ -1877,8 +1877,8 @@ body[data-page="character"] .kid-main { padding: 0; max-width: none; }
 /* ============ STAGE ============ */
 .char-stage {
   position: relative;
-  height: 60vh;
-  min-height: 460px;
+  height: 65vh;
+  min-height: 500px;
   overflow: hidden;
   isolation: isolate;
 }
@@ -2034,8 +2034,18 @@ body[data-page="character"] .kid-main { padding: 0; max-width: none; }
 /* --- Top bar (character name over the stage) --- */
 /* --- Desktop back arrow --- */
 .char-back-arrow {
-  display: none;
+  display: flex;
+  position: fixed; top: 14px; left: 14px; z-index: 100;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.6);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  align-items: center; justify-content: center;
+  color: var(--kk-ink); text-decoration: none;
+  transition: transform .12s;
 }
+.char-back-arrow:hover { transform: translateY(-2px); }
 
 /* --- Character image column (image + name) --- */
 .char-image-col {
@@ -2109,7 +2119,7 @@ body[data-page="character"] .kid-main { padding: 0; max-width: none; }
 
 /* --- Scene chips rail --- */
 .char-scene-rail {
-  position: absolute; top: 54px;
+  position: absolute; top: 14px;
   left: 0; right: 0; z-index: 6;
   display: flex; gap: 6px; padding: 0 16px;
   justify-content: center;
@@ -2527,18 +2537,9 @@ body[data-page="character"] .kid-main { padding: 0; max-width: none; }
     border-radius: 0; grid-column: 1;
   }
   .char-back-arrow {
-    display: flex;
-    position: fixed; top: 20px; left: 20px; z-index: 100;
     width: 44px; height: 44px; border-radius: 14px;
-    background: rgba(255,255,255,0.85);
-    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.6);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    align-items: center; justify-content: center;
-    color: var(--kk-ink); text-decoration: none;
-    transition: transform .12s;
+    top: 20px; left: 20px;
   }
-  .char-back-arrow:hover { transform: translateY(-2px); }
 
   .char-top__name-text { font-size: 28px; }
 
