@@ -9,7 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
 <style>
   /* ═══ Kid nav transparent over the map ═══ */
-  body[data-page="subject-map"] .kid-main { padding: 0; }
+  body[data-page="subject-map"] .kid-nav { display: none; }
+  body[data-page="subject-map"] .kid-main { padding: 0; max-width: 100%; }
   body[data-page="subject-map"] {
     font-family: "Nunito", system-ui, sans-serif;
     background:
@@ -407,21 +408,22 @@
   .m-tab svg { width: 24px; height: 24px; }
   .m-tab.is-active { color: var(--accent); background: var(--accent-soft); }
 
+  /* Mobile back arrow (shown only on mobile) */
+  .map-back-arrow {
+    display: none;
+    position: fixed; top: 14px; left: 14px; z-index: 55;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(255,255,255,0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--rim);
+    box-shadow: 0 2px 8px rgba(42,36,82,0.1);
+    align-items: center; justify-content: center;
+    color: var(--ink); text-decoration: none;
+  }
+
   /* ═══ RESPONSIVE (MOBILE) ═══ */
   @media (max-width: 860px) {
-    .kh-inner { padding: 10px 14px; gap: 8px; }
-    .kh-subject { display: none; }
-    .kh-logo-mark { width: 32px; height: 32px; border-radius: 9px; }
-    .kh-logo-mark svg { width: 16px; height: 16px; }
-    .kh-logo-text { font-size: 17px; }
-    .kh-badges { gap: 6px; }
-    .kh-badge { font-size: 14px; padding: 4px 10px 4px 4px; gap: 5px; }
-    .kh-badge-ico { width: 24px; height: 24px; }
-    .kh-badge-ico svg { width: 12px; height: 12px; }
-    .kh-right { display: flex; gap: 6px; margin-left: 8px; }
-    .kh-btn { width: 34px; height: 34px; border-radius: 10px; }
-    .kh-btn svg { width: 18px; height: 18px; }
-    .kh-avatar { width: 34px; height: 34px; font-size: 14px; }
+    .kh { display: none; }
+    .map-back-arrow { display: flex; }
 
     .prog { margin-top: 24px; padding: 0 16px; }
     .prog h1 { font-size: 28px; }
@@ -461,6 +463,11 @@
 <div class="sky-deco" aria-hidden="true">
   <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div><div class="cloud c4"></div>
 </div>
+
+<!-- Mobile back arrow -->
+<a class="map-back-arrow" href="/kid/home" title="Назад">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M14 6l-6 6 6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</a>
 
 <!-- Custom header -->
 <header class="kh">

@@ -10,6 +10,11 @@
     body[data-page="character"] .kid-nav { display: none; }
     body[data-page="character"] .kid-main { padding: 0; max-width: 100%; }
   }
+  /* Mobile: hide full kid-nav, show only back arrow */
+  @media (max-width: 1099px) {
+    body[data-page="character"] .kid-nav { display: none; }
+    body[data-page="character"] .kid-main { padding: 0; max-width: 100%; }
+  }
 </style>
 {% endblock %}
 
