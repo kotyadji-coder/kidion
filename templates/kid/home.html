@@ -164,49 +164,34 @@
   }
 
   .hub-play {
-    display: inline-flex; align-items: center; gap: 18px;
-    padding: 24px 44px; border: none; cursor: pointer;
-    background: linear-gradient(180deg, #86efac 0%, #22c55e 40%, #16a34a 100%);
-    color: #fff; border-radius: 32px;
-    box-shadow: inset 0 5px 0 rgba(255,255,255,0.5), inset 0 -8px 0 rgba(0,0,0,0.15),
-      0 10px 0 #15803d, 0 24px 50px -12px rgba(34,197,94,0.5);
+    display: inline-flex; align-items: center; gap: 14px;
+    padding: 20px 38px; border: none; cursor: pointer;
+    background: #22c55e;
+    color: #fff; border-radius: 20px;
+    box-shadow: 0 8px 24px rgba(34, 197, 94, 0.35);
     font-family: "Baloo 2", sans-serif; font-weight: 800;
-    transition: transform .15s, box-shadow .15s;
-    text-decoration: none; position: relative; overflow: hidden;
-    animation: hubPlayPulse 2.5s ease-in-out infinite;
+    font-size: 26px; letter-spacing: -0.3px;
+    text-decoration: none;
+    transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
   }
-  @keyframes hubPlayPulse {
-    0%,100% { box-shadow: inset 0 5px 0 rgba(255,255,255,0.5), inset 0 -8px 0 rgba(0,0,0,0.15), 0 10px 0 #15803d, 0 24px 50px -12px rgba(34,197,94,0.5); }
-    50% { box-shadow: inset 0 5px 0 rgba(255,255,255,0.5), inset 0 -8px 0 rgba(0,0,0,0.15), 0 10px 0 #15803d, 0 28px 60px -10px rgba(34,197,94,0.65), 0 0 30px rgba(134,239,172,0.3); }
+  .hub-play:hover {
+    transform: translateY(-2px);
+    background: #16a34a;
+    box-shadow: 0 12px 32px rgba(34, 197, 94, 0.45);
   }
-  .hub-play::before {
-    content: ""; position: absolute; top: 4px; left: 4px; right: 4px; height: 30%;
-    background: linear-gradient(180deg, rgba(255,255,255,0.45), transparent);
-    border-radius: 28px 28px 50% 50%; pointer-events: none;
-  }
-  .hub-play::after {
-    content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-    background: conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,0.15) 60deg, transparent 120deg);
-    animation: hubPlayShine 4s linear infinite;
-    pointer-events: none;
-  }
-  @keyframes hubPlayShine { to { transform: rotate(360deg); } }
-  .hub-play:hover { transform: translateY(-3px) scale(1.02); animation: none; }
   .hub-play:active {
-    transform: translateY(6px) scale(0.98);
-    box-shadow: inset 0 4px 0 rgba(255,255,255,0.3), inset 0 -3px 0 rgba(0,0,0,0.15),
-      0 2px 0 #15803d, 0 6px 14px -4px rgba(34,197,94,0.5);
-    animation: none;
+    transform: translateY(1px);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
   }
   .hub-play-icon {
-    width: 56px; height: 56px; border-radius: 50%;
-    background: rgba(255,255,255,0.2); border: 3px solid rgba(255,255,255,0.7);
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(255,255,255,0.25);
     display: grid; place-items: center; flex-shrink: 0;
-    box-shadow: 0 0 20px rgba(255,255,255,0.3);
+    box-shadow: 0 4px 12px rgba(255,255,255,0.2);
   }
-  .hub-play-text { display: flex; flex-direction: column; line-height: 1; text-align: left; position: relative; z-index: 1; }
-  .hub-play-text .big { font-size: 48px; letter-spacing: -1px; text-shadow: 0 3px 0 rgba(21,128,61,0.4), 0 0 20px rgba(255,255,255,0.3); }
-  .hub-play-text .sub { font-size: 14px; margin-top: 8px; opacity: 0.9; font-weight: 700; }
+  .hub-play-text { display: flex; flex-direction: column; line-height: 1.1; }
+  .hub-play-text .big { font-size: 26px; letter-spacing: -0.3px; }
+  .hub-play-text .sub { font-size: 12px; font-weight: 700; opacity: 0.85; margin-top: 3px; }
 
   /* === PORTALS === */
   .hub-portals {
@@ -360,11 +345,11 @@
       width: 14px; height: 14px; background: var(--hb-paper);
       border-left: 1px solid var(--hb-rim); border-top: 1px solid var(--hb-rim);
     }
-    .hub-play { padding: 18px 30px; gap: 14px; border-radius: 26px; }
-    .hub-play-icon { width: 48px; height: 48px; border-width: 2.5px; }
-    .hub-play-icon svg { width: 22px; height: 22px; }
-    .hub-play-text .big { font-size: 34px; }
-    .hub-play-text .sub { font-size: 12px; }
+    .hub-play { padding: 16px 28px; gap: 10px; border-radius: 16px; font-size: 22px; }
+    .hub-play-icon { width: 38px; height: 38px; }
+    .hub-play-icon svg { width: 18px; height: 18px; }
+    .hub-play-text .big { font-size: 22px; }
+    .hub-play-text .sub { font-size: 11px; }
 
     .hub-portals { padding: 0 20px; margin-top: 44px; }
     .hub-portals-head h2 { font-size: 20px; }
