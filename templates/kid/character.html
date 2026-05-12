@@ -71,25 +71,25 @@
     <!-- Purchase burst -->
     <div class="char-burst" id="char-burst"></div>
 
-    <!-- Character image -->
+    <!-- Character image + name below -->
     <div class="char-image-wrap">
-      <div class="char-image-float" id="char-image-float">
-        <img src="/static/kid/default-character.svg" alt="character" class="char-image" id="char-image" onerror="this.src='/static/kid/default-character.svg'">
-      </div>
-    </div>
-
-    <!-- Character name — below image -->
-    <div class="char-bottom-name">
-      <div class="char-top__name" id="char-top-name">
-        <span class="char-top__name-text" id="char-name-display"></span>
-        <button class="char-top__name-edit" onclick="editCharacterName()" title="Rename">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3 L21 8 L8 21 H3 V16 Z"/></svg>
-        </button>
-      </div>
-      <div class="char-top__name-form" id="char-name-form" style="display:none">
-        <input type="text" id="char-name-input" class="char-top__name-input" maxlength="30">
-        <button class="char-top__name-btn char-top__name-btn--save" onclick="saveCharacterName()">&#10003;</button>
-        <button class="char-top__name-btn char-top__name-btn--cancel" onclick="cancelEditName()">&#10005;</button>
+      <div class="char-image-col">
+        <div class="char-image-float" id="char-image-float">
+          <img src="/static/kid/default-character.svg" alt="character" class="char-image" id="char-image" onerror="this.src='/static/kid/default-character.svg'">
+        </div>
+        <div class="char-bottom-name">
+          <div class="char-top__name" id="char-top-name">
+            <span class="char-top__name-text" id="char-name-display"></span>
+            <button class="char-top__name-edit" onclick="editCharacterName()" title="Rename">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3 L21 8 L8 21 H3 V16 Z"/></svg>
+            </button>
+          </div>
+          <div class="char-top__name-form" id="char-name-form" style="display:none">
+            <input type="text" id="char-name-input" class="char-top__name-input" maxlength="30">
+            <button class="char-top__name-btn char-top__name-btn--save" onclick="saveCharacterName()">&#10003;</button>
+            <button class="char-top__name-btn char-top__name-btn--cancel" onclick="cancelEditName()">&#10005;</button>
+          </div>
+        </div>
       </div>
     </div>
 

@@ -2037,10 +2037,14 @@ body[data-page="character"] .kid-main { padding: 0; max-width: none; }
   display: none;
 }
 
-/* --- Character name (bottom of stage) --- */
+/* --- Character image column (image + name) --- */
+.char-image-col {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 10px;
+}
+
+/* --- Character name (below image) --- */
 .char-bottom-name {
-  position: absolute; bottom: 24px;
-  left: 0; right: 0; z-index: 5;
   display: flex; flex-direction: column;
   align-items: center; gap: 6px;
 }
@@ -2536,9 +2540,6 @@ body[data-page="character"] .kid-main { padding: 0; max-width: none; }
   }
   .char-back-arrow:hover { transform: translateY(-2px); }
 
-  .char-bottom-name {
-    bottom: 40px;
-  }
   .char-top__name-text { font-size: 28px; }
 
   .char-scene-rail {
