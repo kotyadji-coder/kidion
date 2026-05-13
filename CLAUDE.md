@@ -21,7 +21,7 @@ Parent creates child (name, grade, interests) → AI generates universe + charac
 - **Backend:** FastAPI + uvicorn + SQLite (sqlite3, no ORM)
 - **Frontend:** Jinja2 templates + vanilla JS (no React/Vue)
 - **Auth:** bcrypt (passwords) + itsdangerous (signed cookies `kid_session` for parents, `kid_session_child` for kids)
-- **AI Generation:** Google Vertex AI (Gemini 3.1 Pro for text, Gemini 2.5 Flash for images and kid chat)
+- **AI Generation:** Google AI Studio (primary, API key) + Vertex AI (fallback). See AI Models section below.
 - **Payments:** YooKassa Python SDK (not yet connected with real keys)
 - **Tests:** pytest + pytest-asyncio + httpx (306 tests)
 
@@ -37,13 +37,14 @@ kidion/
 ├── callbacks.py               # HMAC validation for legacy bot callbacks
 ├── services/
 │   ├── generation.py          # Generation Adapter: build_question() + generate_lesson_content()
-│   ├── gemini_client.py       # Vertex AI calls (stub mode without GOOGLE_CLOUD_PROJECT)
+│   ├── ai_client.py           # AI Studio wrapper (StudioModel), fallback to Vertex AI
+│   ├── gemini_client.py       # Lesson generation (AI Studio first, Vertex fallback, stub if neither)
 │   ├── prompts.py             # Russian prompts for Methodologist + Tutor-Gamer
-│   ├── image_generator.py     # Gemini 2.5 Flash lesson image generation
+│   ├── image_generator.py     # Gemini 2.5 Flash lesson image generation (Vertex AI only)
 │   ├── content_generator.py   # Saves lesson HTML/PNG/JSON to content/
 │   ├── curricula.py           # Load/search curriculum JSON files
 │   ├── universe.py            # Universe/character/shop generation (Gemini)
-│   ├── kid_chat.py            # Spark AI chat: single character, safety prompts, Gemini 2.5 Flash
+│   ├── kid_chat.py            # Spark AI chat: single character, safety prompts
 │   └── worksheet/             # Printable worksheet generation (from metodist)
 │       ├── models.py           # Pydantic models: 24 task types + 3 activities
 │       ├── prompts.py          # Prompts for worksheet/activity generation
@@ -106,10 +107,10 @@ kidion/
 3. Background task calls `services/universe.py`:
    - `generate_universe()` → Gemini generates universe_description + character_prompt (stored in children table)
    - `generate_character_image()` → Gemini Flash generates PNG → saved to `content/characters/{child_id}.png`
-   - `generate_shop_items()` → Gemini generates ~20 themed items → saved to `shop_items` table
+   - `generate_shop_items()` → Gemini Flash generates ~17 themed items (4 categories) → saved to `shop_items` table
 
 ### Stub Mode
-All generation functions return predefined defaults when `GOOGLE_CLOUD_PROJECT` is not set. Character image returns `None` (UI shows placeholder).
+All generation functions return predefined defaults when neither `GEMINI_API_KEY` nor `GOOGLE_CLOUD_PROJECT` is set. Character image returns `None` (UI shows placeholder).
 
 ### Kid Onboarding (`/kid/onboarding`)
 - First login redirects here if `character_onboarded=0`
@@ -119,7 +120,7 @@ All generation functions return predefined defaults when `GOOGLE_CLOUD_PROJECT` 
 
 ### Character Page (`/kid/character`)
 - Left: character PNG + **character name with edit pencil** + speech bubble (contextual phrases based on star count)
-- Right: star shop with category tabs (outfit, accessory, pet, background, special)
+- Right: star shop with category tabs (outfit, accessory, pet, background)
 - Buying item: deducts stars → creates `child_items` record → triggers background character regeneration
 - Insufficient stars: grey button, tooltip on click "Нужно еще немного поучиться!"
 - Equip/unequip: toggles `child_items.equipped` → triggers background character regeneration
@@ -130,7 +131,7 @@ All generation functions return predefined defaults when `GOOGLE_CLOUD_PROJECT` 
 - PIN label: "Введи свой секретный код"
 
 ### Shop Item Categories & Pricing
-- outfit (5 items, 5-20 stars), accessory (5 items, 10-25 stars), pet (4 items, 20-40 stars), background (3 items, 15-30 stars), special (3 items, 30-50 stars)
+- outfit (5 items, 5-20 stars), accessory (5 items, 10-25 stars), pet (4 items, 20-40 stars), background (3 items, 15-30 stars)
 
 ## Two Currencies
 
@@ -206,12 +207,34 @@ One universal character **Spark** (friendly fire creature in glasses and purple 
 - `/kid/character` — RPG character page + star shop + name editing + speech bubble
 - `/kid/subject/{subject}` — Duolingo-style lesson map with tooltip
 - `/kid/lesson/{id}` — lesson iframe + print button
-- `/kid/chat` — AI chat with 3 characters (Owl, Dreamer, Professor)
+- `/kid/chat` — AI chat with Spark (single assistant)
 - `/kid/result/{id}` — confetti + stars animation + shop button
 
 ### Parent
 - `/dashboard`, `/children/new`, `/children/{id}`, `/children/{id}/subject/{subject}`, `/children/{id}/history`
 - `/profile`, `/buy`, `/login`, `/register`
+
+## AI Models & Backend
+
+### Priority: AI Studio (API key) → Vertex AI → Stub mode
+- `GEMINI_API_KEY` set → uses Google AI Studio (google-genai SDK)
+- `GOOGLE_CLOUD_PROJECT` set → uses Vertex AI (vertexai SDK)
+- Neither → returns stubs (for local dev/tests)
+- Image generation (PNG) always requires Vertex AI
+
+### Models by Function
+
+| Model | Function | File |
+|-------|----------|------|
+| `gemini-2.5-pro` | Lesson Step 1: Methodologist (rules, mnemonics) | gemini_client.py |
+| `gemini-3.1-pro-preview` | Lesson Step 2: Tutor-Gamer (JSON lesson + tasks), Universe + character generation | gemini_client.py, universe.py |
+| `gemini-2.5-flash-lite` | Lesson Step 3: Visual layout, image prompts | gemini_client.py |
+| `gemini-2.5-flash` | Kid chat (Spark), shop items, character/lesson images (Vertex only) | kid_chat.py, universe.py, image_generator.py |
+
+### Architecture
+- `services/ai_client.py` — `StudioModel` class wraps google-genai to mimic Vertex AI `GenerativeModel` interface
+- `get_studio_model(name)` returns `StudioModel` if `GEMINI_API_KEY` is set, else `None`
+- Each file's model-creation function tries Studio first, then Vertex, then returns `None` (stub)
 
 ## Running
 
