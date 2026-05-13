@@ -203,7 +203,22 @@ def generate_shop_items(universe_description: str, character_name: str) -> list[
     Generate a catalog of ~20 shop items themed to the child's universe.
     Returns list of dicts with: category, title_ru, description_ru, emoji, price_stars.
     """
-    model = _get_text_model()
+    from services.ai_client import get_studio_model
+    model = get_studio_model("gemini-2.5-flash")
+    if model is None:
+        # Try Vertex AI
+        project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+        if project:
+            import vertexai
+            from vertexai.generative_models import GenerativeModel
+            credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+            if credentials_path:
+                from google.oauth2 import service_account
+                credentials = service_account.Credentials.from_service_account_file(credentials_path)
+                vertexai.init(project=project, location="global", credentials=credentials)
+            else:
+                vertexai.init(project=project, location="global")
+            model = GenerativeModel("gemini-2.5-flash")
 
     prompt = f"""Ты — геймдизайнер детской образовательной платформы.
 
@@ -212,14 +227,13 @@ def generate_shop_items(universe_description: str, character_name: str) -> list[
 Вселенная ребёнка: {universe_description}
 Персонаж ребёнка: {character_name}
 
-Придумай каталог из 20 предметов для магазина, где ребёнок может покупать вещи для своего персонажа за звёзды (⭐), заработанные на уроках.
+Придумай каталог из 17 предметов для магазина, где ребёнок может покупать вещи для своего персонажа за звёзды, заработанные на уроках.
 
 Категории:
-- outfit (одежда): 5 предметов, цены 5-20⭐
-- accessory (аксессуары, оружие): 5 предметов, цены 10-25⭐
-- pet (питомцы): 4 предмета, цены 20-40⭐
-- background (фоны/локации): 3 предмета, цены 15-30⭐
-- special (особые предметы): 3 предмета, цены 30-50⭐
+- outfit (одежда): 5 предметов, цены 5-20
+- accessory (аксессуары): 5 предметов, цены 10-25
+- pet (питомцы): 4 предмета, цены 20-40
+- background (фоны/локации): 3 предмета, цены 15-30
 
 Каждый предмет должен быть тематически связан с вселенной ребёнка.
 
@@ -249,9 +263,6 @@ def generate_shop_items(universe_description: str, character_name: str) -> list[
             {"category": "background", "title_ru": "Волшебный лес", "description_ru": "Зелёный лес с светлячками", "emoji": "🌲", "price_stars": 15},
             {"category": "background", "title_ru": "Космическая станция", "description_ru": "Учимся среди звёзд", "emoji": "🚀", "price_stars": 20},
             {"category": "background", "title_ru": "Подводный замок", "description_ru": "Учёба на дне океана", "emoji": "🏰", "price_stars": 30},
-            {"category": "special", "title_ru": "Крылья знаний", "description_ru": "Летай между уроками!", "emoji": "🪽", "price_stars": 30},
-            {"category": "special", "title_ru": "Невидимость", "description_ru": "Секретная способность", "emoji": "👻", "price_stars": 40},
-            {"category": "special", "title_ru": "Машина времени", "description_ru": "Путешествуй в прошлое", "emoji": "⏰", "price_stars": 50},
         ]
 
     try:
@@ -271,7 +282,7 @@ def generate_shop_items(universe_description: str, character_name: str) -> list[
         if isinstance(items, dict):
             items = items.get("items", [])
         # Validate each item
-        valid_categories = {"outfit", "accessory", "pet", "background", "special"}
+        valid_categories = {"outfit", "accessory", "pet", "background"}
         validated = []
         for item in items:
             if isinstance(item, dict) and item.get("category") in valid_categories:
