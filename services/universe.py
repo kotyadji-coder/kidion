@@ -15,6 +15,10 @@ logger = logging.getLogger("kidion")
 
 def _get_text_model():
     """Get Gemini model for text generation. Returns None in stub mode."""
+    from services.ai_client import get_studio_model
+    studio = get_studio_model("gemini-3.1-pro-preview")
+    if studio is not None:
+        return studio
     project = os.environ.get("GOOGLE_CLOUD_PROJECT")
     if not project:
         return None

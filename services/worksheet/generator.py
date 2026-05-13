@@ -80,8 +80,7 @@ def _generate_regular_worksheet(child: dict, topic: str, subject: str,
                                 lesson_number: int, content_id: str,
                                 server_url: str) -> str:
     """Generate a 4-task worksheet."""
-    from services.gemini_client import _get_model, CHILD_SAFETY_SETTINGS
-    from vertexai.generative_models import GenerationConfig
+    from services.gemini_client import _get_model
 
     model = _get_model()
 
@@ -91,8 +90,7 @@ def _generate_regular_worksheet(child: dict, topic: str, subject: str,
         prompt = get_worksheet_prompt(child, topic, subject)
         response = model.generate_content(
             prompt,
-            generation_config=GenerationConfig(response_mime_type="application/json"),
-            safety_settings=CHILD_SAFETY_SETTINGS,
+            generation_config={"response_mime_type": "application/json"},
         )
         tasks_data = _extract_json(response.text)
 
@@ -125,8 +123,7 @@ def _generate_regular_worksheet(child: dict, topic: str, subject: str,
 def _generate_activity(child: dict, topic: str, subject: str,
                        content_id: str, server_url: str) -> str:
     """Generate a full-page activity for lesson 5."""
-    from services.gemini_client import _get_model, CHILD_SAFETY_SETTINGS
-    from vertexai.generative_models import GenerationConfig
+    from services.gemini_client import _get_model
 
     activity_type = pick_activity_type(subject)
     model = _get_model()
@@ -137,8 +134,7 @@ def _generate_activity(child: dict, topic: str, subject: str,
         prompt = get_activity_prompt(child, topic, subject, activity_type)
         response = model.generate_content(
             prompt,
-            generation_config=GenerationConfig(response_mime_type="application/json"),
-            safety_settings=CHILD_SAFETY_SETTINGS,
+            generation_config={"response_mime_type": "application/json"},
         )
         activity_data = _extract_json(response.text)
 

@@ -2,8 +2,12 @@ import json
 import os
 import re
 
-import vertexai
-from vertexai.generative_models import GenerationConfig, GenerativeModel, HarmBlockThreshold, HarmCategory, SafetySetting
+try:
+    import vertexai
+    from vertexai.generative_models import GenerationConfig, GenerativeModel, HarmBlockThreshold, HarmCategory, SafetySetting
+    _HAS_VERTEX = True
+except Exception:
+    _HAS_VERTEX = False
 
 from services.prompts import (
     GENERATE_IMAGE_PROMPT_FALLBACK_PROMPT,
@@ -20,29 +24,22 @@ MODEL_STEP1 = "gemini-2.5-pro"
 MODEL_STEP2 = "gemini-3.1-pro-preview"
 FLASH_LITE_MODEL_NAME = "gemini-2.5-flash-lite"
 
-CHILD_SAFETY_SETTINGS = [
-    SafetySetting(
-        category=HarmCategory.HARM_CATEGORY_HARASSMENT,
-        threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
-    ),
-    SafetySetting(
-        category=HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-        threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
-    ),
-    SafetySetting(
-        category=HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-        threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
-    ),
-    SafetySetting(
-        category=HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-        threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
-    ),
-]
+def _get_child_safety_settings():
+    from vertexai.generative_models import HarmBlockThreshold, HarmCategory, SafetySetting
+    return [
+        SafetySetting(category=HarmCategory.HARM_CATEGORY_HARASSMENT, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
+        SafetySetting(category=HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
+        SafetySetting(category=HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
+        SafetySetting(category=HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
+    ]
+
+# Lazy property for backward compat (worksheet generator imports CHILD_SAFETY_SETTINGS)
+CHILD_SAFETY_SETTINGS = None
 
 
 def _init_vertex(location: str):
     """Initialize Vertex AI with a specific location."""
-    if not PROJECT_ID:
+    if not PROJECT_ID or not _HAS_VERTEX:
         return False
     credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     if credentials_path:
@@ -55,12 +52,20 @@ def _init_vertex(location: str):
 
 
 def _get_model(model_name: str = None) -> GenerativeModel:
+    from services.ai_client import get_studio_model
+    studio = get_studio_model(model_name or MODEL_STEP1)
+    if studio is not None:
+        return studio
     if not _init_vertex(PRO_REGION):
         return None
     return GenerativeModel(model_name or MODEL_STEP1)
 
 
 def _get_flash_lite_model() -> GenerativeModel:
+    from services.ai_client import get_studio_model
+    studio = get_studio_model(FLASH_LITE_MODEL_NAME)
+    if studio is not None:
+        return studio
     if not _init_vertex(LITE_REGION):
         return None
     return GenerativeModel(FLASH_LITE_MODEL_NAME)
@@ -105,7 +110,7 @@ def generate_explanation(question: str) -> tuple[str, dict]:
 
     # Step 1: methodologist (gemini-2.5-pro)
     step1_prompt = METHODOLOGIST_PROMPT.format(question=question)
-    step1_response = model_step1.generate_content(step1_prompt, safety_settings=CHILD_SAFETY_SETTINGS)
+    step1_response = model_step1.generate_content(step1_prompt)
 
     # Check safety rating
     if _is_blocked_by_safety(step1_response):
@@ -121,8 +126,7 @@ def generate_explanation(question: str) -> tuple[str, dict]:
     )
     step2_response = model_step2.generate_content(
         step2_prompt,
-        generation_config=GenerationConfig(response_mime_type="application/json"),
-        safety_settings=CHILD_SAFETY_SETTINGS,
+        generation_config={"response_mime_type": "application/json"},
     )
 
     # Check safety rating
@@ -143,7 +147,7 @@ def generate_image_prompt(explanation: str) -> str:
         return "a colorful educational illustration"
 
     prompt = GENERATE_IMAGE_PROMPT_PROMPT.format(story=explanation)
-    response = model.generate_content(prompt, safety_settings=CHILD_SAFETY_SETTINGS)
+    response = model.generate_content(prompt)
     return response.text.strip()
 
 
@@ -156,7 +160,7 @@ def generate_image_prompt_fallback(explanation: str) -> str:
         return "a colorful educational illustration fallback"
 
     prompt = GENERATE_IMAGE_PROMPT_FALLBACK_PROMPT.format(story=explanation)
-    response = model.generate_content(prompt, safety_settings=CHILD_SAFETY_SETTINGS)
+    response = model.generate_content(prompt)
     return response.text.strip()
 
 
@@ -190,8 +194,7 @@ def generate_visual_layout(story_blocks: list[dict], topic: str, subject: str,
     try:
         response = model.generate_content(
             prompt,
-            generation_config=GenerationConfig(response_mime_type="application/json"),
-            safety_settings=CHILD_SAFETY_SETTINGS,
+            generation_config={"response_mime_type": "application/json"},
         )
 
         if _is_blocked_by_safety(response):

@@ -75,40 +75,35 @@ def generate_chat_response(
     if child_name:
         system_prompt += f"\nИмя ребёнка: {child_name}. Можешь иногда обращаться по имени."
 
+    from services.ai_client import get_studio_model
+
+    studio = get_studio_model("gemini-2.5-flash-preview-05-20", system_instruction=system_prompt)
+
     project = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    if not project:
+    if not studio and not project:
         # Stub mode
         return _stub_response(messages[-1]["content"] if messages else "")
 
     try:
-        import vertexai
-        from vertexai.generative_models import (
-            GenerativeModel,
-            Content,
-            Part,
-            SafetySetting,
-            HarmCategory,
-            HarmBlockThreshold,
-        )
-
-        credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-        if credentials_path:
-            from google.oauth2 import service_account
-            credentials = service_account.Credentials.from_service_account_file(credentials_path)
-            vertexai.init(project=project, location="global", credentials=credentials)
+        if studio:
+            model = studio
         else:
-            vertexai.init(project=project, location="global")
-
-        safety_settings = [
-            SafetySetting(category=HarmCategory.HARM_CATEGORY_HARASSMENT, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
-            SafetySetting(category=HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
-            SafetySetting(category=HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
-            SafetySetting(category=HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
-        ]
-
-        model = GenerativeModel("gemini-2.5-flash-preview-05-20", system_instruction=system_prompt)
+            import vertexai
+            from vertexai.generative_models import GenerativeModel
+            credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+            if credentials_path:
+                from google.oauth2 import service_account
+                credentials = service_account.Credentials.from_service_account_file(credentials_path)
+                vertexai.init(project=project, location="global", credentials=credentials)
+            else:
+                vertexai.init(project=project, location="global")
+            model = GenerativeModel("gemini-2.5-flash-preview-05-20", system_instruction=system_prompt)
 
         # Build conversation history
+        if studio:
+            from vertexai.generative_models import Content, Part
+        else:
+            from vertexai.generative_models import Content, Part, SafetySetting, HarmCategory, HarmBlockThreshold
         history = []
         for msg in messages[:-1]:
             role = "user" if msg["role"] == "user" else "model"
@@ -116,7 +111,16 @@ def generate_chat_response(
 
         chat = model.start_chat(history=history)
         last_msg = messages[-1]["content"] if messages else ""
-        response = chat.send_message(last_msg, safety_settings=safety_settings)
+        if studio:
+            response = chat.send_message(last_msg)
+        else:
+            safety_settings = [
+                SafetySetting(category=HarmCategory.HARM_CATEGORY_HARASSMENT, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
+                SafetySetting(category=HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
+                SafetySetting(category=HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
+                SafetySetting(category=HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
+            ]
+            response = chat.send_message(last_msg, safety_settings=safety_settings)
 
         if not response.candidates:
             return "Хм, я не смог придумать ответ. Попробуй спросить по-другому! 🤔"
