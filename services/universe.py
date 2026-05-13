@@ -166,7 +166,7 @@ def generate_character_image(character_prompt: str, equipped_items: list[dict] |
         from vertexai.generative_models import GenerativeModel
 
         vertexai.init(project=project, location="us-central1")
-        model = GenerativeModel("gemini-2.5-flash-preview-04-17")
+        model = GenerativeModel("gemini-2.5-flash")
 
         full_prompt = character_prompt
         if equipped_items:

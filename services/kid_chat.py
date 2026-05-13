@@ -77,7 +77,7 @@ def generate_chat_response(
 
     from services.ai_client import get_studio_model
 
-    studio = get_studio_model("gemini-2.5-flash-preview-05-20", system_instruction=system_prompt)
+    studio = get_studio_model("gemini-2.5-flash", system_instruction=system_prompt)
 
     project = os.environ.get("GOOGLE_CLOUD_PROJECT")
     if not studio and not project:
@@ -97,7 +97,7 @@ def generate_chat_response(
                 vertexai.init(project=project, location="global", credentials=credentials)
             else:
                 vertexai.init(project=project, location="global")
-            model = GenerativeModel("gemini-2.5-flash-preview-05-20", system_instruction=system_prompt)
+            model = GenerativeModel("gemini-2.5-flash", system_instruction=system_prompt)
 
         # Build conversation history
         if studio:

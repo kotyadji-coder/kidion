@@ -19,7 +19,7 @@ def generate_image(prompt: str) -> bytes | None:
         from vertexai.generative_models import GenerativeModel
 
         vertexai.init(project=project, location="us-central1")
-        model = GenerativeModel("gemini-2.5-flash-preview-04-17")
+        model = GenerativeModel("gemini-2.5-flash")
 
         response = model.generate_content(
             f"Generate an educational children illustration: {prompt}",
