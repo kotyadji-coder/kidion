@@ -267,6 +267,27 @@ def _init_schema(conn: sqlite3.Connection) -> None:
 
         CREATE INDEX IF NOT EXISTS idx_chat_subs_user ON chat_subscriptions(user_id);
 
+        CREATE TABLE IF NOT EXISTS methodologist_cache (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            subject    TEXT NOT NULL,
+            grade      INTEGER NOT NULL,
+            topic      TEXT NOT NULL,
+            output     TEXT NOT NULL,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(subject, grade, topic)
+        );
+
+        CREATE TABLE IF NOT EXISTS topic_images (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            curriculum_topic_id INTEGER,
+            subject         TEXT NOT NULL,
+            grade           INTEGER NOT NULL,
+            topic           TEXT NOT NULL,
+            image_filename  TEXT NOT NULL,
+            created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(subject, grade, topic)
+        );
+
         CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
         CREATE INDEX IF NOT EXISTS idx_users_ref_code ON users(ref_code);
         CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id);
@@ -1763,3 +1784,49 @@ def get_active_chat_subscription(conn: sqlite3.Connection, user_id: int) -> dict
         (user_id, _now()),
     ).fetchone()
     return dict(row) if row else None
+
+
+# ---------------------------------------------------------------------------
+# Methodologist Cache operations
+# ---------------------------------------------------------------------------
+
+def get_cached_methodologist(conn: sqlite3.Connection, subject: str, grade: int, topic: str) -> str | None:
+    """Return cached methodologist output or None."""
+    row = conn.execute(
+        "SELECT output FROM methodologist_cache WHERE subject = ? AND grade = ? AND topic = ?",
+        (subject, grade, topic),
+    ).fetchone()
+    return row[0] if row else None
+
+
+def save_methodologist_cache(conn: sqlite3.Connection, subject: str, grade: int, topic: str, output: str) -> None:
+    """Save methodologist output to cache."""
+    conn.execute(
+        "INSERT OR REPLACE INTO methodologist_cache (subject, grade, topic, output, created_at) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (subject, grade, topic, output, _now()),
+    )
+    conn.commit()
+
+
+# ---------------------------------------------------------------------------
+# Topic Image Cache operations
+# ---------------------------------------------------------------------------
+
+def get_topic_image(conn: sqlite3.Connection, subject: str, grade: int, topic: str) -> str | None:
+    """Return cached image filename for a topic or None."""
+    row = conn.execute(
+        "SELECT image_filename FROM topic_images WHERE subject = ? AND grade = ? AND topic = ?",
+        (subject, grade, topic),
+    ).fetchone()
+    return row[0] if row else None
+
+
+def save_topic_image(conn: sqlite3.Connection, subject: str, grade: int, topic: str, image_filename: str) -> None:
+    """Save topic image filename to cache."""
+    conn.execute(
+        "INSERT OR REPLACE INTO topic_images (subject, grade, topic, image_filename, created_at) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (subject, grade, topic, image_filename, _now()),
+    )
+    conn.commit()

@@ -59,6 +59,8 @@ def temp_db_path(tmp_path):
 def override_db(temp_db_path, monkeypatch):
     """Override DATABASE_PATH so every test uses its own fresh SQLite file."""
     monkeypatch.setenv("DATABASE_PATH", temp_db_path)
+    from db import init_db
+    init_db(temp_db_path)
 
 
 # ---------------------------------------------------------------------------

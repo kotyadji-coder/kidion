@@ -1,3 +1,4 @@
+import os
 import uuid
 import logging
 from datetime import date
@@ -7,6 +8,9 @@ from services.image_generator import generate_image
 from services.content_generator import save_lesson_html
 
 logger = logging.getLogger("kidion")
+
+_BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_CONTENT_DIR = os.path.join(_BASE_DIR, "content")
 
 
 def build_question(child: dict, topic: str, subject: str, prev_lesson_titles: list[str]) -> str:
@@ -37,6 +41,46 @@ def build_question(child: dict, topic: str, subject: str, prev_lesson_titles: li
     )
 
 
+def _get_or_generate_topic_image(conn, child: dict, topic: str, subject: str,
+                                  story_text: str, server_url: str) -> bytes | None:
+    """Return image bytes for a topic, reusing cached image if available."""
+    from db import get_topic_image, save_topic_image
+
+    grade = child["grade"]
+    cached_filename = get_topic_image(conn, subject, grade, topic)
+
+    if cached_filename:
+        # Reuse existing image
+        cached_path = os.path.join(_CONTENT_DIR, cached_filename)
+        if os.path.exists(cached_path):
+            with open(cached_path, "rb") as f:
+                return f.read()
+        logger.warning("Cached topic image file missing: %s", cached_path)
+
+    # Generate new image
+    image_bytes = None
+    try:
+        img_prompt = generate_image_prompt(story_text)
+        image_bytes = generate_image(img_prompt)
+    except Exception:
+        try:
+            img_prompt_fallback = generate_image_prompt_fallback(story_text)
+            image_bytes = generate_image(img_prompt_fallback)
+        except Exception:
+            pass
+
+    # Save to cache if generated
+    if image_bytes:
+        os.makedirs(_CONTENT_DIR, exist_ok=True)
+        filename = f"topic_{subject}_{grade}_{uuid.uuid4().hex[:8]}.png"
+        img_path = os.path.join(_CONTENT_DIR, filename)
+        with open(img_path, "wb") as f:
+            f.write(image_bytes)
+        save_topic_image(conn, subject, grade, topic, filename)
+
+    return image_bytes
+
+
 def generate_lesson_content(lesson_id: int, child: dict, topic: str, subject: str,
                              db_path: str, server_url: str,
                              lesson_number: int = 1) -> None:
@@ -44,15 +88,28 @@ def generate_lesson_content(lesson_id: int, child: dict, topic: str, subject: st
 
     lesson_number: 1-5 within topic (5 = activity worksheet instead of regular).
     """
-    import sqlite3
-    from db import get_connection, update_lesson_content, get_recent_lesson_titles
+    from db import (
+        get_connection, update_lesson_content, get_recent_lesson_titles,
+        get_cached_methodologist, save_methodologist_cache,
+    )
 
     try:
         conn = get_connection(db_path)
         prev_titles = get_recent_lesson_titles(conn, child["id"], limit=3)
         question = build_question(child, topic, subject, prev_titles)
 
-        _, lesson_json = generate_explanation(question)
+        # Check methodologist cache (keyed by subject+grade+topic, independent of child)
+        grade = child["grade"]
+        cached_method = get_cached_methodologist(conn, subject, grade, topic)
+
+        methodologist_output, lesson_json = generate_explanation(
+            question, cached_methodologist=cached_method
+        )
+
+        # Save to cache if it was a fresh generation
+        if not cached_method and methodologist_output != "stub":
+            save_methodologist_cache(conn, subject, grade, topic, methodologist_output)
+            logger.info("Cached methodologist for %s/%s/%s", subject, grade, topic)
 
         # Substitute {child_name} placeholder with actual child name
         child_name = child.get("name", "")
@@ -75,15 +132,10 @@ def generate_lesson_content(lesson_id: int, child: dict, topic: str, subject: st
             character_emoji=character_emoji,
         )
 
-        try:
-            img_prompt = generate_image_prompt(story_text)
-            image_bytes = generate_image(img_prompt)
-        except Exception:
-            try:
-                img_prompt_fallback = generate_image_prompt_fallback(story_text)
-                image_bytes = generate_image(img_prompt_fallback)
-            except Exception:
-                image_bytes = None
+        # Image: one per topic (shared across 5 lessons in the same topic)
+        image_bytes = _get_or_generate_topic_image(
+            conn, child, topic, subject, story_text, server_url
+        )
 
         content_id = str(uuid.uuid4())[:8]
         content_url = save_lesson_html(image_bytes, lesson_json, content_id, server_url,
@@ -106,7 +158,7 @@ def generate_lesson_content(lesson_id: int, child: dict, topic: str, subject: st
 
         update_lesson_content(conn, lesson_id, content_url, print_url, "done",
                               worksheet_url=worksheet_url, icon=lesson_icon)
-    except Exception as e:
+    except Exception:
         logger.exception("Generation failed for lesson %s", lesson_id)
         try:
             conn = get_connection(db_path)

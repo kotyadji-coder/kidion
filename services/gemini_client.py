@@ -92,7 +92,7 @@ def _extract_json(raw: str) -> dict:
     return json.loads(cleaned)
 
 
-def generate_explanation(question: str) -> tuple[str, dict]:
+def generate_explanation(question: str, cached_methodologist: str | None = None) -> tuple[str, dict]:
     """
     Two-step chain:
       Step 1 — Methodologist: structured rule + mnemonic.
@@ -100,6 +100,7 @@ def generate_explanation(question: str) -> tuple[str, dict]:
 
     Returns (methodologist_output, lesson_dict).
 
+    If cached_methodologist is provided, step 1 is skipped (cache hit).
     Stub mode: if GOOGLE_CLOUD_PROJECT is not set, returns stub data.
     """
     model_step1 = _get_model(MODEL_STEP1)
@@ -108,15 +109,17 @@ def generate_explanation(question: str) -> tuple[str, dict]:
     if model_step1 is None:
         return ("stub", _stub_lesson(question))
 
-    # Step 1: methodologist (gemini-2.5-pro)
-    step1_prompt = METHODOLOGIST_PROMPT.format(question=question)
-    step1_response = model_step1.generate_content(step1_prompt)
+    # Step 1: methodologist (gemini-2.5-pro) — skip if cached
+    if cached_methodologist:
+        methodologist_output = cached_methodologist
+    else:
+        step1_prompt = METHODOLOGIST_PROMPT.format(question=question)
+        step1_response = model_step1.generate_content(step1_prompt)
 
-    # Check safety rating
-    if _is_blocked_by_safety(step1_response):
-        raise ValueError("Lesson content blocked by safety filter at step 1")
+        if _is_blocked_by_safety(step1_response):
+            raise ValueError("Lesson content blocked by safety filter at step 1")
 
-    methodologist_output = step1_response.text.strip()
+        methodologist_output = step1_response.text.strip()
 
     # Step 2: tutor-gamer → strict JSON (gemini-3.1-pro-preview)
     model_step2 = _get_model(MODEL_STEP2)
