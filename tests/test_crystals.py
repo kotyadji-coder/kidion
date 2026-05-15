@@ -131,10 +131,9 @@ async def test_crystals_cannot_go_negative_via_concurrent_deductions(
     """
     con = sqlite3.connect(temp_db_path)
     con.execute(
-        "CREATE TABLE IF NOT EXISTS users "
-        "(id INTEGER PRIMARY KEY, email TEXT, crystals INTEGER DEFAULT 0)"
+        "INSERT INTO users (email, password_hash, crystals, ref_code, created_at) "
+        "VALUES ('atom@example.com', 'x', 10, 'ATOM0001', '2025-01-01T00:00:00')"
     )
-    con.execute("INSERT INTO users (email, crystals) VALUES ('atom@example.com', 10)")
     con.commit()
 
     cursor1 = con.execute(
