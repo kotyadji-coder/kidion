@@ -178,9 +178,12 @@ def build_question(child: dict, topic: str, subject: str, prev_lesson_titles: li
     if prev_lesson_titles:
         context_text = f"\nПредыдущие уроки (не повторять): {', '.join(prev_lesson_titles)}"
 
+    universe_desc = child.get("universe_description") or ""
+    universe_line = f" Описание вселенной: {universe_desc}" if universe_desc else ""
+
     return (
         f"Пол: {gender_text}. Возраст: {age} лет. "
-        f"Класс: {child['grade']}. Любимая вселенная: {child['universe']}. "
+        f"Класс: {child['grade']}. Любимая вселенная: {child['universe']}.{universe_line} "
         f"Тема урока: {topic}. Предмет: {subject}. "
         f"{difficulty_text}{context_text}"
     )
@@ -270,11 +273,13 @@ def generate_lesson_content(lesson_id: int, child: dict, topic: str, subject: st
         # Step 3: Visual layout (Gemini Flash) — rich theory blocks
         character_name = child.get("character_name") or "Искатель"
         character_emoji = "🦊"
+        universe_desc = child.get("universe_description") or ""
         visual_blocks = generate_visual_layout(
             lesson_json.get("story_blocks", []),
             topic, subject,
             character_name=character_name,
             character_emoji=character_emoji,
+            universe_description=universe_desc,
         )
 
         # Validate generated content

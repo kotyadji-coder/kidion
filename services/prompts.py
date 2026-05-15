@@ -453,6 +453,7 @@ VISUAL_LAYOUT_PROMPT = """РОЛЬ: Ты — дизайнер интеракти
 - Предмет: {subject}
 - Имя персонажа: {character_name}
 - Эмодзи персонажа: {character_emoji}
+- Вселенная ребёнка: {universe_description}
 - Блоки теории (от тьютора):
 {story_blocks_json}
 

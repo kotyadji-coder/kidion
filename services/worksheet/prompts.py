@@ -233,10 +233,12 @@ def build_child_context(child: dict) -> str:
             pass
 
     universe = child.get("universe", "приключения")
+    universe_desc = child.get("universe_description") or ""
+    universe_line = f" Описание вселенной: {universe_desc}." if universe_desc else ""
 
     return (
         f"Пол: {gender_text}. Возраст: {age} лет. "
-        f"Класс: {child['grade']}. Вселенная: {universe}.{interests}"
+        f"Класс: {child['grade']}. Вселенная: {universe}.{universe_line}{interests}"
     )
 
 

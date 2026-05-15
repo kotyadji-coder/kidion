@@ -169,7 +169,8 @@ def generate_image_prompt_fallback(explanation: str) -> str:
 
 def generate_visual_layout(story_blocks: list[dict], topic: str, subject: str,
                            character_name: str = "Искатель",
-                           character_emoji: str = "🦊") -> list[dict]:
+                           character_emoji: str = "🦊",
+                           universe_description: str = "") -> list[dict]:
     """
     Step 3: Visual Layout (Gemini Flash).
     Takes story_blocks from Step 2 and returns rich visual_blocks for theory_renderer.
@@ -192,6 +193,7 @@ def generate_visual_layout(story_blocks: list[dict], topic: str, subject: str,
         character_name=character_name,
         character_emoji=character_emoji,
         story_blocks_json=story_blocks_json,
+        universe_description=universe_description or "не указано",
     )
 
     try:
