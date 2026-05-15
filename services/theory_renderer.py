@@ -31,7 +31,7 @@ THEORY_CSS = r"""
 
 /* ── Theory container ── */
 .theory {
-    max-width: 700px;
+    max-width: 900px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
@@ -69,6 +69,9 @@ THEORY_CSS = r"""
     border-radius: 6px;
     font-weight: 700;
     color: #4338ca;
+    line-height: 2.2;
+    display: inline;
+    white-space: nowrap;
 }
 
 /* ── Title ── */
@@ -395,9 +398,11 @@ THEORY_CSS = r"""
 }
 .summary-title { font-size: 1.2rem; font-weight: 900; margin-bottom: 16px; text-align: center; }
 .summary-item {
-    display: flex; align-items: center; gap: 12px;
+    display: flex; align-items: flex-start; gap: 12px;
     padding: 8px 0; font-size: 1rem; font-weight: 600;
     opacity: 0; transform: translateX(-10px); transition: all 0.4s ease;
+    word-break: break-word;
+    line-height: 1.6;
 }
 .block.visible .summary-item { opacity: 1; transform: translateX(0); }
 .block.visible .summary-item:nth-child(2) { transition-delay: 0.15s; }
@@ -439,9 +444,36 @@ THEORY_JS = """
 
 _SAFE_TAGS = _re.compile(r'<(/?)(span|strong|br|em|b|i)(\s+class="[^"]*")?\s*/?>')
 
+# Common AI model typos in HTML tags
+_TAG_TYPOS = {
+    "<stong>": "<strong>", "</stong>": "</strong>",
+    "<strng>": "<strong>", "</strng>": "</strong>",
+    "<storng>": "<strong>", "</storng>": "</strong>",
+    "<strog>": "<strong>", "</strog>": "</strong>",
+    "<srong>": "<strong>", "</srong>": "</strong>",
+}
+
+
+def _fix_broken_tags(text: str) -> str:
+    """Fix common AI-generated HTML typos and unclosed tags."""
+    for typo, fix in _TAG_TYPOS.items():
+        text = text.replace(typo, fix)
+    # Close unclosed <strong> tags
+    opens = text.count("<strong>")
+    closes = text.count("</strong>")
+    if opens > closes:
+        text += "</strong>" * (opens - closes)
+    # Close unclosed <em> tags
+    opens = text.count("<em>")
+    closes = text.count("</em>")
+    if opens > closes:
+        text += "</em>" * (opens - closes)
+    return text
+
 
 def _esc(text: str) -> str:
     """Escape HTML but preserve safe formatting tags (span.hl, strong, br, em)."""
+    text = _fix_broken_tags(str(text))
     # Extract safe tags, escape everything, put safe tags back
     parts = _SAFE_TAGS.split(str(text))
     result = []
@@ -762,7 +794,7 @@ body {{
         rgba(167,243,208,0.28) 50%,
         rgba(253,230,138,0.25) 100%);
 }}
-.page {{ max-width: 700px; margin: 0 auto; padding: 48px 20px 80px; }}
+.page {{ max-width: 900px; margin: 0 auto; padding: 48px 20px 80px; }}
 {THEORY_CSS}
 </style>
 </head>

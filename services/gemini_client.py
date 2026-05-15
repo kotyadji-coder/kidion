@@ -20,9 +20,9 @@ from services.prompts import (
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
 PRO_REGION = "global"
 LITE_REGION = "us-central1"
-MODEL_STEP1 = "gemini-2.5-pro"
-MODEL_STEP2 = "gemini-3.1-pro-preview"
-FLASH_LITE_MODEL_NAME = "gemini-2.5-flash-lite"
+MODEL_STEP1 = "gemini-2.5-flash"
+MODEL_STEP2 = "gemini-2.5-flash"
+FLASH_LITE_MODEL_NAME = "gemini-2.5-flash"
 
 def _get_child_safety_settings():
     from vertexai.generative_models import HarmBlockThreshold, HarmCategory, SafetySetting

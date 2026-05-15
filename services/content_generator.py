@@ -114,7 +114,7 @@ body {{
 }}
 
 .page {{
-    max-width: 700px;
+    max-width: 900px;
     margin: 0 auto;
     padding: 48px 20px 80px;
 }}
@@ -613,11 +613,6 @@ function finishLesson() {{
     html_path = os.path.join(_CONTENT_DIR, f"{content_id}.html")
     with open(html_path, "w", encoding="utf-8") as f:
         f.write(html)
-
-    # Save print version (simplified)
-    print_path = os.path.join(_CONTENT_DIR, f"{content_id}_print.html")
-    with open(print_path, "w", encoding="utf-8") as f:
-        f.write(html.replace('class="option-btn"', 'class="option-btn" style="cursor:default"'))
 
     return f"{server_url}/content/{content_id}.html"
 

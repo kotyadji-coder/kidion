@@ -214,9 +214,13 @@ ACTIVITY_PROMPT = """РОЛЬ:
 def build_child_context(child: dict) -> str:
     """Build context string for worksheet prompts from child dict."""
     from datetime import date
-    birth = date.fromisoformat(child["birth_date"])
-    today = date.today()
-    age = today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
+    birth_str = child.get("birth_date", "")
+    if birth_str:
+        birth = date.fromisoformat(birth_str)
+        today = date.today()
+        age = today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
+    else:
+        age = child.get("grade", 1) + 6
     gender_text = "девочка" if child["gender"] == "girl" else "мальчик"
 
     interests = ""
