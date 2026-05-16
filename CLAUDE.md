@@ -263,3 +263,4 @@ uvicorn main:app --host 127.0.0.1 --port 8003 --reload
 - [ ] Pass universe_description into lesson generation prompts (so lessons are themed)
 - [ ] Update registry.json with kidion entry
 - [ ] Favicon, 404 page, rate limiting on auth
+- [ ] Cloud backup for DB (Cloudflare R2) — when real users appear
