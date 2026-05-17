@@ -264,3 +264,12 @@ uvicorn main:app --host 127.0.0.1 --port 8003 --reload
 - [ ] Update registry.json with kidion entry
 - [ ] Favicon, 404 page, rate limiting on auth
 - [ ] Cloud backup for DB (Cloudflare R2) — when real users appear
+
+## LLM Dashboard Integration
+
+Token usage from every Gemini call is sent to the centralized LLM Dashboard (`http://5.42.101.215:8005/`).
+
+- **How:** fire-and-forget `httpx.post()` in a daemon thread after each `generate_content()` call
+- **Where:** `services/ai_client.py` — `_send_to_dashboard()` function, called from `StudioModel.generate_content()` and `_StudioChat.send_message()`
+- **Dashboard project:** `~/Documents/projects/llm-dashboard`
+- **If dashboard is down:** errors silently logged at DEBUG level, bot works normally
