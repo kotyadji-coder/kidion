@@ -1,108 +1,725 @@
 {% extends "base.html" %}
 {% block title %}История уроков — {{ child.name }} — Kidion{% endblock %}
+{% block head %}
+<style>
+/* ===================== History page ===================== */
+.hist-page {
+  padding: 8px 0 40px;
+}
+.hist-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13.5px; font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  text-decoration: none;
+}
+.hist-back:hover { color: var(--primary); text-decoration: none; }
+
+.hist-header {
+  margin-bottom: 4px;
+}
+.hist-h1 {
+  margin: 0 0 4px;
+  font-size: 24px; font-weight: 600;
+  letter-spacing: -0.028em;
+  line-height: 1.15;
+  display: inline-flex; align-items: center; gap: 10px;
+}
+.hist-h1-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: var(--accent-softer);
+  border: 1px solid var(--accent-border);
+  display: inline-grid; place-items: center;
+  font-size: 18px;
+  flex: 0 0 38px;
+}
+.hist-h1 .hist-who { color: var(--text-muted); font-weight: 500; }
+.hist-sub {
+  margin: 8px 0 22px;
+  font-size: 13.5px;
+  color: var(--text-3);
+  line-height: 1.5;
+}
+
+/* ===================== Big stat cards (4-up) ===================== */
+.hist-bigstats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.hist-bigstat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex; flex-direction: column;
+  gap: 6px;
+}
+.hist-bigstat-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.hist-bigstat-value {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.hist-bigstat-icon {
+  font-size: 18px;
+  position: relative; top: -1px;
+}
+.hist-bigstat-foot {
+  font-size: 12px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.hist-bigstat-foot .delta-up { color: #16a34a; font-weight: 500; }
+.hist-bigstat.is-streak {
+  background: linear-gradient(180deg, #fef9ec, var(--surface) 60%);
+}
+
+/* ===================== Section head + filters ===================== */
+.hist-section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px;
+  flex-wrap: wrap;
+}
+.hist-section-head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.hist-section-head .hist-eyebrow {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.hist-filters {
+  display: flex; flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.hist-filter {
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 5px;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.hist-filter:hover { background: var(--surface-2); color: var(--text); }
+.hist-filter.is-active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+.hist-filter-count {
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-3);
+  font-weight: 500;
+}
+.hist-filter.is-active .hist-filter-count {
+  background: rgba(255,255,255,0.22);
+  color: white;
+}
+
+/* ===================== Table ===================== */
+.hist-table {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.hist-thead {
+  display: none;
+}
+.hist-trow {
+  display: grid;
+  border-top: 1px solid var(--border);
+  transition: background .12s;
+}
+.hist-trow:first-child { border-top: 0; }
+.hist-trow:hover { background: var(--surface-2); }
+
+/* Mobile row layout */
+.hist-trow {
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  gap: 4px 12px;
+  padding: 12px 14px;
+  align-items: center;
+}
+.hist-tcell-subj {
+  font-size: 18px;
+  line-height: 1;
+  grid-row: 1; grid-column: 1;
+  align-self: center;
+}
+.hist-tcell-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  grid-column: 2; grid-row: 1;
+}
+.hist-tcell-stars {
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-align: right;
+  white-space: nowrap;
+  grid-column: 3; grid-row: 1;
+}
+.hist-tcell-meta {
+  grid-column: 2 / -1;
+  grid-row: 2;
+  display: flex; align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+.hist-tcell-meta .hist-dot {
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: var(--text-4);
+  flex: 0 0 3px;
+}
+
+/* Desktop columns (hidden on mobile) */
+.hist-tcell-subject,
+.hist-tcell-mode,
+.hist-tcell-status { display: none; }
+
+.hist-stars-on  { color: var(--gold); }
+.hist-stars-off { color: var(--border-strong); }
+.hist-stars-dash { color: var(--text-4); font-size: 14px; letter-spacing: 0; }
+
+/* Status badges */
+.hist-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 3px 9px 3px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.hist-badge::before {
+  content: "";
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: 0 0 6px;
+}
+.hist-badge.is-done {
+  background: #dcfce7;
+  color: #166534;
+}
+.hist-badge.is-ready {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.hist-badge.is-gen {
+  background: #fef3c7;
+  color: #92400e;
+}
+.hist-badge.is-gen::before {
+  animation: hist-pulse 1.4s ease-in-out infinite;
+}
+@keyframes hist-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.7); }
+}
+
+/* Mode tag */
+.hist-mode-tag {
+  display: inline-flex; align-items: center;
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.hist-mode-tag.is-route   { background: var(--accent-soft); color: var(--accent-ink); border-color: var(--accent-border); }
+.hist-mode-tag.is-request { background: #f5f3ff; color: #5b21b6; border-color: #ddd6fe; }
+
+/* Table footer */
+.hist-table-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px;
+  padding: 11px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+
+/* ===================== Empty state ===================== */
+.hist-empty {
+  background: var(--surface);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 36px 22px;
+  text-align: center;
+}
+.hist-empty-icon {
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  background: var(--accent-softer);
+  border: 1px solid var(--accent-border);
+  display: inline-grid; place-items: center;
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+.hist-empty-title {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.hist-empty-body {
+  margin: 0 auto;
+  max-width: 32ch;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ===================== By-subject summary ===================== */
+.hist-bysubj {
+  margin-top: 22px;
+}
+.hist-bysubj-rows {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 6px 0;
+}
+.hist-bysubj-row {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) 56px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  font-size: 13.5px;
+}
+.hist-bysubj-row + .hist-bysubj-row { border-top: 1px solid var(--border); }
+.hist-bysubj-icon { font-size: 17px; line-height: 1; }
+.hist-bysubj-name { color: var(--text); font-weight: 500; }
+.hist-bysubj-count {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  font-weight: 500;
+}
+
+/* ===================== Loading spinner ===================== */
+.hist-loading {
+  display: flex; justify-content: center;
+  padding: 40px 0;
+}
+.hist-spinner {
+  width: 28px; height: 28px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: hist-spin 0.7s linear infinite;
+}
+@keyframes hist-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ===================== Desktop ===================== */
+@media (min-width: 768px) {
+  .hist-bigstats {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .hist-bigstat-value { font-size: 30px; }
+  .hist-h1 { font-size: 28px; }
+  .hist-h1-icon { width: 44px; height: 44px; font-size: 22px; flex: 0 0 44px; }
+
+  .hist-thead {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) 150px 150px 120px 80px;
+    gap: 14px;
+    padding: 11px 18px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  .hist-trow {
+    grid-template-columns: 24px minmax(0, 1fr) 150px 150px 120px 80px;
+    grid-template-rows: auto;
+    gap: 14px;
+    padding: 14px 18px;
+    align-items: center;
+  }
+  .hist-tcell-subj { font-size: 17px; grid-row: auto; grid-column: auto; }
+  .hist-tcell-title { font-size: 14.5px; grid-row: auto; grid-column: auto; }
+  .hist-tcell-subject,
+  .hist-tcell-mode,
+  .hist-tcell-status { display: block; }
+  .hist-tcell-subject { font-size: 13px; color: var(--text-muted); }
+  .hist-tcell-mode { font-size: 12.5px; }
+  .hist-tcell-stars { grid-row: auto; grid-column: auto; letter-spacing: 2px; }
+  .hist-tcell-meta { display: none; }
+
+  .hist-bysubj-row {
+    grid-template-columns: 26px minmax(0, 1fr) 80px 64px;
+  }
+  .hist-bysubj-avg { display: block; }
+}
+
+/* Mobile: hide avg column */
+.hist-bysubj-avg {
+  display: none;
+  font-size: 12.5px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.hist-bysubj-avg .avg-star { color: var(--gold); margin-right: 2px; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container child-profile-page">
-  <a href="/children/{{ child.id }}" class="btn btn--ghost btn--sm">&larr; Назад к профилю</a>
-  <h1>📊 История уроков — {{ child.name }}</h1>
+<div class="container hist-page">
+  <a href="/children/{{ child.id }}" class="hist-back">
+    <span>&larr;</span> Назад к профилю
+  </a>
 
-  <!-- Stats summary -->
-  <div class="history-stats" id="history-stats">
-    <div class="spinner"></div>
+  <div class="hist-header">
+    <h1 class="hist-h1">
+      <span class="hist-h1-icon" aria-hidden="true">📊</span>
+      <span>История уроков</span>
+      <span class="hist-who">— {{ child.name }}</span>
+    </h1>
+    <p class="hist-sub" id="hist-sub">
+      Загрузка статистики...
+    </p>
   </div>
 
-  <!-- Lessons table -->
-  <div id="history-table">
-    <div class="spinner"></div>
+  <!-- Stats cards -->
+  <div class="hist-bigstats" id="hist-stats">
+    <div class="hist-bigstat">
+      <span class="hist-bigstat-label">Уроков пройдено</span>
+      <span class="hist-bigstat-value"><span>—</span></span>
+    </div>
+    <div class="hist-bigstat">
+      <span class="hist-bigstat-label">Средний балл</span>
+      <span class="hist-bigstat-value"><span class="hist-bigstat-icon">⭐</span><span>—</span></span>
+    </div>
+    <div class="hist-bigstat is-streak">
+      <span class="hist-bigstat-label">Серия дней</span>
+      <span class="hist-bigstat-value"><span class="hist-bigstat-icon">🔥</span><span>—</span></span>
+    </div>
+    <div class="hist-bigstat">
+      <span class="hist-bigstat-label">Рекорд серии</span>
+      <span class="hist-bigstat-value"><span class="hist-bigstat-icon">🏆</span><span>—</span></span>
+    </div>
   </div>
+
+  <!-- Section head -->
+  <div class="hist-section-head">
+    <h3>Список уроков</h3>
+    <span class="hist-eyebrow" id="hist-count">загрузка...</span>
+  </div>
+
+  <!-- Filters -->
+  <div class="hist-filters" id="hist-filters" style="display:none"></div>
+
+  <!-- Table / empty -->
+  <div id="hist-content">
+    <div class="hist-loading"><div class="hist-spinner"></div></div>
+  </div>
+
+  <!-- By-subject summary -->
+  <div id="hist-bysubj"></div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
 var CHILD_ID = {{ child.id }};
+var CHILD_GRADE = {{ child.grade }};
+var allLessons = [];
+var currentFilter = 'all';
+
+var SUBJ_ICONS = {
+  'math': '📐', 'russian': '📝', 'world': '🌍',
+  'Математика': '📐', 'Русский язык': '📝', 'Окружающий мир': '🌍'
+};
 
 document.addEventListener('DOMContentLoaded', async function() {
-  // Load stats
+  var statsP = fetch('/api/children/' + CHILD_ID + '/stats').then(function(r){ return r.json(); });
+  var lessonsP = fetch('/api/children/' + CHILD_ID + '/lessons').then(function(r){ return r.json(); });
+
   try {
-    var resp = await fetch('/api/children/' + CHILD_ID + '/stats');
-    var stats = await resp.json();
-    var statsEl = document.getElementById('history-stats');
+    var results = await Promise.all([statsP, lessonsP]);
+    var stats = results[0];
+    var data = results[1];
+    allLessons = data.lessons || [];
 
-    var avgStars = stats.average_stars ? stats.average_stars.toFixed(1) : '—';
-
-    statsEl.innerHTML =
-      '<div class="stats-grid">' +
-      '  <div class="stat-card card"><div class="stat-card__value">' + stats.total_lessons + '</div><div class="stat-card__label">Уроков пройдено</div></div>' +
-      '  <div class="stat-card card"><div class="stat-card__value">⭐ ' + avgStars + '</div><div class="stat-card__label">Средний балл</div></div>' +
-      '  <div class="stat-card card"><div class="stat-card__value">🔥 ' + stats.current_streak + '</div><div class="stat-card__label">Серия дней</div></div>' +
-      '  <div class="stat-card card"><div class="stat-card__value">🏆 ' + stats.longest_streak + '</div><div class="stat-card__label">Рекорд серии</div></div>' +
-      '</div>';
+    renderStats(stats);
+    renderSubtitle(stats);
+    renderFilters(allLessons);
+    renderLessons(allLessons);
+    renderBySubject(allLessons);
   } catch(e) {
-    document.getElementById('history-stats').innerHTML = '';
-  }
-
-  // Load lessons
-  try {
-    var resp2 = await fetch('/api/children/' + CHILD_ID + '/lessons');
-    var data = await resp2.json();
-    var tableEl = document.getElementById('history-table');
-
-    if (!data.lessons || data.lessons.length === 0) {
-      tableEl.innerHTML = '<p class="empty-state">Ещё нет пройденных уроков</p>';
-      return;
-    }
-
-    var html = '<table class="history-tbl"><thead><tr>' +
-      '<th>Тема</th><th>Предмет</th><th>Режим</th><th>Статус</th><th>Звёзды</th>' +
-      '</tr></thead><tbody>';
-
-    for (var i = 0; i < data.lessons.length; i++) {
-      var l = data.lessons[i];
-      var modeLabel = l.mode === 'weekly' ? 'Тема недели' : l.mode === 'curriculum' ? 'Маршрут' : 'По запросу';
-      var statusLabel = '';
-      var starsHtml = '';
-
-      if (l.stars !== null && l.stars !== undefined) {
-        statusLabel = '<span class="badge badge--green">Пройден</span>';
-        starsHtml = renderStars(l.stars);
-      } else if (l.status === 'done') {
-        statusLabel = '<span class="badge badge--blue">Готов</span>';
-        starsHtml = '—';
-      } else if (l.status === 'pending') {
-        statusLabel = '<span class="badge" style="background:#fef3c7;color:#92400e">Генерируется</span>';
-        starsHtml = '—';
-      } else {
-        statusLabel = l.status;
-        starsHtml = '—';
-      }
-
-      html += '<tr>' +
-        '<td>' + esc(l.topic_title) + '</td>' +
-        '<td>' + esc(l.subject) + '</td>' +
-        '<td>' + modeLabel + '</td>' +
-        '<td>' + statusLabel + '</td>' +
-        '<td>' + starsHtml + '</td>' +
-        '</tr>';
-    }
-
-    html += '</tbody></table>';
-    tableEl.innerHTML = html;
-
-  } catch(e) {
-    document.getElementById('history-table').innerHTML = '<p class="empty-state">Ошибка загрузки</p>';
+    document.getElementById('hist-content').innerHTML =
+      '<div class="hist-empty"><div class="hist-empty-icon">⚠️</div>' +
+      '<p class="hist-empty-title">Ошибка загрузки</p>' +
+      '<p class="hist-empty-body">Попробуйте обновить страницу</p></div>';
   }
 });
 
-function renderStars(stars) {
-  var s = '';
-  for (var i = 1; i <= 3; i++) {
-    s += '<span class="star ' + (i <= stars ? 'earned' : '') + '">★</span>';
-  }
-  return s;
+function renderStats(stats) {
+  var avgStars = stats.average_stars ? stats.average_stars.toFixed(1) : '0';
+  var el = document.getElementById('hist-stats');
+  el.innerHTML =
+    '<div class="hist-bigstat">' +
+      '<span class="hist-bigstat-label">Уроков пройдено</span>' +
+      '<span class="hist-bigstat-value"><span>' + stats.total_lessons + '</span></span>' +
+    '</div>' +
+    '<div class="hist-bigstat">' +
+      '<span class="hist-bigstat-label">Средний балл</span>' +
+      '<span class="hist-bigstat-value"><span class="hist-bigstat-icon">⭐</span><span>' + avgStars + '</span></span>' +
+      '<span class="hist-bigstat-foot">из 3.0</span>' +
+    '</div>' +
+    '<div class="hist-bigstat is-streak">' +
+      '<span class="hist-bigstat-label">Серия дней</span>' +
+      '<span class="hist-bigstat-value"><span class="hist-bigstat-icon">🔥</span><span>' + stats.current_streak + '</span></span>' +
+      '<span class="hist-bigstat-foot">' + (stats.current_streak > 0 ? 'продолжается' : 'прервалась') + '</span>' +
+    '</div>' +
+    '<div class="hist-bigstat">' +
+      '<span class="hist-bigstat-label">Рекорд серии</span>' +
+      '<span class="hist-bigstat-value"><span class="hist-bigstat-icon">🏆</span><span>' + stats.longest_streak + '</span></span>' +
+    '</div>';
 }
 
+function renderSubtitle(stats) {
+  var el = document.getElementById('hist-sub');
+  if (allLessons.length === 0) {
+    el.textContent = 'Здесь будет копиться всё, что прошёл ребёнок: темы, оценки, серии дней.';
+  } else {
+    var streakText = stats.current_streak > 0
+      ? stats.current_streak + ' ' + pluralDays(stats.current_streak) + ' подряд'
+      : 'нерегулярно';
+    el.textContent = CHILD_GRADE + ' класс \u00b7 занимается ' + streakText + '. Ниже \u2014 все уроки и сводная статистика.';
+  }
+}
+
+function renderFilters(lessons) {
+  var filtersEl = document.getElementById('hist-filters');
+  if (lessons.length === 0) { filtersEl.style.display = 'none'; return; }
+
+  filtersEl.style.display = 'flex';
+  var counts = {
+    all: lessons.length,
+    done: lessons.filter(function(l){ return l.stars !== null && l.stars !== undefined; }).length,
+    ready: lessons.filter(function(l){ return l.status === 'done' && (l.stars === null || l.stars === undefined); }).length,
+    generating: lessons.filter(function(l){ return l.status === 'pending'; }).length
+  };
+
+  var filters = [
+    { key: 'all', label: 'Все уроки', count: counts.all },
+    { key: 'done', label: 'Пройдены', count: counts.done },
+    { key: 'ready', label: 'Готовы', count: counts.ready },
+    { key: 'generating', label: 'Генерируются', count: counts.generating }
+  ];
+
+  filtersEl.innerHTML = filters.map(function(f) {
+    return '<button class="hist-filter' + (currentFilter === f.key ? ' is-active' : '') + '" data-filter="' + f.key + '">' +
+      '<span>' + f.label + '</span>' +
+      '<span class="hist-filter-count">' + f.count + '</span>' +
+    '</button>';
+  }).join('');
+
+  filtersEl.addEventListener('click', function(e) {
+    var btn = e.target.closest('.hist-filter');
+    if (!btn) return;
+    currentFilter = btn.dataset.filter;
+    renderFilters(allLessons);
+    var filtered = filterLessons(allLessons, currentFilter);
+    renderLessons(filtered);
+  });
+}
+
+function filterLessons(lessons, filter) {
+  if (filter === 'all') return lessons;
+  if (filter === 'done') return lessons.filter(function(l){ return l.stars !== null && l.stars !== undefined; });
+  if (filter === 'ready') return lessons.filter(function(l){ return l.status === 'done' && (l.stars === null || l.stars === undefined); });
+  if (filter === 'generating') return lessons.filter(function(l){ return l.status === 'pending'; });
+  return lessons;
+}
+
+function renderLessons(lessons) {
+  var el = document.getElementById('hist-content');
+  var countEl = document.getElementById('hist-count');
+
+  if (allLessons.length === 0) {
+    countEl.textContent = '0 записей';
+    el.innerHTML =
+      '<div class="hist-empty">' +
+        '<div class="hist-empty-icon">📚</div>' +
+        '<p class="hist-empty-title">История пока пуста</p>' +
+        '<p class="hist-empty-body">Когда ребёнок пройдёт первый урок, он появится здесь со звёздочками и временем прохождения.</p>' +
+      '</div>';
+    return;
+  }
+
+  countEl.textContent = lessons.length + ' ' + pluralLessons(lessons.length);
+
+  var html = '<div class="hist-table">';
+
+  // Desktop header
+  html += '<div class="hist-thead">' +
+    '<span></span>' +
+    '<span>Тема</span>' +
+    '<span>Предмет</span>' +
+    '<span>Режим</span>' +
+    '<span>Статус</span>' +
+    '<span style="text-align:right">Звёзды</span>' +
+  '</div>';
+
+  for (var i = 0; i < lessons.length; i++) {
+    var l = lessons[i];
+    var icon = SUBJ_ICONS[l.subject] || '📖';
+    var subjectLabel = l.subject || '';
+    var modeLabel = l.mode === 'weekly' ? 'Тема недели' : l.mode === 'curriculum' ? 'Маршрут' : 'По запросу';
+    var modeCls = l.mode === 'curriculum' ? 'is-route' : l.mode === 'weekly' ? '' : 'is-request';
+
+    var statusInfo = getStatusInfo(l);
+    var starsHtml = statusInfo.isDone ? renderStars(l.stars) : '<span class="hist-stars-dash">\u2014</span>';
+
+    html += '<div class="hist-trow">' +
+      '<span class="hist-tcell-subj">' + icon + '</span>' +
+      '<span class="hist-tcell-title" title="' + esc(l.topic_title) + '">' + esc(l.topic_title) + '</span>' +
+      '<span class="hist-tcell-subject">' + esc(subjectLabel) + '</span>' +
+      '<span class="hist-tcell-mode"><span class="hist-mode-tag ' + modeCls + '">' + modeLabel + '</span></span>' +
+      '<span class="hist-tcell-status">' + statusInfo.badge + '</span>' +
+      '<span class="hist-tcell-stars">' + starsHtml + '</span>' +
+      '<span class="hist-tcell-meta">' +
+        '<span>' + esc(subjectLabel) + '</span>' +
+        '<span class="hist-dot"></span>' +
+        '<span class="hist-mode-tag ' + modeCls + '">' + modeLabel + '</span>' +
+        '<span class="hist-dot"></span>' +
+        statusInfo.badge +
+      '</span>' +
+    '</div>';
+  }
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function getStatusInfo(l) {
+  if (l.stars !== null && l.stars !== undefined) {
+    return { isDone: true, badge: '<span class="hist-badge is-done">Пройден</span>' };
+  } else if (l.status === 'done') {
+    return { isDone: false, badge: '<span class="hist-badge is-ready">Готов</span>' };
+  } else if (l.status === 'pending') {
+    return { isDone: false, badge: '<span class="hist-badge is-gen">Генерируется</span>' };
+  }
+  return { isDone: false, badge: '<span class="hist-badge">' + (l.status || '') + '</span>' };
+}
+
+function renderStars(stars) {
+  var n = Math.max(0, Math.min(3, stars || 0));
+  return '<span class="hist-stars-on">' + '\u2605'.repeat(n) + '</span>' +
+         '<span class="hist-stars-off">' + '\u2605'.repeat(3 - n) + '</span>';
+}
+
+function renderBySubject(lessons) {
+  var el = document.getElementById('hist-bysubj');
+  if (lessons.length === 0) return;
+
+  var subjs = {};
+  for (var i = 0; i < lessons.length; i++) {
+    var l = lessons[i];
+    var key = l.subject || 'Другое';
+    if (!subjs[key]) subjs[key] = { count: 0, totalStars: 0, starsCount: 0 };
+    subjs[key].count++;
+    if (l.stars !== null && l.stars !== undefined) {
+      subjs[key].totalStars += l.stars;
+      subjs[key].starsCount++;
+    }
+  }
+
+  var rows = Object.keys(subjs).map(function(name) {
+    var s = subjs[name];
+    var icon = SUBJ_ICONS[name] || '📖';
+    var avg = s.starsCount > 0 ? (s.totalStars / s.starsCount).toFixed(1) : '\u2014';
+    return { name: name, icon: icon, count: s.count, avg: avg };
+  });
+
+  rows.sort(function(a, b) { return b.count - a.count; });
+
+  var html = '<section class="hist-bysubj">' +
+    '<div class="hist-section-head"><h3>Прогресс по предметам</h3></div>' +
+    '<div class="hist-bysubj-rows">';
+
+  for (var j = 0; j < rows.length; j++) {
+    var r = rows[j];
+    html += '<div class="hist-bysubj-row">' +
+      '<span class="hist-bysubj-icon">' + r.icon + '</span>' +
+      '<span class="hist-bysubj-name">' + esc(r.name) + '</span>' +
+      '<span class="hist-bysubj-avg"><span class="avg-star">⭐</span>' + r.avg + '</span>' +
+      '<span class="hist-bysubj-count">' + r.count + ' ур.</span>' +
+    '</div>';
+  }
+
+  html += '</div></section>';
+  el.innerHTML = html;
+}
+
+function pluralLessons(n) {
+  var m100 = n % 100, m10 = n % 10;
+  if (m100 >= 11 && m100 <= 14) return 'уроков';
+  if (m10 === 1) return 'урок';
+  if (m10 >= 2 && m10 <= 4) return 'урока';
+  return 'уроков';
+}
+function pluralDays(n) {
+  var m100 = n % 100, m10 = n % 10;
+  if (m100 >= 11 && m100 <= 14) return 'дней';
+  if (m10 === 1) return 'день';
+  if (m10 >= 2 && m10 <= 4) return 'дня';
+  return 'дней';
+}
 function esc(str) {
-  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 </script>
 {% endblock %}
