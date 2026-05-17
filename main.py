@@ -3707,9 +3707,11 @@ async def page_child_subject(child_id: int, subject: str, request: Request):
     child_dict.pop("pin_hash", None)
 
     subject_names = {"math": "Математика", "russian": "Русский язык", "english": "Английский язык", "world": "Окружающий мир"}
+    subject_emojis = {"math": "📐", "russian": "📝", "english": "🌍", "world": "🌿"}
 
     return templates.TemplateResponse(
         request, "subject.html",
         {"user": user, "child": child_dict, "subject": subject,
-         "subject_name": subject_names.get(subject, subject)},
+         "subject_name": subject_names.get(subject, subject),
+         "subject_emoji": subject_emojis.get(subject, "📖")},
     )

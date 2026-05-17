@@ -3,353 +3,565 @@
 
 {% block head %}
 <style>
+/* ===================== Subject page chrome ===================== */
 .subject-page {
-  max-width: 900px;
+  padding: 18px 20px 40px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+}
+@media (min-width: 769px) {
+  .subject-page { padding: 22px 40px 56px; }
 }
 
-/* Breadcrumb */
-.subject-breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-bottom: 1.25rem;
+/* ===================== Breadcrumbs ===================== */
+.kd-crumbs {
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: 6px 8px;
+  font-size: 12.5px;
+  color: var(--text-3);
+  margin: 0 0 14px;
 }
-
-.subject-breadcrumb a {
+.kd-crumbs a {
   color: var(--text-muted);
   text-decoration: none;
+  padding: 3px 6px;
+  border-radius: 6px;
+  margin-left: -6px;
+  transition: background .12s, color .12s;
 }
-.subject-breadcrumb a:hover { color: var(--primary); }
+.kd-crumbs a:hover { background: var(--surface-2); color: var(--text); text-decoration: none; }
+.kd-crumbs-sep { color: var(--text-4); font-size: 11px; opacity: 0.8; }
+.kd-crumbs-now { color: var(--text); font-weight: 500; }
 
-/* Info block (collapsible) */
-.info-block {
-  background: linear-gradient(135deg, var(--primary-light) 0%, #f0e6ff 100%);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem 1.75rem;
-  margin-bottom: 1.5rem;
-  position: relative;
-  line-height: 1.6;
+/* ===================== Subject heading ===================== */
+.kd-subject-h1-row {
+  display: flex; align-items: flex-end; gap: 14px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
 }
-
-.info-block__close {
-  position: absolute;
-  top: 0.75rem;
-  right: 1rem;
-  background: none;
-  border: none;
-  font-size: 1.25rem;
-  color: var(--text-muted);
-  cursor: pointer;
-  line-height: 1;
-}
-.info-block__close:hover { color: var(--text); }
-
-.info-block h3 {
-  font-size: 1rem;
-  margin-bottom: 0.75rem;
-}
-
-.info-block ul {
-  list-style: none;
-  padding: 0;
+.kd-subject-h1 {
   margin: 0;
+  font-size: 26px; font-weight: 600;
+  letter-spacing: -0.028em;
+  line-height: 1.15;
+  display: inline-flex; align-items: center; gap: 12px;
 }
-
-.info-block li {
-  font-size: 0.9rem;
-  margin-bottom: 0.4rem;
-  padding-left: 0;
+@media (min-width: 769px) { .kd-subject-h1 { font-size: 30px; } }
+.kd-subject-h1-emoji {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: var(--accent-softer);
+  border: 1px solid var(--accent-border);
+  display: inline-grid; place-items: center;
+  font-size: 24px;
+  flex: 0 0 44px;
 }
-
-.info-block__toggle {
-  display: none;
-  background: var(--primary-light);
-  border: 1.5px solid var(--primary);
-  border-radius: var(--radius-sm);
-  padding: 0.5rem 1rem;
-  font-size: 0.85rem;
-  color: var(--primary);
+.kd-subject-explain {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--accent-ink);
+  padding: 6px 10px 6px 8px;
+  border-radius: 999px;
   cursor: pointer;
-  font-family: var(--font);
-  font-weight: 600;
-  margin-bottom: 1.5rem;
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-bottom: 4px;
+  transition: background .12s;
 }
-.info-block__toggle:hover { background: #e0d6ff; }
+.kd-subject-explain:hover { background: #ddd6fe; }
 
-/* Stats */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.stat-card {
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 1.25rem;
-  text-align: center;
-  box-shadow: var(--shadow);
-}
-
-.stat-card__value {
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: var(--primary);
-  margin-bottom: 0.25rem;
-}
-
-.stat-card__label {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
-/* Program section */
-.program-section__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.program-section__header h2 {
-  font-size: 1.3rem;
-}
-
-.program-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-/* Topic cards */
-.topics-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.topic-card {
-  background: var(--surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-  border-left: 4px solid var(--border);
-}
-
-.topic-card--completed { border-left-color: var(--success); }
-.topic-card--active { border-left-color: var(--primary); }
-.topic-card--locked { border-left-color: var(--border); opacity: 0.85; }
-
-.topic-card__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.25rem;
-  cursor: pointer;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.topic-card__header:hover { background: var(--primary-light); }
-
-.topic-card__info {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.topic-card__icon { font-size: 1.5rem; }
-
-.topic-card__title { font-weight: 700; font-size: 0.95rem; }
-
-.topic-card__meta { font-size: 0.8rem; color: var(--text-muted); }
-
-.topic-card__chevron {
-  color: var(--text-muted);
-  font-size: 1.1rem;
-  transition: transform 0.2s;
-  margin-left: 0.5rem;
-}
-
-.topic-card__chevron.open { transform: rotate(180deg); }
-
-.topic-card__actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.topic-card__lessons {
-  padding: 0 1.25rem 1rem;
-}
-
-/* Lesson rows */
-.lesson-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.lesson-row:last-child { border-bottom: none; }
-.lesson-row__icon { font-size: 1rem; }
-.lesson-row__title { font-size: 0.9rem; }
-.lesson-row--locked .lesson-row__title { color: var(--text-muted); }
-
-.lesson-row--clickable {
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-  padding: 0.5rem;
-  margin: 0 -0.5rem;
-  transition: background 0.15s;
-}
-.lesson-row--clickable:hover { background: var(--primary-light); }
-.lesson-row--clickable .lesson-row__title {
-  color: var(--primary);
-  text-decoration: underline;
-  text-decoration-style: dotted;
-  text-underline-offset: 3px;
-}
-
-.lesson-row--generating .lesson-row__icon {
-  display: inline-block;
-  animation: spin 1s linear infinite;
-}
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-/* Generation progress */
-.gen-progress {
-  margin: 0.75rem 1.25rem;
-  padding: 0.75rem 1rem;
-  background: var(--primary-light);
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.gen-progress__bar-wrap {
-  flex: 1;
-  background: var(--border);
-  border-radius: 100px;
-  height: 8px;
-  overflow: hidden;
-}
-
-.gen-progress__bar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--primary), var(--accent));
-  border-radius: 100px;
-  transition: width 0.5s ease;
-}
-
-.gen-progress__text {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  white-space: nowrap;
-  min-width: 100px;
-  text-align: right;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.gen-progress--active .gen-progress__text {
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-/* Ready button */
-.gen-ready-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0.75rem 1.25rem;
-  padding: 0.6rem 1.25rem;
-  background: linear-gradient(135deg, var(--success), #16a34a);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  font-size: 0.9rem;
-  cursor: pointer;
-  text-decoration: none;
-  transition: transform 0.15s, box-shadow 0.15s;
-}
-
-.gen-ready-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.35);
-  text-decoration: none;
-  color: #fff;
-}
-
-/* Month block */
-.month-block {
-  display: flex;
-  gap: 1.25rem;
-  align-items: flex-start;
-  background: var(--surface);
-  border: 2px solid var(--border);
+/* ===================== Info block (collapsible) ===================== */
+.kd-info {
+  position: relative;
   border-radius: var(--radius-lg);
-  padding: 1.5rem 1.75rem;
-  margin-top: 1.5rem;
+  padding: 22px 22px 20px;
+  margin: 18px 0 22px;
+  background: linear-gradient(135deg, var(--accent-soft) 0%, #f0e6ff 60%, var(--accent-softer) 100%);
+  border: 1px solid var(--accent-border);
+  overflow: hidden;
+  isolation: isolate;
 }
-
-.month-block__icon {
-  font-size: 2rem;
-  flex-shrink: 0;
+.kd-info-orb {
+  position: absolute; top: -34px; right: -26px;
+  width: 150px; height: 150px; border-radius: 50%;
+  background: radial-gradient(circle at 32% 30%, white 0%, #c4b5fd 40%, #7c3aed 100%);
+  opacity: 0.25; z-index: -1; filter: blur(2px);
 }
-
-.month-block__title {
-  font-weight: 700;
-  font-size: 1.1rem;
-  margin-bottom: 0.35rem;
+.kd-info-close {
+  position: absolute;
+  top: 12px; right: 12px;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.6);
+  border: 1px solid var(--accent-border);
+  color: var(--accent-ink);
+  font-size: 15px;
+  line-height: 1;
+  display: grid; place-items: center;
+  cursor: pointer;
+  transition: background .12s;
 }
-
-.month-block__text {
-  font-size: 0.9rem;
+.kd-info-close:hover { background: white; }
+.kd-info-title {
+  margin: 0 0 6px;
+  font-size: 17px; font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--accent-ink);
+  padding-right: 32px;
+}
+.kd-info-body {
+  margin: 0 0 14px;
+  font-size: 13.5px;
+  color: var(--text);
+  line-height: 1.5;
+  max-width: 56ch;
+}
+.kd-info-body strong { font-weight: 600; }
+.kd-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 14px;
+  margin-bottom: 12px;
+}
+@media (min-width: 769px) {
+  .kd-info-grid { grid-template-columns: repeat(4, 1fr); }
+}
+.kd-info-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 12.5px;
+  color: var(--text);
+  line-height: 1.4;
+}
+.kd-info-item-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  margin-top: 6px;
+  flex: 0 0 6px;
+}
+.kd-info-item strong {
+  display: block;
+  font-weight: 600;
+  color: var(--accent-ink);
+  font-size: 12.5px;
+}
+.kd-info-item span { color: var(--text-muted); font-size: 12px; }
+.kd-info-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
   color: var(--text-muted);
-  margin-bottom: 1rem;
+  padding: 8px 10px 8px 12px;
+  border-left: 2px solid var(--accent-border);
+  background: rgba(255,255,255,0.6);
+  border-radius: 0 6px 6px 0;
   line-height: 1.5;
 }
 
-.month-block__done {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+/* ===================== Stats row ===================== */
+.kd-substats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 22px;
+}
+@media (max-width: 600px) {
+  .kd-substats { grid-template-columns: 1fr; gap: 8px; }
+}
+.kd-substat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex; flex-direction: column;
+  gap: 4px;
+}
+.kd-substat-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.kd-substat-value {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+  display: inline-flex; align-items: baseline; gap: 6px;
+  line-height: 1.1;
+}
+.kd-substat-value .kd-substat-icon { font-size: 17px; position: relative; top: -1px; }
+.kd-substat-value small {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-3);
 }
 
-.month-block__done-text {
-  font-weight: 700;
-  color: var(--success);
-  font-size: 0.95rem;
+/* ===================== Program header ===================== */
+.kd-program-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 12px;
+  margin: 4px 0 12px;
+  flex-wrap: wrap;
 }
+.kd-program-title {
+  margin: 0;
+  font-size: 17px; font-weight: 600;
+  letter-spacing: -0.018em;
+}
+.kd-program-legend {
+  display: flex; align-items: center;
+  gap: 12px;
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+@media (max-width: 600px) { .kd-program-legend { gap: 9px; flex-wrap: wrap; } }
+.kd-leg { display: inline-flex; align-items: center; gap: 5px; }
+.kd-leg-swatch { width: 3px; height: 11px; border-radius: 2px; }
+.kd-leg-swatch.is-done { background: #22c55e; }
+.kd-leg-swatch.is-active { background: var(--primary); }
+.kd-leg-swatch.is-locked { background: var(--border-strong); }
 
-/* Skip test ghost button */
-.btn--skip {
+.kd-topics { display: flex; flex-direction: column; gap: 10px; }
+
+/* ===================== Topic card ===================== */
+.kd-topic {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color .12s, box-shadow .12s;
+}
+.kd-topic.is-active { border-color: var(--accent-border); }
+.kd-topic.is-locked { opacity: 0.78; }
+.kd-topic.is-open { box-shadow: var(--shadow-md); }
+
+.kd-topic-bar {
+  position: absolute;
+  top: 10px; bottom: 10px; left: 0;
+  width: 4px;
+  border-radius: 0 3px 3px 0;
+  background: var(--border-strong);
+}
+.kd-topic.is-done .kd-topic-bar { background: var(--success); }
+.kd-topic.is-active .kd-topic-bar { background: var(--primary); }
+
+.kd-topic-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 16px 16px 22px;
   background: transparent;
-  color: var(--text-muted);
-  border-color: var(--border);
-  font-size: 0.8rem;
+  border: 0;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--text);
 }
-.btn--skip:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-  background: var(--primary-light);
+@media (max-width: 600px) {
+  .kd-topic-head {
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    padding: 14px 14px 14px 18px;
+  }
+}
+.kd-topic-head:hover { background: var(--surface-2); }
+
+.kd-topic-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  display: grid; place-items: center;
+  font-size: 19px;
+  flex: 0 0 38px;
+}
+.kd-topic.is-active .kd-topic-icon {
+  background: var(--accent-softer);
+  border-color: var(--accent-border);
+}
+.kd-topic.is-done .kd-topic-icon {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
 }
 
-/* Modal */
-.modal-overlay {
+.kd-topic-info { min-width: 0; }
+.kd-topic-name {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--text);
+  line-height: 1.25;
+  display: inline-flex; align-items: center; gap: 8px;
+  flex-wrap: wrap;
+}
+.kd-topic-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.kd-topic.is-done .kd-topic-tag {
+  background: #f0fdf4;
+  color: #166534;
+}
+.kd-topic-meta {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.kd-topic-meta .kd-topic-stars { color: var(--gold); margin-left: 4px; }
+
+.kd-topic-actions {
+  display: inline-flex; gap: 8px;
+}
+@media (max-width: 600px) { .kd-topic-actions { display: none; } }
+.kd-topic-actions .btn { height: 34px; padding: 0 12px; font-size: 12.5px; }
+.kd-topic-actions .kd-cost {
+  display: inline-flex; align-items: baseline; gap: 3px;
+  margin-left: 4px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.9;
+}
+
+.kd-topic-chevron {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  display: grid; place-items: center;
+  font-size: 10px;
+  color: var(--text-3);
+  transition: transform .18s, background .12s;
+  flex: 0 0 28px;
+}
+.kd-topic.is-open .kd-topic-chevron { transform: rotate(180deg); background: var(--accent-softer); color: var(--accent-ink); }
+
+/* Mobile actions row */
+.kd-topic-mobile-actions {
+  display: none;
+  gap: 8px;
+  padding: 0 16px 14px 22px;
+}
+@media (max-width: 600px) {
+  .kd-topic-mobile-actions { display: flex; flex-wrap: wrap; }
+  .kd-topic-mobile-actions .btn { height: 36px; font-size: 13px; flex: 1; min-width: 140px; }
+}
+
+/* ===================== Topic body (lessons) ===================== */
+.kd-topic-body {
+  padding: 4px 16px 16px 22px;
+  border-top: 1px dashed var(--border);
+  display: flex; flex-direction: column;
+}
+.kd-topic-body-inner { padding-top: 8px; }
+
+.kd-lesson {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 4px;
+  border-bottom: 1px solid rgba(229, 231, 235, 0.7);
+  font-size: 13.5px;
+  color: var(--text);
+}
+.kd-lesson:last-child { border-bottom: 0; }
+
+.kd-lesson-icn {
+  width: 22px; height: 22px;
+  display: grid; place-items: center;
+  font-size: 14px;
+  line-height: 1;
+}
+.kd-lesson-icn.is-spin { animation: kd-spin 1.4s linear infinite; transform-origin: center; }
+@keyframes kd-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.kd-lesson-name {
+  letter-spacing: -0.005em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kd-lesson.is-ready .kd-lesson-name {
+  color: var(--accent-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--accent-border);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.kd-lesson.is-ready .kd-lesson-name:hover {
+  color: var(--primary);
+  text-decoration-color: var(--primary);
+}
+.kd-lesson.is-locked .kd-lesson-name { color: var(--text-4); }
+.kd-lesson.is-gen .kd-lesson-name { color: var(--text-muted); }
+
+.kd-lesson-aux {
+  font-size: 12px;
+  color: var(--gold);
+  letter-spacing: 1px;
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+.kd-lesson.is-gen .kd-lesson-aux {
+  color: var(--accent-ink);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0;
+}
+.kd-lesson.is-available .kd-lesson-aux {
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0;
+}
+
+/* Done CTAs */
+.kd-topic-done-cta {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+@media (max-width: 600px) { .kd-topic-done-cta { flex-direction: column; } }
+
+.btn-success {
+  background: var(--success);
+  color: white;
+  border-color: transparent;
+  font-weight: 600;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.18) inset, 0 1px 2px rgba(30, 80, 50, 0.18);
+}
+.btn-success:hover { background: #16a34a; text-decoration: none; color: white; }
+
+/* ===================== Generation progress ===================== */
+.kd-topic-gen {
+  margin: 0 16px 16px 22px;
+  padding: 14px 14px 12px;
+  background: var(--accent-softer);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-md);
+}
+.kd-topic-gen-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.kd-topic-gen-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent-ink);
+  display: inline-flex; align-items: center; gap: 8px;
+  animation: kd-pulse 1.6s ease-in-out infinite;
+}
+.kd-topic-gen-num {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--accent-ink);
+  font-variant-numeric: tabular-nums;
+}
+@keyframes kd-pulse {
+  0%, 100% { opacity: 0.65; }
+  50%      { opacity: 1; }
+}
+.kd-genbar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(79, 70, 229, 0.1);
+  overflow: hidden;
+}
+.kd-genbar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), #7c3aed);
+  border-radius: inherit;
+  position: relative;
+  overflow: hidden;
+  transition: width 0.5s ease;
+}
+.kd-genbar-fill::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.45) 50%, transparent 100%);
+  animation: kd-shimmer 1.8s linear infinite;
+}
+@keyframes kd-shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ===================== Monthly block ===================== */
+.kd-monthly {
+  margin: 10px 0;
+  padding: 18px 20px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--accent-softer) 0%, rgba(99,102,241,0.06) 60%, var(--accent-softer) 100%);
+  border: 1px solid var(--accent-border);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 18px;
+}
+@media (max-width: 600px) {
+  .kd-monthly {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 18px 18px 16px;
+  }
+}
+.kd-monthly-icon {
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  background: white;
+  border: 1px solid var(--accent-border);
+  display: grid; place-items: center;
+  font-size: 24px;
+  flex: 0 0 48px;
+}
+.kd-monthly-body {
+  font-size: 13.5px;
+  color: var(--text);
+  line-height: 1.45;
+}
+.kd-monthly-body strong {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--accent-ink);
+  margin-bottom: 2px;
+}
+.kd-monthly-actions {
+  display: inline-flex; gap: 8px;
+  flex-wrap: wrap;
+}
+.kd-monthly-actions .btn { height: 40px; }
+@media (max-width: 600px) { .kd-monthly-actions .btn { flex: 1; min-width: 140px; } }
+
+.kd-monthly.is-ready {
+  background: linear-gradient(160deg, #f0fdf4, white 70%);
+  border-color: #bbf7d0;
+}
+.kd-monthly.is-ready .kd-monthly-icon {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+.kd-monthly.is-ready .kd-monthly-body strong { color: #166534; }
+
+/* ===================== Modal ===================== */
+.kd-modal-scrim {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.45);
@@ -357,78 +569,243 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: fadeIn 0.2s ease;
+  animation: kd-fadeIn 0.2s ease;
 }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes kd-fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-.modal-box {
+.kd-modal {
   background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  max-width: 460px;
+  max-width: 420px;
   width: 90%;
-  padding: 2rem;
-  text-align: center;
-  animation: slideUp 0.25s ease;
+  overflow: hidden;
+  animation: kd-slideUp 0.25s ease;
 }
-@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes kd-slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-.modal-box__icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
-.modal-box__title { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text); }
-.modal-box__text { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.5; text-align: left; }
-.modal-box__buttons { display: flex; gap: 0.75rem; justify-content: center; }
-.modal-box__buttons .btn { min-width: 120px; }
+.kd-confirm {
+  text-align: left;
+  padding: 22px 22px 6px;
+}
+.kd-confirm-icon {
+  width: 56px; height: 56px;
+  border-radius: 16px;
+  background: var(--accent-softer);
+  border: 1px solid var(--accent-border);
+  display: grid; place-items: center;
+  font-size: 28px;
+  margin-bottom: 14px;
+}
+.kd-confirm-icon.is-warn {
+  background: #fef9c3;
+  border-color: #fde68a;
+}
+.kd-confirm-icon.is-month {
+  background: #eef2ff;
+  border-color: var(--accent-border);
+}
+.kd-confirm-icon.is-pass { background: #f0fdf4; border-color: #bbf7d0; }
+.kd-confirm-icon.is-retry { background: #fef9c3; border-color: #fde68a; }
 
-@media (max-width: 600px) {
-  .stats-grid { grid-template-columns: 1fr 1fr; }
-  .topic-card__header { flex-direction: column; align-items: flex-start; }
+.kd-confirm-title {
+  margin: 0 0 6px;
+  font-size: 18px; font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.kd-confirm-body {
+  margin: 0 0 14px;
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.kd-confirm-receipt {
+  margin: 0 0 6px;
+  display: flex; flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.kd-receipt-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px;
+  font-size: 13px;
+  border-top: 1px solid var(--border);
+}
+.kd-receipt-row:first-child { border-top: 0; }
+.kd-receipt-row.is-total {
+  background: var(--surface);
+  font-weight: 600;
+  color: var(--accent-ink);
+}
+.kd-receipt-row .kd-receipt-label { color: var(--text-muted); }
+.kd-receipt-row .kd-receipt-value {
+  font-variant-numeric: tabular-nums;
+  display: inline-flex; align-items: baseline; gap: 4px;
+}
+
+.kd-modal-foot {
+  display: flex; gap: 8px; justify-content: flex-end;
+  padding: 16px 22px;
+  border-top: 1px solid var(--border);
+}
+.kd-modal-foot .btn { min-width: 110px; }
+
+/* ===================== Skip-test overlay ===================== */
+.kd-skiptest {
+  position: fixed; inset: 0;
+  z-index: 300;
+  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 50%, #4338ca 100%);
+  display: flex; flex-direction: column;
+  color: white;
+  overflow: hidden;
+}
+.kd-skiptest-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 22px;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+}
+.kd-skiptest-title {
+  font-size: 15px; font-weight: 600;
+  letter-spacing: -0.015em;
+  display: inline-flex; align-items: center; gap: 10px;
+}
+.kd-skiptest-eyebrow {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #c4b5fd;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.16);
+}
+.kd-skiptest-close {
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.16);
+  color: white;
+  border-radius: 999px;
+  height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+.kd-skiptest-close:hover { background: rgba(255,255,255,0.18); }
+
+.kd-skiptest-frame {
+  flex: 1;
+  margin: 22px;
+  border-radius: var(--radius-lg);
+  background: white;
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,0.20);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+@media (max-width: 600px) { .kd-skiptest-frame { margin: 14px; } }
+
+.kd-skiptest-final {
+  flex: 1;
+  display: grid; place-items: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+.kd-skiptest-final-inner { max-width: 380px; }
+.kd-skiptest-final-emoji { font-size: 56px; margin-bottom: 14px; }
+.kd-skiptest-final-h { margin: 0 0 8px; font-size: 22px; font-weight: 600; letter-spacing: -0.024em; }
+.kd-skiptest-final-sub { margin: 0 0 22px; font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+
+/* Skip button ghost style */
+.btn--skip {
+  background: transparent;
+  color: var(--text-muted);
+  border-color: var(--border);
+  font-size: 12.5px;
+}
+.btn--skip:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--accent-soft);
 }
 </style>
 {% endblock head %}
 
 {% block content %}
 <div class="subject-page">
-  <!-- Breadcrumb -->
-  <div class="subject-breadcrumb">
-    <a href="/dashboard">Дашборд</a> <span>/</span>
-    <a href="/children/{{ child.id }}">{{ child.name }}</a> <span>/</span>
-    <span>{{ subject_name }}</span>
-  </div>
+  <!-- Breadcrumbs -->
+  <nav class="kd-crumbs">
+    <a href="/dashboard">Дашборд</a>
+    <span class="kd-crumbs-sep">&rsaquo;</span>
+    <a href="/children/{{ child.id }}">{{ child.name }}</a>
+    <span class="kd-crumbs-sep">&rsaquo;</span>
+    <span class="kd-crumbs-now">{{ subject_name }}</span>
+  </nav>
 
-  <h1 style="margin-bottom:1.25rem;">{{ subject_name }}</h1>
+  <!-- Subject heading -->
+  <div class="kd-subject-h1-row">
+    <h1 class="kd-subject-h1">
+      <span class="kd-subject-h1-emoji">{{ subject_emoji }}</span>
+      {{ subject_name }}
+    </h1>
+    <button class="kd-subject-explain" id="info-toggle" style="display:none;" onclick="toggleInfo()">
+      <span>?</span> Как здесь всё устроено
+    </button>
+  </div>
 
   <!-- Info block -->
-  <button class="info-block__toggle" id="info-toggle" style="display:none;">💡 Как здесь всё устроено?</button>
-  <div class="info-block" id="info-block">
-    <button class="info-block__close" id="info-close">&times;</button>
-    <h3>💡 Как здесь всё устроено?</h3>
-    <p style="font-size:0.9rem; margin-bottom:0.75rem;">Нажмите «Создать уроки», и нейросеть превратит скучную школьную тему в захватывающее приключение для вашего ребенка!</p>
-    <p style="font-size:0.9rem; margin-bottom:0.5rem;">В каждой сгенерированной теме (5 уроков) вас ждут:</p>
-    <ul>
-      <li>📖 <strong>Сюжетная теория</strong> — понятное объяснение правил, вплетенное в уникальную вселенную ребенка</li>
-      <li>💻 <strong>Интерактив</strong> — увлекательные тестовые задания на экране для проверки знаний</li>
-      <li>🖨️ <strong>Печатные квесты</strong> — задания, которые можно распечатать и решать руками</li>
-      <li>⭐ <strong>Мотивация</strong> — за каждый урок ребенок получает звездочки для прокачки персонажа</li>
-    </ul>
-    <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.75rem;">Ребенок уже отлично знает тему? Пройдите бесплатный тест-пропуск, чтобы открыть следующую!</p>
-  </div>
-
-  <!-- Stats Block -->
-  <div class="stats-grid" id="stats-grid">
-    <div class="spinner">Загрузка...</div>
-  </div>
-
-  <!-- Program Block -->
-  <section class="program-section">
-    <div class="program-section__header">
-      <h2>Программа</h2>
+  <section class="kd-info" id="info-block">
+    <span class="kd-info-orb"></span>
+    <button class="kd-info-close" id="info-close" onclick="closeInfo()">&times;</button>
+    <h2 class="kd-info-title">Как здесь всё устроено</h2>
+    <p class="kd-info-body">
+      Нажмите <strong>«Создать уроки»</strong> у любой темы — нейросеть превратит её в приключение
+      по интересам вашего ребёнка. Каждая тема состоит из 5 уроков.
+    </p>
+    <div class="kd-info-grid">
+      <div class="kd-info-item">
+        <span class="kd-info-item-dot"></span>
+        <div><strong>Сюжетная теория</strong><span>Материал вплетён в историю героя</span></div>
+      </div>
+      <div class="kd-info-item">
+        <span class="kd-info-item-dot"></span>
+        <div><strong>Интерактив</strong><span>Задания с разбором, не тесты</span></div>
+      </div>
+      <div class="kd-info-item">
+        <span class="kd-info-item-dot"></span>
+        <div><strong>Печатные квесты</strong><span>Рабочая тетрадь к каждой теме</span></div>
+      </div>
+      <div class="kd-info-item">
+        <span class="kd-info-item-dot"></span>
+        <div><strong>Мотивация</strong><span>Звёзды, серии и магазин наград</span></div>
+      </div>
     </div>
-    <div id="topics-list" class="topics-list">
-      <div class="spinner">Загрузка программы...</div>
-    </div>
-
-    <!-- Month block inserted dynamically after 4th locked topic -->
+    <p class="kd-info-hint">
+      Если тема знакома — можно пройти тест-пропуск и сэкономить кристаллы.
+    </p>
   </section>
+
+  <!-- Stats -->
+  <div class="kd-substats" id="stats-grid">
+    <div class="kd-substat"><span class="kd-substat-label">Загрузка</span><span class="kd-substat-value">...</span></div>
+  </div>
+
+  <!-- Program -->
+  <div class="kd-program-head">
+    <h2 class="kd-program-title">Программа</h2>
+    <div class="kd-program-legend">
+      <span class="kd-leg"><span class="kd-leg-swatch is-done"></span>пройдена</span>
+      <span class="kd-leg"><span class="kd-leg-swatch is-active"></span>активная</span>
+      <span class="kd-leg"><span class="kd-leg-swatch is-locked"></span>скоро</span>
+    </div>
+  </div>
+  <div class="kd-topics" id="topics-list">
+    <div style="padding:20px;text-align:center;color:var(--text-3);">Загрузка программы...</div>
+  </div>
 </div>
 
 <!-- Modal container -->
@@ -449,26 +826,23 @@ var firstLoad = true;
 (function() {
   var infoBlock = document.getElementById('info-block');
   var infoToggle = document.getElementById('info-toggle');
-  var infoClose = document.getElementById('info-close');
   var visits = parseInt(localStorage.getItem('subject_visits_' + SUBJECT) || '0');
   visits++;
   localStorage.setItem('subject_visits_' + SUBJECT, visits);
-
   if (visits > 5) {
     infoBlock.style.display = 'none';
     infoToggle.style.display = 'inline-flex';
   }
-
-  infoClose.addEventListener('click', function() {
-    infoBlock.style.display = 'none';
-    infoToggle.style.display = 'inline-flex';
-  });
-
-  infoToggle.addEventListener('click', function() {
-    infoBlock.style.display = 'block';
-    infoToggle.style.display = 'none';
-  });
 })();
+
+function closeInfo() {
+  document.getElementById('info-block').style.display = 'none';
+  document.getElementById('info-toggle').style.display = 'inline-flex';
+}
+function toggleInfo() {
+  document.getElementById('info-block').style.display = 'block';
+  document.getElementById('info-toggle').style.display = 'none';
+}
 
 document.addEventListener('DOMContentLoaded', function() {
   enrollAndLoad();
@@ -485,14 +859,11 @@ async function enrollAndLoad() {
   loadStats();
   loadProgram();
 
-  // If first enrollment triggered auto-generation, show progress for first topic
   if (data.auto_lesson_ids && data.auto_lesson_ids.length > 0) {
-    // Wait a moment for program to render, then show inline progress
     setTimeout(function() {
-      // Find the first topic ID from the rendered topics
-      var firstTopicCard = document.querySelector('.topic-card');
+      var firstTopicCard = document.querySelector('.kd-topic');
       if (firstTopicCard) {
-        var topicId = firstTopicCard.id.replace('topic-card-', '');
+        var topicId = firstTopicCard.getAttribute('data-topic-id');
         showInlineProgress(topicId, data.auto_lesson_ids);
       }
     }, 1500);
@@ -503,7 +874,7 @@ async function loadStats() {
   var grid = document.getElementById('stats-grid');
   try {
     var resp = await fetch('/api/children/' + CHILD_ID + '/subject-progress/' + SUBJECT);
-    if (!resp.ok) { grid.innerHTML = '<p>Нет данных</p>'; return; }
+    if (!resp.ok) { grid.innerHTML = '<div class="kd-substat"><span class="kd-substat-label">Нет данных</span></div>'; return; }
     var data = await resp.json();
 
     var currentTopic = '—';
@@ -521,11 +892,11 @@ async function loadStats() {
     }
 
     grid.innerHTML =
-      '<div class="stat-card"><div class="stat-card__value">' + (data.completed_lessons || 0) + '/' + (data.total_lessons || 0) + '</div><div class="stat-card__label">Пройдено уроков</div></div>' +
-      '<div class="stat-card"><div class="stat-card__value">' + esc(currentTopic) + '</div><div class="stat-card__label">Текущая тема</div></div>' +
-      '<div class="stat-card"><div class="stat-card__value">' + (data.total_stars || 0) + ' ⭐</div><div class="stat-card__label">Заработано звёзд</div></div>';
+      '<div class="kd-substat"><span class="kd-substat-label">Пройдено уроков</span><span class="kd-substat-value">' + (data.completed_lessons || 0) + '<small>/' + (data.total_lessons || 0) + '</small></span></div>' +
+      '<div class="kd-substat"><span class="kd-substat-label">Текущая тема</span><span class="kd-substat-value" style="font-size:17px;letter-spacing:-0.018em">' + esc(currentTopic) + '</span></div>' +
+      '<div class="kd-substat"><span class="kd-substat-label">Заработано звёзд</span><span class="kd-substat-value"><span class="kd-substat-icon">⭐</span>' + (data.total_stars || 0) + '</span></div>';
   } catch(e) {
-    grid.innerHTML = '<p>Ошибка загрузки</p>';
+    grid.innerHTML = '<div class="kd-substat"><span class="kd-substat-label">Ошибка загрузки</span></div>';
   }
 }
 
@@ -533,18 +904,16 @@ async function loadProgram() {
   var list = document.getElementById('topics-list');
   try {
     var resp = await fetch('/api/children/' + CHILD_ID + '/subject-progress/' + SUBJECT);
-    if (!resp.ok) { list.innerHTML = '<p>Программа не найдена</p>'; return; }
+    if (!resp.ok) { list.innerHTML = '<p style="padding:20px;color:var(--text-3)">Программа не найдена</p>'; return; }
     var data = await resp.json();
     var topics = data.topics || [];
 
     if (topics.length === 0) {
-      list.innerHTML = '<p>Программа для этого предмета пока не загружена</p>';
+      list.innerHTML = '<p style="padding:20px;color:var(--text-3)">Программа для этого предмета пока не загружена</p>';
       return;
     }
 
-    // Count all generated lessons across all topics
-    var totalGenerated = 0;
-    var totalLessons = 0;
+    var totalGenerated = 0, totalLessons = 0;
     for (var ti = 0; ti < topics.length; ti++) {
       var tls = topics[ti].lessons || [];
       totalLessons += tls.length;
@@ -557,10 +926,10 @@ async function loadProgram() {
     var firstActiveExpanded = false;
     var lockedCount = 0;
     var monthBlockInserted = false;
+
     for (var i = 0; i < topics.length; i++) {
       var t = topics[i];
       var lessons = t.lessons || [];
-
       var completed = 0, available = 0, locked = 0;
       var pendingIds = [], doneIds = [];
       for (var j = 0; j < lessons.length; j++) {
@@ -575,95 +944,122 @@ async function loadProgram() {
         totalStars += lessons[k].stars_earned || 0;
       }
 
-      var topicStatus = completed === lessons.length ? 'completed' : (available > 0 || completed > 0) ? 'active' : 'locked';
+      var topicStatus = completed === lessons.length ? 'done' : (available > 0 || completed > 0) ? 'active' : 'locked';
 
       if (topicStatus === 'locked') lockedCount++;
 
-      // Insert month block after 4th locked topic
+      // Insert monthly block after 4th locked topic
       if (lockedCount === 4 && !monthBlockInserted) {
         monthBlockInserted = true;
         html += buildMonthBlock(totalGenerated, totalLessons);
       }
 
-      // Determine if this topic should be auto-expanded
       var autoExpand = false;
       if (firstLoad && !firstActiveExpanded && (topicStatus === 'active' || (topicStatus === 'locked' && i === 0))) {
         autoExpand = true;
         firstActiveExpanded = true;
       }
 
-      html += '<div class="topic-card topic-card--' + topicStatus + '" id="topic-card-' + t.id + '">';
-      html += '<div class="topic-card__header" onclick="toggleTopic(' + i + ')">';
-      html += '<div class="topic-card__info">';
-      html += '<span class="topic-card__icon">' + (t.icon || '📖') + '</span>';
-      html += '<div>';
-      html += '<div class="topic-card__title">' + esc(t.title_ru) + '</div>';
-      html += '<div class="topic-card__meta">' + completed + '/' + lessons.length + ' уроков · ' + totalStars + ' ⭐</div>';
-      html += '</div></div>';
+      var isOpen = autoExpand;
+      var showActions = pendingIds.length === 0 && (topicStatus === 'active' || topicStatus === 'locked');
 
-      // Chevron
-      html += '<div style="display:flex;align-items:center;gap:0.5rem;">';
-
-      // Action buttons
-      html += '<div class="topic-card__actions">';
-      if (topicStatus === 'locked') {
-        html += '<button class="btn btn--sm btn--skip" onclick="event.stopPropagation(); assignSkipTest(' + t.id + ', \'' + esc(t.title_ru).replace(/'/g, "\\'") + '\')" title="Ребенок уже знает этот материал? Пройдите тест-проверку. При успешной сдаче тема будет засчитана.">Тест для пропуска</button>';
-      }
-      // No per-topic "Листы" button in header — use ready buttons below instead
-      // Generate topic button
+      // Ungenerated lessons count
       var ungenerated = 0;
       for (var m = 0; m < lessons.length; m++) {
         if (!lessons[m].lesson_id && lessons[m].status !== 'completed') ungenerated++;
       }
-      if (ungenerated > 0 && topicStatus !== 'completed') {
-        var cost = ungenerated * 20;
-        html += '<button class="btn btn--sm btn--primary" onclick="event.stopPropagation(); generateTopic(' + t.id + ', ' + ungenerated + ', \'' + esc(t.title_ru).replace(/'/g, "\\'") + '\')">Создать уроки (' + cost + ' 💎)</button>';
+      var cost = ungenerated * 20;
+
+      html += '<article class="kd-topic is-' + topicStatus + (isOpen ? ' is-open' : '') + '" data-topic-id="' + t.id + '" id="topic-card-' + t.id + '">';
+      html += '<span class="kd-topic-bar"></span>';
+
+      // Header
+      html += '<div class="kd-topic-head" onclick="toggleTopic(this)">';
+      html += '<span class="kd-topic-icon">' + (t.icon || '📖') + '</span>';
+      html += '<div class="kd-topic-info">';
+      html += '<h3 class="kd-topic-name">' + esc(t.title_ru);
+      if (topicStatus === 'active') html += '<span class="kd-topic-tag">сейчас</span>';
+      if (topicStatus === 'done') html += '<span class="kd-topic-tag">пройдена</span>';
+      html += '</h3>';
+      html += '<p class="kd-topic-meta">' + completed + '/5 уроков';
+      if (totalStars > 0) html += ' &middot; <span class="kd-topic-stars">⭐ ' + totalStars + '</span>';
+      html += '</p></div>';
+
+      // Desktop actions
+      if (showActions) {
+        html += '<div class="kd-topic-actions" onclick="event.stopPropagation()">';
+        if (topicStatus === 'locked') {
+          html += '<button class="btn btn--sm btn--skip" onclick="assignSkipTest(' + t.id + ', \'' + esc(t.title_ru).replace(/'/g, "\\'") + '\')">Тест-пропуск</button>';
+        }
+        if (ungenerated > 0 && topicStatus !== 'done') {
+          html += '<button class="btn btn--sm btn--primary" onclick="generateTopic(' + t.id + ', ' + ungenerated + ', \'' + esc(t.title_ru).replace(/'/g, "\\'") + '\')">Создать уроки<span class="kd-cost" style="margin-left:4px">' + cost + ' 💎</span></button>';
+        }
+        html += '</div>';
       }
+
+      html += '<span class="kd-topic-chevron">&#9662;</span>';
       html += '</div>';
 
-      html += '<span class="topic-card__chevron' + (autoExpand ? ' open' : '') + '" id="chevron-' + i + '">▼</span>';
-      html += '</div></div>';
+      // Mobile actions
+      if (showActions) {
+        html += '<div class="kd-topic-mobile-actions">';
+        if (topicStatus === 'locked') {
+          html += '<button class="btn btn--sm btn--skip" onclick="assignSkipTest(' + t.id + ', \'' + esc(t.title_ru).replace(/'/g, "\\'") + '\')">Тест-пропуск</button>';
+        }
+        if (ungenerated > 0 && topicStatus !== 'done') {
+          html += '<button class="btn btn--sm btn--primary" onclick="generateTopic(' + t.id + ', ' + ungenerated + ', \'' + esc(t.title_ru).replace(/'/g, "\\'") + '\')">Создать уроки<span class="kd-cost" style="margin-left:4px">' + cost + ' 💎</span></button>';
+        }
+        html += '</div>';
+      }
 
       // Generation progress
       if (pendingIds.length > 0) {
         var totalGen = pendingIds.length + doneIds.length;
         var doneCount = doneIds.length;
         var pct = totalGen > 0 ? Math.round((doneCount / totalGen) * 100) : 0;
-        html += '<div class="gen-progress gen-progress--active" id="gen-progress-' + t.id + '" data-topic-id="' + t.id + '" data-lesson-ids="' + pendingIds.join(',') + '" data-total="' + totalGen + '" data-done="' + doneCount + '">';
-        html += '<div class="gen-progress__bar-wrap"><div class="gen-progress__bar" style="width:' + pct + '%"></div></div>';
-        html += '<div class="gen-progress__text">Генерация: ' + doneCount + '/' + totalGen + '</div>';
+        html += '<div class="kd-topic-gen" id="gen-progress-' + t.id + '" data-topic-id="' + t.id + '" data-lesson-ids="' + pendingIds.join(',') + '" data-total="' + totalGen + '" data-done="' + doneCount + '">';
+        html += '<div class="kd-topic-gen-head">';
+        html += '<span class="kd-topic-gen-label">Генерация уроков…</span>';
+        html += '<span class="kd-topic-gen-num">' + doneCount + '/' + totalGen + ' &middot; ' + pct + '%</span>';
+        html += '</div>';
+        html += '<div class="kd-genbar"><div class="kd-genbar-fill" style="width:' + pct + '%"></div></div>';
         html += '</div>';
       } else if (doneIds.length > 0 && doneIds.length > completed) {
-        html += '<div style="display:flex; gap:0.75rem; padding:0.75rem 1.25rem; flex-wrap:wrap;">';
-        html += '<a href="/kid/login?child_id=' + CHILD_ID + '" class="gen-ready-btn" style="margin:0">✨ Перейти к урокам</a>';
-        html += '<a href="/api/children/' + CHILD_ID + '/worksheets?topic_id=' + t.id + '" target="_blank" class="btn btn--outline btn--sm" style="align-self:center">🖨 Рабочая тетрадь</a>';
+        html += '<div class="kd-topic-done-cta" style="margin:0 16px 16px 22px;padding-top:0;border-top:0">';
+        html += '<a href="/kid/login?child_id=' + CHILD_ID + '" class="btn btn-success" style="text-decoration:none">✨ Перейти к урокам</a>';
+        html += '<a href="/api/children/' + CHILD_ID + '/worksheets?topic_id=' + t.id + '" target="_blank" class="btn btn--outline" style="text-decoration:none">🖨 Рабочая тетрадь</a>';
         html += '</div>';
       }
 
-      // Lessons list
-      html += '<div class="topic-card__lessons" id="topic-lessons-' + i + '" style="display:' + (autoExpand ? 'block' : 'none') + '">';
+      // Lessons body
+      html += '<div class="kd-topic-body" style="display:' + (isOpen ? 'flex' : 'none') + '">';
+      html += '<div class="kd-topic-body-inner">';
       for (var n = 0; n < lessons.length; n++) {
         var l = lessons[n];
-        var statusIcon = l.status === 'completed' ? '✅' : (l.lesson_id && l.lesson_status === 'pending') ? '⏳' : l.status === 'available' ? '🟡' : l.status === 'test' ? '📋' : '🔒';
-        var starsText = l.stars_earned > 0 ? ' · ' + l.stars_earned + ' ⭐' : '';
-        var isClickable = l.lesson_id && l.lesson_status === 'done' && l.status !== 'locked';
-        var isGenerating = l.lesson_id && l.lesson_status === 'pending';
-        var rowClass = 'lesson-row lesson-row--' + l.status;
-        if (isClickable) rowClass += ' lesson-row--clickable';
-        if (isGenerating) rowClass += ' lesson-row--generating';
-
-        if (isClickable) {
-          html += '<div class="' + rowClass + '" onclick="window.open(\'' + l.content_url + '\', \'_blank\')">';
-        } else {
-          html += '<div class="' + rowClass + '">';
+        var lessonState = l.status === 'completed' ? 'done' : (l.lesson_id && l.lesson_status === 'pending') ? 'gen' : (l.lesson_id && l.lesson_status === 'done' && l.status !== 'locked') ? 'ready' : l.status === 'available' ? 'available' : 'locked';
+        var statusIcon = lessonState === 'done' ? '✅' : lessonState === 'gen' ? '⏳' : lessonState === 'available' ? '🟡' : lessonState === 'ready' ? '🟡' : '🔒';
+        var starsText = '';
+        if (lessonState === 'done' && l.stars_earned > 0) {
+          starsText = '★'.repeat(Math.min(l.stars_earned, 3)) + '☆'.repeat(Math.max(0, 3 - l.stars_earned));
         }
-        html += '<span class="lesson-row__icon">' + statusIcon + '</span>';
-        html += '<span class="lesson-row__title">' + esc(l.title_ru) + starsText + '</span>';
+        var auxText = lessonState === 'gen' ? 'генерация' : lessonState === 'available' ? 'доступен' : '';
+
+        html += '<div class="kd-lesson is-' + lessonState + '"';
+        if (lessonState === 'ready') {
+          html += ' onclick="window.open(\'' + esc(l.content_url || '') + '\', \'_blank\')" style="cursor:pointer"';
+        }
+        html += '>';
+        html += '<span class="kd-lesson-icn' + (lessonState === 'gen' ? ' is-spin' : '') + '">' + statusIcon + '</span>';
+        html += '<span class="kd-lesson-name">' + esc(l.title_ru) + '</span>';
+        if (starsText) html += '<span class="kd-lesson-aux">' + starsText + '</span>';
+        else if (auxText) html += '<span class="kd-lesson-aux">' + auxText + '</span>';
         html += '</div>';
       }
       html += '</div></div>';
+      html += '</article>';
     }
-    // Add month block at end if not inserted yet (fewer than 4 locked topics)
+
+    // Add monthly block at end if not inserted
     if (!monthBlockInserted && topics.length >= 4) {
       html += buildMonthBlock(totalGenerated, totalLessons);
     }
@@ -671,19 +1067,17 @@ async function loadProgram() {
     list.innerHTML = html;
     firstLoad = false;
 
-    // Attach month button handler
     var monthBtn = document.getElementById('btn-generate-month');
     if (monthBtn) monthBtn.addEventListener('click', monthClickHandler);
 
-    // Start polling
     startGenerationPolling();
   } catch(e) {
-    list.innerHTML = '<p>Ошибка загрузки</p>';
+    list.innerHTML = '<p style="padding:20px;color:var(--text-3)">Ошибка загрузки</p>';
   }
 }
 
 function startGenerationPolling() {
-  var progressEls = document.querySelectorAll('.gen-progress--active');
+  var progressEls = document.querySelectorAll('.kd-topic-gen[data-lesson-ids]');
   progressEls.forEach(function(el) {
     var lessonIds = el.getAttribute('data-lesson-ids').split(',').map(Number);
     var topicId = el.getAttribute('data-topic-id');
@@ -712,8 +1106,8 @@ async function pollGenerationProgress(topicId, lessonIds, totalCount) {
     if (el) {
       var totalDone = (totalCount - lessonIds.length) + doneCount;
       var pct = Math.round((totalDone / totalCount) * 100);
-      el.querySelector('.gen-progress__bar').style.width = pct + '%';
-      el.querySelector('.gen-progress__text').textContent = 'Генерация: ' + totalDone + '/' + totalCount;
+      el.querySelector('.kd-genbar-fill').style.width = pct + '%';
+      el.querySelector('.kd-topic-gen-num').innerHTML = totalDone + '/' + totalCount + ' &middot; ' + pct + '%';
     }
   }
   delete generatingLessons[topicId];
@@ -723,49 +1117,81 @@ async function pollGenerationProgress(topicId, lessonIds, totalCount) {
 
 function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
 
-function toggleTopic(idx) {
-  var el = document.getElementById('topic-lessons-' + idx);
-  var chevron = document.getElementById('chevron-' + idx);
-  var isOpen = el.style.display !== 'none';
-  el.style.display = isOpen ? 'none' : 'block';
-  if (chevron) chevron.classList.toggle('open', !isOpen);
+function toggleTopic(headEl) {
+  var article = headEl.closest('.kd-topic');
+  var body = article.querySelector('.kd-topic-body');
+  var isOpen = article.classList.contains('is-open');
+  if (isOpen) {
+    article.classList.remove('is-open');
+    body.style.display = 'none';
+  } else {
+    article.classList.add('is-open');
+    body.style.display = 'flex';
+  }
 }
 
 // --- Modals ---
 function showModal(opts) {
   var root = document.getElementById('modal-root');
-  var overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.onclick = function(e) { if (e.target === overlay) closeCurrentModal(); };
+  root.innerHTML = '';
 
-  var box = document.createElement('div');
-  box.className = 'modal-box';
-  box.innerHTML = '<div class="modal-box__icon">' + (opts.icon || '') + '</div>' +
-    '<div class="modal-box__title">' + (opts.title || '') + '</div>' +
-    '<div class="modal-box__text">' + (opts.text || '') + '</div>' +
-    '<div class="modal-box__buttons" id="modal-buttons"></div>';
+  var scrim = document.createElement('div');
+  scrim.className = 'kd-modal-scrim';
+  scrim.onclick = function(e) { if (e.target === scrim) closeCurrentModal(); };
 
-  overlay.appendChild(box);
-  root.appendChild(overlay);
+  var modal = document.createElement('div');
+  modal.className = 'kd-modal';
+  if (opts.maxWidth) modal.style.maxWidth = opts.maxWidth + 'px';
 
-  var btnWrap = box.querySelector('#modal-buttons');
+  var confirm = document.createElement('div');
+  confirm.className = 'kd-confirm';
+  if (opts.center) confirm.style.textAlign = 'center';
+
+  var iconDiv = document.createElement('div');
+  iconDiv.className = 'kd-confirm-icon' + (opts.iconCls ? ' ' + opts.iconCls : '');
+  if (opts.center) iconDiv.style.margin = '0 auto 14px';
+  iconDiv.textContent = opts.icon || '';
+  confirm.appendChild(iconDiv);
+
+  var title = document.createElement('h3');
+  title.className = 'kd-confirm-title';
+  title.textContent = opts.title || '';
+  confirm.appendChild(title);
+
+  if (opts.html) {
+    var body = document.createElement('div');
+    body.className = 'kd-confirm-body';
+    body.innerHTML = opts.html;
+    confirm.appendChild(body);
+  }
+
+  if (opts.receipt) {
+    var receipt = document.createElement('div');
+    receipt.className = 'kd-confirm-receipt';
+    if (opts.receiptStyle) Object.assign(receipt.style, opts.receiptStyle);
+    receipt.innerHTML = opts.receipt;
+    confirm.appendChild(receipt);
+  }
+
+  modal.appendChild(confirm);
+
+  var foot = document.createElement('div');
+  foot.className = 'kd-modal-foot';
   (opts.buttons || []).forEach(function(b) {
     var btn = document.createElement('button');
     btn.className = 'btn ' + (b.cls || 'btn--outline');
     btn.textContent = b.label;
     btn.onclick = function() { closeCurrentModal(); if (b.action) b.action(); };
-    btnWrap.appendChild(btn);
+    foot.appendChild(btn);
   });
+  modal.appendChild(foot);
 
-  root._currentOverlay = overlay;
+  scrim.appendChild(modal);
+  root.appendChild(scrim);
 }
 
 function closeCurrentModal() {
-  var root = document.getElementById('modal-root');
-  if (root._currentOverlay) {
-    root._currentOverlay.remove();
-    root._currentOverlay = null;
-  }
+  document.getElementById('modal-root').innerHTML = '';
 }
 
 // --- Actions ---
@@ -774,14 +1200,15 @@ function generateTopic(topicId, count, topicTitle) {
   var remaining = USER_CRYSTALS - cost;
   showModal({
     icon: '💎',
-    title: 'Создать уроки',
-    text: 'Вы собираетесь открыть тему «' + topicTitle + '».<br><br>' +
-      'Искусственный интеллект создаст ' + count + ' новых уроков специально для ' + esc(CHILD_NAME) + '.<br><br>' +
-      'Списать <b>' + cost + ' 💎</b> со счета?<br>' +
-      '<span style="font-size:0.85rem;color:var(--text-muted)">У вас останется: ' + Math.max(0, remaining) + ' 💎</span>',
+    title: 'Создать уроки по теме?',
+    html: 'Нейросеть сгенерирует ' + count + ' уроков и рабочую тетрадь по теме «' + topicTitle + '». Обычно занимает 5–8 минут.',
+    receipt:
+      '<div class="kd-receipt-row"><span class="kd-receipt-label">Уроки (' + count + ' шт. + рабочая тетрадь)</span><span class="kd-receipt-value">' + cost + ' 💎</span></div>' +
+      '<div class="kd-receipt-row"><span class="kd-receipt-label">Останется после</span><span class="kd-receipt-value">' + Math.max(0, remaining) + ' 💎</span></div>' +
+      '<div class="kd-receipt-row is-total"><span class="kd-receipt-label">К списанию</span><span class="kd-receipt-value">' + cost + ' 💎</span></div>',
     buttons: [
       { label: 'Отмена', cls: 'btn--outline' },
-      { label: 'Да, создать уроки!', cls: 'btn--primary', action: function() { doGenerateTopic(topicId); } }
+      { label: 'Создать уроки', cls: 'btn--primary', action: function() { doGenerateTopic(topicId); } }
     ]
   });
 }
@@ -802,12 +1229,12 @@ async function doGenerateTopic(topicId) {
     } else {
       showModal({
         icon: '❌', title: 'Ошибка',
-        text: data.error === 'insufficient_crystals' ? 'Недостаточно кристаллов. <a href="/buy">Пополнить</a>' : (data.error || 'Произошла ошибка'),
+        html: data.error === 'insufficient_crystals' ? 'Недостаточно кристаллов. <a href="/buy">Пополнить</a>' : (data.error || 'Произошла ошибка'),
         buttons: [{ label: 'Ок', cls: 'btn--primary' }]
       });
     }
   } catch(e) {
-    showModal({ icon: '❌', title: 'Ошибка', text: 'Ошибка соединения', buttons: [{ label: 'Ок', cls: 'btn--primary' }] });
+    showModal({ icon: '❌', title: 'Ошибка', html: 'Ошибка соединения', buttons: [{ label: 'Ок', cls: 'btn--primary' }] });
   }
 }
 
@@ -820,19 +1247,22 @@ function showInlineProgress(topicId, lessonIds) {
   var card = document.getElementById('topic-card-' + topicId);
   if (!card) { loadProgram(); return; }
 
-  var existing = card.querySelector('.gen-progress, .gen-ready-btn');
-  if (existing) existing.parentElement.removeChild(existing);
+  var existing = card.querySelector('.kd-topic-gen, .kd-topic-done-cta');
+  if (existing) existing.remove();
 
   var genBtn = card.querySelector('.btn--primary');
   if (genBtn) genBtn.style.display = 'none';
 
-  var header = card.querySelector('.topic-card__header');
+  var header = card.querySelector('.kd-topic-head');
   var progressEl = document.createElement('div');
-  progressEl.className = 'gen-progress gen-progress--active';
+  progressEl.className = 'kd-topic-gen';
   progressEl.id = 'gen-progress-' + topicId;
   progressEl.innerHTML =
-    '<div class="gen-progress__bar-wrap"><div class="gen-progress__bar" style="width:0%"></div></div>' +
-    '<div class="gen-progress__text">Генерация: 0/' + lessonIds.length + '</div>';
+    '<div class="kd-topic-gen-head">' +
+    '<span class="kd-topic-gen-label">Генерация уроков…</span>' +
+    '<span class="kd-topic-gen-num">0/' + lessonIds.length + ' &middot; 0%</span>' +
+    '</div>' +
+    '<div class="kd-genbar"><div class="kd-genbar-fill" style="width:0%"></div></div>';
   header.insertAdjacentElement('afterend', progressEl);
 
   pollInlineProgress(topicId, lessonIds);
@@ -858,17 +1288,17 @@ async function pollInlineProgress(topicId, lessonIds) {
     var el = document.getElementById('gen-progress-' + topicId);
     if (el) {
       var pct = Math.round((doneCount / total) * 100);
-      el.querySelector('.gen-progress__bar').style.width = pct + '%';
-      el.querySelector('.gen-progress__text').textContent = 'Генерация: ' + doneCount + '/' + total;
+      el.querySelector('.kd-genbar-fill').style.width = pct + '%';
+      el.querySelector('.kd-topic-gen-num').innerHTML = doneCount + '/' + total + ' &middot; ' + pct + '%';
     }
   }
 
   var el = document.getElementById('gen-progress-' + topicId);
   if (el) {
     el.outerHTML =
-      '<div style="display:flex; gap:0.75rem; padding:0.75rem 1.25rem; flex-wrap:wrap;">' +
-      '<a href="/kid/login?child_id=' + CHILD_ID + '" class="gen-ready-btn" style="margin:0">✨ Перейти к урокам</a>' +
-      '<a href="/api/children/' + CHILD_ID + '/worksheets?topic_id=' + topicId + '" target="_blank" class="btn btn--outline btn--sm" style="align-self:center">🖨 Рабочая тетрадь</a>' +
+      '<div class="kd-topic-done-cta" style="margin:0 16px 16px 22px;padding-top:0;border-top:0">' +
+      '<a href="/kid/login?child_id=' + CHILD_ID + '" class="btn btn-success" style="text-decoration:none">✨ Перейти к урокам</a>' +
+      '<a href="/api/children/' + CHILD_ID + '/worksheets?topic_id=' + topicId + '" target="_blank" class="btn btn--outline" style="text-decoration:none">🖨 Рабочая тетрадь</a>' +
       '</div>';
   }
   loadStats();
@@ -878,22 +1308,23 @@ async function pollInlineProgress(topicId, lessonIds) {
 function assignSkipTest(topicId, topicTitle) {
   showModal({
     icon: '⏭️',
-    title: 'Пропуск темы: ' + topicTitle,
-    text: 'Чтобы пропустить эту тему и открыть следующие, ребенку нужно правильно решить короткий тест.<br><br>' +
-      '⚠️ <strong>Внимание:</strong> Позовите ребенка к экрану. Сейчас начнётся тест из 5 вопросов по теме «' + topicTitle + '». За этот тест не выдаются печатные материалы и сюжетная история, это только проверка знаний.',
+    iconCls: 'is-warn',
+    title: 'Пропустить эту тему?',
+    html: 'Тест-пропуск покажет, знает ли ребёнок тему «' + topicTitle + '». При успехе она откроется без генерации.',
+    receipt: '<div style="display:block;color:#92400e;padding:14px"><strong>Позовите ребёнка к экрану</strong><span style="display:block;font-size:12.5px;margin-top:4px;color:#a16207">Тест проходит ребёнок сам. Подсказки и помощь ломают логику пропуска.</span></div>',
+    receiptStyle: { background: '#fef9c3', borderColor: '#fde68a' },
     buttons: [
       { label: 'Отмена', cls: 'btn--outline' },
-      { label: 'Начать тест', cls: 'btn--primary', action: function() { doSkipTest(topicId, topicTitle); } }
+      { label: 'Запустить тест', cls: 'btn--primary', action: function() { doSkipTest(topicId, topicTitle); } }
     ]
   });
 }
 
 async function doSkipTest(topicId, topicTitle) {
   try {
-    // Show generating modal
     showModal({
       icon: '⏳', title: 'Создаём тест...',
-      text: 'Подождите несколько секунд, тест готовится.',
+      html: 'Подождите несколько секунд, тест готовится.',
       buttons: []
     });
 
@@ -905,13 +1336,11 @@ async function doSkipTest(topicId, topicTitle) {
     var data = await resp.json();
     if (!resp.ok) {
       closeCurrentModal();
-      showModal({ icon: '❌', title: 'Ошибка', text: data.error || 'Произошла ошибка', buttons: [{ label: 'Ок', cls: 'btn--primary' }] });
+      showModal({ icon: '❌', title: 'Ошибка', html: data.error || 'Произошла ошибка', buttons: [{ label: 'Ок', cls: 'btn--primary' }] });
       return;
     }
 
     var lessonId = data.lesson_id;
-
-    // Poll until test is generated
     var ready = false;
     for (var attempt = 0; attempt < 60; attempt++) {
       await sleep(2000);
@@ -926,47 +1355,46 @@ async function doSkipTest(topicId, topicTitle) {
     closeCurrentModal();
 
     if (!ready) {
-      showModal({ icon: '❌', title: 'Ошибка', text: 'Не удалось создать тест. Попробуйте позже.', buttons: [{ label: 'Ок', cls: 'btn--primary' }] });
+      showModal({ icon: '❌', title: 'Ошибка', html: 'Не удалось создать тест. Попробуйте позже.', buttons: [{ label: 'Ок', cls: 'btn--primary' }] });
       return;
     }
 
-    // Open fullscreen test overlay
     openTestOverlay(lessonId, topicTitle);
-
   } catch(e) {
     closeCurrentModal();
-    showModal({ icon: '❌', title: 'Ошибка', text: 'Ошибка соединения', buttons: [{ label: 'Ок', cls: 'btn--primary' }] });
+    showModal({ icon: '❌', title: 'Ошибка', html: 'Ошибка соединения', buttons: [{ label: 'Ок', cls: 'btn--primary' }] });
   }
 }
 
 function openTestOverlay(lessonId, topicTitle) {
   var overlay = document.createElement('div');
   overlay.id = 'test-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:#F0EDFF;z-index:300;display:flex;flex-direction:column;';
+  overlay.className = 'kd-skiptest';
 
-  // Fetch lesson content_url and show in iframe
-  fetch('/api/lessons/' + lessonId + '/poll').then(function(r) { return r.json(); }).then(function(lesson) {
-    var contentUrl = lesson.content_url;
-    if (!contentUrl) {
-      overlay.innerHTML = '<div style="flex:1;display:flex;align-items:center;justify-content:center;font-family:Nunito,sans-serif;font-size:1.2rem;color:#636E72;">Тест не найден</div>';
-      return;
-    }
-
-    overlay.innerHTML =
-      '<div style="padding:16px 20px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,0.06);font-family:Nunito,sans-serif;font-size:1.1rem;font-weight:700;color:#6C5CE7;text-align:center;">Тест: ' + esc(topicTitle) + '</div>' +
-      '<iframe src="' + esc(contentUrl) + '" style="flex:1;border:none;width:100%;" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>';
-  });
+  overlay.innerHTML =
+    '<div class="kd-skiptest-bar">' +
+    '<div class="kd-skiptest-title"><span class="kd-skiptest-eyebrow">Тест-пропуск</span>' + esc(topicTitle) + '</div>' +
+    '<button class="kd-skiptest-close" onclick="closeTestOverlay()">Прервать тест</button>' +
+    '</div>' +
+    '<div class="kd-skiptest-frame" id="skiptest-frame" style="justify-content:center;align-items:center;color:var(--text-3);">Загрузка теста...</div>';
 
   document.body.appendChild(overlay);
   document.body.style.overflow = 'hidden';
 
-  // Listen for test completion
+  fetch('/api/lessons/' + lessonId + '/poll').then(function(r) { return r.json(); }).then(function(lesson) {
+    var contentUrl = lesson.content_url;
+    if (!contentUrl) {
+      document.getElementById('skiptest-frame').innerHTML = '<div style="padding:40px;text-align:center;">Тест не найден</div>';
+      return;
+    }
+    document.getElementById('skiptest-frame').innerHTML =
+      '<iframe src="' + esc(contentUrl) + '" style="flex:1;border:none;width:100%;" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>';
+  });
+
   window._testOverlayListener = function(event) {
     if (!event.data || event.data.type !== 'kidion_lesson_complete') return;
     var correct = event.data.correct;
     var total = event.data.total || 5;
-
-    // Submit result
     fetch('/api/lessons/' + lessonId + '/result', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
@@ -980,41 +1408,55 @@ function openTestOverlay(lessonId, topicTitle) {
   window.addEventListener('message', window._testOverlayListener);
 }
 
+function closeTestOverlay() {
+  var overlay = document.getElementById('test-overlay');
+  if (overlay) {
+    overlay.remove();
+    document.body.style.overflow = '';
+    if (window._testOverlayListener) {
+      window.removeEventListener('message', window._testOverlayListener);
+    }
+  }
+}
+
 function showTestResult(correct, total, result) {
+  window.removeEventListener('message', window._testOverlayListener);
   var overlay = document.getElementById('test-overlay');
   if (!overlay) return;
 
-  // Remove listener
-  window.removeEventListener('message', window._testOverlayListener);
-
-  // Show child-friendly "done" screen
-  var passed = correct >= 4;
-
+  // Show kid-friendly "done" screen
   overlay.innerHTML =
-    '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Nunito,sans-serif;text-align:center;padding:40px 20px;">' +
-      '<div style="font-size:4rem;margin-bottom:20px;">🎉</div>' +
-      '<div style="font-size:1.8rem;font-weight:900;color:#6C5CE7;margin-bottom:12px;">Тест завершён!</div>' +
-      '<div style="font-size:1.2rem;color:#636E72;margin-bottom:40px;">Позови маму или папу</div>' +
-      '<button id="test-continue-btn" style="padding:14px 40px;background:linear-gradient(135deg,#6C5CE7,#8B7CF7);color:#fff;border:none;border-radius:16px;font-family:Nunito,sans-serif;font-size:1.1rem;font-weight:700;cursor:pointer;">Продолжить</button>' +
-    '</div>';
+    '<div class="kd-skiptest-bar"><div class="kd-skiptest-title"><span class="kd-skiptest-eyebrow">Тест-пропуск</span>Завершён</div></div>' +
+    '<div class="kd-skiptest-final">' +
+    '<div class="kd-skiptest-final-inner">' +
+    '<div class="kd-skiptest-final-emoji">🙌</div>' +
+    '<h3 class="kd-skiptest-final-h">Тест завершён!</h3>' +
+    '<p class="kd-skiptest-final-sub">Позови маму или папу — они посмотрят результаты вместе с тобой.</p>' +
+    '<button class="btn btn--primary btn--lg" id="test-continue-btn">Показать результаты</button>' +
+    '</div></div>';
 
+  var passed = correct >= 4;
   document.getElementById('test-continue-btn').addEventListener('click', function() {
-    // Remove overlay
-    overlay.remove();
-    document.body.style.overflow = '';
-
-    // Show parent result
+    closeTestOverlay();
     if (passed) {
       showModal({
-        icon: '🎉', title: 'Отлично! Тема пройдена.',
-        text: 'Результат: ' + correct + '/' + total + '. Следующая тема открыта!',
-        buttons: [{ label: 'Отлично!', cls: 'btn--primary' }]
+        icon: '🎉', iconCls: 'is-pass', center: true,
+        title: 'Отлично! Тема пройдена',
+        html: 'Ребёнок ответил на ' + correct + ' из ' + total + ' вопросов правильно. Тема засчитана как пройденная — кристаллы не списаны.',
+        buttons: [
+          { label: 'Закрыть', cls: 'btn--outline' },
+          { label: 'К следующей теме', cls: 'btn--primary' }
+        ]
       });
     } else {
       showModal({
-        icon: '📚', title: 'Нужно повторить',
-        text: 'Результат: ' + correct + '/' + total + '. Похоже, эту тему нужно повторить. Создайте уроки, чтобы ребёнок разобрался в материале.',
-        buttons: [{ label: 'Понятно', cls: 'btn--primary' }]
+        icon: '📚', iconCls: 'is-retry', center: true,
+        title: 'Чуть-чуть не хватило',
+        html: 'Ребёнок ответил на ' + correct + ' из ' + total + ' вопросов правильно. Стоит пройти тему — нейросеть подберёт уроки с упором на сложные места.',
+        buttons: [
+          { label: 'Закрыть', cls: 'btn--outline' },
+          { label: 'Создать уроки', cls: 'btn--primary' }
+        ]
       });
     }
     loadProgram();
@@ -1026,43 +1468,41 @@ function monthClickHandler() {
   var remaining = USER_CRYSTALS - 400;
   showModal({
     icon: '📅',
-    title: 'Создать уроки на месяц',
-    text: 'Вы откроете сразу 4 темы (20 уроков) — этого хватит на целый месяц занятий.<br><br>Списать <b>400 💎</b> со счета?<br>' +
-      '<span style="font-size:0.85rem;color:var(--text-muted)">У вас останется: ' + Math.max(0, remaining) + ' 💎</span>',
+    iconCls: 'is-month',
+    title: 'Создать уроки на месяц?',
+    html: 'Нейросеть сгенерирует 4 темы — 20 уроков и 4 рабочие тетради. Это займёт 20–30 минут.',
+    receipt:
+      '<div class="kd-receipt-row"><span class="kd-receipt-label">4 темы × 100 💎</span><span class="kd-receipt-value" style="text-decoration:line-through;color:var(--text-3)">500 💎</span></div>' +
+      '<div class="kd-receipt-row"><span class="kd-receipt-label">Скидка за пакет</span><span class="kd-receipt-value" style="color:var(--success)">−100 💎</span></div>' +
+      '<div class="kd-receipt-row"><span class="kd-receipt-label">Останется после</span><span class="kd-receipt-value">' + Math.max(0, remaining) + ' 💎</span></div>' +
+      '<div class="kd-receipt-row is-total"><span class="kd-receipt-label">К списанию</span><span class="kd-receipt-value">400 💎</span></div>',
     buttons: [
       { label: 'Отмена', cls: 'btn--outline' },
-      { label: 'Да, создать!', cls: 'btn--primary', action: doGenerateMonth }
+      { label: 'Создать на месяц', cls: 'btn--primary', action: doGenerateMonth }
     ]
   });
 }
 
 function buildMonthBlock(totalGenerated, totalLessons) {
-  var mb = '<div class="month-block" id="month-block">';
-  mb += '<div class="month-block__icon">📅</div>';
-  mb += '<div class="month-block__content">';
-  mb += '<div class="month-block__title">Занятия на месяц</div>';
-
   if (totalGenerated >= 20) {
-    mb += '<div id="month-action">';
-    mb += '<div class="month-block__done">';
-    mb += '<div class="month-block__done-text">✅ ' + totalGenerated + ' уроков готовы!</div>';
-    mb += '<div style="display:flex; gap:0.75rem; flex-wrap:wrap;">';
-    mb += '<a href="/kid/login?child_id=' + CHILD_ID + '" class="btn btn--primary">✨ Перейти к урокам</a>';
-    mb += '<a href="/api/children/' + CHILD_ID + '/worksheets?subject=' + SUBJECT + '" target="_blank" class="btn btn--outline">🖨 Рабочая тетрадь</a>';
-    mb += '</div></div></div>';
-  } else {
-    mb += '<p class="month-block__text">Создайте сразу 4 темы (20 уроков) — этого хватит на месяц регулярных занятий.</p>';
-    mb += '<div id="month-action">';
-    mb += '<button class="btn btn--accent" id="btn-generate-month">Создать уроки на месяц (400 💎)</button>';
-    if (totalGenerated > 0) {
-      mb += '<div style="margin-top:0.75rem;">';
-      mb += '<a href="/api/children/' + CHILD_ID + '/worksheets?subject=' + SUBJECT + '" target="_blank" class="btn btn--outline btn--sm">🖨 Распечатать готовые листы</a>';
-      mb += '</div>';
-    }
-    mb += '</div>';
+    return '<section class="kd-monthly is-ready">' +
+      '<div class="kd-monthly-icon">✅</div>' +
+      '<div class="kd-monthly-body"><strong>' + totalGenerated + ' уроков готовы</strong>Этого хватит на месяц регулярных занятий.</div>' +
+      '<div class="kd-monthly-actions">' +
+      '<a href="/kid/login?child_id=' + CHILD_ID + '" class="btn btn-success" style="text-decoration:none">Перейти к урокам</a>' +
+      '<a href="/api/children/' + CHILD_ID + '/worksheets?subject=' + SUBJECT + '" target="_blank" class="btn btn--outline" style="text-decoration:none">🖨 Рабочая тетрадь</a>' +
+      '</div></section>';
   }
 
-  mb += '</div></div>';
+  var mb = '<section class="kd-monthly" id="month-block">';
+  mb += '<div class="kd-monthly-icon">📅</div>';
+  mb += '<div class="kd-monthly-body"><strong>Создайте сразу 4 темы — этого хватит на месяц</strong>20 уроков по школьной программе. Дешевле, чем по одной: <b>400&nbsp;💎</b> вместо&nbsp;500.</div>';
+  mb += '<div class="kd-monthly-actions" id="month-action">';
+  mb += '<button class="btn btn--primary" id="btn-generate-month">Создать уроки на месяц<span class="kd-cost" style="margin-left:6px">400 💎</span></button>';
+  if (totalGenerated > 0) {
+    mb += '<a href="/api/children/' + CHILD_ID + '/worksheets?subject=' + SUBJECT + '" target="_blank" class="btn btn--outline" style="text-decoration:none">🖨 Распечатать готовые</a>';
+  }
+  mb += '</div></section>';
   return mb;
 }
 
@@ -1077,29 +1517,31 @@ async function doGenerateMonth() {
     if (resp.ok) {
       USER_CRYSTALS -= 400;
       updateCrystalsDisplay();
-      showMonthProgress(data.lesson_ids || [], data.lessons_count || 0);
+      showMonthProgress(data.lesson_ids || []);
       loadStats();
     } else {
       showModal({
         icon: '❌', title: 'Ошибка',
-        text: data.error === 'insufficient_crystals' ? 'Недостаточно кристаллов. <a href="/buy">Пополнить</a>' : (data.error || 'Произошла ошибка'),
+        html: data.error === 'insufficient_crystals' ? 'Недостаточно кристаллов. <a href="/buy">Пополнить</a>' : (data.error || 'Произошла ошибка'),
         buttons: [{ label: 'Ок', cls: 'btn--primary' }]
       });
     }
   } catch(e) {
-    showModal({ icon: '❌', title: 'Ошибка', text: 'Ошибка соединения', buttons: [{ label: 'Ок', cls: 'btn--primary' }] });
+    showModal({ icon: '❌', title: 'Ошибка', html: 'Ошибка соединения', buttons: [{ label: 'Ок', cls: 'btn--primary' }] });
   }
 }
 
 function showMonthProgress(lessonIds) {
-  // Show progress inside month-block
   var monthAction = document.getElementById('month-action');
+  if (!monthAction) return;
   monthAction.innerHTML =
-    '<div class="gen-progress gen-progress--active" id="month-progress">' +
-    '<div class="gen-progress__bar-wrap"><div class="gen-progress__bar" style="width:0%"></div></div>' +
-    '<div class="gen-progress__text">Генерация: 0/' + lessonIds.length + '</div>' +
+    '<div class="kd-topic-gen" id="month-progress" style="margin:0;width:100%">' +
+    '<div class="kd-topic-gen-head">' +
+    '<span class="kd-topic-gen-label">Генерация уроков…</span>' +
+    '<span class="kd-topic-gen-num">0/' + lessonIds.length + ' &middot; 0%</span>' +
+    '</div>' +
+    '<div class="kd-genbar"><div class="kd-genbar-fill" style="width:0%"></div></div>' +
     '</div>';
-
   pollMonthProgress(lessonIds);
 }
 
@@ -1123,22 +1565,19 @@ async function pollMonthProgress(lessonIds) {
     var el = document.getElementById('month-progress');
     if (el) {
       var pct = Math.round((doneCount / total) * 100);
-      el.querySelector('.gen-progress__bar').style.width = pct + '%';
-      el.querySelector('.gen-progress__text').textContent = 'Генерация месяца: ' + doneCount + '/' + total;
+      el.querySelector('.kd-genbar-fill').style.width = pct + '%';
+      el.querySelector('.kd-topic-gen-num').innerHTML = doneCount + '/' + total + ' &middot; ' + pct + '%';
     }
   }
 
-  // Show done state in month block
   var monthAction = document.getElementById('month-action');
   if (monthAction) {
     monthAction.innerHTML =
-      '<div class="month-block__done">' +
-      '<div class="month-block__done-text">✅ ' + total + ' уроков готовы!</div>' +
-      '<div style="display:flex; gap:0.75rem; flex-wrap:wrap;">' +
-      '<a href="/kid/login?child_id=' + CHILD_ID + '" class="btn btn--primary">✨ Перейти к урокам</a>' +
-      '<a href="/api/children/' + CHILD_ID + '/worksheets?subject=' + SUBJECT + '" target="_blank" class="btn btn--outline">🖨 Рабочая тетрадь</a>' +
-      '</div></div>';
+      '<a href="/kid/login?child_id=' + CHILD_ID + '" class="btn btn-success" style="text-decoration:none">Перейти к урокам</a>' +
+      '<a href="/api/children/' + CHILD_ID + '/worksheets?subject=' + SUBJECT + '" target="_blank" class="btn btn--outline" style="text-decoration:none">🖨 Рабочая тетрадь</a>';
   }
+  var block = document.getElementById('month-block');
+  if (block) block.className = 'kd-monthly is-ready';
   loadStats();
   loadProgram();
 }
