@@ -1872,6 +1872,7 @@ async def get_subject_progress(child_id: int, subject: str, request: Request):
             "stars_earned": row["stars_earned"],
             "lesson_id": row["lesson_id"],
             "lesson_status": row.get("lesson_status"),
+            "content_url": row.get("content_url"),
         })
 
     topics = sorted(topics_map.values(), key=lambda t: t["theme_order"])

@@ -1402,7 +1402,7 @@ def get_child_progress_for_subject(conn: sqlite3.Connection, child_id: int, subj
     rows = conn.execute(
         """SELECT clp.*, cl.lesson_order, cl.title_ru, cl.prompt_hint,
                   ct.id AS topic_id, ct.theme_order, ct.title_ru AS topic_title, ct.icon,
-                  l.status AS lesson_status, l.icon AS lesson_icon
+                  l.status AS lesson_status, l.icon AS lesson_icon, l.content_url
            FROM child_lesson_progress clp
            JOIN curriculum_lessons cl ON cl.id = clp.curriculum_lesson_id
            JOIN curriculum_topics ct ON ct.id = cl.topic_id

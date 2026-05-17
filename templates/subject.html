@@ -653,7 +653,7 @@ async function loadProgram() {
         if (isGenerating) rowClass += ' lesson-row--generating';
 
         if (isClickable) {
-          html += '<div class="' + rowClass + '" onclick="window.open(\'/kid/lesson/' + l.lesson_id + '\', \'_blank\')">';
+          html += '<div class="' + rowClass + '" onclick="window.open(\'' + l.content_url + '\', \'_blank\')">';
         } else {
           html += '<div class="' + rowClass + '">';
         }
