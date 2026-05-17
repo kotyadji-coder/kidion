@@ -5,7 +5,7 @@
     --primary: #4f46e5;
     --primary-dark: #3730a3;
     --primary-light: #eef2ff;
-    --accent: #ff6b8a;
+    --accent: #4f46e5;
     --bg: #f7f7f8;
     --bg-alt: #ffffff;
     --surface: #ffffff;
@@ -1525,17 +1525,6 @@ img {
     margin-bottom: 1rem;
 }
 
-.btn--accent {
-    background: #f59e0b;
-    color: #fff;
-    border-color: #f59e0b;
-}
-
-.btn--accent:hover {
-    background: #d97706;
-    border-color: #d97706;
-    color: #fff;
-}
 
 .free-lessons-list {
     margin-top: 0.5rem;

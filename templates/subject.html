@@ -137,7 +137,7 @@
 .kd-info-item-dot {
   width: 6px; height: 6px;
   border-radius: 50%;
-  background: var(--primary);
+  background: var(--accent);
   margin-top: 6px;
   flex: 0 0 6px;
 }
@@ -221,7 +221,7 @@
 .kd-leg { display: inline-flex; align-items: center; gap: 5px; }
 .kd-leg-swatch { width: 3px; height: 11px; border-radius: 2px; }
 .kd-leg-swatch.is-done { background: #22c55e; }
-.kd-leg-swatch.is-active { background: var(--primary); }
+.kd-leg-swatch.is-active { background: var(--accent); }
 .kd-leg-swatch.is-locked { background: var(--border-strong); }
 
 .kd-topics { display: flex; flex-direction: column; gap: 10px; }
@@ -247,7 +247,7 @@
   background: var(--border-strong);
 }
 .kd-topic.is-done .kd-topic-bar { background: var(--success); }
-.kd-topic.is-active .kd-topic-bar { background: var(--primary); }
+.kd-topic.is-active .kd-topic-bar { background: var(--accent); }
 
 .kd-topic-head {
   display: grid;
@@ -402,8 +402,8 @@
   cursor: pointer;
 }
 .kd-lesson.is-ready .kd-lesson-name:hover {
-  color: var(--primary);
-  text-decoration-color: var(--primary);
+  color: var(--accent);
+  text-decoration-color: var(--accent);
 }
 .kd-lesson.is-locked .kd-lesson-name { color: var(--text-4); }
 .kd-lesson.is-gen .kd-lesson-name { color: var(--text-muted); }
@@ -485,7 +485,7 @@
 }
 .kd-genbar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary), #7c3aed);
+  background: linear-gradient(90deg, var(--accent), #7c3aed);
   border-radius: inherit;
   position: relative;
   overflow: hidden;
@@ -728,8 +728,8 @@
   font-size: 12.5px;
 }
 .btn--skip:hover {
-  border-color: var(--primary);
-  color: var(--primary);
+  border-color: var(--accent);
+  color: var(--accent);
   background: var(--accent-soft);
 }
 </style>
