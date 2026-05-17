@@ -4,21 +4,29 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Kidion{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
   {% block head %}{% endblock %}
 </head>
 <body>
   <nav class="navbar">
-    <a href="/dashboard" class="navbar__logo">Kidion</a>
-    <div class="navbar__actions">
-      {% if user %}
-        <span class="navbar__crystals">💎 <span id="crystal-count">{{ user.crystals }}</span></span>
-        <a href="/buy" class="btn btn--sm btn--accent">Пополнить</a>
-        <a href="/profile" class="navbar__link">Профиль</a>
-        <button class="btn btn--sm btn--ghost" onclick="logout()">Выйти</button>
-      {% else %}
-        <a href="/login" class="btn btn--sm btn--primary">Войти</a>
-      {% endif %}
+    <div class="navbar__inner">
+      <a href="/dashboard" class="navbar__brand">
+        <span class="navbar__brand-icon">
+          <svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="3" fill="#fff"/><circle cx="4" cy="6" r="1.6" fill="#fff"/><circle cx="16" cy="6" r="1.6" fill="#fff"/><circle cx="4" cy="14" r="1.6" fill="#fff"/><circle cx="16" cy="14" r="1.6" fill="#fff"/><g stroke="#fff" stroke-width="1" opacity=".6"><line x1="10" y1="10" x2="4" y2="6"/><line x1="10" y1="10" x2="16" y2="6"/><line x1="10" y1="10" x2="4" y2="14"/><line x1="10" y1="10" x2="16" y2="14"/></g></svg>
+        </span>
+        <span class="navbar__brand-text">kidion<span class="navbar__brand-dot">.</span>ru</span>
+      </a>
+      <div class="navbar__actions">
+        {% if user %}
+          <a href="/buy" class="navbar__crystals" title="&#1055;&#1086;&#1087;&#1086;&#1083;&#1085;&#1080;&#1090;&#1100; &#1082;&#1088;&#1080;&#1089;&#1090;&#1072;&#1083;&#1083;&#1099;">&#128142; <span class="navbar__crystals-label">&#1050;&#1088;&#1080;&#1089;&#1090;&#1072;&#1083;&#1083;&#1099;</span> <span id="crystal-count">{{ user.crystals }}</span></a>
+          <a href="/profile" class="navbar__avatar-btn">{{ user.email[0]|upper }}</a>
+        {% else %}
+          <a href="/login" class="btn btn--primary btn--sm">&#1042;&#1086;&#1081;&#1090;&#1080;</a>
+        {% endif %}
+      </div>
     </div>
   </nav>
   <main class="main-content container">

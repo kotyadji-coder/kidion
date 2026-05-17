@@ -4,35 +4,68 @@
 {% block head %}
 <style>
 .child-profile-page {
-  max-width: 900px;
+  --cp-accent: oklch(0.52 0.17 268);
+  --cp-accent-ink: oklch(0.34 0.16 268);
+  --cp-accent-soft: oklch(0.96 0.030 268);
+  --cp-accent-softer: oklch(0.985 0.014 268);
+  --cp-accent-border: oklch(0.88 0.045 268);
+  --cp-surface: #ffffff;
+  --cp-surface-2: #f7f7f8;
+  --cp-surface-3: #eeeff1;
+  --cp-border: #e5e7eb;
+  --cp-border-strong: #d1d5db;
+  --cp-text: #1f2937;
+  --cp-text-2: #6b7280;
+  --cp-text-3: #9ca3af;
+  --cp-gold: #d97706;
+  --cp-gold-soft: #fef9ee;
+  --cp-warm: #ea580c;
+  --cp-radius-sm: 8px;
+  --cp-radius-md: 12px;
+  --cp-radius-lg: 16px;
+  --cp-shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --cp-shadow-md: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px -8px rgba(0,0,0,0.08);
+  --cp-font: 'Inter', -apple-system, system-ui, sans-serif;
+
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 24px 20px 40px;
+  font-family: var(--cp-font);
+  -webkit-font-smoothing: antialiased;
 }
 
-.child-profile-page__back {
+/* Back link */
+.cp-back {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  color: var(--text-muted);
-  font-size: 0.9rem;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cp-text-2);
   text-decoration: none;
-  margin-bottom: 1.5rem;
+  padding: 6px 10px 6px 6px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  transition: background 0.12s, color 0.12s;
 }
-.child-profile-page__back:hover { color: var(--primary); text-decoration: none; }
+.cp-back:hover { background: var(--cp-surface-2); color: var(--cp-text); text-decoration: none; }
 
+/* Layout */
 .cp-layout {
   display: grid;
   grid-template-columns: 260px 1fr;
-  gap: 2rem;
-  align-items: flex-start;
+  gap: 36px;
+  align-items: start;
 }
 
 /* Sidebar */
 .cp-sidebar {
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
-  padding: 1.5rem;
+  background: var(--cp-surface);
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-lg);
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
   position: sticky;
   top: 80px;
 }
@@ -41,15 +74,16 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  margin: 0 auto 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 3rem;
-  background: var(--primary-light);
+  background: var(--cp-surface-2);
+  border: 1px solid var(--cp-border);
+  display: grid;
+  place-items: center;
+  font-size: 42px;
+  line-height: 1;
+  align-self: center;
+  margin-bottom: 12px;
   overflow: hidden;
 }
-
 .cp-sidebar__avatar img {
   width: 80px;
   height: 80px;
@@ -58,331 +92,569 @@
 }
 
 .cp-sidebar__name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   text-align: center;
-  font-weight: 700;
-  font-size: 1.2rem;
-  margin-bottom: 0.25rem;
 }
-
 .cp-sidebar__meta {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--cp-text-3);
   text-align: center;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  margin-bottom: 1rem;
 }
 
 .cp-sidebar__interests {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-bottom: 1.25rem;
-  line-height: 1.5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin: 14px 0 0;
+}
+.cp-chip {
+  font-size: 11.5px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--cp-surface-2);
+  border: 1px solid var(--cp-border);
+  color: var(--cp-text-2);
+  font-weight: 500;
 }
 
-.cp-sidebar__interests strong {
-  color: var(--text);
+.cp-sidebar hr {
+  border: 0;
+  border-top: 1px solid var(--cp-border);
+  margin: 18px -2px;
 }
 
 .cp-sidebar__stats {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 1rem 0;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
+  gap: 8px;
 }
-
-.cp-sidebar__stat {
+.cp-stat {
+  flex: 1;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 10px;
+  background: var(--cp-surface-2);
+  border-radius: var(--cp-radius-md);
+  border: 1px solid transparent;
 }
-
-.cp-sidebar__stat span:last-child {
-  font-weight: 700;
-  color: var(--primary);
+.cp-stat__label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cp-text-3);
+  font-weight: 500;
 }
+.cp-stat__value {
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.cp-stat__icon { font-size: 12px; position: relative; top: -1px; }
 
 .cp-sidebar__links {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 8px;
 }
+.cp-sidebar__links .cp-btn { width: 100%; }
 
-.cp-sidebar__links .btn {
-  width: 100%;
+/* Buttons */
+.cp-btn {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--cp-font);
+  letter-spacing: -0.005em;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, box-shadow 0.12s;
+  white-space: nowrap;
+  text-decoration: none;
+  text-align: center;
 }
+.cp-btn:hover { text-decoration: none; }
+.cp-btn--primary {
+  background: var(--cp-accent);
+  color: white;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.18) inset, 0 1px 2px rgba(108,99,255,0.18);
+}
+.cp-btn--primary:hover { background: var(--cp-accent-ink); color: white; }
+.cp-btn--ghost {
+  background: var(--cp-surface);
+  color: var(--cp-text);
+  border-color: var(--cp-border);
+}
+.cp-btn--ghost:hover { background: var(--cp-surface-2); }
+.cp-btn--outline {
+  background: transparent;
+  color: var(--cp-accent-ink);
+  border-color: var(--cp-accent-border);
+}
+.cp-btn--outline:hover { background: var(--cp-accent-softer); }
 
 /* Main content */
-.cp-main {
-  min-width: 0;
-}
+.cp-main { min-width: 0; }
 
-/* Section cards */
-.cp-section {
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
-  padding: 1.5rem 1.75rem;
-  margin-bottom: 1.25rem;
-}
+/* Section headers */
+.cp-section { margin-bottom: 32px; }
+.cp-section:last-child { margin-bottom: 0; }
 
 .cp-section__header {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1.25rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
 }
-
-.cp-section__icon { font-size: 1.75rem; flex-shrink: 0; }
-.cp-section__title { font-size: 1.15rem; font-weight: 700; margin: 0; }
-.cp-section__subtitle { font-size: 0.85rem; color: var(--text-muted); margin: 0.15rem 0 0; }
+.cp-section__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--cp-accent-softer);
+  border: 1px solid var(--cp-accent-border);
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+  flex: 0 0 36px;
+}
+.cp-section__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.cp-section__subtitle {
+  margin: 3px 0 0;
+  font-size: 13.5px;
+  color: var(--cp-text-2);
+  line-height: 1.45;
+}
 
 /* Subject cards */
 .subjects-grid-v2 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
+  gap: 10px;
 }
-
 .subject-card-v2 {
+  position: relative;
+  background: var(--cp-surface);
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-md);
+  padding: 16px 14px 14px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 1.25rem 0.75rem;
-  border-radius: var(--radius);
+  gap: 8px;
+  text-align: left;
   text-decoration: none;
-  color: var(--text);
-  transition: transform 0.2s, box-shadow 0.2s;
-  border: 2px solid var(--border);
-  background: var(--bg);
+  color: var(--cp-text);
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  cursor: pointer;
 }
-
 .subject-card-v2:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow);
-  border-color: var(--primary);
+  border-color: var(--cp-accent-border);
+  box-shadow: var(--cp-shadow-md);
   text-decoration: none;
 }
-
-.subject-card-v2--disabled { opacity: 0.45; pointer-events: none; }
-.subject-card-v2__icon { font-size: 2rem; margin-bottom: 0.4rem; }
-.subject-card-v2__name { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.2rem; }
-.subject-card-v2__progress { color: var(--text-muted); font-size: 0.8rem; }
+.subject-card-v2__icon { font-size: 26px; line-height: 1; }
+.subject-card-v2__name {
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--cp-text);
+}
+.subject-card-v2__progress {
+  font-size: 12px;
+  color: var(--cp-text-3);
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cp-progress-bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--cp-surface-3);
+  overflow: hidden;
+}
+.cp-progress-fill {
+  height: 100%;
+  background: var(--cp-accent);
+  border-radius: inherit;
+  transition: width 0.3s;
+}
+.subject-card-v2--disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.subject-card-v2__badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: var(--cp-surface-2);
+  color: var(--cp-text-3);
+}
 
 /* Free lesson form */
 .free-lesson-form-v2 {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  background: var(--cp-surface);
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-md);
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 1fr 160px auto;
+  gap: 8px;
   align-items: stretch;
 }
-
 .free-lesson-form-v2 .input-topic {
-  flex: 1;
-  min-width: 180px;
-  padding: 0.6rem 0.85rem;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: 0.9rem;
-  background: var(--bg);
-  transition: border-color 0.2s;
-}
-
-.free-lesson-form-v2 .input-topic:focus {
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid var(--cp-border);
+  background: var(--cp-surface-2);
+  font-family: var(--cp-font);
+  font-size: 14px;
+  color: var(--cp-text);
   outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-light);
+  transition: border-color 0.12s, background 0.12s;
+  min-width: 0;
 }
-
+.free-lesson-form-v2 .input-topic:focus {
+  border-color: var(--cp-accent);
+  background: var(--cp-surface);
+  box-shadow: 0 0 0 3px rgba(108,99,255,0.12);
+}
+.free-lesson-form-v2 .input-topic::placeholder { color: var(--cp-text-3); }
 .free-lesson-form-v2 .input-subject {
-  width: 150px;
-  padding: 0.6rem 0.75rem;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: 0.9rem;
-  background: var(--bg);
+  height: 42px;
+  padding: 0 32px 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--cp-border);
+  background: var(--cp-surface-2);
+  font-family: var(--cp-font);
+  font-size: 14px;
+  color: var(--cp-text);
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M3 5l3 3 3-3' stroke='%236b7280' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px;
+  cursor: pointer;
 }
-
 .free-lesson-form-v2 .btn-create {
-  padding: 0.6rem 1.2rem;
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: var(--cp-accent);
+  color: white;
+  border: none;
+  font-family: var(--cp-font);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
   white-space: nowrap;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.18) inset, 0 1px 2px rgba(108,99,255,0.18);
+  transition: background 0.12s;
+}
+.free-lesson-form-v2 .btn-create:hover { background: var(--cp-accent-ink); }
+.cp-cost {
+  opacity: 0.9;
+  margin-left: 4px;
+  font-variant-numeric: tabular-nums;
 }
 
+/* Generation status */
 .free-status-v2 {
-  margin-top: 0.75rem;
-  padding: 0.6rem 0.85rem;
-  border-radius: var(--radius-sm);
-  background: var(--primary-light);
-  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--cp-accent-softer);
+  border: 1px solid var(--cp-accent-border);
+  border-radius: var(--cp-radius-sm);
+  font-size: 13px;
+  color: var(--cp-accent-ink);
 }
-
-.free-list-title {
-  font-size: 0.8rem;
-  font-weight: 700;
-  margin: 1.25rem 0 0.5rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.cp-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(108,99,255,0.25);
+  border-top-color: var(--cp-accent);
+  animation: cp-spin 0.8s linear infinite;
+  flex: 0 0 14px;
 }
+@keyframes cp-spin { to { transform: rotate(360deg); } }
 
+/* Free lessons list */
+.free-lessons-list {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-md);
+  background: var(--cp-surface);
+  overflow: hidden;
+}
 .free-list-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0.55rem 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 0.9rem;
+  gap: 12px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--cp-border);
+  font-size: 14px;
 }
+.free-list-item:first-child { border-top: 0; }
+.free-list-item__subj {
+  width: 22px;
+  flex: 0 0 22px;
+  font-size: 16px;
+  text-align: center;
+}
+.free-list-item__title {
+  flex: 1;
+  min-width: 0;
+  letter-spacing: -0.005em;
+  color: var(--cp-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.free-list-item__stars {
+  color: var(--cp-gold);
+  font-size: 13px;
+  letter-spacing: 1px;
+  flex: 0 0 auto;
+}
+.free-list-item__status {
+  font-size: 12px;
+  color: var(--cp-text-3);
+  flex: 0 0 auto;
+}
+.free-list-item__status.is-gen { color: var(--cp-accent-ink); }
 
-.free-list-item:last-child { border-bottom: none; }
-.free-list-item__stars .star { color: #d4d4d8; font-size: 1rem; }
-.free-list-item__stars .star.earned { color: #f59e0b; }
+/* Stars note */
+.stars-note {
+  margin: 12px 2px 0;
+  padding: 10px 12px;
+  background: var(--cp-gold-soft);
+  border-left: 3px solid rgba(217,119,6,0.4);
+  border-radius: 0 8px 8px 0;
+  font-size: 12.5px;
+  color: var(--cp-text-2);
+  line-height: 1.5;
+}
 
 /* Universe block */
 .universe-block {
+  background: var(--cp-surface);
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-lg);
+  padding: 18px;
   display: flex;
-  gap: 1.25rem;
+  gap: 18px;
   align-items: flex-start;
 }
-
 .universe-block__img {
-  width: 100px;
-  height: 100px;
-  border-radius: var(--radius);
+  width: 110px;
+  height: 110px;
+  border-radius: 14px;
   object-fit: cover;
-  flex-shrink: 0;
-  background: var(--primary-light);
+  flex: 0 0 110px;
+  background: var(--cp-accent-soft);
+  border: 1px solid var(--cp-accent-border);
 }
-
 .universe-block__text {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  line-height: 1.6;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--cp-text);
+  letter-spacing: -0.005em;
+}
+.universe-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  font-size: 13.5px;
+  color: var(--cp-text-2);
+  background: var(--cp-surface-2);
+  border-radius: var(--cp-radius-md);
+  border: 1px dashed var(--cp-border-strong);
 }
 
 /* Recreate section */
 .recreate-section {
-  margin-top: 0.75rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-md);
+  background: var(--cp-surface-2);
 }
-
-.recreate-section p {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-bottom: 0.75rem;
+.recreate-section__title {
+  margin: 0 0 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.recreate-section__body {
+  margin: 0 0 12px;
+  font-size: 12.5px;
+  color: var(--cp-text-2);
   line-height: 1.5;
-}
-
-/* Stars note */
-.stars-note {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-top: 0.75rem;
-  padding: 0.6rem;
-  background: var(--bg);
-  border-radius: var(--radius-sm);
 }
 
 /* Modal */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
+  background: rgba(15,18,35,0.38);
+  backdrop-filter: blur(2px);
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 20px;
 }
-
 .modal-card {
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
   width: 100%;
-  max-width: 520px;
+  max-width: 480px;
+  background: var(--cp-surface);
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-lg);
+  box-shadow: 0 12px 40px -8px rgba(15,18,35,0.2);
+  overflow: hidden;
   max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--border);
+  flex-direction: column;
 }
-
-.modal-header h2 { font-size: 1.15rem; margin: 0; }
-.modal-close { background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; padding: 0; line-height: 1; }
-.modal-close:hover { color: var(--text); }
-.modal-body { padding: 1.25rem 1.5rem; }
-
+.modal-header {
+  padding: 18px 20px 4px;
+}
+.modal-header h2 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.modal-header__sub {
+  margin: 0;
+  font-size: 13px;
+  color: var(--cp-text-2);
+}
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  color: var(--cp-text-3);
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+.modal-close:hover { color: var(--cp-text); }
+.modal-body {
+  padding: 14px 20px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+}
 .modal-warning {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
   background: #fef2f2;
   border: 1px solid #fecaca;
-  border-radius: var(--radius-sm);
-  padding: 0.75rem 1rem;
-  font-size: 0.85rem;
   color: #b91c1c;
-  margin-bottom: 1rem;
+  font-size: 12.5px;
+  line-height: 1.5;
 }
-
-.modal-form-group { margin-bottom: 1rem; }
-.modal-form-group label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.3rem; }
+.modal-warning__icon { flex: 0 0 16px; font-size: 15px; line-height: 1.2; }
+.modal-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.modal-form-group label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--cp-text-2);
+  letter-spacing: -0.005em;
+}
 .modal-form-group input {
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid var(--cp-border);
+  background: var(--cp-surface-2);
+  font-family: var(--cp-font);
+  font-size: 14px;
+  color: var(--cp-text);
+  outline: none;
+  transition: border-color 0.12s, background 0.12s;
   width: 100%;
-  padding: 0.55rem 0.75rem;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: 0.9rem;
-  font-family: var(--font);
-  background: var(--bg);
 }
-.modal-form-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
-.modal-hint { color: var(--text-muted); font-size: 0.75rem; margin-top: 3px; }
-
+.modal-form-group input:focus {
+  border-color: var(--cp-accent);
+  background: var(--cp-surface);
+  box-shadow: 0 0 0 3px rgba(108,99,255,0.12);
+}
 .modal-footer {
   display: flex;
-  gap: 0.75rem;
+  gap: 8px;
   justify-content: flex-end;
-  padding: 1rem 1.5rem;
-  border-top: 1px solid var(--border);
+  padding: 14px 20px 18px;
+  border-top: 1px solid var(--cp-border);
+  margin-top: 4px;
+  background: var(--cp-surface);
 }
+.modal-footer .cp-btn { min-width: 100px; }
 
 @media (max-width: 768px) {
+  .child-profile-page { padding: 14px 16px 32px; }
   .cp-layout {
     grid-template-columns: 1fr;
+    gap: 24px;
   }
-  .cp-sidebar {
-    position: static;
-  }
-  .subjects-grid-v2 {
-    grid-template-columns: 1fr 1fr;
-  }
-  .free-lesson-form-v2 {
-    flex-direction: column;
-  }
-  .free-lesson-form-v2 .input-subject {
-    width: 100%;
-  }
-  .universe-block {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
+  .cp-sidebar { position: static; }
+  .subjects-grid-v2 { grid-template-columns: 1fr 1fr; }
+  .free-lesson-form-v2 { grid-template-columns: 1fr; }
+  .universe-block { flex-direction: column; gap: 14px; }
+  .universe-block__img { width: 100%; height: 140px; flex: none; }
 }
 </style>
 {% endblock head %}
 
 {% block content %}
 <div class="child-profile-page">
-  <a href="/dashboard" class="child-profile-page__back">&larr; Назад к детям</a>
+  <a href="/dashboard" class="cp-back"><span>&larr;</span> Назад к детям</a>
 
   <div class="cp-layout">
     <!-- Sidebar -->
@@ -391,7 +663,7 @@
         {% if child.character_image_url %}
           <img src="{{ child.character_image_url }}" alt="{{ child.name }}">
         {% else %}
-          {{ '👧' if child.gender == 'girl' else '👦' }}
+          {{ '\U0001f467' if child.gender == 'girl' else '\U0001f466' }}
         {% endif %}
       </div>
       <div class="cp-sidebar__name">{{ child.name }}</div>
@@ -399,39 +671,51 @@
 
       {% if child.interests %}
       <div class="cp-sidebar__interests">
-        <strong>Увлечения:</strong> {{ child.interests }}
+        {% for interest in child.interests.split(',') if interest.strip() %}
+          <span class="cp-chip">{{ interest.strip() }}</span>
+        {% endfor %}
       </div>
       {% endif %}
 
+      <hr>
+
       <div class="cp-sidebar__stats">
-        <div class="cp-sidebar__stat"><span>Баланс:</span> <span>{{ child.stars or 0 }} ⭐</span></div>
-        <div class="cp-sidebar__stat"><span>Ударный режим:</span> <span>🔥 {{ child.current_streak }} дн.</span></div>
+        <div class="cp-stat">
+          <span class="cp-stat__label">Баланс</span>
+          <span class="cp-stat__value"><span class="cp-stat__icon">&#11088;</span>{{ child.stars or 0 }}</span>
+        </div>
+        <div class="cp-stat">
+          <span class="cp-stat__label">Серия</span>
+          <span class="cp-stat__value"><span class="cp-stat__icon">&#128293;</span>{{ child.current_streak }}</span>
+        </div>
       </div>
 
+      <hr>
+
       <div class="cp-sidebar__links">
-        <a href="/kid/login?child_id={{ child.id }}" class="btn btn--primary btn--sm">Кабинет ребёнка</a>
-        <a href="/children/{{ child.id }}/history" class="btn btn--ghost btn--sm">История уроков</a>
+        <a href="/kid/login?child_id={{ child.id }}" class="cp-btn cp-btn--primary">Кабинет ребёнка &rarr;</a>
+        <a href="/children/{{ child.id }}/history" class="cp-btn cp-btn--ghost">История уроков</a>
       </div>
     </aside>
 
     <!-- Main content -->
     <div class="cp-main">
       <!-- Subjects -->
-      <div class="cp-section">
+      <section class="cp-section">
         <div class="cp-section__header">
-          <span class="cp-section__icon">📚</span>
+          <span class="cp-section__icon">&#128218;</span>
           <div>
             <h2 class="cp-section__title">Программа обучения</h2>
             <p class="cp-section__subtitle">Выберите предмет, чтобы начать</p>
           </div>
         </div>
         <div class="subjects-grid-v2" id="subjects-grid"></div>
-      </div>
+      </section>
 
       <!-- Free Lessons -->
-      <div class="cp-section">
+      <section class="cp-section">
         <div class="cp-section__header">
-          <span class="cp-section__icon">🎨</span>
+          <span class="cp-section__icon">&#127912;</span>
           <div>
             <h2 class="cp-section__title">Свободные уроки</h2>
             <p class="cp-section__subtitle">Любая тема — для любопытства и развлечения</p>
@@ -446,65 +730,68 @@
             <option value="russian">Русский язык</option>
             <option value="general">Другое</option>
           </select>
-          <button type="submit" class="btn btn--accent btn-create">Создать урок (20 💎)</button>
+          <button type="submit" class="btn-create">Создать урок<span class="cp-cost"> (20 &#128142;)</span></button>
         </form>
         <div id="free-status" class="free-status-v2" style="display:none"></div>
         <div id="free-lessons-list"></div>
 
         <div class="stars-note">
-          ⭐ Звездочки — это личная награда ребенка. Он тратит их на одежду для своего персонажа. Кристаллы ребенок не видит.
+          &#11088; Звездочки — это личная награда ребенка. Он тратит их на одежду для своего персонажа. Кристаллы ребенок не видит.
         </div>
-      </div>
+      </section>
 
       <!-- Universe -->
-      <div class="cp-section">
+      <section class="cp-section">
         <div class="cp-section__header">
-          <span class="cp-section__icon">🌌</span>
+          <span class="cp-section__icon">&#127756;</span>
           <div>
             <h2 class="cp-section__title">Вселенная героя</h2>
             <p class="cp-section__subtitle">Уникальный мир, созданный ИИ</p>
           </div>
         </div>
 
+        {% if child.universe_description %}
         <div class="universe-block">
           {% if child.character_image_url %}
           <img src="{{ child.character_image_url }}" alt="Персонаж" class="universe-block__img">
           {% endif %}
-          <div class="universe-block__text">
-            {% if child.universe_description %}
-              {{ child.universe_description }}
-            {% else %}
-              Вселенная создаётся... Обновите страницу через пару минут.
-            {% endif %}
-          </div>
+          <div class="universe-block__text">{{ child.universe_description }}</div>
         </div>
+        {% else %}
+        <div class="universe-empty">
+          <span class="cp-spinner"></span>
+          Вселенная создаётся... Обновите страницу через пару минут.
+        </div>
+        {% endif %}
 
         <div class="recreate-section">
-          <p><strong>Пересоздать персонажа и магазин наград</strong><br>
-          Если интересы ребёнка изменились, можно создать новую вселенную. Персонаж, предметы в магазине и купленные вещи будут удалены. Потраченные звёзды не вернутся. Уже пройденные уроки останутся без изменений.</p>
-          <button class="btn btn--outline btn--sm" id="btn-recreate-universe" style="border-color: var(--accent); color: var(--accent);">
+          <p class="recreate-section__title">Пересоздать персонажа и магазин наград</p>
+          <p class="recreate-section__body">
+            Удалятся: текущий персонаж, описание вселенной, магазин одежды и все купленные предметы.
+            Заработанные звёзды останутся у ребёнка, но потратить их можно будет только в новом магазине.
+          </p>
+          <button class="cp-btn cp-btn--outline" id="btn-recreate-universe">
             Пересоздать вселенную
           </button>
-          <div id="recreate-status" style="display:none; margin-top:0.75rem; font-size:0.9rem;"></div>
+          <div id="recreate-status" style="display:none; margin-top:10px; font-size:13px;"></div>
         </div>
-      </div>
+      </section>
     </div>
   </div>
 
   <!-- Recreate universe modal -->
   <div id="recreate-modal" class="modal-overlay" style="display:none;">
-    <div class="modal-card">
+    <div class="modal-card" style="position:relative;">
       <div class="modal-header">
         <h2>Пересоздать вселенную</h2>
+        <p class="modal-header__sub">Новый персонаж и магазин на основе обновлённых интересов</p>
         <button class="modal-close" id="modal-close">&times;</button>
       </div>
       <div class="modal-body">
         <div class="modal-warning">
-          Купленные предметы в магазине будут удалены. Потраченные на них звёзды не вернутся.
+          <span class="modal-warning__icon">&#9888;</span>
+          <span>Купленные предметы будут удалены. Звёзды останутся, но потратить их можно будет только в новом магазине.</span>
         </div>
-        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.25rem;">
-          Заполните анкету заново — на её основе создастся новая вселенная
-        </p>
         <div class="modal-form-group">
           <label>Любимые герои и персонажи</label>
           <input type="text" id="re-favorite-heroes" placeholder="Гарри Поттер, Наруто, Фиксики...">
@@ -527,8 +814,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn--outline" id="modal-cancel">Отмена</button>
-        <button class="btn btn--primary" id="modal-confirm">Пересоздать</button>
+        <button class="cp-btn cp-btn--ghost" id="modal-cancel">Отмена</button>
+        <button class="cp-btn cp-btn--primary" id="modal-confirm">Пересоздать</button>
       </div>
     </div>
   </div>
@@ -569,13 +856,17 @@ async function loadSubjects() {
     for (var j = 0; j < allSubjects.length; j++) {
       var s = allSubjects[j];
       var enrolled = enrolledMap[s.key];
-      var progress = enrolled ? enrolled.completed_lessons + '/' + enrolled.total_lessons : '—';
+      var done = enrolled ? enrolled.completed_lessons : 0;
+      var total = enrolled ? enrolled.total_lessons : 30;
+      var pct = total ? Math.round((done / total) * 100) : 0;
       var hasData = s.key === 'math' || s.key === 'russian';
 
       html += '<a href="/children/' + CHILD_ID + '/subject/' + s.key + '" class="subject-card-v2' + (hasData ? '' : ' subject-card-v2--disabled') + '">';
-      html += '<div class="subject-card-v2__icon">' + s.icon + '</div>';
-      html += '<div class="subject-card-v2__name">' + s.name + '</div>';
-      html += '<div class="subject-card-v2__progress">' + progress + ' уроков</div>';
+      if (!hasData) html += '<span class="subject-card-v2__badge">скоро</span>';
+      html += '<span class="subject-card-v2__icon">' + s.icon + '</span>';
+      html += '<span class="subject-card-v2__name">' + s.name + '</span>';
+      html += '<span class="subject-card-v2__progress"><span>' + done + '/' + total + '</span>';
+      html += '<span class="cp-progress-bar"><span class="cp-progress-fill" style="width:' + pct + '%"></span></span></span>';
       html += '</a>';
     }
     grid.innerHTML = html;
@@ -604,9 +895,9 @@ document.getElementById('free-lesson-form').addEventListener('submit', async fun
     var data = await resp.json();
 
     if (resp.ok) {
-      statusEl.innerHTML = 'Урок создан!';
+      statusEl.innerHTML = '<span class="cp-spinner"></span> Готовим урок: подбираем материал, рисуем иллюстрации&hellip; обычно 1&ndash;2 минуты.';
       document.getElementById('free-topic').value = '';
-      setTimeout(loadFreeLessons, 1000);
+      setTimeout(function() { loadFreeLessons(); statusEl.style.display = 'none'; }, 3000);
     } else if (data.error === 'insufficient_crystals') {
       statusEl.innerHTML = 'Недостаточно кристаллов. <a href="/buy">Пополнить</a>';
     } else {
@@ -627,22 +918,30 @@ async function loadFreeLessons() {
 
     if (lessons.length === 0) { list.innerHTML = ''; return; }
 
-    var html = '<div class="free-list-title">Созданные уроки</div>';
+    var subjIcons = {math: '&#128208;', russian: '&#128221;', science: '&#127758;', general: '&#127912;', world: '&#127758;'};
+    var html = '<div class="free-lessons-list">';
     for (var i = 0; i < lessons.length; i++) {
       var l = lessons[i];
-      var starsHtml = '';
-      if (l.stars !== null && l.stars !== undefined) {
+      var icon = subjIcons[l.subject] || '&#127912;';
+      var statusHtml = '';
+      if (l.stars !== null && l.stars !== undefined && l.stars > 0) {
+        var stars = '';
         for (var s = 1; s <= 3; s++) {
-          starsHtml += '<span class="star ' + (s <= l.stars ? 'earned' : '') + '">&#9733;</span>';
+          stars += s <= l.stars ? '&#9733;' : '&#9734;';
         }
+        statusHtml = '<span class="free-list-item__stars">' + stars + '</span>';
+      } else if (l.status === 'done' || (l.stars !== null && l.stars !== undefined)) {
+        statusHtml = '<span class="free-list-item__status">&#10003; готов</span>';
       } else {
-        starsHtml = '<span style="font-size:0.8rem;color:var(--text-muted)">' + (l.status === 'done' ? 'Готов' : 'Генерация...') + '</span>';
+        statusHtml = '<span class="free-list-item__status is-gen">генерация&hellip;</span>';
       }
       html += '<div class="free-list-item">';
-      html += '<span>' + esc(l.topic_title) + '</span>';
-      html += '<span class="free-list-item__stars">' + starsHtml + '</span>';
+      html += '<span class="free-list-item__subj">' + icon + '</span>';
+      html += '<span class="free-list-item__title">' + esc(l.topic_title) + '</span>';
+      html += statusHtml;
       html += '</div>';
     }
+    html += '</div>';
     list.innerHTML = html;
   } catch(e) {}
 }

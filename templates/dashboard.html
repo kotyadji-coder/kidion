@@ -2,236 +2,497 @@
 {% block title %}Кабинет родителя — Kidion{% endblock %}
 
 {% block head %}
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-.dashboard {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
+/* ===================== Override base.html chrome ===================== */
+body {
+  background: oklch(0.985 0.003 255) !important;
+  font-family: "Geist", ui-sans-serif, -apple-system, "Segoe UI", sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+/* navbar is now shared from base.html */
+.footer {
+  border-top: 1px solid oklch(0.92 0.006 255);
+  background: #fff;
+  color: oklch(0.62 0.010 260);
+  font-family: "Geist", ui-sans-serif, -apple-system, "Segoe UI", sans-serif;
+}
+.footer a { color: oklch(0.46 0.012 260); }
+/* Let .kd handle its own spacing — zero out container padding */
+.main-content.container {
+  padding: 0 !important;
 }
 
-.dashboard__welcome {
-  margin-bottom: 2rem;
-}
+/* ===================== Design tokens ===================== */
+.kd {
+  --bg:           oklch(0.985 0.003 255);
+  --surface:      #ffffff;
+  --surface-2:    oklch(0.972 0.004 255);
+  --surface-3:    oklch(0.955 0.005 255);
+  --border:        oklch(0.92 0.006 255);
+  --border-strong: oklch(0.86 0.010 255);
+  --text:    oklch(0.22 0.015 260);
+  --text-2:  oklch(0.46 0.012 260);
+  --text-3:  oklch(0.62 0.010 260);
+  --text-4:  oklch(0.74 0.008 260);
+  --accent:        oklch(0.52 0.17 268);
+  --accent-ink:    oklch(0.34 0.16 268);
+  --accent-soft:   oklch(0.96 0.030 268);
+  --accent-softer: oklch(0.985 0.014 268);
+  --accent-border: oklch(0.88 0.045 268);
+  --warm:        oklch(0.66 0.15 48);
+  --warm-soft:   oklch(0.96 0.030 65);
+  --gold:        oklch(0.74 0.12 82);
+  --gold-soft:   oklch(0.96 0.038 90);
+  --gem:         oklch(0.55 0.15 295);
+  --gem-soft:    oklch(0.96 0.025 295);
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --shadow-sm: 0 1px 2px rgba(15, 18, 35, 0.04);
+  --shadow-md: 0 1px 3px rgba(15, 18, 35, 0.04), 0 8px 24px -8px rgba(15, 18, 35, 0.08);
+  --font: "Geist", ui-sans-serif, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", monospace;
 
-.dashboard__welcome h1 {
-  font-size: 1.6rem;
-  margin-bottom: 0.5rem;
-}
-
-.dashboard__welcome p {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-  line-height: 1.6;
-}
-
-/* Onboarding block */
-.onboarding-block {
-  background: linear-gradient(135deg, var(--primary-light) 0%, #f0e6ff 100%);
-  border-radius: var(--radius-lg);
-  padding: 2rem;
-  margin-bottom: 2rem;
-  text-align: center;
-}
-
-.onboarding-block p {
+  font-family: var(--font);
   color: var(--text);
-  font-size: 0.95rem;
-  margin-bottom: 1rem;
-  line-height: 1.6;
+  font-feature-settings: "ss01", "ss03", "cv11";
+  line-height: 1.4;
+  letter-spacing: -0.005em;
 }
+.kd *, .kd *::before, .kd *::after { box-sizing: border-box; }
+.kd button { font-family: inherit; cursor: pointer; }
+.kd a { text-decoration: none; color: inherit; }
 
-.onboarding-block .btn {
-  font-size: 1.05rem;
-  padding: 0.85rem 2rem;
-}
-
-/* Activity block */
-.activity-block {
+/* ===================== Top bar ===================== */
+.kd-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
   background: var(--surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 1.25rem 1.5rem;
-  margin-bottom: 1.5rem;
-  font-size: 0.95rem;
-  color: var(--text);
-  border-left: 4px solid var(--primary);
 }
-
-/* Child cards */
-.child-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  margin-bottom: 1.5rem;
-}
-
-.child-card-v2 {
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
-  padding: 1.5rem;
-  transition: transform 0.15s, box-shadow 0.15s;
-}
-
-.child-card-v2:hover {
-  box-shadow: var(--shadow-lg);
-}
-
-.child-card-v2__header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.child-card-v2__avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: var(--primary-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2rem;
-  flex-shrink: 0;
-}
-
-.child-card-v2__avatar img {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.child-card-v2__name {
-  font-weight: 700;
-  font-size: 1.15rem;
-}
-
-.child-card-v2__meta {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.child-card-v2__stats {
-  display: flex;
-  gap: 1.5rem;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-  color: var(--text-muted);
-}
-
-.child-card-v2__stats span {
-  font-weight: 600;
+.kd-brand {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 600; font-size: 17px;
+  letter-spacing: -0.022em;
   color: var(--text);
 }
-
-.child-card-v2__progress {
-  margin-bottom: 1rem;
+.kd-brand-mark {
+  width: 26px; height: 26px; border-radius: 8px;
+  background: linear-gradient(140deg, oklch(0.62 0.17 268), oklch(0.45 0.18 282));
+  display: grid; place-items: center;
+  color: white; font-weight: 700; font-size: 13px;
+  letter-spacing: -0.02em;
+  box-shadow: inset 0 -3px 6px rgba(0,0,0,0.12), 0 1px 2px rgba(40,30,90,0.18);
 }
+.kd-topbar-right { display: flex; align-items: center; gap: 10px; }
 
-.child-card-v2__progress-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  margin-bottom: 0.4rem;
-}
-
-.child-card-v2__progress-item .bar {
-  flex: 1;
-  height: 6px;
-  background: rgba(108, 99, 255, 0.1);
+.kd-balance {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 11px 6px 8px;
+  background: var(--gem-soft);
+  border: 1px solid color-mix(in oklch, var(--gem) 18%, transparent);
   border-radius: 999px;
+  font-size: 13px; font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background .12s;
+}
+.kd-balance:hover { background: color-mix(in oklch, var(--gem-soft) 80%, var(--gem) 8%); }
+.kd-balance-icon { font-size: 12px; line-height: 1; }
+.kd-balance-label { color: var(--text-2); font-weight: 500; font-size: 12px; }
+
+.kd-avatar-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  display: grid; place-items: center;
+  font-size: 14px; color: var(--text-2);
+  cursor: pointer;
+  transition: background .12s;
+}
+.kd-avatar-btn:hover { background: var(--surface-3); }
+
+.kd-topbar-menu { position: relative; }
+.kd-topbar-dropdown {
+  position: absolute; top: 100%; right: 0; margin-top: 6px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-md);
+  padding: 4px; min-width: 160px; z-index: 100;
+  display: none;
+}
+.kd-topbar-dropdown.open { display: block; }
+.kd-topbar-dropdown a,
+.kd-topbar-dropdown button {
+  display: block; width: 100%; padding: 8px 12px;
+  border: 0; background: transparent; border-radius: var(--radius-sm);
+  font-size: 13.5px; font-weight: 500; color: var(--text);
+  cursor: pointer; text-align: left; transition: background .12s;
+  font-family: var(--font);
+}
+.kd-topbar-dropdown a:hover,
+.kd-topbar-dropdown button:hover { background: var(--surface-2); }
+.kd-topbar-dropdown hr { border: 0; border-top: 1px solid var(--border); margin: 4px 2px; }
+
+/* ===================== Page layout ===================== */
+.kd-page { padding: 24px 20px 32px; }
+
+.kd-h1 {
+  margin: 0 0 4px;
+  font-size: 26px; font-weight: 600;
+  letter-spacing: -0.028em; line-height: 1.15;
+}
+.kd-h1-sub {
+  margin: 0 0 24px;
+  color: var(--text-2);
+  font-size: 14.5px; line-height: 1.5;
+  max-width: 36ch;
+}
+
+/* ===================== Invite (empty-state) block ===================== */
+.kd-invite {
+  position: relative;
+  border-radius: var(--radius-lg);
+  padding: 26px 22px 22px;
+  background:
+    radial-gradient(120% 100% at 100% 0%, oklch(0.93 0.085 268) 0%, transparent 60%),
+    radial-gradient(120% 120% at 0% 100%, oklch(0.94 0.06 295) 0%, transparent 55%),
+    var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  overflow: hidden; isolation: isolate;
+}
+.kd-invite-orb {
+  position: absolute; top: -28px; right: -22px;
+  width: 130px; height: 130px; border-radius: 50%;
+  background: radial-gradient(circle at 32% 30%, white 0%, oklch(0.92 0.10 268) 40%, oklch(0.78 0.16 282) 100%);
+  opacity: 0.55; z-index: -1; filter: blur(2px); pointer-events: none;
+}
+.kd-invite-title {
+  margin: 0 0 8px; font-size: 18px; font-weight: 600;
+  letter-spacing: -0.022em; color: var(--accent-ink);
+  max-width: 22ch; line-height: 1.25;
+}
+.kd-invite-body {
+  margin: 0 0 18px; font-size: 13.5px; color: var(--text);
+  line-height: 1.5; max-width: 36ch;
+}
+
+/* ===================== Buttons ===================== */
+.kd-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px;
+  height: 40px; padding: 0 16px;
+  border-radius: 10px;
+  font-size: 14px; font-weight: 500;
+  letter-spacing: -0.005em;
+  border: 1px solid transparent;
+  transition: background .12s, border-color .12s, box-shadow .12s;
+  white-space: nowrap;
+  font-family: var(--font);
+  line-height: 1;
+  cursor: pointer;
+  text-decoration: none;
+}
+.kd-btn-primary,
+a.kd-btn-primary,
+a.kd-btn-primary:visited {
+  background: var(--accent); color: #fff !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.18) inset, 0 1px 2px rgba(40, 35, 100, 0.18);
+}
+.kd-btn-primary:hover,
+a.kd-btn-primary:hover { background: var(--accent-ink); color: #fff !important; }
+.kd-btn-ghost,
+a.kd-btn-ghost,
+a.kd-btn-ghost:visited {
+  background: var(--surface); color: var(--text) !important;
+  border-color: var(--border);
+}
+.kd-btn-ghost:hover,
+a.kd-btn-ghost:hover { background: var(--surface-2); color: var(--text) !important; }
+.kd-btn-block { width: 100%; }
+
+/* ===================== Streak banner ===================== */
+.kd-streak {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px 12px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+}
+.kd-streak-bar {
+  width: 4px; align-self: stretch; min-height: 20px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--warm), oklch(0.74 0.16 28));
+  flex: 0 0 4px;
+}
+.kd-streak-body { font-size: 13.5px; line-height: 1.45; color: var(--text); }
+.kd-streak-body strong { font-weight: 600; }
+.kd-streak-num { font-variant-numeric: tabular-nums; }
+.kd-streak-fire { color: var(--warm); margin-left: 2px; }
+.kd-streak-star { color: var(--gold); }
+
+/* ===================== Kid cards ===================== */
+.kd-cards { display: flex; flex-direction: column; gap: 12px; }
+
+.kd-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  min-width: 0;
+}
+.kd-card-top {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 14px;
+}
+.kd-avatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  display: grid; place-items: center;
+  font-size: 30px; line-height: 1;
+  flex: 0 0 56px;
   overflow: hidden;
 }
-
-.child-card-v2__progress-item .bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--primary), #a78bfa);
-  border-radius: 999px;
+.kd-avatar img {
+  width: 56px; height: 56px;
+  border-radius: 50%; object-fit: cover;
+}
+.kd-card-name {
+  margin: 0; font-size: 17px; font-weight: 600;
+  letter-spacing: -0.018em; line-height: 1.2;
+}
+.kd-card-meta {
+  margin: 2px 0 0; font-size: 12.5px; color: var(--text-3);
 }
 
-.child-card-v2__actions {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-/* Add child button */
-.add-child-block {
-  margin-bottom: 2rem;
-}
-
-/* Referral block */
-.referral-block {
-  background: var(--surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 1.5rem;
-}
-
-.referral-block h3 {
-  font-size: 1rem;
-  margin-bottom: 0.5rem;
-}
-
-.referral-block p {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
-}
-
-.referral-block__link {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.referral-block__link input {
+.kd-stats { display: flex; gap: 8px; margin-bottom: 14px; }
+.kd-stat {
   flex: 1;
-  padding: 0.5rem 0.75rem;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: 0.85rem;
-  background: var(--bg);
-  color: var(--text);
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in oklch, var(--border) 60%, transparent);
 }
-
-/* Start here hint */
-.start-here-hint {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--primary);
-  animation: hint-bounce 1.5s ease-in-out infinite;
-  white-space: nowrap;
+.kd-stat-label {
+  font-size: 10.5px; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--text-3); font-weight: 500;
 }
+.kd-stat-value {
+  font-size: 16px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.015em;
+  display: inline-flex; align-items: baseline; gap: 4px;
+}
+.kd-stat-icon { font-size: 13px; position: relative; top: -1px; }
 
-.start-here-arrow {
-  font-size: 1.2rem;
+.kd-card-actions { display: flex; gap: 8px; }
+.kd-card-actions .kd-btn { flex: 1; height: 38px; font-size: 13.5px; white-space: normal; }
+
+/* Hint pill */
+.kd-hint {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 500;
+  color: var(--accent-ink);
+  margin-top: 10px;
+  padding: 6px 10px 6px 8px;
+  background: var(--accent-soft);
+  border-radius: 999px; width: fit-content;
+}
+.kd-hint-arrow {
   display: inline-block;
-  animation: arrow-pulse 1.5s ease-in-out infinite;
+  animation: kd-arrow 1.4s ease-in-out infinite;
+}
+@keyframes kd-arrow {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
 }
 
-@keyframes hint-bounce {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(-4px); }
+/* Add kid CTA (dashed) */
+.kd-add {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; width: 100%;
+  border: 1px dashed var(--border-strong);
+  background: transparent; color: var(--text-2);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  font-size: 14px; font-weight: 500;
+  font-family: var(--font);
+  transition: background .12s, border-color .12s, color .12s;
+  margin-top: 4px; cursor: pointer;
+  text-decoration: none;
+}
+.kd-add:hover {
+  background: var(--accent-softer);
+  border-color: var(--accent-border);
+  color: var(--accent-ink);
+}
+.kd-add-plus {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--surface-2);
+  display: inline-grid; place-items: center;
+  font-size: 14px; font-weight: 500; color: var(--text-2);
 }
 
-@keyframes arrow-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+/* ===================== Referral block ===================== */
+.kd-referral {
+  margin-top: 28px;
+  padding: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  min-width: 0;
+}
+.kd-referral-head {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 4px;
+}
+.kd-referral-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--gem-soft);
+  display: grid; place-items: center; font-size: 15px;
+}
+.kd-referral-title {
+  margin: 0; font-size: 15px; font-weight: 600;
+  letter-spacing: -0.018em;
+}
+.kd-referral-body {
+  margin: 2px 0 14px;
+  font-size: 13px; color: var(--text-2); line-height: 1.5;
+}
+.kd-link-field {
+  display: flex; align-items: stretch;
+  border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+  background: var(--surface-2);
+  height: 40px;
+  min-width: 0;
+}
+.kd-link-input {
+  flex: 1; min-width: 0;
+  padding: 0 12px; border: 0; background: transparent;
+  font-family: var(--font-mono);
+  font-size: 12.5px; color: var(--text-2);
+  outline: none; letter-spacing: -0.01em;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.kd-link-copy {
+  border: 0; background: var(--surface);
+  border-left: 1px solid var(--border);
+  padding: 0 14px;
+  font-size: 13px; font-weight: 500; color: var(--text);
+  display: inline-flex; align-items: center; gap: 6px;
+  cursor: pointer; font-family: var(--font);
+  transition: background .12s; white-space: nowrap;
+}
+.kd-link-copy:hover { background: var(--surface-3); }
+
+/* ===================== Balance card (desktop aside) ===================== */
+.kd-balance-card {
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  min-width: 0;
+}
+.kd-balance-card-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text-3);
+  margin: 0 0 4px;
+}
+.kd-balance-card-value {
+  display: flex; align-items: baseline; gap: 8px;
+  font-size: 26px; font-weight: 600;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+}
+.kd-balance-card-icon { font-size: 20px; }
+.kd-balance-card-sub {
+  font-size: 13px; font-weight: 500; color: var(--text-2);
+  letter-spacing: 0;
+}
+.kd-balance-card-note {
+  font-size: 12.5px; color: var(--text-2);
+  margin: 6px 0 0;
+}
+.kd-balance-card-action { margin-top: 12px; }
+
+/* ===================== Mobile (default) ===================== */
+.kd-balance-card { display: none; }
+.kd-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ===================== Desktop ===================== */
+@media (min-width: 980px) {
+  .kd-topbar { padding: 16px 40px; }
+  .kd-page {
+    display: flex;
+    gap: 32px;
+    padding: 32px 40px 40px;
+  }
+  .kd-main {
+    flex: 1 1 0%;
+    min-width: 0;
+  }
+  .kd-aside {
+    flex: 0 0 280px;
+  }
+  .kd-balance-card { display: block; }
+  .kd-h1 { font-size: 30px; }
+  .kd-cards { gap: 14px; }
+  .kd-card { padding: 20px; }
+  .kd-card-actions .kd-btn { height: 40px; font-size: 14px; }
+  .kd-referral { margin-top: 0; }
+
+  /* Two-up card grid — auto-fit so cards go single-col when tight */
+  .kd-cards.is-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .kd-cards.is-grid .kd-add,
+  .kd-cards.is-grid .kd-streak {
+    grid-column: 1 / -1;
+  }
+  .kd-cards.is-grid .kd-streak {
+    margin-bottom: 0;
+  }
+}
+
+/* ===================== Loading ===================== */
+.kd-spinner {
+  display: flex; align-items: center; justify-content: center;
+  padding: 60px 20px; color: var(--text-3); font-size: 14px;
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard">
-  <div id="dashboard-content">
-    <div class="spinner">Загрузка...</div>
+<div class="kd" id="kd-root">
+  <!-- Page (always same structure: main + aside) -->
+  <div class="kd-page">
+    <div class="kd-main" id="kd-main">
+      <div class="kd-spinner">Загрузка...</div>
+    </div>
+    <aside class="kd-aside" id="kd-aside"></aside>
   </div>
 </div>
 {% endblock %}
@@ -241,135 +502,169 @@
 var USER_CRYSTALS = {{ user.crystals }};
 var USER_REF_CODE = '{{ user.ref_code }}';
 
+
 (async function() {
   var resp = await fetch('/api/children');
   if (!resp.ok) return;
   var children = await resp.json();
-  var container = document.getElementById('dashboard-content');
+  var mainEl = document.getElementById('kd-main');
+  var asideEl = document.getElementById('kd-aside');
+
+  // Aside is always the same
+  asideEl.innerHTML = renderBalanceCard() + renderReferral();
 
   if (children.length === 0) {
-    // Empty state — onboarding
-    container.innerHTML =
-      '<div class="dashboard__welcome">' +
-        '<h1>Добро пожаловать в Kidion!</h1>' +
-        '<p>Мы подарили вам 60 кристаллов 💎. Это наша внутренняя валюта — используйте её, чтобы генерировать персонализированные уроки для вашего ребенка.</p>' +
-      '</div>' +
-      '<div class="onboarding-block">' +
-        '<p>Здесь пока пусто. Давайте создадим профиль вашего ребенка, чтобы нейросеть придумала для него уникальную вселенную!</p>' +
-        '<a href="/children/new" class="btn btn--primary">+ Добавить ребенка</a>' +
-      '</div>' +
-      renderReferral();
-    return;
+    mainEl.innerHTML = renderEmptyMain();
+  } else {
+    mainEl.innerHTML = renderPopulatedMain(children);
   }
 
-  // Has children — full dashboard
-  var html = '';
-
-  // Welcome
-  html += '<div class="dashboard__welcome"><h1>Добрый день!</h1></div>';
-
-  // Activity block — show recent activity
-  html += renderActivity(children);
-
-  // Child cards
-  html += '<div class="child-cards">';
-  for (var i = 0; i < children.length; i++) {
-    html += renderChildCard(children[i]);
-  }
-  html += '</div>';
-
-  // Add child button (if < 3)
-  if (children.length < 3) {
-    html += '<div class="add-child-block"><a href="/children/new" class="btn btn--outline">+ Добавить еще одного ребенка</a></div>';
-  }
-
-  // Referral
-  html += renderReferral();
-
-  container.innerHTML = html;
-
-  // Copy referral link handler
+  // Copy referral link
   var copyBtn = document.getElementById('copy-ref');
   if (copyBtn) {
     copyBtn.addEventListener('click', function() {
       var input = document.getElementById('ref-link-input');
       navigator.clipboard.writeText(input.value);
-      copyBtn.textContent = 'Скопировано!';
-      setTimeout(function() { copyBtn.textContent = 'Скопировать'; }, 2000);
+      this.textContent = '\u2713 Скопировано';
+      var self = this;
+      setTimeout(function() { self.textContent = '\u29C9 Скопировать'; }, 2000);
     });
   }
 })();
 
-function renderActivity(children) {
-  // Find child with highest stars or streak
+function renderEmptyMain() {
+  return '<h1 class="kd-h1">Добро пожаловать в\u00a0Kidion</h1>' +
+    '<p class="kd-h1-sub">Мы подарили вам\u00a0<strong>60\u00a0кристаллов</strong> \u2014 внутреннюю валюту для генерации персонализированных уроков.</p>' +
+    '<section class="kd-invite">' +
+      '<span class="kd-invite-orb" aria-hidden="true"></span>' +
+      '<h2 class="kd-invite-title">Создайте профиль ребёнка \u2014 нейросеть придумает уникальную вселенную</h2>' +
+      '<p class="kd-invite-body">Имя, возраст, любимые темы \u2014 на их основе сгенерируем персонажа и серию уроков по школьной программе.</p>' +
+      '<a href="/children/new" class="kd-btn kd-btn-primary kd-btn-block">+ Добавить ребёнка</a>' +
+    '</section>';
+}
+
+function renderPopulatedMain(children) {
+  var html = '';
+
+  // Greeting
+  html += '<h1 class="kd-h1">Добрый день!</h1>';
+  html += '<p class="kd-h1-sub">Дети, которых вы добавили. Откройте профиль или перейдите к урокам.</p>';
+
+  // Streak banner (will be placed inside cards grid)
+  var streakHtml = '';
   var best = null;
   for (var i = 0; i < children.length; i++) {
     if (!best || (children[i].current_streak || 0) > (best.current_streak || 0)) {
       best = children[i];
     }
   }
-  if (!best || !best.current_streak) return '';
-
-  var text = best.name + ' на ударном режиме: 🔥 ' + best.current_streak + ' ' + pluralDays(best.current_streak) + ' подряд!';
-  if (best.stars > 0) {
-    text += ' Заработано ' + best.stars + ' ⭐';
+  if (best && best.current_streak >= 1) {
+    streakHtml = '<div class="kd-streak" role="status">' +
+      '<span class="kd-streak-bar" aria-hidden="true"></span>' +
+      '<div class="kd-streak-body">' +
+        '<strong>' + esc(best.name) + '</strong> на ударном режиме: ' +
+        '<span class="kd-streak-num">' + best.current_streak + '</span> ' +
+        pluralDays(best.current_streak) + ' подряд <span class="kd-streak-fire">\uD83D\uDD25</span>' +
+        (best.stars > 0 ? (' \u00b7 заработано <span class="kd-streak-num">' + best.stars + '</span> <span class="kd-streak-star">\u2B50</span>') : '') +
+      '</div>' +
+    '</div>';
   }
-  return '<div class="activity-block">' + esc(text) + '</div>';
+
+  // Kid cards (is-grid enables 2-col layout on desktop)
+  var cardsClass = 'kd-cards' + (children.length > 1 ? ' is-grid' : '');
+  html += '<div class="' + cardsClass + '">';
+  if (streakHtml) {
+    html += streakHtml;
+    streakHtml = ''; // consumed
+  }
+  for (var j = 0; j < children.length; j++) {
+    html += renderChildCard(children[j]);
+  }
+  if (children.length < 3) {
+    html += '<a href="/children/new" class="kd-add"><span class="kd-add-plus">+</span> Добавить ещё одного ребёнка</a>';
+  }
+  html += '</div>';
+
+  return html;
 }
 
 function renderChildCard(c) {
-  var avatarHtml = '';
+  var avatarInner;
   if (c.character_image_url) {
-    avatarHtml = '<div class="child-card-v2__avatar"><img src="' + esc(c.character_image_url) + '" alt=""></div>';
+    avatarInner = '<img src="' + esc(c.character_image_url) + '" alt="">';
   } else {
-    avatarHtml = '<div class="child-card-v2__avatar">' + (c.gender === 'girl' ? '👧' : '👦') + '</div>';
+    avatarInner = c.gender === 'girl' ? '\uD83D\uDC67' : '\uD83D\uDC66';
   }
 
   var setupDone = localStorage.getItem('child_setup_' + c.id);
 
-  var html = '<div class="child-card-v2">';
-  html += '<div class="child-card-v2__header">';
-  html += avatarHtml;
-  html += '<div><div class="child-card-v2__name">' + esc(c.name) + '</div>';
-  html += '<div class="child-card-v2__meta">' + c.grade + ' класс</div></div>';
-  html += '</div>';
+  var html = '<article class="kd-card">';
+
+  // Top
+  html += '<div class="kd-card-top">';
+  html += '<div class="kd-avatar">' + avatarInner + '</div>';
+  html += '<div>';
+  html += '<h3 class="kd-card-name">' + esc(c.name) + '</h3>';
+  html += '<p class="kd-card-meta">' + c.grade + ' класс</p>';
+  html += '</div></div>';
 
   // Stats
-  html += '<div class="child-card-v2__stats">';
-  html += '<div>Баланс: <span>' + (c.stars || 0) + ' ⭐</span></div>';
-  if (c.current_streak > 0) {
-    html += '<div>Ударный режим: <span>🔥 ' + c.current_streak + ' ' + pluralDays(c.current_streak) + '</span></div>';
-  }
+  html += '<div class="kd-stats">';
+  html += '<div class="kd-stat">';
+  html += '<span class="kd-stat-label">Звёзды</span>';
+  html += '<span class="kd-stat-value"><span class="kd-stat-icon">\u2B50</span>' + (c.stars || 0) + '</span>';
+  html += '</div>';
+  html += '<div class="kd-stat">';
+  html += '<span class="kd-stat-label">Ударный режим</span>';
+  html += '<span class="kd-stat-value"><span class="kd-stat-icon">\uD83D\uDD25</span>' + (c.current_streak || 0) + ' ' + pluralDays(c.current_streak || 0) + '</span>';
+  html += '</div>';
   html += '</div>';
 
   // Actions
-  html += '<div class="child-card-v2__actions" style="position:relative;">';
+  html += '<div class="kd-card-actions">';
   if (setupDone) {
-    html += '<a href="/kid/login?child_id=' + c.id + '" class="btn btn--primary btn--sm">Перейти к урокам</a>';
+    html += '<a href="/kid/login?child_id=' + c.id + '" class="kd-btn kd-btn-primary">К урокам</a>';
+  } else {
+    html += '<a href="/children/' + c.id + '" class="kd-btn kd-btn-primary" onclick="localStorage.setItem(\'child_setup_' + c.id + '\',\'1\')">Настроить</a>';
   }
-  html += '<a href="/children/' + c.id + '" class="btn ' + (setupDone ? 'btn--ghost' : 'btn--primary') + ' btn--sm" onclick="localStorage.setItem(\'child_setup_' + c.id + '\',\'1\')">Настройки профиля</a>';
+  html += '<a href="/children/' + c.id + '" class="kd-btn kd-btn-ghost">Настройки</a>';
+  html += '</div>';
 
-  // Show "start here" hint if setup not done
+  // Hint
   if (!setupDone) {
-    html += '<div class="start-here-hint">';
-    html += '<span class="start-here-arrow">&#8592;</span> Начните здесь';
-    html += '</div>';
+    html += '<div class="kd-hint"><span class="kd-hint-arrow">\u2191</span> Начните здесь</div>';
   }
 
-  html += '</div>';
-  html += '</div>';
+  html += '</article>';
   return html;
+}
+
+function renderBalanceCard() {
+  var lessonsApprox = Math.floor(USER_CRYSTALS / 20);
+  return '<div class="kd-balance-card">' +
+    '<p class="kd-balance-card-label">Ваш баланс</p>' +
+    '<p class="kd-balance-card-value">' +
+      '<span class="kd-balance-card-icon">\uD83D\uDC8E</span>' + USER_CRYSTALS +
+      ' <span class="kd-balance-card-sub">кристаллов</span>' +
+    '</p>' +
+    '<p class="kd-balance-card-note">\u2248 ' + lessonsApprox + ' сгенерированных уроков</p>' +
+    '<div class="kd-balance-card-action"><a href="/buy" class="kd-btn kd-btn-ghost kd-btn-block">Пополнить</a></div>' +
+  '</div>';
 }
 
 function renderReferral() {
   var link = window.location.origin + '/register?ref=' + USER_REF_CODE;
-  return '<div class="referral-block">' +
-    '<h3>🎁 Подарите друзьям магию знаний!</h3>' +
-    '<p>Поделитесь ссылкой и получите по 60 💎 кристаллов каждый.</p>' +
-    '<div class="referral-block__link">' +
-    '<input type="text" id="ref-link-input" value="' + esc(link) + '" readonly>' +
-    '<button class="btn btn--primary btn--sm" id="copy-ref">Скопировать</button>' +
-    '</div></div>';
+  return '<section class="kd-referral">' +
+    '<div class="kd-referral-head">' +
+      '<div class="kd-referral-icon">\uD83D\uDC8E</div>' +
+      '<h3 class="kd-referral-title">Подарите друзьям магию знаний</h3>' +
+    '</div>' +
+    '<p class="kd-referral-body">Поделитесь ссылкой \u2014 каждый получит по\u00a060\u00a0кристаллов.</p>' +
+    '<div class="kd-link-field">' +
+      '<input class="kd-link-input" id="ref-link-input" value="' + esc(link) + '" readonly>' +
+      '<button class="kd-link-copy" id="copy-ref">\u29C9 Скопировать</button>' +
+    '</div>' +
+  '</section>';
 }
 
 function pluralDays(n) {
