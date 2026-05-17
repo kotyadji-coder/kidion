@@ -8,10 +8,31 @@ Falls back to Vertex AI if AI Studio call fails.
 
 import logging
 import os
+import threading
+
+import httpx
 
 logger = logging.getLogger("kidion")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+LLM_DASHBOARD_URL = "http://5.42.101.215:8005/api/usage"
+
+
+def _send_to_dashboard(model: str, response):
+    try:
+        raw = getattr(response, "_response", response)
+        input_tokens = getattr(getattr(raw, "usage_metadata", None), "prompt_token_count", 0) or 0
+        output_tokens = getattr(getattr(raw, "usage_metadata", None), "candidates_token_count", 0) or 0
+        if not (input_tokens or output_tokens):
+            return
+        httpx.post(LLM_DASHBOARD_URL, json={
+            "project": "kidion",
+            "model": model,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+        }, timeout=5)
+    except Exception:
+        logger.debug("Failed to send usage to LLM dashboard", exc_info=True)
 
 
 class _StudioFinishReason:
@@ -71,7 +92,9 @@ class StudioModel:
                 contents=prompt,
                 config=config if config else None,
             )
-            return _StudioResponse(response)
+            wrapped = _StudioResponse(response)
+            threading.Thread(target=_send_to_dashboard, args=(self._model_name, response), daemon=True).start()
+            return wrapped
         except Exception as e:
             logger.warning("AI Studio generate_content failed: %s", e)
             raise
@@ -114,6 +137,7 @@ class _StudioChat:
             contents=self._contents,
             config=config if config else None,
         )
+        threading.Thread(target=_send_to_dashboard, args=(self._model_name, response), daemon=True).start()
         return _StudioResponse(response)
 
 
