@@ -125,9 +125,9 @@
 }
 .hist-filter:hover { background: var(--surface-2); color: var(--text); }
 .hist-filter.is-active {
-  background: var(--accent);
+  background: var(--primary);
   color: white;
-  border-color: var(--accent);
+  border-color: var(--primary);
 }
 .hist-filter-count {
   font-variant-numeric: tabular-nums;
@@ -480,6 +480,9 @@ var SUBJ_ICONS = {
   'math': '📐', 'russian': '📝', 'world': '🌍',
   'Математика': '📐', 'Русский язык': '📝', 'Окружающий мир': '🌍'
 };
+var SUBJ_NAMES = {
+  'math': 'Математика', 'russian': 'Русский язык', 'world': 'Окружающий мир'
+};
 
 document.addEventListener('DOMContentLoaded', async function() {
   var statsP = fetch('/api/children/' + CHILD_ID + '/stats').then(function(r){ return r.json(); });
@@ -616,7 +619,7 @@ function renderLessons(lessons) {
   for (var i = 0; i < lessons.length; i++) {
     var l = lessons[i];
     var icon = SUBJ_ICONS[l.subject] || '📖';
-    var subjectLabel = l.subject || '';
+    var subjectLabel = SUBJ_NAMES[l.subject] || l.subject || '';
     var modeLabel = l.mode === 'weekly' ? 'Тема недели' : l.mode === 'curriculum' ? 'Маршрут' : 'По запросу';
     var modeCls = l.mode === 'curriculum' ? 'is-route' : l.mode === 'weekly' ? '' : 'is-request';
 
@@ -668,7 +671,7 @@ function renderBySubject(lessons) {
   var subjs = {};
   for (var i = 0; i < lessons.length; i++) {
     var l = lessons[i];
-    var key = l.subject || 'Другое';
+    var key = SUBJ_NAMES[l.subject] || l.subject || 'Другое';
     if (!subjs[key]) subjs[key] = { count: 0, totalStars: 0, starsCount: 0 };
     subjs[key].count++;
     if (l.stars !== null && l.stars !== undefined) {

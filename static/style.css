@@ -2,10 +2,10 @@
    CSS Variables
    ========================================================= */
 :root {
-    --primary: #4f46e5;
-    --primary-dark: #3730a3;
-    --primary-light: #eef2ff;
-    --accent: #4f46e5;
+    --primary: oklch(0.52 0.17 268);
+    --primary-dark: oklch(0.34 0.16 268);
+    --primary-light: oklch(0.96 0.030 268);
+    --accent: oklch(0.52 0.17 268);
     --bg: #f7f7f8;
     --bg-alt: #ffffff;
     --surface: #ffffff;
@@ -30,10 +30,10 @@
     --gem: #7c3aed;
     --gem-soft: #f5f3ff;
     --text-4: #bcc1c8;
-    --accent-ink: #3730a3;
-    --accent-soft: #eef2ff;
-    --accent-softer: #f5f7ff;
-    --accent-border: #c7d2fe;
+    --accent-ink: oklch(0.34 0.16 268);
+    --accent-soft: oklch(0.96 0.030 268);
+    --accent-softer: oklch(0.985 0.014 268);
+    --accent-border: oklch(0.88 0.045 268);
     --gold: #ca8a04;
     --gold-soft: #fef9c3;
 }
