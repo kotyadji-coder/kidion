@@ -107,6 +107,7 @@ from db import (
     count_daily_messages,
     create_chat_subscription,
     get_active_chat_subscription,
+    use_chat_image,
 )
 from payments import PACKAGES, create_yookassa_payment, handle_webhook
 from referral import generate_ref_code, process_registration_referral
@@ -3428,36 +3429,39 @@ async def kid_chat_send(request: Request):
 # Chat Subscription API (parent buys for account)
 # ---------------------------------------------------------------------------
 
+CHAT_SUB_PRICE_RUB = 500
+CHAT_SUB_IMAGES = 30
+CHAT_IMAGE_COST_CRYSTALS = 5
+
+
 @app.post("/api/chat/subscribe")
 async def chat_subscribe(request: Request):
-    """Buy chat subscription for 300 crystals/month."""
+    """Buy chat subscription for 500 rub/month. Includes 30 images."""
     conn = get_db_connection()
     user = get_current_user(request, conn)
     if not user:
         return JSONResponse({"error": "unauthorized"}, status_code=401)
 
-    # Check if already subscribed
     existing = get_active_chat_subscription(conn, user["id"])
     if existing:
         return JSONResponse({"error": "already_subscribed", "expires_at": existing["expires_at"]}, status_code=400)
 
-    # Deduct 300 crystals
-    ok = update_crystals(conn, user["id"], -300)
-    if not ok:
-        return JSONResponse({"error": "not_enough_crystals", "message": "Недостаточно кристаллов (нужно 300)"}, status_code=400)
-
-    insert_transaction(conn, user["id"], -300, "chat_subscription")
-
-    # Create subscription (30 days)
+    # For now: direct activation (no YooKassa yet — same as crystal flow for testing)
+    # TODO: integrate YooKassa payment for real money
     from datetime import datetime, timedelta, timezone
     now = datetime.now(timezone.utc)
     expires = now + timedelta(days=30)
-    sub_id = create_chat_subscription(conn, user["id"], now.isoformat(), expires.isoformat())
+    sub_id = create_chat_subscription(
+        conn, user["id"], now.isoformat(), expires.isoformat(),
+        images_remaining=CHAT_SUB_IMAGES,
+        amount_rub=CHAT_SUB_PRICE_RUB,
+    )
 
     return JSONResponse({
         "ok": True,
         "subscription_id": sub_id,
         "expires_at": expires.isoformat(),
+        "images_remaining": CHAT_SUB_IMAGES,
     })
 
 
@@ -3473,6 +3477,9 @@ async def chat_subscription_status(request: Request):
     return JSONResponse({
         "active": sub is not None,
         "expires_at": sub["expires_at"] if sub else None,
+        "images_remaining": sub.get("images_remaining", 0) if sub else 0,
+        "price_rub": CHAT_SUB_PRICE_RUB,
+        "image_cost_crystals": CHAT_IMAGE_COST_CRYSTALS,
     })
 
 

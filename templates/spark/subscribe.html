@@ -68,27 +68,23 @@
   <div class="sub-page">
     <div class="sub-head">
       <h1 class="sub-h1">Подписка Спарк</h1>
-      <p class="sub-h1-sub">Все персонажи, голосовые сообщения, картинки от AI и еженедельный отчёт</p>
-      <div class="sub-balance">
-        <span class="sub-balance-icon">💎</span>
-        <span id="crystal-count">{{ crystals }}</span> кристаллов
-      </div>
+      <p class="sub-h1-sub">Все персонажи, голосовые сообщения, 30 картинок от AI и еженедельный отчёт</p>
     </div>
 
     {% if subscription %}
     <div class="sub-status">
       <p class="sub-status-label">Подписка активна</p>
       <p class="sub-status-value">Спарк Pro</p>
-      <p class="sub-status-expires">Действует до {{ subscription.expires_at[:10] }}</p>
+      <p class="sub-status-expires">Действует до {{ subscription.expires_at[:10] }} &middot; Картинок осталось: {{ subscription.images_remaining }}</p>
     </div>
     {% endif %}
 
     <div class="sub-buy">
       <div>
-        <span class="sub-buy-price">300</span>
-        <span class="sub-buy-unit">💎 / месяц</span>
+        <span class="sub-buy-price">500</span>
+        <span class="sub-buy-unit">₽ / месяц</span>
       </div>
-      <p class="sub-buy-desc">Одна подписка на всех детей в аккаунте. Кристаллы работают и на уроках в kidion.ru.</p>
+      <p class="sub-buy-desc">Одна подписка на всех детей в аккаунте. Включены 30 картинок от AI. Дополнительные — 5💎 за штуку.</p>
 
       <ul class="sub-features">
         <li class="sub-feat">
@@ -105,7 +101,7 @@
         </li>
         <li class="sub-feat">
           <span class="sub-feat-icon"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.8l2.2 2.2L9 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          AI-генератор картинок
+          <strong>30 картинок/мес</strong> от AI (доп. — 5💎)
         </li>
         <li class="sub-feat">
           <span class="sub-feat-icon"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.8l2.2 2.2L9 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
@@ -114,21 +110,18 @@
       </ul>
 
       {% if not subscription %}
-      <button class="sp-btn sp-btn-primary sp-btn-lg sub-buy-btn" id="btn-subscribe" {% if crystals < 300 %}disabled style="opacity:0.5"{% endif %}>
-        {% if crystals >= 300 %}
-          Оформить за 300 💎
-        {% else %}
-          Не хватает кристаллов (нужно 300)
-        {% endif %}
+      <button class="sp-btn sp-btn-primary sp-btn-lg sub-buy-btn" id="btn-subscribe">
+          Оформить за 500 ₽/мес
       </button>
       <p class="sub-error" id="sub-error"></p>
       <p class="sub-success" id="sub-success"></p>
       {% endif %}
     </div>
 
-    {% if crystals < 300 and not subscription %}
+    {% if subscription and subscription.images_remaining is defined and subscription.images_remaining <= 0 %}
     <div class="sub-packages">
-      <h3 class="sub-packages-h">Купить кристаллы</h3>
+      <h3 class="sub-packages-h">Картинки закончились? Купите кристаллы</h3>
+      <p style="text-align:center; font-size:13px; color:var(--text-2); margin: 0 0 14px;">1 картинка = 5💎. Кристаллы работают и на уроках в kidion.ru.</p>
       <div class="sub-packages-grid">
         <a class="sub-pkg" href="/buy">
           <div class="sub-pkg-crystals">💎 60</div>

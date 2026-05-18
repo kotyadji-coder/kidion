@@ -369,6 +369,18 @@ def _init_schema(conn: sqlite3.Connection) -> None:
     except sqlite3.OperationalError:
         pass
 
+    # Add images_remaining and payment_id to chat_subscriptions (migration-safe)
+    for col, defn in [
+        ("images_remaining", "INTEGER NOT NULL DEFAULT 0"),
+        ("amount_rub", "REAL NOT NULL DEFAULT 0"),
+        ("payment_id", "TEXT"),
+    ]:
+        try:
+            conn.execute(f"ALTER TABLE chat_subscriptions ADD COLUMN {col} {defn}")
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass
+
     # Seed curriculum data
     _seed_math_grade1(conn)
 
@@ -1911,11 +1923,15 @@ def create_chat_subscription(
     user_id: int,
     started_at: str,
     expires_at: str,
+    images_remaining: int = 30,
+    amount_rub: float = 0,
+    payment_id: str | None = None,
 ) -> int:
     cursor = conn.execute(
-        "INSERT INTO chat_subscriptions (user_id, started_at, expires_at, created_at) "
-        "VALUES (?, ?, ?, ?)",
-        (user_id, started_at, expires_at, _now()),
+        "INSERT INTO chat_subscriptions "
+        "(user_id, started_at, expires_at, images_remaining, amount_rub, payment_id, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (user_id, started_at, expires_at, images_remaining, amount_rub, payment_id, _now()),
     )
     conn.commit()
     return cursor.lastrowid
@@ -1929,6 +1945,19 @@ def get_active_chat_subscription(conn: sqlite3.Connection, user_id: int) -> dict
         (user_id, _now()),
     ).fetchone()
     return dict(row) if row else None
+
+
+def use_chat_image(conn: sqlite3.Connection, user_id: int) -> bool:
+    """Decrement images_remaining for active subscription. Returns True if had remaining."""
+    sub = get_active_chat_subscription(conn, user_id)
+    if not sub or sub.get("images_remaining", 0) <= 0:
+        return False
+    conn.execute(
+        "UPDATE chat_subscriptions SET images_remaining = images_remaining - 1 WHERE id = ?",
+        (sub["id"],),
+    )
+    conn.commit()
+    return True
 
 
 # ---------------------------------------------------------------------------
