@@ -44,7 +44,7 @@ kidion/
 │   ├── content_generator.py   # Saves lesson HTML/PNG/JSON to content/
 │   ├── curricula.py           # Load/search curriculum JSON files
 │   ├── universe.py            # Universe/character/shop generation (Gemini)
-│   ├── kid_chat.py            # Spark AI chat: single character, safety prompts
+│   ├── kid_chat.py            # Spark AI chat: 4 characters, per-character safety prompts
 │   └── worksheet/             # Printable worksheet generation (from metodist)
 │       ├── models.py           # Pydantic models: 24 task types + 3 activities
 │       ├── prompts.py          # Prompts for worksheet/activity generation
@@ -66,9 +66,18 @@ kidion/
 │   ├── chat.html              # Spark AI chat (single assistant, simple layout)
 │   ├── lesson.html            # Lesson iframe + auto-score via postMessage
 │   └── result.html            # Stars animation + confetti + shop button
+├── templates/spark/
+│   ├── chat.html              # New Spark Chat (multi-character, Geist font)
+│   ├── landing.html           # Spark Chat landing page (/spark)
+│   └── subscribe.html         # Subscription purchase page (/spark/subscribe)
+├── static/spark/
+│   ├── chat.css               # Chat CSS (oklch, per-character tints)
+│   ├── landing.css            # Landing page CSS
+│   ├── chat.js                # Multi-character chat JS
+│   └── spark-hero.png         # Spark character PNG
 ├── static/kid/style.css       # Kid CSS (Nunito, pastels, mobile-first)
 ├── static/kid/img/spark.png   # Spark avatar image
-├── static/kid/chat.js         # Chat page JS (CRUD, send, typing, attachments)
+├── static/kid/chat.js         # Chat page JS (legacy single-Spark)
 ├── content/                   # Generated lesson HTML/PNG + characters/ (gitignored)
 ├── content/characters/        # Generated character PNGs: {child_id}.png
 └── tests/                     # 306 tests across 16 test files
@@ -97,7 +106,8 @@ kidion/
 | `referrals` | Referral relationships | referrer_id, referred_id |
 | `kid_chats` | Kid AI chat sessions | child_id, character_key, title |
 | `kid_chat_messages` | Chat messages | chat_id, role (user/assistant), content, image_url |
-| `chat_subscriptions` | Chat subscription (parent) | user_id, started_at, expires_at |
+| `chat_subscriptions` | Chat subscription (parent) | user_id, started_at, expires_at, images_remaining, amount_rub |
+| `chat_characters` | Seeded chat characters (4) | key, name_ru, role_ru, system_prompt, greeting_ru, is_free |
 
 ## Personalized Universe & Character System
 
@@ -138,31 +148,37 @@ All generation functions return predefined defaults when neither `GEMINI_API_KEY
 - **Crystals**: Parent currency. Bought with real money, spent on lesson generation and chat subscription. Child never sees crystals.
 - **Stars**: Child currency. Earned by completing lessons (+1 per correct task, max 5 per lesson). Spent in character shop. Stored in `children.stars`.
 
-## Kid AI Chat System
+## Spark Chat (chat.kidion.ru)
 
-### Spark — Single AI Assistant
-One universal character **Spark** (friendly fire creature in glasses and purple robe). Avatar: `static/kid/img/spark.png`.
-- Single chat per child, auto-created on first visit
-- No chat list, no character selection — just open and talk
-- DB keeps only last 30 messages (auto-trimmed on insert)
-- "New conversation" button clears message history
+Multi-character AI chat for children. New design at `/spark/chat`, landing at `/spark`.
 
-### Safety
-- Strict system prompt: no violence, politics, adult content, no personal data requests
-- Gemini safety filters at `BLOCK_LOW_AND_ABOVE`
-- Input sanitization against prompt injection
-- Responses adapted for ages 6-10
+### 4 Characters
+| Character | Key | Role | Tier | Model |
+|-----------|-----|------|------|-------|
+| Спарк | spark | Универсальный друг | free | gemini-2.5-flash |
+| Профессор Сова | owl | Учитель | pro | gemini-2.5-flash |
+| Капитан Сказка | captain | Рассказчик | pro | gemini-2.5-flash |
+| Друг Пикси | pixie | Ровесник | pro | gemini-2.5-flash |
+
+Each has a unique system prompt layered on shared safety rules (10 rules in `_SAFETY_BASE`). Per-character chat history (separate `kid_chats` row per child+character). SVG avatars for Owl/Captain/Pixie, PNG for Spark.
 
 ### Subscription & Limits
-- **Free:** 5 messages/day per parent account (all children share)
-- **Subscription:** 300 crystals/month → 50 messages/day
+- **Free:** 10 messages/day, only Spark, no voice/images
+- **Pro (500 ₽/month real money):** 100 msg/day, all 4 characters, voice input, 30 AI images/month included, parent reports
+- **Extra images:** 5💎 per image (from crystal balance)
 - Limits counted across all children of the same parent
-- Subscription bought on `/buy` page (parent auth)
+- Subscription page: `/spark/subscribe` (parent auth)
+- TODO: integrate YooKassa for real payment (currently direct activation)
 
 ### Chat API
-- `GET /api/kid/chat` — get chat + messages + limits
-- `POST /api/kid/chat/send` — send message, get AI response
-- `POST /api/kid/chat/clear` — clear history (new conversation)
+- `GET /api/kid/chat?character=spark` — get chat + messages + limits
+- `POST /api/kid/chat/send?character=owl` — send message (checks subscription for pro chars)
+- `POST /api/kid/chat/clear?character=spark` — clear history
+- `GET /api/kid/characters` — list all characters + locked status
+- `POST /api/chat/subscribe` — buy subscription (500 rub/month)
+
+### Voice Input
+Web Speech API (browser-side, free). Opens overlay, speech → text → editable before send. Pro only.
 
 ## Key Business Logic
 
@@ -171,7 +187,7 @@ One universal character **Spark** (friendly fire creature in glasses and purple 
 - **Packages:** 60/60 rub, 360/320 rub, 600/490 rub, 1000/800 rub
 - **Adaptive difficulty** (1-3): auto-adjusts based on last 2 lesson results
 - **Auto-scoring:** iframe postMessage → auto-submit result. Stub mode → 5/5.
-- **Chat subscription:** 300 crystals/month, 50 msg/day (5 free). Per account, all children.
+- **Chat subscription:** 500 rub/month (real money), 100 msg/day (10 free), 30 images/month, extra images 5💎 each.
 
 ## API Endpoints
 
@@ -188,15 +204,15 @@ One universal character **Spark** (friendly fire creature in glasses and purple 
 - Data: `GET /api/kid/me` (includes character_image_url, universe_description), `/lessons`, `/lessons/{id}`, `/subjects`, `/subject/{s}/map`, `/free-lessons`
 - Actions: `POST /api/kid/lessons/{curriculum_lesson_id}/start`
 - **Character & Shop:** `GET /api/kid/character`, `POST /api/kid/character/name`, `POST /api/kid/shop/buy/{item_id}`, `POST /api/kid/shop/equip/{item_id}`
-- **Chat:** `GET /api/kid/chat`, `POST /api/kid/chat/send`, `POST /api/kid/chat/clear`
+- **Chat:** `GET /api/kid/chat?character=X`, `POST /api/kid/chat/send?character=X`, `POST /api/kid/chat/clear?character=X`, `GET /api/kid/characters`
 
 ### Payments & Lessons (parent auth)
 - `POST /api/lessons/generate`, `POST /api/lessons/generate-topic`, `GET /api/lessons/{id}/poll`, `POST /api/lessons/{id}/result`
 - `POST /api/payment/create`, `POST /api/payment/webhook`, `GET /api/payment/status/{id}`
 - `GET /api/children/{id}/worksheets?topic_id=X` — batch print worksheets for topic (5 pages)
 - `GET /api/children/{id}/worksheets?subject=X` — batch print all worksheets for subject
-- `POST /api/chat/subscribe` — buy chat subscription (300 crystals/month)
-- `GET /api/chat/subscription` — check subscription status
+- `POST /api/chat/subscribe` — buy chat subscription (500 rub/month)
+- `GET /api/chat/subscription` — check subscription status + images_remaining
 
 ## Pages
 
@@ -207,8 +223,13 @@ One universal character **Spark** (friendly fire creature in glasses and purple 
 - `/kid/character` — RPG character page + star shop + name editing + speech bubble
 - `/kid/subject/{subject}` — Duolingo-style lesson map with tooltip
 - `/kid/lesson/{id}` — lesson iframe + print button
-- `/kid/chat` — AI chat with Spark (single assistant)
+- `/kid/chat` — AI chat with Spark (legacy single assistant)
 - `/kid/result/{id}` — confetti + stars animation + shop button
+
+### Spark Chat
+- `/spark` — landing page (public, no auth)
+- `/spark/chat` — multi-character chat (child auth via PIN)
+- `/spark/subscribe` — subscription purchase (parent auth)
 
 ### Parent
 - `/dashboard`, `/children/new`, `/children/{id}`, `/children/{id}/subject/{subject}`, `/children/{id}/history`
@@ -257,7 +278,11 @@ uvicorn main:app --host 127.0.0.1 --port 8003 --reload
 
 - [x] Deploy to VPS (systemd + nginx + certbot SSL)
 - [x] DNS: A-record kidion.ru -> 72.56.126.111
-- [ ] YooKassa: get real SHOP_ID and SECRET_KEY
+- [ ] YooKassa: get real SHOP_ID and SECRET_KEY (for crystal packages + chat subscription)
+- [ ] Spark Chat: subdomain chat.kidion.ru (nginx + DNS + cookie domain=.kidion.ru)
+- [ ] Spark Chat: AI image generation in chat (detect "нарисуй", call Vertex AI)
+- [ ] Spark Chat: parent reports (weekly chat summaries)
+- [ ] Spark Chat: independent registration flow (simplified, no universe)
 - [x] Connect print worksheet generation (worksheets generated alongside lessons)
 - [ ] Add curricula for grades 3-4 and more subjects (world)
 - [ ] Pass universe_description into lesson generation prompts (so lessons are themed)
