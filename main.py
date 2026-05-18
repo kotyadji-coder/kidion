@@ -3227,6 +3227,14 @@ async def spark_chat_page(request: Request):
     )
 
 
+@app.get("/spark", response_class=HTMLResponse)
+async def spark_landing_page(request: Request):
+    """Spark Chat landing page (public, no auth required)."""
+    if templates is None:
+        return HTMLResponse("<h1>Spark Chat</h1>")
+    return templates.TemplateResponse(request, "spark/landing.html", {})
+
+
 # ---------------------------------------------------------------------------
 # Kid Chat API endpoints (single Spark chat)
 # ---------------------------------------------------------------------------

@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Спарк Чат — умный AI-друг для вашего ребёнка</title>
+<meta name="description" content="Безопасный AI-чат для детей 6-10 лет. Объяснит домашку, расскажет историю, поддержит любопытство. Без рекламы и взрослых тем.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/spark/chat.css">
+<link rel="stylesheet" href="/static/spark/landing.css">
+</head>
+<body>
+<div class="sp">
+
+  <!-- Nav -->
+  <nav class="sp-nav">
+    <a class="sp-brand" href="/spark">
+      <span class="sp-brand-mark">S</span>
+      <span>Спарк Чат</span>
+    </a>
+    <ul class="sp-nav-links">
+      <li><a class="sp-nav-link" href="#feats">Возможности</a></li>
+      <li><a class="sp-nav-link" href="#safety">Безопасность</a></li>
+      <li><a class="sp-nav-link" href="#chars">Персонажи</a></li>
+      <li><a class="sp-nav-link" href="#price">Тарифы</a></li>
+    </ul>
+    <div class="sp-nav-cta">
+      <a class="sp-btn sp-btn-ghost sp-nav-login" href="/login">Войти</a>
+      <a class="sp-btn sp-btn-primary" href="/register">
+        Попробовать
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <button class="sp-nav-burger" aria-label="Меню" onclick="document.querySelector('.sp-nav-links').classList.toggle('is-open')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 5h10M3 8h10M3 11h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="sp-hero">
+    <div class="sp-container sp-hero-inner">
+      <div class="sp-hero-text">
+        <span class="sp-hero-pill">
+          <span class="sp-hero-pill-tag">Новое</span>
+          <span>AI-чат для детей 6–10 лет</span>
+        </span>
+        <h1 class="sp-h1">
+          Умный друг для&nbsp;вашего <span class="sp-grad-text">ребёнка</span>
+        </h1>
+        <p class="sp-hero-sub">
+          Безопасный AI-помощник, который объяснит домашку, расскажет историю
+          и&nbsp;поддержит любопытство. Без рекламы, без взрослых тем, под присмотром родителей.
+        </p>
+        <div class="sp-hero-ctas">
+          <a class="sp-btn sp-btn-primary sp-btn-lg" href="/register">
+            Попробовать бесплатно
+            <span class="sp-btn-sub">&middot; 5&nbsp;сообщений в день</span>
+          </a>
+          <a class="sp-btn sp-btn-ghost sp-btn-lg" href="#feats">Посмотреть, как работает</a>
+        </div>
+        <div class="sp-hero-trust">
+          <span class="sp-hero-trust-item">
+            <span class="sp-hero-trust-check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5l2.8 2.8L11.5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            Без сбора персональных данных
+          </span>
+          <span class="sp-hero-trust-item">
+            <span class="sp-hero-trust-check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5l2.8 2.8L11.5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            Карта оплаты не нужна
+          </span>
+        </div>
+      </div>
+
+      <div class="sp-hero-stage" aria-hidden="true">
+        <span class="sp-hero-sparkle s1">&#10022;</span>
+        <span class="sp-hero-sparkle s2">&#10023;</span>
+        <span class="sp-hero-sparkle s3">&#10022;</span>
+        <img class="sp-hero-spark" src="/static/spark/spark-hero.png" alt="">
+
+        <div class="sp-hero-chat">
+          <div class="sp-hero-chat-head">
+            <div class="sp-hero-chat-av">&#10022;</div>
+            <div>
+              <p class="sp-hero-chat-name">Спарк</p>
+              <p class="sp-hero-chat-status">онлайн &middot; отвечает за&nbsp;3 сек</p>
+            </div>
+          </div>
+          <div class="sp-hero-msgs">
+            <div class="sp-msg sp-msg-user">А&nbsp;динозавры умели плавать?</div>
+            <div class="sp-msg sp-msg-bot">
+              О, отличный вопрос! &#127754; Некоторые&nbsp;— да! Например, <strong>спинозавр</strong>
+              почти всё время проводил в воде, как современные крокодилы. А вот <strong>тираннозавр</strong>
+              плавать почти не умел.
+            </div>
+            <div class="sp-msg sp-msg-user">Покажи спинозавра!</div>
+            <div class="sp-msg sp-msg-typing">
+              <span class="sp-typing-dots"><span></span><span></span><span></span></span>
+            </div>
+          </div>
+          <div class="sp-hero-input">
+            <span>Напиши сообщение Спарку&hellip;</span>
+            <span class="sp-hero-input-send">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7h8M7 3.5L10.5 7 7 10.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="sp-section" id="feats">
+    <div class="sp-container">
+      <div class="sp-section-head">
+        <span class="sp-eyebrow">Возможности</span>
+        <h2 class="sp-h2">Что умеет Спарк</h2>
+        <p class="sp-section-sub">
+          Один собеседник для всех детских «почему». Объясняет, придумывает, рисует — всегда в рамках,
+          подходящих для возраста&nbsp;6–10&nbsp;лет.
+        </p>
+      </div>
+      <div class="sp-feats">
+        <article class="sp-feat">
+          <div class="sp-feat-icon">&#128218;</div>
+          <h3 class="sp-feat-title">Помощь с уроками</h3>
+          <p class="sp-feat-body">Объяснит тему простыми словами, поможет разобраться с домашкой, не выдавая готового ответа.</p>
+          <p class="sp-feat-tag">1–4 класс &middot; школьная программа</p>
+        </article>
+        <article class="sp-feat">
+          <div class="sp-feat-icon">&#127760;</div>
+          <h3 class="sp-feat-title">Интересные факты</h3>
+          <p class="sp-feat-body">Расскажет о космосе, динозаврах, океане — о чём угодно — на понятном языке.</p>
+          <p class="sp-feat-tag">10 000+ тем</p>
+        </article>
+        <article class="sp-feat">
+          <div class="sp-feat-icon">&#128214;</div>
+          <h3 class="sp-feat-title">Истории и сказки</h3>
+          <p class="sp-feat-body">Придумает персональную сказку по запросу ребёнка с его героями и сюжетом.</p>
+          <p class="sp-feat-tag">По запросу &middot; от 3 минут</p>
+        </article>
+        <article class="sp-feat">
+          <div class="sp-feat-icon">&#127912;</div>
+          <h3 class="sp-feat-title">Картинки от AI</h3>
+          <p class="sp-feat-body">Нарисует картинку по описанию — безопасный детский генератор изображений.</p>
+          <p class="sp-feat-tag">В подписке</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Safety -->
+  <section class="sp-section sp-safety" id="safety">
+    <div class="sp-container">
+      <div class="sp-section-head">
+        <span class="sp-eyebrow">Безопасность</span>
+        <h2 class="sp-h2">Полная безопасность для&nbsp;детей</h2>
+        <p class="sp-section-sub">
+          Мы не делаем «детский ChatGPT». Спарк&nbsp;— отдельный продукт с собственными правилами,
+          ограничениями и&nbsp;ежедневной проверкой ответов командой методистов.
+        </p>
+      </div>
+      <div class="sp-safety-grid">
+        <article class="sp-safety-item">
+          <div class="sp-safety-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 2.5L4 5v6c0 4 3 7 7 8.5 4-1.5 7-4.5 7-8.5V5l-7-2.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7.8 11.2l2.3 2.3L14.2 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <h3 class="sp-safety-title">Строгие фильтры контента</h3>
+            <p class="sp-safety-body">Никакого насилия, политики, взрослых или коммерческих тем. Многослойная модерация на каждом сообщении.</p>
+          </div>
+        </article>
+        <article class="sp-safety-item">
+          <div class="sp-safety-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M2.5 11s3-6 8.5-6 8.5 6 8.5 6-3 6-8.5 6S2.5 11 2.5 11z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="11" cy="11" r="2.6" stroke="currentColor" stroke-width="1.6"/></svg>
+          </div>
+          <div>
+            <h3 class="sp-safety-title">Не запрашивает личные данные</h3>
+            <p class="sp-safety-body">Спарк никогда не спросит адрес, телефон, школу или фамилию. Если ребёнок их напишет — мягко переведёт тему.</p>
+          </div>
+        </article>
+        <article class="sp-safety-item">
+          <div class="sp-safety-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.6"/><path d="M7 9.5c0-1 .8-1.8 1.8-1.8s1.7.8 1.7 1.7c0 1.6-2.5 2-2.5 4.6h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.2 13.5V8l2.3 2.6V13.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <h3 class="sp-safety-title">Ответы по возрасту</h3>
+            <p class="sp-safety-body">Все объяснения подобраны для 6–10 лет: понятные слова, короткие предложения, аналогии из детского мира.</p>
+          </div>
+        </article>
+        <article class="sp-safety-item">
+          <div class="sp-safety-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="4" y="3.5" width="14" height="15" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M7.5 8h7M7.5 11h7M7.5 14h4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <h3 class="sp-safety-title">Отчёт для родителей</h3>
+            <p class="sp-safety-body">Раз в неделю — что обсуждали, какие темы интересны ребёнку, на чём стоит обратить внимание.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Characters -->
+  <section class="sp-section" id="chars">
+    <div class="sp-container">
+      <div class="sp-section-head">
+        <span class="sp-eyebrow">Персонажи</span>
+        <h2 class="sp-h2">Выберите собеседника</h2>
+        <p class="sp-section-sub">
+          У каждого&nbsp;— свой характер и манера говорить. Ребёнок переключается между ними в один тап;
+          контекст разговора сохраняется отдельно для каждого.
+        </p>
+      </div>
+      <div class="sp-chars">
+        <article class="sp-char" style="--char-tint: oklch(0.96 0.045 50)">
+          <span class="sp-char-badge is-free">Бесплатно</span>
+          <div class="sp-char-av"><img src="/static/spark/spark-hero.png" alt="Спарк"></div>
+          <h3 class="sp-char-name">Спарк</h3>
+          <p class="sp-char-role">Универсальный друг</p>
+          <p class="sp-char-body">Помощник по умолчанию: ответит на любой вопрос, поддержит беседу, поможет с домашкой.</p>
+          <p class="sp-char-quote">&laquo;Привет! О&nbsp;чём поговорим сегодня?&raquo;</p>
+        </article>
+        <article class="sp-char" style="--char-tint: oklch(0.95 0.04 75)">
+          <span class="sp-char-badge is-pro">Подписка</span>
+          <div class="sp-char-av">
+            <svg viewBox="0 0 96 96" width="100%" height="100%"><defs><linearGradient id="ob2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8b7355"/><stop offset="1" stop-color="#5a4a36"/></linearGradient><linearGradient id="obl2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0d8a8"/><stop offset="1" stop-color="#d4b888"/></linearGradient></defs><ellipse cx="48" cy="56" rx="32" ry="34" fill="url(#ob2)"/><ellipse cx="48" cy="62" rx="20" ry="22" fill="url(#obl2)"/><path d="M28 28c-1-6 2-10 5-10s3 6 0 12M68 28c1-6-2-10-5-10s-3 6 0 12" fill="#5a4a36"/><circle cx="38" cy="44" r="11" fill="white" stroke="#2a2418" stroke-width="2.4"/><circle cx="58" cy="44" r="11" fill="white" stroke="#2a2418" stroke-width="2.4"/><circle cx="40" cy="46" r="4.5" fill="#2a2418"/><circle cx="60" cy="46" r="4.5" fill="#2a2418"/><circle cx="42" cy="44.5" r="1.6" fill="white"/><circle cx="62" cy="44.5" r="1.6" fill="white"/><path d="M48 52l-3 5h6l-3-5z" fill="#e6a040" stroke="#a87026" stroke-width="1.2" stroke-linejoin="round"/><path d="M48 4l-30 10 30 10 30-10-30-10z" fill="#3a3358" stroke="#1a1530" stroke-width="1.2"/><rect x="22" y="10" width="52" height="6" fill="#2a2440" rx="1"/><circle cx="48" cy="14" r="2.4" fill="#e8c84c"/></svg>
+          </div>
+          <h3 class="sp-char-name">Профессор Сова</h3>
+          <p class="sp-char-role">Учитель</p>
+          <p class="sp-char-body">Объясняет школьные темы подробно, разбирает шаг за шагом, любит «почему?».</p>
+          <p class="sp-char-quote">&laquo;Давай разберёмся вместе — с&nbsp;чего начнём?&raquo;</p>
+        </article>
+        <article class="sp-char" style="--char-tint: oklch(0.95 0.04 230)">
+          <span class="sp-char-badge is-pro">Подписка</span>
+          <div class="sp-char-av">
+            <svg viewBox="0 0 96 96" width="100%" height="100%"><defs><radialGradient id="cf2" cx="0.5" cy="0.4" r="0.7"><stop offset="0" stop-color="#ffdfb8"/><stop offset="1" stop-color="#e8b888"/></radialGradient><linearGradient id="ch2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a3a6e"/><stop offset="1" stop-color="#1a2548"/></linearGradient></defs><path d="M14 84c0-12 14-20 34-20s34 8 34 20" fill="#1a2548"/><circle cx="48" cy="50" r="22" fill="url(#cf2)"/><ellipse cx="40" cy="49" rx="2.6" ry="3" fill="#3a2818"/><ellipse cx="56" cy="49" rx="2.6" ry="3" fill="#3a2818"/><path d="M42 58c2 2 4 3 6 3s4-1 6-3" stroke="#7a4828" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="36" cy="55" r="3" fill="#f4a890" opacity="0.55"/><circle cx="60" cy="55" r="3" fill="#f4a890" opacity="0.55"/><path d="M34 60c0 10 6 16 14 16s14-6 14-16c0-1 0-2-.4-3-2 3-7 4-13.6 4s-11.6-1-13.6-4c-.4 1-.4 2-.4 3z" fill="#d8d8d8" stroke="#9a9a9a" stroke-width="1.2"/><path d="M18 36c0-12 14-22 30-22s30 10 30 22v2H18z" fill="url(#ch2)"/><rect x="18" y="36" width="60" height="6" fill="#0e1530"/><circle cx="48" cy="28" r="6" fill="#e8c84c" stroke="#a88420" stroke-width="1.2"/></svg>
+          </div>
+          <h3 class="sp-char-name">Капитан Сказка</h3>
+          <p class="sp-char-role">Рассказчик</p>
+          <p class="sp-char-body">Сочиняет истории и приключения с ребёнком в главной роли. Можно продолжать каждый вечер.</p>
+          <p class="sp-char-quote">&laquo;На&nbsp;каком корабле отправимся в&nbsp;этот раз?&raquo;</p>
+        </article>
+        <article class="sp-char" style="--char-tint: oklch(0.95 0.04 340)">
+          <span class="sp-char-badge is-pro">Подписка</span>
+          <div class="sp-char-av">
+            <svg viewBox="0 0 96 96" width="100%" height="100%"><defs><radialGradient id="pf2" cx="0.5" cy="0.4" r="0.7"><stop offset="0" stop-color="#ffe2cc"/><stop offset="1" stop-color="#f0b896"/></radialGradient><linearGradient id="ph2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff8acb"/><stop offset="1" stop-color="#c84a98"/></linearGradient></defs><path d="M14 88c0-12 14-20 34-20s34 8 34 20" fill="#5dd0c8"/><circle cx="48" cy="48" r="22" fill="url(#pf2)"/><path d="M26 38c0-14 10-24 22-24s22 10 22 24c0 4-1 7-2 9-2-6-6-10-12-10-5 0-8 3-8 3s-3-3-8-3c-6 0-10 4-12 10-1-2-2-5-2-9z" fill="url(#ph2)"/><path d="M26 38c-2 4-4 12-2 22 0 0 4-4 6-12M70 38c2 4 4 12 2 22 0 0-4-4-6-12" fill="url(#ph2)"/><ellipse cx="40" cy="50" rx="4" ry="5" fill="#3a2858"/><ellipse cx="56" cy="50" rx="4" ry="5" fill="#3a2858"/><circle cx="41.5" cy="48.5" r="1.6" fill="white"/><circle cx="57.5" cy="48.5" r="1.6" fill="white"/><circle cx="34" cy="58" r="3.5" fill="#ff8aa0" opacity="0.6"/><circle cx="62" cy="58" r="3.5" fill="#ff8aa0" opacity="0.6"/><path d="M42 62c2 2.5 4 3.5 6 3.5s4-1 6-3.5" stroke="#a83858" stroke-width="1.8" stroke-linecap="round" fill="none"/><g fill="#ffd64a"><path d="M18 22l1 3 3 1-3 1-1 3-1-3-3-1 3-1z"/><path d="M78 28l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></g></svg>
+          </div>
+          <h3 class="sp-char-name">Друг Пикси</h3>
+          <p class="sp-char-role">Ровесник</p>
+          <p class="sp-char-body">Болтает на детские темы, делится «секретами», шутит. Помогает не чувствовать себя одиноко.</p>
+          <p class="sp-char-quote">&laquo;Угадай, что я узнала сегодня!&raquo;</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="sp-section" id="price">
+    <div class="sp-container">
+      <div class="sp-section-head">
+        <span class="sp-eyebrow">Тарифы</span>
+        <h2 class="sp-h2">Начните бесплатно</h2>
+        <p class="sp-section-sub">
+          Подписка оплачивается кристаллами&nbsp;— общая валюта Kidion. Купленные кристаллы
+          работают и&nbsp;на&nbsp;уроках в&nbsp;kidion.ru.
+        </p>
+      </div>
+      <div class="sp-price">
+        <!-- Free tier -->
+        <article class="sp-tier">
+          <div class="sp-tier-head">
+            <div>
+              <h3 class="sp-tier-name">Бесплатно</h3>
+              <p class="sp-tier-tagline">Чтобы попробовать и&nbsp;посмотреть, как ребёнок отнесётся</p>
+            </div>
+          </div>
+          <div>
+            <div class="sp-tier-price">
+              <span class="sp-tier-price-num">0</span>
+              <span class="sp-tier-price-unit">&#8381; / навсегда</span>
+            </div>
+            <p class="sp-tier-price-aux">Без карты, без срока</p>
+          </div>
+          <ul class="sp-tier-feats">
+            <li class="sp-tier-feat is-on">
+              <span class="sp-tier-feat-icon"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.8l2.2 2.2L9 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span><strong>5 сообщений в день</strong> от Спарка</span>
+            </li>
+            <li class="sp-tier-feat is-on">
+              <span class="sp-tier-feat-icon"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.8l2.2 2.2L9 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span>Только персонаж <strong>Спарк</strong></span>
+            </li>
+            <li class="sp-tier-feat is-off">
+              <span class="sp-tier-feat-icon"><svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M2 2l5 5M7 2L2 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+              <span>Голосовые сообщения</span>
+            </li>
+            <li class="sp-tier-feat is-off">
+              <span class="sp-tier-feat-icon"><svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M2 2l5 5M7 2L2 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+              <span>Картинки от AI</span>
+            </li>
+            <li class="sp-tier-feat is-off">
+              <span class="sp-tier-feat-icon"><svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M2 2l5 5M7 2L2 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+              <span>Еженедельный отчёт для родителей</span>
+            </li>
+          </ul>
+          <a class="sp-btn sp-btn-ghost sp-btn-block sp-btn-lg sp-tier-cta" href="/register">Начать бесплатно</a>
+        </article>
+
+        <!-- Pro tier -->
+        <article class="sp-tier is-pro">
+          <div class="sp-tier-head">
+            <div>
+              <h3 class="sp-tier-name">Подписка Спарк</h3>
+              <p class="sp-tier-tagline">Все персонажи, голос, картинки, отчёт</p>
+            </div>
+            <span class="sp-tier-badge">Рекомендуем</span>
+          </div>
+          <div>
+            <div class="sp-tier-price">
+              <span class="sp-tier-price-num">300</span>
+              <span class="sp-tier-price-unit">&#128142; / мес &middot; &asymp;300 &#8381;</span>
+            </div>
+            <p class="sp-tier-price-aux">Можно отменить в&nbsp;любой момент</p>
+          </div>
+          <ul class="sp-tier-feats">
+            <li class="sp-tier-feat is-on">
+              <span class="sp-tier-feat-icon"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.8l2.2 2.2L9 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span><strong>50 сообщений в день</strong> любому персонажу</span>
+            </li>
+            <li class="sp-tier-feat is-on">
+              <span class="sp-tier-feat-icon"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.8l2.2 2.2L9 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span>Все <strong>4 персонажа</strong> и&nbsp;переключения</span>
+            </li>
+            <li class="sp-tier-feat is-on">
+              <span class="sp-tier-feat-icon"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.8l2.2 2.2L9 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span>Голосовые сообщения <em>(новое)</em></span>
+            </li>
+            <li class="sp-tier-feat is-on">
+              <span class="sp-tier-feat-icon"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.8l2.2 2.2L9 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span>Безопасный AI-генератор картинок</span>
+            </li>
+            <li class="sp-tier-feat is-on">
+              <span class="sp-tier-feat-icon"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.8l2.2 2.2L9 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span>Еженедельный отчёт для родителей</span>
+            </li>
+          </ul>
+          <a class="sp-btn sp-btn-primary sp-btn-block sp-btn-lg sp-tier-cta" href="/register">Оформить подписку</a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="sp-foot">
+    <div class="sp-container">
+      <div class="sp-foot-grid">
+        <div>
+          <a class="sp-brand" href="/spark">
+            <span class="sp-brand-mark">S</span>
+            <span>Спарк Чат</span>
+          </a>
+          <p class="sp-foot-tag">
+            Безопасный AI-чат для детей от&nbsp;Kidion. Часть экосистемы kidion.ru: общий аккаунт,
+            общий баланс кристаллов, общий родительский кабинет.
+          </p>
+        </div>
+        <div>
+          <p class="sp-foot-col-title">Продукт</p>
+          <ul class="sp-foot-list">
+            <li><a href="#feats">Возможности</a></li>
+            <li><a href="#safety">Безопасность</a></li>
+            <li><a href="#chars">Персонажи</a></li>
+            <li><a href="#price">Тарифы</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="sp-foot-col-title">О&nbsp;нас</p>
+          <ul class="sp-foot-list">
+            <li><a href="https://kidion.ru">kidion.ru</a></li>
+            <li><a href="#">Условия использования</a></li>
+            <li><a href="#">Политика конфиденциальности</a></li>
+            <li><a href="#">Связаться с&nbsp;нами</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="sp-foot-bot">
+        <span>&copy; Kidion, 2026</span>
+        <span>chat.kidion.ru</span>
+      </div>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
