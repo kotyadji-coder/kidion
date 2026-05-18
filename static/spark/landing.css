@@ -273,7 +273,7 @@
 .sp-hero-spark {
   position: absolute;
   top: -12px; left: 50%;
-  transform: translateX(-58%);
+  transform: translateX(-30%);
   width: 220px; height: auto;
   z-index: 2;
   filter: drop-shadow(0 14px 24px rgba(74,35,110,0.18));
@@ -281,15 +281,15 @@
   animation: sp-bob 5s ease-in-out infinite;
 }
 @media (min-width: 769px) {
-  .sp-hero-spark { width: 280px; top: -24px; transform: translateX(-72%); animation-name: sp-bob-d; }
+  .sp-hero-spark { width: 280px; top: -24px; transform: translateX(-40%); animation-name: sp-bob-d; }
 }
 @keyframes sp-bob {
-  0%, 100% { transform: translateX(-58%) translateY(0); }
-  50%      { transform: translateX(-58%) translateY(-8px); }
+  0%, 100% { transform: translateX(-30%) translateY(0); }
+  50%      { transform: translateX(-30%) translateY(-8px); }
 }
 @keyframes sp-bob-d {
-  0%, 100% { transform: translateX(-72%) translateY(0); }
-  50%      { transform: translateX(-72%) translateY(-10px); }
+  0%, 100% { transform: translateX(-40%) translateY(0); }
+  50%      { transform: translateX(-40%) translateY(-10px); }
 }
 
 .sp-hero-sparkle {

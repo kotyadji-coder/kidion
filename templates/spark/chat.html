@@ -239,8 +239,8 @@
   window.SPARK_CHAT = {
     childName: {{ child.name | tojson }},
     hasSubscription: {{ "true" if has_subscription else "false" }},
-    freeLimit: 5,
-    paidLimit: 50,
+    freeLimit: 10,
+    paidLimit: 100,
   };
 </script>
 <script src="/static/spark/chat.js"></script>

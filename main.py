@@ -3276,7 +3276,7 @@ async def kid_chat_get(request: Request):
     daily_count = count_daily_messages(conn, child["id"], today_str)
     parent_id = child["parent_id"]
     has_sub = get_active_chat_subscription(conn, parent_id) is not None
-    daily_limit = 50 if has_sub else 5
+    daily_limit = 100 if has_sub else 10
 
     return JSONResponse({
         "chat_id": chat["id"],
@@ -3359,7 +3359,7 @@ async def kid_chat_send(request: Request):
     from datetime import date
     today_str = date.today().isoformat()
     daily_count = count_daily_messages(conn, child["id"], today_str)
-    daily_limit = 50 if has_sub else 5
+    daily_limit = 100 if has_sub else 10
 
     if daily_count >= daily_limit:
         msg = "На сегодня сообщения закончились! Приходи завтра!" if not has_sub else "Лимит 50 сообщений в день достигнут. Приходи завтра!"
