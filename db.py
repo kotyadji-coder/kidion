@@ -267,6 +267,21 @@ def _init_schema(conn: sqlite3.Connection) -> None:
 
         CREATE INDEX IF NOT EXISTS idx_chat_subs_user ON chat_subscriptions(user_id);
 
+        CREATE TABLE IF NOT EXISTS chat_characters (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            key             TEXT NOT NULL UNIQUE,
+            name_ru         TEXT NOT NULL,
+            role_ru         TEXT NOT NULL,
+            avatar_type     TEXT NOT NULL DEFAULT 'svg',
+            system_prompt   TEXT NOT NULL,
+            greeting_ru     TEXT NOT NULL,
+            greeting_sub_ru TEXT NOT NULL DEFAULT '',
+            suggestions_json TEXT NOT NULL DEFAULT '[]',
+            accent_color    TEXT NOT NULL DEFAULT '',
+            is_free         INTEGER NOT NULL DEFAULT 0,
+            sort_order      INTEGER NOT NULL DEFAULT 0
+        );
+
         CREATE TABLE IF NOT EXISTS methodologist_cache (
             id         INTEGER PRIMARY KEY AUTOINCREMENT,
             subject    TEXT NOT NULL,
@@ -356,6 +371,9 @@ def _init_schema(conn: sqlite3.Connection) -> None:
 
     # Seed curriculum data
     _seed_math_grade1(conn)
+
+    # Seed chat characters
+    _seed_chat_characters(conn)
 
 
 def init_db(db_path: str) -> None:
@@ -1215,6 +1233,105 @@ def get_last_lesson_result_for_enrollment_topic(
 # Seed data
 # ---------------------------------------------------------------------------
 
+
+def _seed_chat_characters(conn: sqlite3.Connection) -> None:
+    """Idempotent seed: 4 chat characters for Spark Chat."""
+    existing = conn.execute("SELECT COUNT(*) FROM chat_characters").fetchone()[0]
+    if existing >= 4:
+        return
+
+    import json as _json
+
+    chars = [
+        {
+            "key": "spark",
+            "name_ru": "Спарк",
+            "role_ru": "Универсальный друг",
+            "avatar_type": "png",
+            "system_prompt": "",  # filled from kid_chat.py
+            "greeting_ru": "Привет! Я Спарк!",
+            "greeting_sub_ru": "Спроси меня о чём угодно — про космос, динозавров, домашку или просто поболтаем.",
+            "suggestions_json": _json.dumps([
+                {"ico": "\u2728", "label": "Интересный факт"},
+                {"ico": "\U0001f4da", "label": "Помощь с уроками"},
+                {"ico": "\U0001f4d6", "label": "Придумай историю"},
+                {"ico": "\U0001f914", "label": "А почему\u2026?"},
+            ]),
+            "accent_color": "spark",
+            "is_free": 1,
+            "sort_order": 0,
+        },
+        {
+            "key": "owl",
+            "name_ru": "Профессор Сова",
+            "role_ru": "Учитель",
+            "avatar_type": "svg",
+            "system_prompt": "",
+            "greeting_ru": "Добро пожаловать в класс!",
+            "greeting_sub_ru": "Какой предмет сегодня разберём? Я объясню по шагам и проверю, что всё понятно.",
+            "suggestions_json": _json.dumps([
+                {"ico": "\U0001f522", "label": "Объясни тему"},
+                {"ico": "\U0001f9ea", "label": "Проверь мои знания"},
+                {"ico": "\U0001f4d0", "label": "Помоги с задачей"},
+                {"ico": "\U0001f9e0", "label": "Расскажи опыт"},
+            ]),
+            "accent_color": "owl",
+            "is_free": 0,
+            "sort_order": 1,
+        },
+        {
+            "key": "captain",
+            "name_ru": "Капитан Сказка",
+            "role_ru": "Рассказчик",
+            "avatar_type": "svg",
+            "system_prompt": "",
+            "greeting_ru": "Ого, новый путешественник!",
+            "greeting_sub_ru": "Какую историю придумаем сегодня? Можешь стать главным героем — расскажи, где хочешь побывать.",
+            "suggestions_json": _json.dumps([
+                {"ico": "\U0001f3f4\u200d\u2620\ufe0f", "label": "Придумай сказку"},
+                {"ico": "\U0001fa90", "label": "Продолжи историю"},
+                {"ico": "\U0001f5dd\ufe0f", "label": "Загадка"},
+                {"ico": "\U0001f3ad", "label": "Сыграем роли"},
+            ]),
+            "accent_color": "captain",
+            "is_free": 0,
+            "sort_order": 2,
+        },
+        {
+            "key": "pixie",
+            "name_ru": "Друг Пикси",
+            "role_ru": "Ровесник",
+            "avatar_type": "svg",
+            "system_prompt": "",
+            "greeting_ru": "Привет-привет!",
+            "greeting_sub_ru": "Что нового расскажешь? У меня тут пара секретов и одна несмешная шутка — выбирай!",
+            "suggestions_json": _json.dumps([
+                {"ico": "\U0001f4ac", "label": "Что нового?"},
+                {"ico": "\U0001f602", "label": "Расскажи шутку"},
+                {"ico": "\U0001f3b2", "label": "Давай играть"},
+                {"ico": "\u2728", "label": "Угадай настроение"},
+            ]),
+            "accent_color": "pixie",
+            "is_free": 0,
+            "sort_order": 3,
+        },
+    ]
+
+    for c in chars:
+        conn.execute(
+            "INSERT OR IGNORE INTO chat_characters "
+            "(key, name_ru, role_ru, avatar_type, system_prompt, greeting_ru, greeting_sub_ru, "
+            "suggestions_json, accent_color, is_free, sort_order) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                c["key"], c["name_ru"], c["role_ru"], c["avatar_type"],
+                c["system_prompt"], c["greeting_ru"], c["greeting_sub_ru"],
+                c["suggestions_json"], c["accent_color"], c["is_free"], c["sort_order"],
+            ),
+        )
+    conn.commit()
+
+
 def _seed_math_grade1(conn: sqlite3.Connection) -> None:
     """Idempotent seed: Math Grade 1, 12 themes x 5 lessons = 60 rows.
     Checks if the first theme title matches; if not, clears and reseeds."""
@@ -1648,14 +1765,42 @@ def create_kid_chat(
 
 def get_or_create_spark_chat(conn: sqlite3.Connection, child_id: int) -> dict:
     """Get existing Spark chat for child, or create one. Returns chat dict."""
+    return get_or_create_character_chat(conn, child_id, "spark")
+
+
+def get_or_create_character_chat(
+    conn: sqlite3.Connection, child_id: int, character_key: str = "spark"
+) -> dict:
+    """Get existing chat for child+character, or create one. Returns chat dict."""
     row = conn.execute(
-        "SELECT * FROM kid_chats WHERE child_id = ? ORDER BY updated_at DESC LIMIT 1",
-        (child_id,),
+        "SELECT * FROM kid_chats WHERE child_id = ? AND character_key = ? "
+        "ORDER BY updated_at DESC LIMIT 1",
+        (child_id, character_key),
     ).fetchone()
     if row:
         return dict(row)
-    chat_id = create_kid_chat(conn, child_id, "spark", "Спарк")
+    # Look up character name for title
+    char_row = conn.execute(
+        "SELECT name_ru FROM chat_characters WHERE key = ?", (character_key,)
+    ).fetchone()
+    title = char_row["name_ru"] if char_row else character_key.capitalize()
+    chat_id = create_kid_chat(conn, child_id, character_key, title)
     return dict(conn.execute("SELECT * FROM kid_chats WHERE id = ?", (chat_id,)).fetchone())
+
+
+def get_chat_characters(conn: sqlite3.Connection) -> list[dict]:
+    """Return all chat characters sorted by sort_order."""
+    rows = conn.execute(
+        "SELECT * FROM chat_characters ORDER BY sort_order"
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_chat_character(conn: sqlite3.Connection, key: str) -> dict | None:
+    row = conn.execute(
+        "SELECT * FROM chat_characters WHERE key = ?", (key,)
+    ).fetchone()
+    return dict(row) if row else None
 
 
 def get_kid_chat(conn: sqlite3.Connection, chat_id: int) -> dict | None:

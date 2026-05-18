@@ -2,6 +2,7 @@
 main.py — FastAPI application for kidion.
 """
 
+import json
 import logging
 import os
 import re
@@ -95,6 +96,9 @@ from db import (
     update_lesson_progress_status,
     # Kid chat
     get_or_create_spark_chat,
+    get_or_create_character_chat,
+    get_chat_characters,
+    get_chat_character,
     get_kid_chat,
     update_kid_chat_timestamp,
     clear_kid_chat_messages,
@@ -3197,19 +3201,46 @@ async def kid_chat_page(request: Request):
     )
 
 
+@app.get("/spark/chat", response_class=HTMLResponse)
+async def spark_chat_page(request: Request):
+    """New Spark Chat page (multi-character, redesigned)."""
+    conn = get_db_connection()
+    child = get_current_child(request, conn)
+    if not child:
+        return RedirectResponse(url="/kid/login", status_code=302)
+
+    if templates is None:
+        return HTMLResponse("<h1>Spark Chat</h1>")
+
+    parent_id = child["parent_id"]
+    has_sub = get_active_chat_subscription(conn, parent_id) is not None
+    characters = get_chat_characters(conn)
+
+    return templates.TemplateResponse(
+        request,
+        "spark/chat.html",
+        {
+            "child": child,
+            "has_subscription": has_sub,
+            "characters": characters,
+        },
+    )
+
+
 # ---------------------------------------------------------------------------
 # Kid Chat API endpoints (single Spark chat)
 # ---------------------------------------------------------------------------
 
 @app.get("/api/kid/chat")
 async def kid_chat_get(request: Request):
-    """Get the single Spark chat and its messages."""
+    """Get chat and its messages. ?character=spark (default)."""
     conn = get_db_connection()
     child = get_current_child(request, conn)
     if not child:
         return JSONResponse({"error": "unauthorized"}, status_code=401)
 
-    chat = get_or_create_spark_chat(conn, child["id"])
+    character_key = request.query_params.get("character", "spark")
+    chat = get_or_create_character_chat(conn, child["id"], character_key)
     messages = get_kid_chat_messages(conn, chat["id"], limit=30)
 
     from datetime import date
@@ -3221,21 +3252,53 @@ async def kid_chat_get(request: Request):
 
     return JSONResponse({
         "chat_id": chat["id"],
+        "character_key": character_key,
         "messages": messages,
         "daily_count": daily_count,
         "daily_limit": daily_limit,
     })
 
 
-@app.post("/api/kid/chat/clear")
-async def kid_chat_clear(request: Request):
-    """Clear chat history (new conversation)."""
+@app.get("/api/kid/characters")
+async def kid_characters_list(request: Request):
+    """Return all chat characters."""
     conn = get_db_connection()
     child = get_current_child(request, conn)
     if not child:
         return JSONResponse({"error": "unauthorized"}, status_code=401)
 
-    chat = get_or_create_spark_chat(conn, child["id"])
+    characters = get_chat_characters(conn)
+    parent_id = child["parent_id"]
+    has_sub = get_active_chat_subscription(conn, parent_id) is not None
+
+    result = []
+    for c in characters:
+        result.append({
+            "key": c["key"],
+            "name_ru": c["name_ru"],
+            "role_ru": c["role_ru"],
+            "avatar_type": c["avatar_type"],
+            "greeting_ru": c["greeting_ru"],
+            "greeting_sub_ru": c["greeting_sub_ru"],
+            "suggestions": json.loads(c["suggestions_json"]) if c["suggestions_json"] else [],
+            "accent_color": c["accent_color"],
+            "is_free": bool(c["is_free"]),
+            "locked": not bool(c["is_free"]) and not has_sub,
+        })
+
+    return JSONResponse({"characters": result, "has_subscription": has_sub})
+
+
+@app.post("/api/kid/chat/clear")
+async def kid_chat_clear(request: Request):
+    """Clear chat history (new conversation). ?character=spark."""
+    conn = get_db_connection()
+    child = get_current_child(request, conn)
+    if not child:
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+
+    character_key = request.query_params.get("character", "spark")
+    chat = get_or_create_character_chat(conn, child["id"], character_key)
     clear_kid_chat_messages(conn, chat["id"])
     return JSONResponse({"ok": True})
 
@@ -3247,15 +3310,27 @@ async def kid_chat_send(request: Request):
     if not child:
         return JSONResponse({"error": "unauthorized"}, status_code=401)
 
-    chat = get_or_create_spark_chat(conn, child["id"])
+    # Determine character from query param
+    character_key = request.query_params.get("character", "spark")
+
+    # Check if pro character requires subscription
+    parent_id = child["parent_id"]
+    has_sub = get_active_chat_subscription(conn, parent_id) is not None
+    if character_key != "spark" and not has_sub:
+        char_info = get_chat_character(conn, character_key)
+        if char_info and not char_info["is_free"]:
+            return JSONResponse(
+                {"error": "subscription_required", "message": "Этот персонаж доступен по подписке."},
+                status_code=403,
+            )
+
+    chat = get_or_create_character_chat(conn, child["id"], character_key)
     chat_id = chat["id"]
 
     # Check daily limit
     from datetime import date
     today_str = date.today().isoformat()
     daily_count = count_daily_messages(conn, child["id"], today_str)
-    parent_id = child["parent_id"]
-    has_sub = get_active_chat_subscription(conn, parent_id) is not None
     daily_limit = 50 if has_sub else 5
 
     if daily_count >= daily_limit:
@@ -3305,6 +3380,7 @@ async def kid_chat_send(request: Request):
     response_text = generate_chat_response(
         context,
         child_name=child["name"],
+        character_key=character_key,
     )
 
     # Save assistant message

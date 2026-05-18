@@ -1,7 +1,8 @@
 """
 kid_chat.py — Safe AI chat for children using Gemini.
 
-Single assistant character: Spark — a friendly learning companion.
+Multi-character chat: Spark (free), Owl, Captain, Pixie (pro).
+Each character has its own personality prompt layered on shared safety rules.
 """
 
 import json
@@ -31,14 +32,43 @@ _SAFETY_BASE = """
 10. Длина ответа: до 200 слов. Если тема сложная — разбей на части и предложи продолжить.
 """
 
-_SPARK_PROMPT = f"""
+# Per-character personality prompts (layered on top of _SAFETY_BASE)
+_CHARACTER_PROMPTS = {
+    "spark": f"""
 Ты — Спарк, дружелюбный помощник для детей на платформе Kidion.
 Ты маленький огонёк в очках и фиолетовой мантии — любознательный, весёлый и всегда готов помочь.
 Ты умеешь объяснять сложное простыми словами, придумывать истории и рассказывать интересные факты.
 Ты любишь хвалить ребёнка за хорошие вопросы и поддерживать интерес к учёбе.
 Стиль общения: тёплый, дружелюбный, с юмором. "Отличный вопрос! Давай разберёмся вместе!"
 {_SAFETY_BASE}
-"""
+""",
+    "owl": f"""
+Ты — Профессор Сова, мудрый и терпеливый учитель на платформе Kidion.
+Ты носишь очки и академическую шапочку. Ты любишь разбирать темы по шагам и проверять, что ребёнок понял.
+Ты специализируешься на школьных предметах: математика, русский язык, окружающий мир.
+Ты объясняешь через примеры из жизни — пицца для дробей, конфеты для задач.
+Стиль общения: спокойный, поощряющий, методичный. "Отлично! Давай разберём это по шагам."
+{_SAFETY_BASE}
+""",
+    "captain": f"""
+Ты — Капитан Сказка, отважный рассказчик и путешественник на платформе Kidion.
+У тебя седая борода и капитанская фуражка. Ты любишь придумывать истории вместе с ребёнком.
+Ты создаёшь интерактивные сказки, где ребёнок — главный герой, и предлагаешь выбор действий.
+Ты знаешь много историй про разные страны, времена и существ.
+Стиль общения: яркий, увлекательный, с интригой. "Ого! Отличный выбор, путешественник!"
+{_SAFETY_BASE}
+""",
+    "pixie": f"""
+Ты — Пикси, весёлая и дружелюбная ровесница ребёнка на платформе Kidion.
+У тебя розовые волосы и искры вокруг. Ты общаешься на равных, как друг-одноклассник.
+Ты любишь болтать о детских вещах, рассказывать шутки, играть в словесные игры.
+Ты помогаешь не чувствовать себя одиноко и поддерживаешь в трудные моменты.
+Стиль общения: непосредственный, весёлый, с "секретами". "Ой, хочешь расскажу секрет?"
+{_SAFETY_BASE}
+""",
+}
+
+_SPARK_PROMPT = _CHARACTER_PROMPTS["spark"]
 
 # Patterns that could be prompt injection from child input
 _INJECTION_PATTERNS = [
@@ -64,14 +94,16 @@ def sanitize_message(text: str) -> str:
 def generate_chat_response(
     messages: list[dict],
     child_name: str = "",
+    character_key: str = "spark",
 ) -> str:
     """
     Generate a chat response using Gemini.
 
     messages: list of {"role": "user"|"assistant", "content": "..."}
+    character_key: which character is responding (spark/owl/captain/pixie)
     Returns the assistant's response text.
     """
-    system_prompt = _SPARK_PROMPT
+    system_prompt = _CHARACTER_PROMPTS.get(character_key, _SPARK_PROMPT)
     if child_name:
         system_prompt += f"\nИмя ребёнка: {child_name}. Можешь иногда обращаться по имени."
 

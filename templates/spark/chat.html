@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Спарк Чат — Kidion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/spark/chat.css">
+</head>
+<body>
+<div class="sc" id="spark-chat" data-char="spark">
+
+  <!-- Top nav -->
+  <nav class="sc-nav">
+    <a class="sc-nav-brand" href="/spark/chat">
+      <span class="sc-nav-mark">S</span>
+      <span>Спарк Чат</span>
+    </a>
+    <div class="sc-nav-right">
+      <span class="sc-nav-quota">
+        <span class="sc-nav-quota-dot"></span>
+        <strong id="nav-msg-count">5</strong> сообщений сегодня
+      </span>
+      {% if not has_subscription %}
+      <a href="/buy" class="sc-nav-pro" style="text-decoration:none">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5l1.4 4.1L12.5 7l-4.1 1.4L7 12.5 5.6 8.4 1.5 7l4.1-1.4L7 1.5z" fill="currentColor"/></svg>
+        Pro
+      </a>
+      {% endif %}
+      <a href="/kid/home" class="sc-nav-avatar" title="Домой">
+        {{ child.name[0] if child.name else 'K' }}
+      </a>
+    </div>
+  </nav>
+
+  <div class="sc-body">
+    <!-- Sidebar (desktop only) -->
+    <aside class="sc-side" id="sidebar">
+      <div class="sc-side-head">
+        <p class="sc-side-title">Персонажи</p>
+        <h2 class="sc-side-h">Спарк Чат</h2>
+      </div>
+      <ul class="sc-side-list" id="side-list">
+        <!-- Populated by JS -->
+      </ul>
+      <div class="sc-side-foot">
+        <div class="sc-side-foot-av">{{ child.name[0] if child.name else 'K' }}</div>
+        <div>
+          <div class="sc-side-foot-name">{{ child.name }}</div>
+          <div class="sc-side-foot-sub">Kidion</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main chat area -->
+    <main class="sc-main" id="chat-main">
+      <!-- Chat header -->
+      <header class="sc-head" id="chat-head">
+        <button class="sc-head-back" id="btn-back" aria-label="Назад">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 4L6 9l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="sc-head-av" id="head-avatar"></div>
+        <div class="sc-head-info">
+          <h2 class="sc-head-name">
+            <span id="head-name">Спарк</span>
+            <span class="sc-head-role" id="head-role">Универсальный друг</span>
+          </h2>
+          <div class="sc-head-status" id="head-status">онлайн</div>
+        </div>
+        <div class="sc-head-actions">
+          <button class="sc-head-action" id="btn-new-chat" aria-label="Новый разговор" title="Новый разговор">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2.5 4.5V8h3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.5 11.5V8H10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.7 6.5C4.5 4.5 6.6 3 9 3c2.5 0 4.7 1.6 5.5 4M12.3 9.5C11.5 11.5 9.4 13 7 13c-2.5 0-4.7-1.6-5.5-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Empty state (shown when no messages) -->
+      <div class="sc-empty" id="empty-state">
+        <div class="sc-empty-av" id="empty-avatar"></div>
+        <h2 class="sc-empty-greet" id="empty-greet">Привет! Я Спарк!</h2>
+        <p class="sc-empty-sub" id="empty-sub"></p>
+        <div class="sc-empty-chips" id="empty-chips"></div>
+      </div>
+
+      <!-- Messages (hidden when empty) -->
+      <div class="sc-msgs" id="messages" style="display:none"></div>
+
+      <!-- Typing indicator -->
+      <div class="sc-row" id="typing-row" style="display:none; padding:0 18px 8px">
+        <div class="sc-row-av is-show" id="typing-avatar"></div>
+        <div class="sc-stack">
+          <div class="sc-typing">
+            <span class="sc-typing-dots"><span></span><span></span><span></span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Composer -->
+      <div class="sc-comp" id="composer">
+        <p class="sc-quota" id="quota-info">
+          Осталось <strong id="quota-count">5 из 5</strong> сообщений сегодня
+          <span class="sc-quota-bar"><i id="quota-bar-fill" style="width:100%"></i></span>
+        </p>
+        <div class="sc-attach" id="attach-preview" style="display:none">
+          <span>🖼️</span>
+          <span class="sc-attach-name" id="attach-name"></span>
+          <button class="sc-attach-rm" id="btn-remove-attach" aria-label="Удалить">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <div class="sc-bar">
+          <button class="sc-bar-btn" id="btn-mic" aria-label="Голос">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="6.5" y="2.5" width="5" height="9" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M4 9c0 2.8 2.2 5 5 5s5-2.2 5-5M9 14v2.5M6.5 16.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+          <input class="sc-bar-input" id="chat-input" placeholder="Напиши Спарку..." autocomplete="off">
+          <label class="sc-bar-btn" id="btn-attach" aria-label="Прикрепить" style="cursor:pointer">
+            <input type="file" accept="image/*" id="file-input" hidden>
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M13.8 8.5l-5.6 5.6a3.2 3.2 0 01-4.5-4.5l6-6a2 2 0 012.9 2.8L7 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </label>
+          <button class="sc-bar-send is-disabled" id="btn-send" aria-label="Отправить">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8h10M8 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Voice overlay -->
+      <div class="sc-voice" id="voice-overlay">
+        <div class="sc-voice-pulse">
+          <svg width="32" height="32" viewBox="0 0 18 18" fill="none"><rect x="6.5" y="2.5" width="5" height="9" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M4 9c0 2.8 2.2 5 5 5s5-2.2 5-5M9 14v2.5M6.5 16.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+          <h3 class="sc-voice-h">Говори, я слушаю!</h3>
+          <p class="sc-voice-sub">Я переведу твою речь в текст.</p>
+        </div>
+        <div class="sc-voice-actions">
+          <button class="sc-voice-cancel" id="btn-voice-cancel">Отмена</button>
+          <button class="sc-voice-stop" id="btn-voice-stop">Готово</button>
+        </div>
+      </div>
+
+      <!-- Character drawer (mobile) -->
+      <div class="sc-drawer" id="char-drawer">
+        <div class="sc-drawer-head">
+          <h2 class="sc-drawer-h">Выбери собеседника</h2>
+          <button class="sc-drawer-close" id="btn-close-drawer">
+            <svg width="18" height="18" viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <ul class="sc-drawer-list" id="drawer-list"></ul>
+      </div>
+    </main>
+  </div>
+
+  <!-- Mobile tab bar -->
+  <nav class="sc-tabs">
+    <a class="sc-tab is-active" id="tab-chat" href="#">
+      <span class="sc-tab-ico"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 6a3 3 0 013-3h8a3 3 0 013 3v5a3 3 0 01-3 3H8l-3.5 3v-3.4A3 3 0 013 11V6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
+      <span>Чат</span>
+    </a>
+    <button class="sc-tab" id="tab-chars">
+      <span class="sc-tab-ico"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="7" cy="8" r="3" stroke="currentColor" stroke-width="1.6"/><circle cx="14" cy="7" r="2.4" stroke="currentColor" stroke-width="1.6"/><path d="M2 16c0-2.4 2.2-4 5-4s5 1.6 5 4M12 16c0-1.6 1.6-3 4-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+      <span>Персонажи</span>
+    </button>
+    <a class="sc-tab" href="/kid/home">
+      <span class="sc-tab-ico"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 9l7-6 7 6v7a2 2 0 01-2 2h-3v-5h-4v5H5a2 2 0 01-2-2V9z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
+      <span>Домой</span>
+    </a>
+  </nav>
+</div>
+
+<!-- SVG avatars for characters (hidden, cloned by JS) -->
+<template id="avatar-spark">
+  <img src="/static/spark/spark-hero.png" alt="Спарк">
+</template>
+<template id="avatar-owl">
+  <svg viewBox="0 0 96 96" width="100%" height="100%">
+    <defs>
+      <linearGradient id="owlBody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8b7355"/><stop offset="1" stop-color="#5a4a36"/></linearGradient>
+      <linearGradient id="owlBelly" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0d8a8"/><stop offset="1" stop-color="#d4b888"/></linearGradient>
+    </defs>
+    <ellipse cx="48" cy="56" rx="32" ry="34" fill="url(#owlBody)"/>
+    <ellipse cx="48" cy="62" rx="20" ry="22" fill="url(#owlBelly)"/>
+    <path d="M28 28c-1-6 2-10 5-10s3 6 0 12M68 28c1-6-2-10-5-10s-3 6 0 12" fill="#5a4a36"/>
+    <circle cx="38" cy="44" r="11" fill="white" stroke="#2a2418" stroke-width="2.4"/>
+    <circle cx="58" cy="44" r="11" fill="white" stroke="#2a2418" stroke-width="2.4"/>
+    <circle cx="40" cy="46" r="4.5" fill="#2a2418"/>
+    <circle cx="60" cy="46" r="4.5" fill="#2a2418"/>
+    <circle cx="42" cy="44.5" r="1.6" fill="white"/>
+    <circle cx="62" cy="44.5" r="1.6" fill="white"/>
+    <path d="M48 52l-3 5h6l-3-5z" fill="#e6a040" stroke="#a87026" stroke-width="1.2" stroke-linejoin="round"/>
+    <path d="M48 4l-30 10 30 10 30-10-30-10z" fill="#3a3358" stroke="#1a1530" stroke-width="1.2"/>
+    <rect x="22" y="10" width="52" height="6" fill="#2a2440" rx="1"/>
+    <circle cx="48" cy="14" r="2.4" fill="#e8c84c"/>
+  </svg>
+</template>
+<template id="avatar-captain">
+  <svg viewBox="0 0 96 96" width="100%" height="100%">
+    <defs>
+      <radialGradient id="capFace" cx="0.5" cy="0.4" r="0.7"><stop offset="0" stop-color="#ffdfb8"/><stop offset="1" stop-color="#e8b888"/></radialGradient>
+      <linearGradient id="capHat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a3a6e"/><stop offset="1" stop-color="#1a2548"/></linearGradient>
+    </defs>
+    <path d="M14 84c0-12 14-20 34-20s34 8 34 20" fill="#1a2548"/>
+    <circle cx="48" cy="50" r="22" fill="url(#capFace)"/>
+    <ellipse cx="40" cy="49" rx="2.6" ry="3" fill="#3a2818"/>
+    <ellipse cx="56" cy="49" rx="2.6" ry="3" fill="#3a2818"/>
+    <path d="M42 58c2 2 4 3 6 3s4-1 6-3" stroke="#7a4828" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <circle cx="36" cy="55" r="3" fill="#f4a890" opacity="0.55"/>
+    <circle cx="60" cy="55" r="3" fill="#f4a890" opacity="0.55"/>
+    <path d="M34 60c0 10 6 16 14 16s14-6 14-16c0-1 0-2-.4-3-2 3-7 4-13.6 4s-11.6-1-13.6-4c-.4 1-.4 2-.4 3z" fill="#d8d8d8" stroke="#9a9a9a" stroke-width="1.2"/>
+    <path d="M18 36c0-12 14-22 30-22s30 10 30 22v2H18z" fill="url(#capHat)"/>
+    <rect x="18" y="36" width="60" height="6" fill="#0e1530"/>
+    <circle cx="48" cy="28" r="6" fill="#e8c84c" stroke="#a88420" stroke-width="1.2"/>
+  </svg>
+</template>
+<template id="avatar-pixie">
+  <svg viewBox="0 0 96 96" width="100%" height="100%">
+    <defs>
+      <radialGradient id="pixFace" cx="0.5" cy="0.4" r="0.7"><stop offset="0" stop-color="#ffe2cc"/><stop offset="1" stop-color="#f0b896"/></radialGradient>
+      <linearGradient id="pixHair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff8acb"/><stop offset="1" stop-color="#c84a98"/></linearGradient>
+    </defs>
+    <path d="M14 88c0-12 14-20 34-20s34 8 34 20" fill="#5dd0c8"/>
+    <circle cx="48" cy="48" r="22" fill="url(#pixFace)"/>
+    <path d="M26 38c0-14 10-24 22-24s22 10 22 24c0 4-1 7-2 9-2-6-6-10-12-10-5 0-8 3-8 3s-3-3-8-3c-6 0-10 4-12 10-1-2-2-5-2-9z" fill="url(#pixHair)"/>
+    <path d="M26 38c-2 4-4 12-2 22 0 0 4-4 6-12M70 38c2 4 4 12 2 22 0 0-4-4-6-12" fill="url(#pixHair)"/>
+    <ellipse cx="40" cy="50" rx="4" ry="5" fill="#3a2858"/>
+    <ellipse cx="56" cy="50" rx="4" ry="5" fill="#3a2858"/>
+    <circle cx="41.5" cy="48.5" r="1.6" fill="white"/>
+    <circle cx="57.5" cy="48.5" r="1.6" fill="white"/>
+    <circle cx="34" cy="58" r="3.5" fill="#ff8aa0" opacity="0.6"/>
+    <circle cx="62" cy="58" r="3.5" fill="#ff8aa0" opacity="0.6"/>
+    <path d="M42 62c2 2.5 4 3.5 6 3.5s4-1 6-3.5" stroke="#a83858" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+    <g fill="#ffd64a"><path d="M18 22l1 3 3 1-3 1-1 3-1-3-3-1 3-1z"/><path d="M78 28l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></g>
+  </svg>
+</template>
+
+<script>
+  window.SPARK_CHAT = {
+    childName: {{ child.name | tojson }},
+    hasSubscription: {{ "true" if has_subscription else "false" }},
+    freeLimit: 5,
+    paidLimit: 50,
+  };
+</script>
+<script src="/static/spark/chat.js"></script>
+</body>
+</html>
