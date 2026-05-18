@@ -954,7 +954,17 @@ async function loadProgram() {
       // Insert monthly block after 4th locked topic
       if (lockedCount === 4 && !monthBlockInserted) {
         monthBlockInserted = true;
-        html += buildMonthBlock(totalGenerated, totalLessons);
+        var remainingLocked = 0;
+        for (var ri = i; ri < topics.length; ri++) {
+          var rls = topics[ri].lessons || [];
+          var rc = 0, ra = 0;
+          for (var rj = 0; rj < rls.length; rj++) {
+            if (rls[rj].status === 'completed') rc++;
+            else if (rls[rj].status === 'available') ra++;
+          }
+          if (rc === 0 && ra === 0) remainingLocked++;
+        }
+        html += buildMonthBlock(totalGenerated, totalLessons, remainingLocked);
       }
 
       var autoExpand = false;
@@ -1063,8 +1073,8 @@ async function loadProgram() {
     }
 
     // Add monthly block at end if not inserted
-    if (!monthBlockInserted && topics.length >= 4) {
-      html += buildMonthBlock(totalGenerated, totalLessons);
+    if (!monthBlockInserted && lockedCount >= 4) {
+      html += buildMonthBlock(totalGenerated, totalLessons, lockedCount);
     }
 
     list.innerHTML = html;
@@ -1486,7 +1496,7 @@ function monthClickHandler() {
   });
 }
 
-function buildMonthBlock(totalGenerated, totalLessons) {
+function buildMonthBlock(totalGenerated, totalLessons, lockedTopics) {
   if (totalGenerated >= 20) {
     return '<section class="kd-monthly is-ready">' +
       '<div class="kd-monthly-icon">✅</div>' +
@@ -1497,16 +1507,23 @@ function buildMonthBlock(totalGenerated, totalLessons) {
       '</div></section>';
   }
 
+  var topicsCount = Math.min(lockedTopics, 4);
+  var lessonsCount = topicsCount * 5;
+  var fullPrice = topicsCount * 100;
+
   var mb = '<section class="kd-monthly" id="month-block">';
   mb += '<div class="kd-monthly-icon">📅</div>';
-  mb += '<div class="kd-monthly-body"><strong>Создайте сразу 4 темы — этого хватит на месяц</strong>20 уроков по школьной программе. Дешевле, чем по одной: <b>400&nbsp;💎</b> вместо&nbsp;500.</div>';
+  mb += '<div class="kd-monthly-body"><strong>Создайте сразу ' + topicsCount + ' ' + pluralTopics(topicsCount) + ' — этого хватит на месяц</strong>' + lessonsCount + ' уроков по школьной программе. Дешевле, чем по одной: <b>400&nbsp;💎</b> вместо&nbsp;' + fullPrice + '.</div>';
   mb += '<div class="kd-monthly-actions" id="month-action">';
-  mb += '<button class="btn btn--primary" id="btn-generate-month">Создать уроки на месяц<span class="kd-cost" style="margin-left:6px">400 💎</span></button>';
-  if (totalGenerated > 0) {
-    mb += '<a href="/api/children/' + CHILD_ID + '/worksheets?subject=' + SUBJECT + '" target="_blank" class="btn btn--outline" style="text-decoration:none">🖨 Распечатать готовые</a>';
-  }
+  mb += '<button class="btn btn--primary" id="btn-generate-month">Создать ' + topicsCount + ' ' + pluralTopics(topicsCount) + '<span class="kd-cost" style="margin-left:6px">400 💎</span></button>';
   mb += '</div></section>';
   return mb;
+}
+
+function pluralTopics(n) {
+  if (n === 1) return 'тему';
+  if (n >= 2 && n <= 4) return 'темы';
+  return 'тем';
 }
 
 async function doGenerateMonth() {
