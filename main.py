@@ -108,12 +108,15 @@ from db import (
     create_chat_subscription,
     get_active_chat_subscription,
     use_chat_image,
+    get_chat_reports,
+    get_kid_chats_by_child,
 )
 from payments import PACKAGES, create_yookassa_payment, handle_webhook
 from referral import generate_ref_code, process_registration_referral
 import services.generation
 from services.universe import generate_universe, generate_character_image, generate_shop_items
 from services.kid_chat import SPARK as CHAT_SPARK, sanitize_message, generate_chat_response
+from services.image_generator import is_draw_request, generate_chat_image
 
 
 def _sanitize_interests(interests: list[str]) -> list[str]:
@@ -3228,6 +3231,22 @@ async def spark_chat_page(request: Request):
     )
 
 
+@app.get("/spark/register", response_class=HTMLResponse)
+async def spark_register_page(request: Request):
+    """Spark Chat registration (simplified, for chat-only users)."""
+    if templates is None:
+        return HTMLResponse("<h1>Register</h1>")
+    return templates.TemplateResponse(request, "spark/register.html", {})
+
+
+@app.get("/spark/login", response_class=HTMLResponse)
+async def spark_login_page(request: Request):
+    """Spark Chat login → pick child → PIN → chat."""
+    if templates is None:
+        return HTMLResponse("<h1>Login</h1>")
+    return templates.TemplateResponse(request, "spark/login.html", {})
+
+
 @app.get("/spark", response_class=HTMLResponse)
 async def spark_landing_page(request: Request):
     """Spark Chat landing page (public, no auth required)."""
@@ -3412,16 +3431,46 @@ async def kid_chat_send(request: Request):
         character_key=character_key,
     )
 
+    # Check if this is an image generation request
+    response_image_url = None
+    if is_draw_request(message_text) and has_sub:
+        # Try subscription images first, then crystals
+        can_generate = use_chat_image(conn, parent_id)
+        if not can_generate:
+            # Try deducting crystals
+            ok = update_crystals(conn, parent_id, -CHAT_IMAGE_COST_CRYSTALS)
+            if ok:
+                insert_transaction(conn, parent_id, -CHAT_IMAGE_COST_CRYSTALS, "chat_image")
+                can_generate = True
+
+        if can_generate:
+            import uuid
+            image_bytes = generate_chat_image(message_text)
+            if image_bytes:
+                os.makedirs("content/chat_images", exist_ok=True)
+                fname = f"{uuid.uuid4().hex}.png"
+                fpath = f"content/chat_images/{fname}"
+                with open(fpath, "wb") as f:
+                    f.write(image_bytes)
+                response_image_url = f"/content/chat_images/{fname}"
+                response_text += "\n\nВот что у меня получилось! 🎨"
+
     # Save assistant message
-    add_kid_chat_message(conn, chat_id, "assistant", response_text)
+    add_kid_chat_message(conn, chat_id, "assistant", response_text, response_image_url)
     update_kid_chat_timestamp(conn, chat_id)
 
     new_daily_count = daily_count + 1
 
+    # Get updated images_remaining
+    sub_info = get_active_chat_subscription(conn, parent_id)
+    images_remaining = sub_info.get("images_remaining", 0) if sub_info else 0
+
     return JSONResponse({
         "response": response_text,
+        "image_url": response_image_url,
         "daily_count": new_daily_count,
         "daily_limit": daily_limit,
+        "images_remaining": images_remaining,
     })
 
 
@@ -3480,6 +3529,32 @@ async def chat_subscription_status(request: Request):
         "images_remaining": sub.get("images_remaining", 0) if sub else 0,
         "price_rub": CHAT_SUB_PRICE_RUB,
         "image_cost_crystals": CHAT_IMAGE_COST_CRYSTALS,
+    })
+
+
+@app.get("/api/children/{child_id}/chat-report")
+async def child_chat_report_api(child_id: int, request: Request):
+    """Get chat reports for a child (parent auth)."""
+    conn = get_db_connection()
+    user = get_current_user(request, conn)
+    if not user:
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    child = get_child_by_id(conn, child_id)
+    if not child or child["parent_id"] != user["id"]:
+        return JSONResponse({"error": "forbidden"}, status_code=403)
+
+    reports = get_chat_reports(conn, child_id)
+    # Also get message stats
+    chats = get_kid_chats_by_child(conn, child_id)
+    total_messages = 0
+    for chat in chats:
+        msgs = get_kid_chat_messages(conn, chat["id"], limit=1000)
+        total_messages += len(msgs)
+
+    return JSONResponse({
+        "child_name": child["name"],
+        "total_messages": total_messages,
+        "reports": reports,
     })
 
 

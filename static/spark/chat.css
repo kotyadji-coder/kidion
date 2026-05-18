@@ -725,6 +725,15 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
   position: relative;
 }
 .sc-bar-btn:hover { background: var(--surface); color: var(--text); }
+.sc-bar-btn.is-locked { color: var(--text-4); }
+.sc-bar-btn.is-locked::after {
+  content: "";
+  position: absolute;
+  top: 5px; right: 5px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--spark-violet);
+  border: 1.5px solid var(--surface-2);
+}
 .sc-bar-input {
   flex: 1;
   border: 0;

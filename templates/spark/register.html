@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Регистрация — Спарк Чат</title>
+<link rel="icon" href="/static/spark/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/spark/chat.css">
+<link rel="stylesheet" href="/static/spark/landing.css">
+<style>
+  body { min-height: 100vh; display: flex; flex-direction: column; }
+  .auth-page { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+  .auth-card { width: 100%; max-width: 420px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 36px 28px; }
+  .auth-h { margin: 0 0 6px; font-size: 24px; font-weight: 600; letter-spacing: -0.025em; text-align: center; }
+  .auth-sub { margin: 0 0 28px; font-size: 14px; color: var(--text-2); text-align: center; line-height: 1.5; }
+  .auth-field { margin-bottom: 14px; }
+  .auth-label { display: block; font-size: 13px; font-weight: 500; color: var(--text-2); margin-bottom: 6px; }
+  .auth-input { width: 100%; height: 44px; padding: 0 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; font-family: inherit; background: var(--surface-2); color: var(--text); outline: none; }
+  .auth-input:focus { border-color: var(--spark-violet-border); box-shadow: 0 0 0 3px var(--spark-violet-soft); }
+  .auth-btn { width: 100%; margin-top: 8px; }
+  .auth-error { color: oklch(0.55 0.2 25); font-size: 13px; text-align: center; margin-top: 10px; display: none; }
+  .auth-switch { text-align: center; margin-top: 18px; font-size: 13px; color: var(--text-3); }
+  .auth-switch a { color: var(--spark-violet); text-decoration: none; font-weight: 500; }
+  .auth-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; font-size: 12px; color: var(--text-3); }
+  .auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+  .auth-child-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .auth-child-h { margin: 0 0 14px; font-size: 15px; font-weight: 600; }
+  .auth-row { display: flex; gap: 10px; }
+  .auth-row .auth-field { flex: 1; }
+</style>
+</head>
+<body>
+<div class="sp">
+  <nav class="sp-nav">
+    <a class="sp-brand" href="/spark">
+      <span class="sp-brand-mark">S</span>
+      <span>Спарк Чат</span>
+    </a>
+    <div class="sp-nav-cta">
+      <a class="sp-btn sp-btn-ghost" href="/spark/login">Войти</a>
+    </div>
+  </nav>
+
+  <div class="auth-page">
+    <form class="auth-card" id="register-form">
+      <h1 class="auth-h">Создайте аккаунт</h1>
+      <p class="auth-sub">Бесплатно. 10 сообщений в день сразу после регистрации.</p>
+
+      <div class="auth-field">
+        <label class="auth-label">Email</label>
+        <input class="auth-input" type="email" name="email" required autocomplete="email" placeholder="parent@example.com">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Пароль</label>
+        <input class="auth-input" type="password" name="password" required minlength="6" placeholder="Минимум 6 символов">
+      </div>
+
+      <div class="auth-child-section">
+        <h3 class="auth-child-h">Профиль ребёнка</h3>
+        <div class="auth-row">
+          <div class="auth-field">
+            <label class="auth-label">Имя</label>
+            <input class="auth-input" type="text" name="child_name" required placeholder="Как зовут?">
+          </div>
+          <div class="auth-field" style="flex:0 0 100px">
+            <label class="auth-label">Класс</label>
+            <select class="auth-input" name="grade" style="appearance:auto">
+              <option value="1">1 класс</option>
+              <option value="2" selected>2 класс</option>
+              <option value="3">3 класс</option>
+              <option value="4">4 класс</option>
+            </select>
+          </div>
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">PIN-код ребёнка (4 цифры)</label>
+          <input class="auth-input" type="text" name="pin" required pattern="\d{4}" maxlength="4" placeholder="1234" inputmode="numeric">
+        </div>
+      </div>
+
+      <button class="sp-btn sp-btn-primary sp-btn-lg auth-btn" type="submit">Начать бесплатно</button>
+      <p class="auth-error" id="auth-error"></p>
+      <p class="auth-switch">Уже есть аккаунт? <a href="/spark/login">Войти</a></p>
+    </form>
+  </div>
+</div>
+
+<script>
+document.getElementById('register-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('auth-error');
+  errEl.style.display = 'none';
+  const fd = new FormData(this);
+
+  try {
+    // 1. Register parent
+    const regRes = await fetch('/auth/register', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        email: fd.get('email'),
+        password: fd.get('password'),
+      }),
+    });
+    const regData = await regRes.json();
+    if (!regRes.ok) {
+      errEl.textContent = regData.detail || regData.error || 'Ошибка регистрации';
+      errEl.style.display = '';
+      return;
+    }
+
+    // 2. Login
+    const loginRes = await fetch('/auth/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        email: fd.get('email'),
+        password: fd.get('password'),
+      }),
+    });
+    if (!loginRes.ok) {
+      errEl.textContent = 'Аккаунт создан, но не удалось войти. Попробуйте войти вручную.';
+      errEl.style.display = '';
+      return;
+    }
+
+    // 3. Create child (simplified — no interests, no universe)
+    const childRes = await fetch('/api/children', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        name: fd.get('child_name'),
+        gender: 'boy',
+        birth_date: '2018-01-01',
+        grade: parseInt(fd.get('grade')),
+        pin: fd.get('pin'),
+        interests: [],
+        source: 'chat',
+      }),
+    });
+    if (!childRes.ok) {
+      const childData = await childRes.json();
+      errEl.textContent = childData.detail || childData.error || 'Ошибка создания профиля';
+      errEl.style.display = '';
+      return;
+    }
+    const childData = await childRes.json();
+
+    // 4. Auth child with PIN
+    await fetch('/api/kid/auth', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        child_id: childData.id,
+        pin: fd.get('pin'),
+      }),
+    });
+
+    // 5. Go to chat
+    window.location.href = '/spark/chat';
+  } catch(e) {
+    errEl.textContent = 'Ошибка сети. Попробуйте ещё раз.';
+    errEl.style.display = '';
+  }
+});
+</script>
+</body>
+</html>

@@ -39,6 +39,11 @@
   });
   setupEvents();
 
+  // Lock mic for free users
+  if (!CFG.hasSubscription) {
+    btnMic.classList.add("is-locked");
+  }
+
   // ---------- API ----------
   async function api(url, method, body) {
     const opts = { method, credentials: "same-origin", headers: {} };
@@ -319,7 +324,12 @@
       } else if (result.data.response) {
         dailyCount = result.data.daily_count || dailyCount + 1;
         updateQuota();
-        appendMessage({ role: "assistant", content: result.data.response, created_at: new Date().toISOString() }, true);
+        appendMessage({
+          role: "assistant",
+          content: result.data.response,
+          image_url: result.data.image_url || null,
+          created_at: new Date().toISOString(),
+        }, true);
       }
       scrollToBottom();
     } catch (e) {
@@ -411,6 +421,12 @@
 
     // Voice (placeholder — opens overlay, cancel closes it)
     btnMic.addEventListener("click", () => {
+      if (!CFG.hasSubscription) {
+        if (confirm("Голосовой ввод доступен по подписке. Оформить?")) {
+          window.location.href = "/spark/subscribe";
+        }
+        return;
+      }
       voiceOverlay.classList.add("is-open");
       startVoiceRecognition();
     });

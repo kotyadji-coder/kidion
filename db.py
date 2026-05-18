@@ -267,6 +267,19 @@ def _init_schema(conn: sqlite3.Connection) -> None:
 
         CREATE INDEX IF NOT EXISTS idx_chat_subs_user ON chat_subscriptions(user_id);
 
+        CREATE TABLE IF NOT EXISTS chat_reports (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            child_id        INTEGER NOT NULL REFERENCES children(id) ON DELETE CASCADE,
+            date            TEXT NOT NULL,
+            summary         TEXT NOT NULL DEFAULT '',
+            topics_json     TEXT NOT NULL DEFAULT '[]',
+            message_count   INTEGER NOT NULL DEFAULT 0,
+            character_key   TEXT NOT NULL DEFAULT 'spark',
+            created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_chat_reports_child ON chat_reports(child_id, date);
+
         CREATE TABLE IF NOT EXISTS chat_characters (
             id              INTEGER PRIMARY KEY AUTOINCREMENT,
             key             TEXT NOT NULL UNIQUE,
@@ -1958,6 +1971,37 @@ def use_chat_image(conn: sqlite3.Connection, user_id: int) -> bool:
     )
     conn.commit()
     return True
+
+
+# ---------------------------------------------------------------------------
+# Chat Reports
+# ---------------------------------------------------------------------------
+
+
+def create_chat_report(
+    conn: sqlite3.Connection,
+    child_id: int,
+    date: str,
+    summary: str,
+    topics_json: str = "[]",
+    message_count: int = 0,
+    character_key: str = "spark",
+) -> int:
+    cursor = conn.execute(
+        "INSERT INTO chat_reports (child_id, date, summary, topics_json, message_count, character_key, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (child_id, date, summary, topics_json, message_count, character_key, _now()),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def get_chat_reports(conn: sqlite3.Connection, child_id: int, limit: int = 30) -> list[dict]:
+    rows = conn.execute(
+        "SELECT * FROM chat_reports WHERE child_id = ? ORDER BY date DESC LIMIT ?",
+        (child_id, limit),
+    ).fetchall()
+    return [dict(r) for r in rows]
 
 
 # ---------------------------------------------------------------------------
