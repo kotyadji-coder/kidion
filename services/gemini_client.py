@@ -13,6 +13,7 @@ from services.prompts import (
     GENERATE_IMAGE_PROMPT_FALLBACK_PROMPT,
     GENERATE_IMAGE_PROMPT_PROMPT,
     METHODOLOGIST_PROMPT,
+    SKIP_TEST_PROMPT,
     TUTOR_GAMER_JSON_PROMPT,
     VISUAL_LAYOUT_PROMPT,
 )
@@ -139,6 +140,25 @@ def generate_explanation(question: str, cached_methodologist: str | None = None)
     lesson_dict = _extract_json(step2_response.text)
 
     return methodologist_output, lesson_dict
+
+
+def generate_skip_test(question: str) -> dict:
+    """Generate test-only lesson (no theory). Returns lesson_dict with empty story_blocks and 5 tasks."""
+    model = _get_model(MODEL_STEP2)
+
+    if model is None:
+        return _stub_lesson(question)
+
+    prompt = SKIP_TEST_PROMPT.format(question=question)
+    response = model.generate_content(
+        prompt,
+        generation_config={"response_mime_type": "application/json"},
+    )
+
+    if _is_blocked_by_safety(response):
+        raise ValueError("Skip test content blocked by safety filter")
+
+    return _extract_json(response.text)
 
 
 def generate_image_prompt(explanation: str) -> str:

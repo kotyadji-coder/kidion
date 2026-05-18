@@ -1993,7 +1993,8 @@ async def assign_skip_test(child_id: int, body: SkipTestRequest, request: Reques
     import threading
     thread = threading.Thread(
         target=services.generation.generate_lesson_content,
-        args=(lesson_id, dict(child), topic["title_ru"], topic["subject"], db_path, server_url)
+        args=(lesson_id, dict(child), topic["title_ru"], topic["subject"], db_path, server_url),
+        kwargs={"mode": "skip_test"},
     )
     thread.start()
 

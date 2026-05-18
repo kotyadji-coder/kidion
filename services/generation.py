@@ -4,7 +4,7 @@ import uuid
 import logging
 from datetime import date
 
-from services.gemini_client import generate_explanation, generate_image_prompt, generate_image_prompt_fallback, generate_visual_layout
+from services.gemini_client import generate_explanation, generate_image_prompt, generate_image_prompt_fallback, generate_skip_test, generate_visual_layout
 from services.image_generator import generate_image
 from services.content_generator import save_lesson_html
 
@@ -231,7 +231,7 @@ def _get_or_generate_topic_image(conn, child: dict, topic: str, subject: str,
 
 def generate_lesson_content(lesson_id: int, child: dict, topic: str, subject: str,
                              db_path: str, server_url: str,
-                             lesson_number: int = 1) -> None:
+                             lesson_number: int = 1, mode: str = "normal") -> None:
     """Background task: generate lesson and save content_url to DB.
 
     lesson_number: 1-5 within topic (5 = activity worksheet instead of regular).
@@ -246,71 +246,73 @@ def generate_lesson_content(lesson_id: int, child: dict, topic: str, subject: st
         prev_titles = get_recent_lesson_titles(conn, child["id"], limit=3)
         question = build_question(child, topic, subject, prev_titles)
 
-        # Check methodologist cache (keyed by subject+grade+topic, independent of child)
-        grade = child["grade"]
-        cached_method = get_cached_methodologist(conn, subject, grade, topic)
+        if mode == "skip_test":
+            # Skip test: only generate 5 tasks, no theory/images/worksheets
+            lesson_json = generate_skip_test(question)
+            lesson_json["story_blocks"] = []
 
-        methodologist_output, lesson_json = generate_explanation(
-            question, cached_methodologist=cached_method
-        )
+            content_id = str(uuid.uuid4())[:8]
+            content_url = save_lesson_html(None, lesson_json, content_id, server_url,
+                                           visual_blocks=[])
+            update_lesson_content(conn, lesson_id, content_url, None, "done")
+        else:
+            # Full lesson: methodologist + tutor-gamer + visual layout + image + worksheet
+            grade = child["grade"]
+            cached_method = get_cached_methodologist(conn, subject, grade, topic)
 
-        # Save to cache if it was a fresh generation
-        if not cached_method and methodologist_output != "stub":
-            save_methodologist_cache(conn, subject, grade, topic, methodologist_output)
-            logger.info("Cached methodologist for %s/%s/%s", subject, grade, topic)
+            methodologist_output, lesson_json = generate_explanation(
+                question, cached_methodologist=cached_method
+            )
 
-        # Substitute {child_name} placeholder with actual child name
-        child_name = child.get("name", "")
-        for block in lesson_json.get("story_blocks", []):
-            if "text" in block:
-                block["text"] = block["text"].replace("{child_name}", child_name)
-        for task in lesson_json.get("tasks", []):
-            if "question" in task:
-                task["question"] = task["question"].replace("{child_name}", child_name)
+            if not cached_method and methodologist_output != "stub":
+                save_methodologist_cache(conn, subject, grade, topic, methodologist_output)
+                logger.info("Cached methodologist for %s/%s/%s", subject, grade, topic)
 
-        story_text = "\n".join(b["text"] for b in lesson_json.get("story_blocks", []))
+            child_name = child.get("name", "")
+            for block in lesson_json.get("story_blocks", []):
+                if "text" in block:
+                    block["text"] = block["text"].replace("{child_name}", child_name)
+            for task in lesson_json.get("tasks", []):
+                if "question" in task:
+                    task["question"] = task["question"].replace("{child_name}", child_name)
 
-        # Step 3: Visual layout (Gemini Flash) — rich theory blocks
-        character_name = child.get("character_name") or "Искатель"
-        character_emoji = "🦊"
-        universe_desc = child.get("universe_description") or ""
-        visual_blocks = generate_visual_layout(
-            lesson_json.get("story_blocks", []),
-            topic, subject,
-            character_name=character_name,
-            character_emoji=character_emoji,
-            universe_description=universe_desc,
-        )
+            story_text = "\n".join(b["text"] for b in lesson_json.get("story_blocks", []))
 
-        # Validate generated content
-        validate_lesson(lesson_json, visual_blocks, lesson_id, topic)
+            character_name = child.get("character_name") or "Искатель"
+            character_emoji = "🦊"
+            universe_desc = child.get("universe_description") or ""
+            visual_blocks = generate_visual_layout(
+                lesson_json.get("story_blocks", []),
+                topic, subject,
+                character_name=character_name,
+                character_emoji=character_emoji,
+                universe_description=universe_desc,
+            )
 
-        # Image: one per topic (shared across 5 lessons in the same topic)
-        image_bytes = _get_or_generate_topic_image(
-            conn, child, topic, subject, story_text, server_url
-        )
+            validate_lesson(lesson_json, visual_blocks, lesson_id, topic)
 
-        content_id = str(uuid.uuid4())[:8]
-        content_url = save_lesson_html(image_bytes, lesson_json, content_id, server_url,
-                                       visual_blocks=visual_blocks)
+            image_bytes = _get_or_generate_topic_image(
+                conn, child, topic, subject, story_text, server_url
+            )
 
-        # Generate printable worksheet
-        worksheet_url = None
-        try:
-            from services.worksheet.generator import generate_worksheet
-            worksheet_url = generate_worksheet(child, topic, subject, lesson_number, server_url)
-        except Exception:
-            logger.exception("Worksheet generation failed for lesson %s", lesson_id)
+            content_id = str(uuid.uuid4())[:8]
+            content_url = save_lesson_html(image_bytes, lesson_json, content_id, server_url,
+                                           visual_blocks=visual_blocks)
 
-        # Extract emoji from first story block for map icon
-        lesson_icon = None
-        story_blocks = lesson_json.get("story_blocks", [])
-        if story_blocks:
-            lesson_icon = story_blocks[0].get("emoji")
+            worksheet_url = None
+            try:
+                from services.worksheet.generator import generate_worksheet
+                worksheet_url = generate_worksheet(child, topic, subject, lesson_number, server_url)
+            except Exception:
+                logger.exception("Worksheet generation failed for lesson %s", lesson_id)
 
-        # print_url = worksheet_url (the real printable version)
-        update_lesson_content(conn, lesson_id, content_url, worksheet_url, "done",
-                              worksheet_url=worksheet_url, icon=lesson_icon)
+            lesson_icon = None
+            story_blocks = lesson_json.get("story_blocks", [])
+            if story_blocks:
+                lesson_icon = story_blocks[0].get("emoji")
+
+            update_lesson_content(conn, lesson_id, content_url, worksheet_url, "done",
+                                  worksheet_url=worksheet_url, icon=lesson_icon)
     except Exception:
         logger.exception("Generation failed for lesson %s", lesson_id)
         try:
