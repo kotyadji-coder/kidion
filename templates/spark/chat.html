@@ -31,7 +31,7 @@
         Pro
       </a>
       {% endif %}
-      <a href="/kid/home" class="sc-nav-avatar" title="Домой">
+      <a href="/" class="sc-nav-avatar" title="Домой">
         {{ child.name[0] if child.name else 'K' }}
       </a>
     </div>
@@ -150,7 +150,7 @@
         <h3 class="sc-voice-h">На сегодня сообщения закончились!</h3>
         <p class="sc-voice-sub">Приходи завтра, а пока можно пройти урок!</p>
         <div class="sc-voice-actions">
-          <a class="sc-voice-stop" href="/kid/home" style="text-decoration:none">Пройти урок</a>
+          <a class="sc-voice-stop" href="/" style="text-decoration:none">Пройти урок</a>
         </div>
         {% if not has_subscription %}
         <p style="font-size:12px; color:var(--text-3); margin-top:12px;">
@@ -182,7 +182,7 @@
       <span class="sc-tab-ico"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="7" cy="8" r="3" stroke="currentColor" stroke-width="1.6"/><circle cx="14" cy="7" r="2.4" stroke="currentColor" stroke-width="1.6"/><path d="M2 16c0-2.4 2.2-4 5-4s5 1.6 5 4M12 16c0-1.6 1.6-3 4-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
       <span>Персонажи</span>
     </button>
-    <a class="sc-tab" href="/kid/home">
+    <a class="sc-tab" href="/">
       <span class="sc-tab-ico"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 9l7-6 7 6v7a2 2 0 01-2 2h-3v-5h-4v5H5a2 2 0 01-2-2V9z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
       <span>Домой</span>
     </a>

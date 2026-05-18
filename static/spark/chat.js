@@ -401,7 +401,7 @@
     });
     btnSend.addEventListener("click", sendMessage);
     btnNewChat.addEventListener("click", clearChat);
-    btnBack.addEventListener("click", () => { window.location.href = "/kid/home"; });
+    btnBack.addEventListener("click", () => { window.location.href = "/"; });
 
     // File attachment
     fileInput.addEventListener("change", () => {

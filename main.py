@@ -3291,6 +3291,46 @@ async def spark_subscribe_page(request: Request):
     )
 
 
+@app.get("/spark/report/{child_id}", response_class=HTMLResponse)
+async def spark_report_page(child_id: int, request: Request):
+    """Parent chat report page for a child."""
+    conn = get_db_connection()
+    user = get_current_user(request, conn)
+    if not user:
+        return RedirectResponse(url="/spark/login", status_code=302)
+
+    child = get_child_by_id(conn, child_id)
+    if not child or child["parent_id"] != user["id"]:
+        return RedirectResponse(url="/", status_code=302)
+
+    has_sub = get_active_chat_subscription(conn, user["id"]) is not None
+    subscription = get_active_chat_subscription(conn, user["id"])
+
+    # Get all chats with messages
+    chats_raw = get_kid_chats_by_child(conn, child_id)
+    chats = []
+    total_messages = 0
+    for chat in chats_raw:
+        msgs = get_kid_chat_messages(conn, chat["id"], limit=50)
+        total_messages += len(msgs)
+        chats.append({
+            **chat,
+            "messages": msgs,
+        })
+
+    return templates.TemplateResponse(
+        request,
+        "spark/report.html",
+        {
+            "child": child,
+            "chats": chats,
+            "total_messages": total_messages,
+            "has_subscription": has_sub,
+            "subscription": dict(subscription) if subscription else None,
+        },
+    )
+
+
 # ---------------------------------------------------------------------------
 # Kid Chat API endpoints (single Spark chat)
 # ---------------------------------------------------------------------------
