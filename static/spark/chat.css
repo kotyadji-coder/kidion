@@ -73,7 +73,8 @@
                            --c-grad:   var(--pix-grad); }
 
 /* ============ Shell ============ */
-html, body { margin: 0; padding: 0; background: var(--bg); height: 100vh; height: 100dvh; overflow: hidden; }
+html, body { margin: 0; padding: 0; background: var(--bg); }
+html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: hidden; }
 
 .sc {
   font-family: var(--font);
@@ -86,6 +87,9 @@ html, body { margin: 0; padding: 0; background: var(--bg); height: 100vh; height
   flex-direction: column;
   height: 100vh;
   height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow: hidden;
 }
 .sc * { box-sizing: border-box; }
 .sc button { font-family: inherit; cursor: pointer; }
@@ -159,9 +163,10 @@ html, body { margin: 0; padding: 0; background: var(--bg); height: 100vh; height
 
 /* ============ Layout ============ */
 .sc-body {
-  flex: 1;
+  flex: 1 1 0;
   display: flex;
   min-height: 0;
+  overflow: hidden;
 }
 
 /* ============ Sidebar (desktop) ============ */
@@ -305,11 +310,13 @@ html, body { margin: 0; padding: 0; background: var(--bg); height: 100vh; height
 
 /* ============ Main chat column ============ */
 .sc-main {
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
+  min-height: 0;
   display: flex; flex-direction: column;
   background: var(--bg);
   position: relative;
+  overflow: hidden;
 }
 
 /* Conversation header */

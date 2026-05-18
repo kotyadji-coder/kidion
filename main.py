@@ -3235,6 +3235,26 @@ async def spark_landing_page(request: Request):
     return templates.TemplateResponse(request, "spark/landing.html", {})
 
 
+@app.get("/spark/subscribe", response_class=HTMLResponse)
+async def spark_subscribe_page(request: Request):
+    """Spark Chat subscription purchase page (parent auth required)."""
+    conn = get_db_connection()
+    user = get_current_user(request, conn)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+
+    subscription = get_active_chat_subscription(conn, user["id"])
+
+    return templates.TemplateResponse(
+        request,
+        "spark/subscribe.html",
+        {
+            "crystals": user["crystals"],
+            "subscription": dict(subscription) if subscription else None,
+        },
+    )
+
+
 # ---------------------------------------------------------------------------
 # Kid Chat API endpoints (single Spark chat)
 # ---------------------------------------------------------------------------

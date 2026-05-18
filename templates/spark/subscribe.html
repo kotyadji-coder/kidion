@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Подписка Спарк — Kidion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/spark/chat.css">
+<link rel="stylesheet" href="/static/spark/landing.css">
+<style>
+  body { min-height: 100vh; display: flex; flex-direction: column; }
+  .sub-page { flex: 1; padding: 40px 20px 60px; max-width: 840px; margin: 0 auto; width: 100%; }
+  .sub-back { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-2); text-decoration: none; margin-bottom: 24px; }
+  .sub-back:hover { color: var(--text); }
+  .sub-head { text-align: center; margin-bottom: 36px; }
+  .sub-h1 { margin: 0 0 8px; font-size: 28px; font-weight: 600; letter-spacing: -0.028em; }
+  @media (min-width: 769px) { .sub-h1 { font-size: 36px; } }
+  .sub-h1-sub { margin: 0; font-size: 15px; color: var(--text-2); line-height: 1.5; }
+  .sub-balance { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; font-size: 14px; font-weight: 600; margin-top: 16px; }
+  .sub-balance-icon { font-size: 16px; }
+
+  /* Status card */
+  .sub-status { background: var(--spark-violet-soft); border: 1px solid var(--spark-violet-border); border-radius: 16px; padding: 20px; margin-bottom: 28px; text-align: center; }
+  .sub-status-label { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--spark-violet-ink); margin: 0 0 4px; }
+  .sub-status-value { font-size: 18px; font-weight: 600; color: var(--text); margin: 0; }
+  .sub-status-expires { font-size: 13px; color: var(--text-2); margin: 4px 0 0; }
+
+  /* Buy section */
+  .sub-buy { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; }
+  .sub-buy-price { font-size: 48px; font-weight: 600; letter-spacing: -0.03em; background: var(--spark-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sub-buy-unit { font-size: 16px; color: var(--text-3); font-weight: 500; }
+  .sub-buy-desc { font-size: 14px; color: var(--text-2); line-height: 1.5; max-width: 400px; }
+
+  .sub-features { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; max-width: 400px; width: 100%; }
+  .sub-feat { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text); padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+  .sub-feat-icon { flex: 0 0 20px; width: 20px; height: 20px; border-radius: 50%; background: var(--spark-violet-soft); color: var(--spark-violet-ink); display: grid; place-items: center; }
+
+  .sub-buy-btn { margin-top: 8px; }
+  .sub-error { color: oklch(0.55 0.2 25); font-size: 13px; margin-top: 8px; display: none; }
+  .sub-success { color: oklch(0.45 0.15 158); font-size: 14px; font-weight: 600; display: none; }
+
+  /* Crystal packages */
+  .sub-packages { margin-top: 32px; text-align: center; }
+  .sub-packages-h { font-size: 16px; font-weight: 600; margin: 0 0 14px; }
+  .sub-packages-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-width: 400px; margin: 0 auto; }
+  @media (min-width: 769px) { .sub-packages-grid { grid-template-columns: repeat(4, 1fr); max-width: 600px; } }
+  .sub-pkg { padding: 14px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; text-align: center; cursor: pointer; transition: border-color .12s, transform .08s; text-decoration: none; color: var(--text); display: block; }
+  .sub-pkg:hover { border-color: var(--spark-violet-border); transform: translateY(-1px); }
+  .sub-pkg-crystals { font-size: 20px; font-weight: 600; }
+  .sub-pkg-price { font-size: 13px; color: var(--text-2); margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="sp">
+  <!-- Nav -->
+  <nav class="sp-nav">
+    <a class="sp-brand" href="/spark">
+      <span class="sp-brand-mark">S</span>
+      <span>Спарк Чат</span>
+    </a>
+    <div class="sp-nav-cta">
+      <a class="sp-btn sp-btn-ghost" href="/spark/chat">Назад в чат</a>
+    </div>
+  </nav>
+
+  <div class="sub-page">
+    <div class="sub-head">
+      <h1 class="sub-h1">Подписка Спарк</h1>
+      <p class="sub-h1-sub">Все персонажи, голосовые сообщения, картинки от AI и еженедельный отчёт</p>
+      <div class="sub-balance">
+        <span class="sub-balance-icon">💎</span>
+        <span id="crystal-count">{{ crystals }}</span> кристаллов
+      </div>
+    </div>
+
+    {% if subscription %}
+    <div class="sub-status">
+      <p class="sub-status-label">Подписка активна</p>
+      <p class="sub-status-value">Спарк Pro</p>
+      <p class="sub-status-expires">Действует до {{ subscription.expires_at[:10] }}</p>
+    </div>
+    {% endif %}
+
+    <div class="sub-buy">
+      <div>
+        <span class="sub-buy-price">300</span>
+        <span class="sub-buy-unit">💎 / месяц</span>
+      </div>
+      <p class="sub-buy-desc">Одна подписка на всех детей в аккаунте. Кристаллы работают и на уроках в kidion.ru.</p>
+
+      <ul class="sub-features">
+        <li class="sub-feat">
+          <span class="sub-feat-icon"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.8l2.2 2.2L9 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <strong>50 сообщений в день</strong> любому персонажу
+        </li>
+        <li class="sub-feat">
+          <span class="sub-feat-icon"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.8l2.2 2.2L9 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          Все <strong>4 персонажа</strong>
+        </li>
+        <li class="sub-feat">
+          <span class="sub-feat-icon"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.8l2.2 2.2L9 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          Голосовые сообщения
+        </li>
+        <li class="sub-feat">
+          <span class="sub-feat-icon"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.8l2.2 2.2L9 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          AI-генератор картинок
+        </li>
+        <li class="sub-feat">
+          <span class="sub-feat-icon"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.8l2.2 2.2L9 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          Еженедельный отчёт для родителей
+        </li>
+      </ul>
+
+      {% if not subscription %}
+      <button class="sp-btn sp-btn-primary sp-btn-lg sub-buy-btn" id="btn-subscribe" {% if crystals < 300 %}disabled style="opacity:0.5"{% endif %}>
+        {% if crystals >= 300 %}
+          Оформить за 300 💎
+        {% else %}
+          Не хватает кристаллов (нужно 300)
+        {% endif %}
+      </button>
+      <p class="sub-error" id="sub-error"></p>
+      <p class="sub-success" id="sub-success"></p>
+      {% endif %}
+    </div>
+
+    {% if crystals < 300 and not subscription %}
+    <div class="sub-packages">
+      <h3 class="sub-packages-h">Купить кристаллы</h3>
+      <div class="sub-packages-grid">
+        <a class="sub-pkg" href="/buy">
+          <div class="sub-pkg-crystals">💎 60</div>
+          <div class="sub-pkg-price">60 ₽</div>
+        </a>
+        <a class="sub-pkg" href="/buy">
+          <div class="sub-pkg-crystals">💎 360</div>
+          <div class="sub-pkg-price">320 ₽</div>
+        </a>
+        <a class="sub-pkg" href="/buy">
+          <div class="sub-pkg-crystals">💎 600</div>
+          <div class="sub-pkg-price">490 ₽</div>
+        </a>
+        <a class="sub-pkg" href="/buy">
+          <div class="sub-pkg-crystals">💎 1000</div>
+          <div class="sub-pkg-price">800 ₽</div>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const btn = document.getElementById('btn-subscribe');
+  if (!btn) return;
+  btn.addEventListener('click', async function() {
+    btn.disabled = true;
+    btn.textContent = 'Оформляем...';
+    try {
+      const res = await fetch('/api/chat/subscribe', { method: 'POST', credentials: 'same-origin' });
+      const data = await res.json();
+      if (res.ok) {
+        document.getElementById('sub-success').style.display = '';
+        document.getElementById('sub-success').textContent = 'Подписка оформлена! Перенаправляем в чат...';
+        btn.style.display = 'none';
+        setTimeout(() => window.location.href = '/spark/chat', 1500);
+      } else {
+        document.getElementById('sub-error').style.display = '';
+        document.getElementById('sub-error').textContent = data.message || data.error || 'Ошибка';
+        btn.disabled = false;
+        btn.textContent = 'Попробовать ещё раз';
+      }
+    } catch(e) {
+      btn.disabled = false;
+      btn.textContent = 'Оформить за 300 💎';
+    }
+  });
+});
+</script>
+</body>
+</html>
