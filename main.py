@@ -2607,8 +2607,20 @@ async def get_child_free_lessons(child_id: int, request: Request):
 # HTML page routes
 # ---------------------------------------------------------------------------
 
+def _is_chat_subdomain(request: Request) -> bool:
+    """Check if request comes from chat.kidion.ru."""
+    host = request.headers.get("host", "")
+    return host.startswith("chat.")
+
+
 @app.get("/", response_class=HTMLResponse)
 async def page_index(request: Request):
+    # chat.kidion.ru → Spark Chat landing
+    if _is_chat_subdomain(request):
+        if templates is None:
+            return HTMLResponse("<h1>Spark Chat</h1>")
+        return templates.TemplateResponse(request, "spark/landing.html", {})
+
     conn = get_db_connection()
     user = get_current_user(request, conn)
     if user:
@@ -2620,6 +2632,8 @@ async def page_index(request: Request):
 
 @app.get("/login", response_class=HTMLResponse)
 async def page_login(request: Request):
+    if _is_chat_subdomain(request):
+        return RedirectResponse(url="/spark/login", status_code=302)
     if templates is None:
         return HTMLResponse("<h1>Login</h1>")
     return templates.TemplateResponse(
@@ -2629,6 +2643,8 @@ async def page_login(request: Request):
 
 @app.get("/register", response_class=HTMLResponse)
 async def page_register(request: Request, ref: str = ""):
+    if _is_chat_subdomain(request):
+        return RedirectResponse(url="/spark/register", status_code=302)
     if templates is None:
         return HTMLResponse("<h1>Register</h1>")
     return templates.TemplateResponse(
