@@ -142,6 +142,23 @@
         </div>
       </div>
 
+      <!-- Limit exhausted overlay -->
+      <div class="sc-voice" id="limit-overlay">
+        <div class="sc-empty-av" style="flex:0 0 100px; width:100px; height:100px;">
+          <img src="/static/spark/spark-hero.png" alt="Спарк" style="width:100%;height:100%;object-fit:cover;object-position:center 18%;transform:scale(1.1)">
+        </div>
+        <h3 class="sc-voice-h">На сегодня сообщения закончились!</h3>
+        <p class="sc-voice-sub">Приходи завтра, а пока можно пройти урок!</p>
+        <div class="sc-voice-actions">
+          <a class="sc-voice-stop" href="/kid/home" style="text-decoration:none">Пройти урок</a>
+        </div>
+        {% if not has_subscription %}
+        <p style="font-size:12px; color:var(--text-3); margin-top:12px;">
+          Хотите больше? <a href="/spark/subscribe" style="color:var(--spark-violet); font-weight:600;">Подписка — 100 сообщений/день</a>
+        </p>
+        {% endif %}
+      </div>
+
       <!-- Character drawer (mobile) -->
       <div class="sc-drawer" id="char-drawer">
         <div class="sc-drawer-head">

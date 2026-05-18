@@ -319,8 +319,10 @@
 
       typingRow.style.display = "none";
 
-      if (result.status === 429 || result.status === 403) {
-        appendMessage({ role: "assistant", content: result.data.message || "Лимит исчерпан.", created_at: new Date().toISOString() }, true);
+      if (result.status === 429) {
+        document.getElementById("limit-overlay").classList.add("is-open");
+      } else if (result.status === 403) {
+        appendMessage({ role: "assistant", content: result.data.message || "Этот персонаж доступен по подписке.", created_at: new Date().toISOString() }, true);
       } else if (result.data.response) {
         dailyCount = result.data.daily_count || dailyCount + 1;
         updateQuota();
