@@ -4156,7 +4156,8 @@ async def page_child_subject(child_id: int, subject: str, request: Request):
 @app.get("/evals/dashboard", response_class=HTMLResponse)
 async def evals_dashboard(request: Request, run_id: int | None = None):
     """Eval dashboard — protected by parent auth."""
-    user = get_current_user(request)
+    conn = get_db_connection()
+    user = get_current_user(request, conn)
     if not user:
         return RedirectResponse("/login")
 
@@ -4207,7 +4208,8 @@ async def evals_dashboard(request: Request, run_id: int | None = None):
 @app.post("/evals/run")
 async def evals_run_api(request: Request):
     """Trigger an eval run via API."""
-    user = get_current_user(request)
+    conn = get_db_connection()
+    user = get_current_user(request, conn)
     if not user:
         return JSONResponse({"error": "auth required"}, 401)
 
