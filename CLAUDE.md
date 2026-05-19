@@ -269,8 +269,8 @@ uvicorn main:app --host 127.0.0.1 --port 8003 --reload
 ## Deploy
 
 - **Domain:** kidion.ru
-- **VPS:** 72.56.126.111, SSH: `ssh -i ~/.ssh/vps_key root@72.56.126.111`
-- **Port:** 8004, **Path:** /opt/kidion
+- **VPS:** 5.42.101.215 (Moscow, Russia — TimeWeb), SSH: `ssh -i ~/.ssh/id_ed25519 root@5.42.101.215`
+- **Port:** 8004, **Path:** /opt/kidion, **SSH Key:** `~/.ssh/id_ed25519`
 - **GitHub:** https://github.com/kotyadji-coder/kidion
 - **Status:** deployed (SSL active)
 
