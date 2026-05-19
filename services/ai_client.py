@@ -3,7 +3,7 @@ ai_client.py - Google AI Studio wrapper compatible with Vertex AI GenerativeMode
 
 If GEMINI_API_KEY is set, returns StudioModel (mimics GenerativeModel interface).
 Existing code calls model.generate_content() the same way - no other changes needed.
-Falls back to Vertex AI if AI Studio call fails.
+On 429/quota errors, automatically falls back to Vertex AI if credentials are available.
 """
 
 import logging
@@ -16,6 +16,45 @@ logger = logging.getLogger("kidion")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 LLM_DASHBOARD_URL = "http://5.42.101.215:8005/api/usage"
+
+
+def _is_quota_error(exc: Exception) -> bool:
+    """Check if exception is a 429 / RESOURCE_EXHAUSTED quota error."""
+    msg = str(exc)
+    return "429" in msg or "RESOURCE_EXHAUSTED" in msg or "quota" in msg.lower()
+
+
+def _get_vertex_fallback(model_name: str, system_instruction=None):
+    """Try to create a Vertex AI model for fallback. Returns None if not configured."""
+    project = os.getenv("GOOGLE_CLOUD_PROJECT")
+    creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    # Also check for commented-out vars: try the credentials file directly
+    if not project and os.path.exists("google-credentials.json"):
+        import json
+        try:
+            with open("google-credentials.json") as f:
+                creds_data = json.load(f)
+            project = creds_data.get("project_id")
+            creds_path = "google-credentials.json"
+        except Exception:
+            pass
+    if not project:
+        return None
+    try:
+        import vertexai
+        from vertexai.generative_models import GenerativeModel
+        if creds_path:
+            from google.oauth2 import service_account
+            credentials = service_account.Credentials.from_service_account_file(creds_path)
+            vertexai.init(project=project, location="global", credentials=credentials)
+        else:
+            vertexai.init(project=project, location="global")
+        if system_instruction:
+            return GenerativeModel(model_name, system_instruction=system_instruction)
+        return GenerativeModel(model_name)
+    except Exception as e:
+        logger.warning("Vertex AI fallback init failed: %s", e)
+        return None
 
 
 def _send_to_dashboard(model: str, response):
@@ -96,6 +135,16 @@ class StudioModel:
             threading.Thread(target=_send_to_dashboard, args=(self._model_name, response), daemon=True).start()
             return wrapped
         except Exception as e:
+            if _is_quota_error(e):
+                logger.warning("AI Studio quota hit, trying Vertex AI fallback...")
+                vertex = _get_vertex_fallback(self._model_name, self._system_instruction)
+                if vertex:
+                    return vertex.generate_content(
+                        prompt,
+                        generation_config=generation_config,
+                        safety_settings=safety_settings,
+                    )
+                logger.error("Vertex AI fallback not available either")
             logger.warning("AI Studio generate_content failed: %s", e)
             raise
 
@@ -132,13 +181,29 @@ class _StudioChat:
         config = {}
         if self._system_instruction:
             config["system_instruction"] = self._system_instruction
-        response = self._client.models.generate_content(
-            model=self._model_name,
-            contents=self._contents,
-            config=config if config else None,
-        )
-        threading.Thread(target=_send_to_dashboard, args=(self._model_name, response), daemon=True).start()
-        return _StudioResponse(response)
+        try:
+            response = self._client.models.generate_content(
+                model=self._model_name,
+                contents=self._contents,
+                config=config if config else None,
+            )
+            threading.Thread(target=_send_to_dashboard, args=(self._model_name, response), daemon=True).start()
+            return _StudioResponse(response)
+        except Exception as e:
+            if _is_quota_error(e):
+                logger.warning("AI Studio chat quota hit, trying Vertex AI fallback...")
+                vertex = _get_vertex_fallback(self._model_name, self._system_instruction)
+                if vertex:
+                    # Rebuild history for Vertex and send
+                    from vertexai.generative_models import Content, Part
+                    history = []
+                    for c in self._contents[:-1]:
+                        role = c.role if c.role != "model" else "model"
+                        text = c.parts[0].text if c.parts else ""
+                        history.append(Content(role=role, parts=[Part.from_text(text)]))
+                    chat = vertex.start_chat(history=history)
+                    return chat.send_message(message, safety_settings=safety_settings)
+            raise
 
 
 def get_studio_model(model_name, system_instruction=None):
