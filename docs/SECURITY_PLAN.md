@@ -197,106 +197,116 @@ Updated by: Claude Code + Anastasia
 
 ---
 
-### BLOCK B: What Anastasia needs to do (non-technical)
+### BLOCK A — STATUS: DONE (2026-05-18)
 
-#### B1. Register as Personal Data Operator
-- Check if notification to Roskomnadzor is required
-- If yes: submit notification at pd.rkn.gov.ru
-- Assign yourself as responsible person
-- **When:** Before public launch
-
-#### B2. Consult IT Lawyer
-- Find a Russian IT lawyer specializing in 152-FZ / children's services
-- Key questions:
-  1. Cross-border data transfer to Google (Gemini API) — is it legal for children's data?
-  2. What consent model is needed for parent + child?
-  3. Do we need to register as data operator with RKN?
-  4. What age marking (6+/12+) should the service have per 436-FZ?
-  5. Are current privacy policy + terms sufficient?
-- **When:** Before public launch
-- **Budget:** ~15,000-30,000 RUB for initial consultation
-
-#### B3. Google Gemini API Terms
-- Review Google AI Studio terms of service
-- Confirm: does Google use API data for training? (Usually no for API, but verify)
-- Check if there's a Data Processing Agreement available
-- Document the finding
-- **Where to check:** https://ai.google.dev/terms
-
-#### B4. Legal Entity
-- Decide: ИП or ООО for operating the service
-- Register if not done yet
-- This affects all legal documents
-- **When:** Before accepting real payments
-
-#### B5. YooKassa Integration
-- Get real SHOP_ID and SECRET_KEY
-- Enable fiscalization (чеки) — required by law for online payments
-- **When:** Before accepting real payments
-
-#### B6. Domain & SSL
-- Ensure COOKIE_SECURE=true in production .env
-- Verify SSL certificate auto-renewal
-- **When:** Already done, just verify
-
-#### B7. Backup Strategy
-- Set up automated DB backups (daily)
-- Store backups in Russia (not abroad)
-- Test restore procedure
-- **When:** Before public launch
-
-#### B8. Support Channel
-- Create a support email (e.g., support@kidion.ru)
-- Add it to privacy policy and terms
-- This is required for privacy/deletion requests
-- **When:** Before public launch
-
-#### B9. Red Team Testing (Together with Claude)
-- After all technical security is implemented
-- Test with Russian children's slang, translit, emoji evasion
-- Test crisis topics
-- Test PII extraction attempts
-- Test prompt injection
-- Claude Code will help create test scripts
-- **When:** After Block A is complete
+All 12 technical tasks implemented and committed: `6a52890`.
 
 ---
 
-### BLOCK C: Future (when scaling)
+### BLOCK B: What Anastasia needs to do
 
-- ML-based PII detector (instead of regex)
-- Human moderation queue with SLA
-- Extended parent dashboard (time limits, character blocking)
-- Rate limiting with Redis (instead of in-memory)
-- Structured logging with log aggregation
-- SIEM / security monitoring
-- Penetration testing by external team
-- Regular security audits
-- Bug bounty program
-- DDoS protection (Cloudflare)
-- Database encryption at rest
-- Key management service (KMS)
-- Incident response playbook with team roles
-- Regular data retention audits
-- Vendor security assessments
+#### B1. Найти IT-юриста (САМОЕ ВАЖНОЕ)
+- [ ] Найти юриста, который специализируется на 152-ФЗ / детских сервисах / IT
+- [ ] Задать ему 5 ключевых вопросов:
+  1. **Трансграничная передача** — можно ли передавать обезличенные данные детей в Google Gemini API (США)? Что для этого нужно юридически?
+  2. **Модель согласия** — достаточно ли чекбокса при регистрации или нужен отдельный документ? Нужна ли подпись / верификация родителя?
+  3. **Регистрация в РКН** — нужно ли подавать уведомление оператора ПДн в Роскомнадзор?
+  4. **Возрастная маркировка** — какую маркировку ставить по 436-ФЗ (6+/12+)? Как правильно описать сервис?
+  5. **Политика конфиденциальности** — попросить проверить текущую (шаблон уже есть на сайте /privacy) и сказать, что доработать
+- [ ] Получить письменное заключение или хотя бы список рекомендаций
+- **Где искать:** Яндекс "юрист 152-ФЗ", профильные группы, рекомендации. Можно на Авито/Профи.ру.
+- **Бюджет:** 15 000 - 30 000 руб за консультацию
+- **Когда:** ДО публичного запуска (до первых реальных пользователей)
+
+#### B2. Проверить условия Google Gemini API
+- [ ] Открыть страницу условий Google AI Studio (загуглить "Google AI Studio terms of service")
+- [ ] Найти раздел про использование данных для обучения — убедиться, что Google НЕ использует данные из API для обучения моделей
+- [ ] Проверить, есть ли Data Processing Agreement (DPA) — документ об обработке данных
+- [ ] Записать результат (ссылку + вывод) — пригодится для юриста
+- **Когда:** Можно сделать прямо сейчас, за 15 минут
+
+#### B3. Уведомление в Роскомнадзор
+- [ ] Юрист скажет, нужно ли. Если да:
+- [ ] Зайти на pd.rkn.gov.ru
+- [ ] Подать уведомление об обработке ПДн
+- [ ] Указать себя ответственным за обработку
+- **Когда:** По результатам консультации юриста
+
+#### B4. Юридическое лицо
+- [ ] Решить: ИП или ООО
+- [ ] Зарегистрировать (если ещё нет)
+- [ ] Это нужно для: приёма платежей, указания в документах, работы с ЮKassa
+- **Когда:** ДО приёма реальных платежей
+
+#### B5. ЮKassa — реальные ключи
+- [ ] Зарегистрироваться в ЮKassa (yookassa.ru) как ИП/ООО
+- [ ] Получить реальные SHOP_ID и SECRET_KEY
+- [ ] Включить фискализацию (отправка чеков) — это обязательно по закону
+- [ ] Прислать ключи — я пропишу их в .env на сервере
+- **Когда:** Когда будет юр. лицо
+
+#### B6. Почта поддержки
+- [ ] Создать support@kidion.ru (или настроить пересылку на личную почту)
+- [ ] Эта почта уже указана в политике конфиденциальности на сайте
+- [ ] Туда будут приходить запросы на удаление данных и жалобы
+- **Когда:** ДО публичного запуска
+
+#### B7. Проверить SSL и cookie на продакшене
+- [ ] Зайти на kidion.ru, проверить что замочек в браузере есть
+- [ ] Попросить меня проверить COOKIE_SECURE=true в .env на сервере (напиши мне "проверь cookie secure на сервере")
+- **Когда:** После деплоя этих изменений
+
+#### B8. Бэкапы базы данных
+- [ ] Напиши мне "настрой бэкапы" — я сделаю cron-скрипт на сервере
+- [ ] Бэкапы будут храниться на том же VPS (в России)
+- **Когда:** ДО публичного запуска
+
+#### B9. Red team тестирование (вместе со мной)
+- [ ] Когда всё задеплоено — напиши мне "давай протестируем безопасность чата"
+- [ ] Я подготовлю тестовые сценарии на русском языке:
+  - Детский сленг и транслит
+  - Попытки вытащить персональные данные
+  - Кризисные темы
+  - Prompt injection
+  - Обход фильтров
+- [ ] Пройдём вместе, я буду фиксить то, что пробьётся
+- **Когда:** После деплоя
+
+#### B10. Деплой на сервер
+- [ ] Напиши мне "задеплой" — я обновлю код на VPS
+- **Когда:** Когда будешь готова
 
 ---
 
-## Implementation Order
+### BLOCK B — Порядок действий (что сначала)
 
-Claude Code will implement in this order:
+| # | Задача | Срочность | Время |
+|---|--------|-----------|-------|
+| 1 | B10. Деплой | Сейчас | 5 мин (делаю я) |
+| 2 | B6. Почта support@kidion.ru | Эта неделя | 10 мин |
+| 3 | B2. Проверить условия Google API | Эта неделя | 15 мин |
+| 4 | B7. Проверить SSL/cookies | После деплоя | 2 мин |
+| 5 | B8. Бэкапы | Эта неделя | 5 мин (делаю я) |
+| 6 | B1. Юрист | До запуска | 1-2 недели |
+| 7 | B9. Red team тест | После деплоя | 1 час (вместе) |
+| 8 | B4. Юр. лицо | До платежей | 1-4 недели |
+| 9 | B5. ЮKassa | После юр. лица | 1 неделя |
+| 10 | B3. РКН | После юриста | По ситуации |
 
-1. **A1** Rate limiting (highest risk — brute force)
-2. **A12** Weak PIN prevention
-3. **A2** Security headers
-4. **A3** PII scrubber
-5. **A4** Crisis response system
-6. **A5** Output moderation
-7. **A6** Audit logging
-8. **A7** Chat data retention
-9. **A8** Parent account deletion
-10. **A9** Parental consent flow
-11. **A10** Enhanced legal pages
-12. **A11** Content report button
+---
 
-Total: 12 technical tasks, implemented as code changes to the existing monolith.
+### BLOCK C: На будущее (при масштабировании)
+
+- ML-based PII detector (вместо regex)
+- Модерационная очередь с human review
+- Расширенный родительский кабинет (лимиты времени, блокировка персонажей)
+- Rate limiting через Redis (вместо in-memory)
+- Структурированное логирование
+- SIEM / мониторинг безопасности
+- Пентест внешней командой
+- Регулярные аудиты безопасности
+- Bug bounty программа
+- DDoS защита (Cloudflare)
+- Шифрование БД at rest
+- Incident response playbook
+- Регулярные аудиты хранения данных
