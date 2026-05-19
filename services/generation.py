@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import uuid
@@ -298,6 +299,24 @@ def generate_lesson_content(lesson_id: int, child: dict, topic: str, subject: st
             content_id = str(uuid.uuid4())[:8]
             content_url = save_lesson_html(image_bytes, lesson_json, content_id, server_url,
                                            visual_blocks=visual_blocks)
+
+            # Save raw JSON for eval system
+            json_path = os.path.join(_CONTENT_DIR, f"{content_id}.json")
+            try:
+                with open(json_path, "w", encoding="utf-8") as f:
+                    json.dump({
+                        "lesson_id": lesson_id,
+                        "child_id": child["id"],
+                        "topic": topic,
+                        "subject": subject,
+                        "grade": child.get("grade", 1),
+                        "universe": child.get("universe", ""),
+                        "difficulty_level": child.get("difficulty_level", 2),
+                        "lesson_json": lesson_json,
+                        "methodologist_output": methodologist_output,
+                    }, f, ensure_ascii=False, indent=2)
+            except Exception:
+                logger.debug("Failed to save lesson JSON for evals", exc_info=True)
 
             worksheet_url = None
             try:

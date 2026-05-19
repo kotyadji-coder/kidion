@@ -16,7 +16,7 @@ import os
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from evals.runner import run_eval, compare_runs, get_all_runs
+from evals.runner import run_eval, run_real_data_eval, compare_runs, get_all_runs
 from evals.dataset import LESSON_TEST_CASES, CHAT_TEST_CASES
 
 
@@ -34,6 +34,12 @@ def cmd_run(args):
         version=args.version or "",
     )
     print(f"Run #{run_id} saved. View at /evals/dashboard")
+
+
+def cmd_check(args):
+    run_id = run_real_data_eval()
+    if run_id > 0:
+        print(f"Run #{run_id} saved. View at /evals/dashboard")
 
 
 def cmd_compare(args):
@@ -88,10 +94,11 @@ def main():
     parser = argparse.ArgumentParser(description="Kidion Eval System")
     sub = parser.add_subparsers(dest="command")
 
-    run_parser = sub.add_parser("run", help="Run evaluations")
+    run_parser = sub.add_parser("run", help="Synthetic eval (generate new lessons)")
     run_parser.add_argument("--quick", action="store_true", help="Quick mode (3 cases)")
     run_parser.add_argument("--version", default="", help="Version label")
 
+    sub.add_parser("check", help="Check existing lessons (real data, cheap)")
     sub.add_parser("compare", help="Compare last two runs")
     sub.add_parser("list", help="List all runs")
 
@@ -99,6 +106,8 @@ def main():
 
     if args.command == "run":
         cmd_run(args)
+    elif args.command == "check":
+        cmd_check(args)
     elif args.command == "compare":
         cmd_compare(args)
     elif args.command == "list":

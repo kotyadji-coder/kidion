@@ -2,13 +2,6 @@ import json
 import os
 import re
 
-try:
-    import vertexai
-    from vertexai.generative_models import GenerationConfig, GenerativeModel, HarmBlockThreshold, HarmCategory, SafetySetting
-    _HAS_VERTEX = True
-except Exception:
-    _HAS_VERTEX = False
-
 from services.prompts import (
     GENERATE_IMAGE_PROMPT_FALLBACK_PROMPT,
     GENERATE_IMAGE_PROMPT_PROMPT,
@@ -18,58 +11,19 @@ from services.prompts import (
     VISUAL_LAYOUT_PROMPT,
 )
 
-PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
-PRO_REGION = "global"
-LITE_REGION = "us-central1"
 MODEL_STEP1 = "gemini-2.5-flash"
 MODEL_STEP2 = "gemini-2.5-flash"
 FLASH_LITE_MODEL_NAME = "gemini-2.5-flash"
 
-def _get_child_safety_settings():
-    from vertexai.generative_models import HarmBlockThreshold, HarmCategory, SafetySetting
-    return [
-        SafetySetting(category=HarmCategory.HARM_CATEGORY_HARASSMENT, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
-        SafetySetting(category=HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
-        SafetySetting(category=HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
-        SafetySetting(category=HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
-    ]
 
-# Lazy property for backward compat (worksheet generator imports CHILD_SAFETY_SETTINGS)
-CHILD_SAFETY_SETTINGS = None
+def _get_model(model_name: str = None):
+    from services.ai_client import get_model
+    return get_model(model_name or MODEL_STEP1)
 
 
-def _init_vertex(location: str):
-    """Initialize Vertex AI with a specific location."""
-    if not PROJECT_ID or not _HAS_VERTEX:
-        return False
-    credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-    if credentials_path:
-        from google.oauth2 import service_account
-        credentials = service_account.Credentials.from_service_account_file(credentials_path)
-        vertexai.init(project=PROJECT_ID, location=location, credentials=credentials)
-    else:
-        vertexai.init(project=PROJECT_ID, location=location)
-    return True
-
-
-def _get_model(model_name: str = None) -> GenerativeModel:
-    from services.ai_client import get_studio_model
-    studio = get_studio_model(model_name or MODEL_STEP1)
-    if studio is not None:
-        return studio
-    if not _init_vertex(PRO_REGION):
-        return None
-    return GenerativeModel(model_name or MODEL_STEP1)
-
-
-def _get_flash_lite_model() -> GenerativeModel:
-    from services.ai_client import get_studio_model
-    studio = get_studio_model(FLASH_LITE_MODEL_NAME)
-    if studio is not None:
-        return studio
-    if not _init_vertex(LITE_REGION):
-        return None
-    return GenerativeModel(FLASH_LITE_MODEL_NAME)
+def _get_flash_lite_model():
+    from services.ai_client import get_model
+    return get_model(FLASH_LITE_MODEL_NAME)
 
 
 def _is_blocked_by_safety(response) -> bool:

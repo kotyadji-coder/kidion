@@ -438,6 +438,159 @@ def get_run_details(run_id: int) -> dict | None:
     }
 
 
+def run_real_data_eval(db_path: str = None) -> int:
+    """Evaluate existing lessons from the production DB. No new generation — almost free."""
+    import glob as glob_mod
+
+    if db_path is None:
+        db_path = os.path.join(_BASE_DIR, "kidion.db")
+
+    content_dir = os.path.join(_BASE_DIR, "content")
+    json_files = sorted(glob_mod.glob(os.path.join(content_dir, "*.json")))
+
+    if not json_files:
+        print("No lesson JSON files found in content/. Generate some lessons first.")
+        return -1
+
+    eval_db = _get_eval_db()
+    now = datetime.now(timezone.utc).isoformat()
+    git_hash = _get_git_hash()
+
+    eval_db.execute(
+        "INSERT INTO eval_runs (started_at, git_hash, version, status) VALUES (?, ?, ?, 'running')",
+        (now, git_hash, f"real-data ({len(json_files)} lessons)"),
+    )
+    eval_db.commit()
+    run_id = eval_db.execute("SELECT last_insert_rowid()").fetchone()[0]
+
+    print(f"\n{'='*60}")
+    print(f"  Real-Data Eval Run #{run_id} | {len(json_files)} lessons")
+    print(f"{'='*60}\n")
+
+    lesson_results_for_recs = []
+    lesson_det_scores = []
+    lesson_llm_scores = []
+
+    for i, jf in enumerate(json_files):
+        fname = os.path.basename(jf)
+        print(f"  [{i+1}/{len(json_files)}] {fname} ...", end=" ", flush=True)
+        try:
+            with open(jf, encoding="utf-8") as f:
+                data = json.load(f)
+
+            lesson_json = data.get("lesson_json", {})
+            topic = data.get("topic", "")
+            subject = data.get("subject", "")
+            grade = data.get("grade", 1)
+            universe = data.get("universe", "")
+            difficulty = data.get("difficulty_level", 2)
+            lesson_id = data.get("lesson_id", 0)
+
+            test_case = {
+                "id": f"real_{lesson_id}",
+                "subject": subject,
+                "grade": grade,
+                "topic": topic,
+                "universe": universe,
+                "difficulty_level": difficulty,
+                "expected": {
+                    "min_tasks": 5,
+                    "min_story_blocks": 3,
+                    "universe_in_text": bool(universe),
+                    "math_check": subject == "math",
+                },
+            }
+
+            # Level 1: deterministic
+            det_results = run_all_validators(lesson_json, test_case)
+            det_score = deterministic_score(det_results)
+            lesson_det_scores.append(det_score)
+
+            # Level 2: LLM judge
+            llm_scores = judge_lesson(lesson_json, test_case)
+            llm_avg = None
+            if llm_scores:
+                numeric = [v for k, v in llm_scores.items()
+                           if isinstance(v, (int, float)) and k not in ("strengths", "weaknesses", "suggestion")]
+                llm_avg = sum(numeric) / len(numeric) if numeric else None
+                if llm_avg:
+                    lesson_llm_scores.append(llm_avg)
+
+            eval_db.execute(
+                """INSERT INTO eval_lesson_results
+                   (run_id, test_case_id, subject, grade, topic, universe,
+                    lesson_json, methodologist_output,
+                    deterministic_json, deterministic_score,
+                    llm_scores_json, llm_avg_score, generation_time_ms)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (run_id, f"real_{lesson_id}", subject, grade, topic, universe,
+                 json.dumps(lesson_json, ensure_ascii=False),
+                 data.get("methodologist_output", ""),
+                 json.dumps(det_results, ensure_ascii=False),
+                 det_score,
+                 json.dumps(llm_scores, ensure_ascii=False) if llm_scores else None,
+                 llm_avg, 0),
+            )
+
+            lesson_results_for_recs.append({
+                "test_case_id": f"real_{lesson_id}",
+                "deterministic": det_results,
+                "llm_scores": llm_scores,
+            })
+
+            status = f"det={det_score:.0%}"
+            if llm_avg:
+                status += f" llm={llm_avg:.1f}/5"
+            print(f"OK — {status}")
+
+        except Exception as e:
+            logger.error("Real data eval error for %s: %s", fname, e)
+            eval_db.execute(
+                """INSERT INTO eval_lesson_results
+                   (run_id, test_case_id, error)
+                   VALUES (?, ?, ?)""",
+                (run_id, fname, str(e)),
+            )
+            print(f"ERROR: {e}")
+
+        eval_db.commit()
+
+    # Recommendations
+    print("\n  Generating recommendations...", end=" ", flush=True)
+    recommendations = generate_recommendations(lesson_results_for_recs, [])
+    print(f"OK ({len(recommendations)} recommendations)")
+
+    # Finalize
+    finished = datetime.now(timezone.utc).isoformat()
+    avg_det = sum(lesson_det_scores) / len(lesson_det_scores) if lesson_det_scores else None
+    avg_llm = sum(lesson_llm_scores) / len(lesson_llm_scores) if lesson_llm_scores else None
+
+    eval_db.execute(
+        """UPDATE eval_runs SET
+           finished_at=?, lesson_count=?, chat_count=0,
+           avg_deterministic=?, avg_llm_score=?,
+           recommendations_json=?, status='completed'
+           WHERE id=?""",
+        (finished, len(json_files),
+         avg_det, avg_llm,
+         json.dumps(recommendations, ensure_ascii=False),
+         run_id),
+    )
+    eval_db.commit()
+    eval_db.close()
+
+    print(f"\n{'='*60}")
+    print(f"  Real-Data Run #{run_id} complete! ({len(json_files)} lessons)")
+    if avg_det is not None:
+        print(f"  Deterministic avg: {avg_det:.0%}")
+    if avg_llm is not None:
+        print(f"  LLM judge avg: {avg_llm:.1f}/5")
+    print(f"  Dashboard: /evals/dashboard")
+    print(f"{'='*60}\n")
+
+    return run_id
+
+
 def get_all_runs() -> list[dict]:
     """Get summary of all eval runs."""
     db = _get_eval_db()

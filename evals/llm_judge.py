@@ -123,23 +123,9 @@ RECOMMENDATIONS_PROMPT = """Ты — AI-консультант по качест
 
 
 def _get_judge_model():
-    """Get model for judging (use the same AI Studio/Vertex pattern)."""
-    from services.ai_client import get_studio_model
-    model = get_studio_model("gemini-2.5-flash")
-    if model is not None:
-        return model
-
-    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    if not project:
-        return None
-
-    try:
-        import vertexai
-        from vertexai.generative_models import GenerativeModel
-        vertexai.init(project=project, location="global")
-        return GenerativeModel("gemini-2.5-flash")
-    except Exception:
-        return None
+    """Get model for judging."""
+    from services.ai_client import get_model
+    return get_model("gemini-2.5-flash")
 
 
 def _extract_json_from_response(text: str) -> dict | list:

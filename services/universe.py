@@ -15,23 +15,8 @@ logger = logging.getLogger("kidion")
 
 def _get_text_model():
     """Get Gemini model for text generation. Returns None in stub mode."""
-    from services.ai_client import get_studio_model
-    studio = get_studio_model("gemini-2.5-flash")
-    if studio is not None:
-        return studio
-    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    if not project:
-        return None
-    import vertexai
-    from vertexai.generative_models import GenerativeModel
-    credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-    if credentials_path:
-        from google.oauth2 import service_account
-        credentials = service_account.Credentials.from_service_account_file(credentials_path)
-        vertexai.init(project=project, location="global", credentials=credentials)
-    else:
-        vertexai.init(project=project, location="global")
-    return GenerativeModel("gemini-3.1-pro-preview")
+    from services.ai_client import get_model
+    return get_model("gemini-2.5-flash")
 
 
 def _extract_json(raw: str) -> dict:
@@ -203,22 +188,8 @@ def generate_shop_items(universe_description: str, character_name: str) -> list[
     Generate a catalog of ~20 shop items themed to the child's universe.
     Returns list of dicts with: category, title_ru, description_ru, emoji, price_stars.
     """
-    from services.ai_client import get_studio_model
-    model = get_studio_model("gemini-2.5-flash")
-    if model is None:
-        # Try Vertex AI
-        project = os.environ.get("GOOGLE_CLOUD_PROJECT")
-        if project:
-            import vertexai
-            from vertexai.generative_models import GenerativeModel
-            credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-            if credentials_path:
-                from google.oauth2 import service_account
-                credentials = service_account.Credentials.from_service_account_file(credentials_path)
-                vertexai.init(project=project, location="global", credentials=credentials)
-            else:
-                vertexai.init(project=project, location="global")
-            model = GenerativeModel("gemini-2.5-flash")
+    from services.ai_client import get_model
+    model = get_model("gemini-2.5-flash")
 
     prompt = f"""Ты — геймдизайнер детской образовательной платформы.
 

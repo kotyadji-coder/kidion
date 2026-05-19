@@ -221,8 +221,9 @@
                 Run #{{ current_run.run.id }} | {{ current_run.run.git_hash }}
             </span>
             {% endif %}
-            <button class="btn btn-green" onclick="runEval('quick')" id="btn-quick">Quick Run</button>
-            <button class="btn btn-primary" onclick="runEval('full')" id="btn-full">Full Run</button>
+            <button class="btn btn-green" onclick="runEval('check')" id="btn-check">Check My Lessons</button>
+            <button class="btn btn-outline" onclick="runEval('quick')" id="btn-quick">Synthetic Quick</button>
+            <button class="btn btn-outline" onclick="runEval('full')" id="btn-full">Synthetic Full</button>
             <a href="/evals/dashboard" class="btn btn-outline">Latest</a>
         </div>
     </div>
@@ -237,10 +238,13 @@
     <div class="empty-state">
         <h2>No eval runs yet</h2>
         <p style="margin-top: 12px;">Launch your first eval:</p>
-        <div style="margin-top: 16px; display: flex; gap: 12px; justify-content: center;">
-            <button class="btn btn-green" onclick="runEval('quick')" id="btn-quick-empty" style="font-size: 16px; padding: 12px 24px;">Quick Run (2 min)</button>
-            <button class="btn btn-primary" onclick="runEval('full')" id="btn-full-empty" style="font-size: 16px; padding: 12px 24px;">Full Run (10 min)</button>
+        <div style="margin-top: 16px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <button class="btn btn-green" onclick="runEval('check')" id="btn-check-empty" style="font-size: 16px; padding: 12px 24px;">Check My Lessons</button>
+            <button class="btn btn-outline" onclick="runEval('quick')" id="btn-quick-empty" style="font-size: 16px; padding: 12px 24px;">Synthetic Quick</button>
         </div>
+        <p style="margin-top: 12px; font-size: 13px; color: var(--muted);">
+            "Check My Lessons" checks existing lessons (cheap). "Synthetic" generates new test lessons.
+        </p>
     </div>
     {% else %}
 
@@ -624,8 +628,12 @@
             const statusText = document.getElementById('run-status-text');
             status.classList.add('visible');
 
-            const isQuick = mode === 'quick';
-            const label = isQuick ? 'Quick Run (3+3 tests, ~2 min)' : 'Full Run (16+12 tests, ~10 min)';
+            const labels = {
+                'check': 'Check My Lessons (existing lessons, ~1 min)',
+                'quick': 'Synthetic Quick (3+3 new tests, ~2 min)',
+                'full': 'Synthetic Full (16+12 new tests, ~10 min)',
+            };
+            const label = labels[mode] || mode;
             statusText.textContent = 'Starting ' + label + '...';
 
             fetch('/evals/run', {
