@@ -4149,3 +4149,74 @@ async def page_child_subject(child_id: int, subject: str, request: Request):
          "subject_name": subject_names.get(subject, subject),
          "subject_emoji": subject_emojis.get(subject, "📖")},
     )
+
+
+# ── Evals Dashboard ──────────────────────────────────────────────────────────
+
+@app.get("/evals/dashboard", response_class=HTMLResponse)
+async def evals_dashboard(request: Request, run_id: int | None = None):
+    """Eval dashboard — protected by parent auth."""
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse("/login")
+
+    from evals.runner import get_all_runs, get_run_details, compare_runs
+
+    runs = get_all_runs()
+    current_run = None
+    recommendations = []
+    comparison = None
+    lesson_data_json = "[]"
+    chat_data_json = "[]"
+
+    if runs:
+        target_id = run_id or runs[0]["id"]
+        current_run = get_run_details(target_id)
+
+        if current_run:
+            # Parse recommendations
+            recs_json = current_run["run"].get("recommendations_json")
+            if recs_json:
+                try:
+                    recommendations = json.loads(recs_json)
+                except Exception:
+                    recommendations = []
+
+            # Build JSON for JS detail panels
+            lesson_data_json = json.dumps(current_run["lessons"], ensure_ascii=False)
+            chat_data_json = json.dumps(current_run["chats"], ensure_ascii=False)
+
+        # Auto-compare with previous run if there are 2+ runs
+        if len(runs) >= 2:
+            comparison = compare_runs()
+
+    return templates.TemplateResponse(
+        request, "evals/dashboard.html",
+        {
+            "runs": runs,
+            "current_run": current_run,
+            "recommendations": recommendations,
+            "comparison": comparison,
+            "lesson_data_json": lesson_data_json,
+            "chat_data_json": chat_data_json,
+            "run_id": run_id,
+        },
+    )
+
+
+@app.post("/evals/run")
+async def evals_run_api(request: Request):
+    """Trigger an eval run via API."""
+    user = get_current_user(request)
+    if not user:
+        return JSONResponse({"error": "auth required"}, 401)
+
+    import threading
+    from evals.runner import run_eval
+
+    def _run():
+        run_eval()
+
+    t = threading.Thread(target=_run, daemon=True)
+    t.start()
+    return JSONResponse({"status": "started", "message": "Eval run started in background"})

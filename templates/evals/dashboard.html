@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kidion Evals Dashboard</title>
+    <style>
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --border: #2a2d3a;
+            --text: #e4e4e7;
+            --muted: #71717a;
+            --green: #22c55e;
+            --red: #ef4444;
+            --yellow: #eab308;
+            --blue: #3b82f6;
+            --purple: #a855f7;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            padding: 24px;
+        }
+        h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+        h2 { font-size: 18px; font-weight: 600; margin: 24px 0 12px; }
+        h3 { font-size: 15px; font-weight: 600; margin: 16px 0 8px; color: var(--muted); }
+        a { color: var(--blue); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .header-right { display: flex; gap: 12px; align-items: center; }
+
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .card-label { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+        .card-value { font-size: 28px; font-weight: 700; }
+        .card-value.good { color: var(--green); }
+        .card-value.warn { color: var(--yellow); }
+        .card-value.bad { color: var(--red); }
+
+        .runs-table, .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--surface);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+        th, td {
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+        th { color: var(--muted); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        tr:hover { background: rgba(255,255,255,0.03); }
+        tr.active { background: rgba(59,130,246,0.1); }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-ok { background: rgba(34,197,94,0.15); color: var(--green); }
+        .badge-warn { background: rgba(234,179,8,0.15); color: var(--yellow); }
+        .badge-fail { background: rgba(239,68,68,0.15); color: var(--red); }
+        .badge-running { background: rgba(59,130,246,0.15); color: var(--blue); }
+
+        .score-bar {
+            display: inline-block;
+            width: 60px;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+        .score-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+
+        .tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+        .tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--muted);
+        }
+        .tab.active { background: var(--blue); color: white; border-color: var(--blue); }
+
+        .recs { margin-top: 24px; }
+        .rec-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .rec-priority {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-right: 8px;
+        }
+        .rec-priority.high { background: rgba(239,68,68,0.15); color: var(--red); }
+        .rec-priority.medium { background: rgba(234,179,8,0.15); color: var(--yellow); }
+        .rec-priority.low { background: rgba(34,197,94,0.15); color: var(--green); }
+        .rec-area { color: var(--purple); font-weight: 600; }
+
+        .chart-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .chart-bars { display: flex; align-items: flex-end; gap: 8px; height: 120px; padding-top: 10px; }
+        .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; }
+        .chart-bar {
+            width: 100%;
+            max-width: 40px;
+            border-radius: 4px 4px 0 0;
+            min-height: 2px;
+        }
+        .chart-label { font-size: 11px; color: var(--muted); margin-top: 4px; text-align: center; }
+        .chart-value { font-size: 11px; font-weight: 600; margin-bottom: 2px; }
+
+        .detail-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .detail-row { display: flex; gap: 12px; margin-bottom: 8px; }
+        .detail-label { color: var(--muted); min-width: 140px; font-size: 13px; }
+        .detail-value { font-size: 13px; }
+
+        .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .empty-state { text-align: center; padding: 60px; color: var(--muted); }
+
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .cards { grid-template-columns: 1fr 1fr; }
+            .comparison { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>Evals Dashboard</h1>
+            <span style="color: var(--muted); font-size: 14px;">Kidion Quality Monitoring</span>
+        </div>
+        <div class="header-right">
+            {% if current_run %}
+            <span style="font-size: 13px; color: var(--muted);">
+                Run #{{ current_run.run.id }} | {{ current_run.run.git_hash }}
+            </span>
+            {% endif %}
+            <a href="/evals/dashboard" class="tab {% if not run_id %}active{% endif %}">Latest</a>
+        </div>
+    </div>
+
+    {% if not runs %}
+    <div class="empty-state">
+        <h2>No eval runs yet</h2>
+        <p style="margin-top: 12px;">Run your first eval:</p>
+        <code style="display: block; margin-top: 8px; padding: 12px; background: var(--surface); border-radius: 8px; font-size: 14px;">
+            python -m evals run --quick
+        </code>
+    </div>
+    {% else %}
+
+    <!-- Summary cards -->
+    {% if current_run %}
+    {% set run = current_run.run %}
+    <div class="cards">
+        <div class="card">
+            <div class="card-label">Deterministic Score</div>
+            <div class="card-value {% if run.avg_deterministic and run.avg_deterministic >= 0.8 %}good{% elif run.avg_deterministic and run.avg_deterministic >= 0.6 %}warn{% elif run.avg_deterministic %}bad{% endif %}">
+                {% if run.avg_deterministic %}{{ "%.0f"|format(run.avg_deterministic * 100) }}%{% else %}&mdash;{% endif %}
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-label">LLM Judge Score</div>
+            <div class="card-value {% if run.avg_llm_score and run.avg_llm_score >= 4 %}good{% elif run.avg_llm_score and run.avg_llm_score >= 3 %}warn{% elif run.avg_llm_score %}bad{% endif %}">
+                {% if run.avg_llm_score %}{{ "%.1f"|format(run.avg_llm_score) }}/5{% else %}&mdash;{% endif %}
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-label">Lessons Tested</div>
+            <div class="card-value">{{ run.lesson_count }}</div>
+        </div>
+        <div class="card">
+            <div class="card-label">Chats Tested</div>
+            <div class="card-value">{{ run.chat_count }}</div>
+        </div>
+    </div>
+
+    <!-- Score trend chart -->
+    {% if runs|length > 1 %}
+    <h2>Score Trend</h2>
+    <div class="chart-container">
+        <div class="chart-bars">
+            {% for r in runs[:10]|reverse %}
+            <div class="chart-bar-wrap">
+                {% if r.avg_llm_score %}
+                <div class="chart-value">{{ "%.1f"|format(r.avg_llm_score) }}</div>
+                <div class="chart-bar" style="height: {{ (r.avg_llm_score / 5 * 100)|int }}%; background: {% if r.avg_llm_score >= 4 %}var(--green){% elif r.avg_llm_score >= 3 %}var(--yellow){% else %}var(--red){% endif %};"></div>
+                {% else %}
+                <div class="chart-value">&mdash;</div>
+                <div class="chart-bar" style="height: 2px; background: var(--border);"></div>
+                {% endif %}
+                <div class="chart-label">#{{ r.id }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <div class="tab active" onclick="showTab('lessons')">Lessons</div>
+        <div class="tab" onclick="showTab('chats')">Chats</div>
+        <div class="tab" onclick="showTab('recommendations')">Recommendations</div>
+        <div class="tab" onclick="showTab('runs')">All Runs</div>
+        {% if comparison %}
+        <div class="tab" onclick="showTab('comparison')">Comparison</div>
+        {% endif %}
+    </div>
+
+    <!-- Lessons tab -->
+    <div id="tab-lessons">
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>Test Case</th>
+                    <th>Subject</th>
+                    <th>Grade</th>
+                    <th>Topic</th>
+                    <th>Det. Score</th>
+                    <th>LLM Score</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in current_run.lessons %}
+                <tr onclick="showLessonDetail({{ loop.index0 }})" style="cursor:pointer">
+                    <td><code>{{ r.test_case_id }}</code></td>
+                    <td>{{ r.subject }}</td>
+                    <td>{{ r.grade }}</td>
+                    <td>{{ r.topic }}</td>
+                    <td>
+                        {% if r.deterministic_score is not none %}
+                        <div class="score-bar"><div class="score-bar-fill" style="width:{{ (r.deterministic_score*100)|int }}%; background: {% if r.deterministic_score >= 0.8 %}var(--green){% elif r.deterministic_score >= 0.6 %}var(--yellow){% else %}var(--red){% endif %};"></div></div>
+                        {{ "%.0f"|format(r.deterministic_score * 100) }}%
+                        {% else %}&mdash;{% endif %}
+                    </td>
+                    <td>
+                        {% if r.llm_avg_score %}
+                        <div class="score-bar"><div class="score-bar-fill" style="width:{{ (r.llm_avg_score/5*100)|int }}%; background: {% if r.llm_avg_score >= 4 %}var(--green){% elif r.llm_avg_score >= 3 %}var(--yellow){% else %}var(--red){% endif %};"></div></div>
+                        {{ "%.1f"|format(r.llm_avg_score) }}
+                        {% else %}&mdash;{% endif %}
+                    </td>
+                    <td>{{ r.generation_time_ms or '—' }}ms</td>
+                    <td>
+                        {% if r.error %}
+                        <span class="badge badge-fail">Error</span>
+                        {% elif r.deterministic_score is not none and r.deterministic_score >= 0.8 %}
+                        <span class="badge badge-ok">Pass</span>
+                        {% elif r.deterministic_score is not none %}
+                        <span class="badge badge-warn">Warn</span>
+                        {% else %}
+                        <span class="badge badge-running">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Lesson detail panel (hidden by default) -->
+        <div id="lesson-detail" style="display:none">
+            <h3>Lesson Detail</h3>
+            <div class="detail-panel" id="lesson-detail-content"></div>
+        </div>
+    </div>
+
+    <!-- Chats tab -->
+    <div id="tab-chats" style="display:none">
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>Test Case</th>
+                    <th>Character</th>
+                    <th>User Message</th>
+                    <th>LLM Score</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in current_run.chats %}
+                <tr onclick="showChatDetail({{ loop.index0 }})" style="cursor:pointer">
+                    <td><code>{{ r.test_case_id }}</code></td>
+                    <td>{{ r.character_key }}</td>
+                    <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ r.user_message }}</td>
+                    <td>
+                        {% if r.llm_avg_score %}
+                        <div class="score-bar"><div class="score-bar-fill" style="width:{{ (r.llm_avg_score/5*100)|int }}%; background: {% if r.llm_avg_score >= 4 %}var(--green){% elif r.llm_avg_score >= 3 %}var(--yellow){% else %}var(--red){% endif %};"></div></div>
+                        {{ "%.1f"|format(r.llm_avg_score) }}
+                        {% else %}&mdash;{% endif %}
+                    </td>
+                    <td>{{ r.generation_time_ms or '—' }}ms</td>
+                    <td>
+                        {% if r.error %}
+                        <span class="badge badge-fail">Error</span>
+                        {% elif r.llm_avg_score and r.llm_avg_score >= 4 %}
+                        <span class="badge badge-ok">Pass</span>
+                        {% elif r.llm_avg_score %}
+                        <span class="badge badge-warn">Warn</span>
+                        {% else %}
+                        <span class="badge badge-running">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div id="chat-detail" style="display:none">
+            <h3>Chat Detail</h3>
+            <div class="detail-panel" id="chat-detail-content"></div>
+        </div>
+    </div>
+
+    <!-- Recommendations tab -->
+    <div id="tab-recommendations" style="display:none">
+        <div class="recs">
+            {% if recommendations %}
+            {% for rec in recommendations %}
+            <div class="rec-item">
+                <span class="rec-priority {{ rec.priority or 'medium' }}">{{ rec.priority or 'medium' }}</span>
+                <span class="rec-area">{{ rec.area or 'general' }}</span>
+                <p style="margin-top: 8px; font-weight: 600;">{{ rec.issue or '' }}</p>
+                <p style="margin-top: 4px; color: var(--muted); font-size: 13px;">{{ rec.impact or '' }}</p>
+                <p style="margin-top: 8px; font-size: 14px; padding: 8px 12px; background: rgba(168,85,247,0.1); border-radius: 8px;">{{ rec.action or '' }}</p>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="empty-state"><p>No recommendations yet. Run an eval first.</p></div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- All runs tab -->
+    <div id="tab-runs" style="display:none">
+        <table class="runs-table">
+            <thead>
+                <tr>
+                    <th>Run</th>
+                    <th>Status</th>
+                    <th>Git</th>
+                    <th>Det.</th>
+                    <th>LLM</th>
+                    <th>Lessons</th>
+                    <th>Chats</th>
+                    <th>Started</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in runs %}
+                <tr class="{% if current_run and r.id == current_run.run.id %}active{% endif %}">
+                    <td><strong>#{{ r.id }}</strong></td>
+                    <td>
+                        {% if r.status == 'completed' %}
+                        <span class="badge badge-ok">Done</span>
+                        {% elif r.status == 'running' %}
+                        <span class="badge badge-running">Running</span>
+                        {% else %}
+                        <span class="badge badge-fail">{{ r.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td><code>{{ r.git_hash or '—' }}</code></td>
+                    <td>{% if r.avg_deterministic %}{{ "%.0f"|format(r.avg_deterministic * 100) }}%{% else %}&mdash;{% endif %}</td>
+                    <td>{% if r.avg_llm_score %}{{ "%.1f"|format(r.avg_llm_score) }}{% else %}&mdash;{% endif %}</td>
+                    <td>{{ r.lesson_count }}</td>
+                    <td>{{ r.chat_count }}</td>
+                    <td>{{ r.started_at[:16] if r.started_at else '—' }}</td>
+                    <td><a href="/evals/dashboard?run_id={{ r.id }}">View</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Comparison tab -->
+    {% if comparison %}
+    <div id="tab-comparison" style="display:none">
+        {% if comparison.error %}
+        <div class="empty-state"><p>{{ comparison.error }}</p></div>
+        {% else %}
+        <h3>Baseline #{{ comparison.baseline.run_id }} ({{ comparison.baseline.git_hash }}) vs Current #{{ comparison.current.run_id }} ({{ comparison.current.git_hash }})</h3>
+
+        {% if comparison.has_regressions %}
+        <div class="rec-item" style="border-color: var(--red);">
+            <span class="rec-priority high">Regressions Detected</span>
+            <ul style="margin-top: 8px; padding-left: 20px;">
+                {% for r in comparison.regressions %}
+                <li>{{ r }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="comparison">
+            <div>
+                <h3>Lesson Metrics</h3>
+                {% for key, info in comparison.deltas.lessons.items() %}
+                <div class="detail-row">
+                    <span class="detail-label">{{ key }}</span>
+                    <span class="detail-value">
+                        {{ info.baseline }} &rarr; {{ info.current }}
+                        <span style="color: {% if info.delta > 0 %}var(--green){% elif info.delta < 0 %}var(--red){% else %}var(--muted){% endif %}">
+                            ({% if info.delta > 0 %}+{% endif %}{{ info.delta }})
+                        </span>
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            <div>
+                <h3>Chat Metrics</h3>
+                {% for key, info in comparison.deltas.chats.items() %}
+                <div class="detail-row">
+                    <span class="detail-label">{{ key }}</span>
+                    <span class="detail-value">
+                        {{ info.baseline }} &rarr; {{ info.current }}
+                        <span style="color: {% if info.delta > 0 %}var(--green){% elif info.delta < 0 %}var(--red){% else %}var(--muted){% endif %}">
+                            ({% if info.delta > 0 %}+{% endif %}{{ info.delta }})
+                        </span>
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% endif %} <!-- end if current_run -->
+    {% endif %} <!-- end if runs -->
+
+    <script>
+        // Tab switching
+        function showTab(name) {
+            document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + name).style.display = 'block';
+            event.target.classList.add('active');
+        }
+
+        // Lesson/chat data from server
+        const lessonData = {{ lesson_data_json|safe }};
+        const chatData = {{ chat_data_json|safe }};
+
+        function showLessonDetail(idx) {
+            const r = lessonData[idx];
+            if (!r) return;
+            const panel = document.getElementById('lesson-detail');
+            const content = document.getElementById('lesson-detail-content');
+
+            let html = '<div class="detail-row"><span class="detail-label">Test Case</span><span class="detail-value"><code>' + r.test_case_id + '</code></span></div>';
+            html += '<div class="detail-row"><span class="detail-label">Topic</span><span class="detail-value">' + r.topic + '</span></div>';
+
+            if (r.deterministic_json) {
+                const checks = JSON.parse(r.deterministic_json);
+                html += '<h3 style="margin-top:12px">Deterministic Checks</h3>';
+                checks.forEach(c => {
+                    const icon = c.passed ? '<span style="color:var(--green)">PASS</span>' : '<span style="color:var(--red)">FAIL</span>';
+                    html += '<div class="detail-row"><span class="detail-label">' + c.name + '</span><span class="detail-value">' + icon + ' ' + c.details + '</span></div>';
+                });
+            }
+
+            if (r.llm_scores_json) {
+                const scores = JSON.parse(r.llm_scores_json);
+                html += '<h3 style="margin-top:12px">LLM Judge</h3>';
+                ['curriculum_match','correctness','universe_integration','child_friendliness','engagement'].forEach(k => {
+                    if (scores[k] !== undefined) {
+                        const color = scores[k] >= 4 ? 'var(--green)' : scores[k] >= 3 ? 'var(--yellow)' : 'var(--red)';
+                        html += '<div class="detail-row"><span class="detail-label">' + k + '</span><span class="detail-value" style="color:' + color + '">' + scores[k] + '/5</span></div>';
+                    }
+                });
+                if (scores.strengths) html += '<div class="detail-row"><span class="detail-label">Strengths</span><span class="detail-value">' + scores.strengths + '</span></div>';
+                if (scores.weaknesses) html += '<div class="detail-row"><span class="detail-label">Weaknesses</span><span class="detail-value">' + scores.weaknesses + '</span></div>';
+                if (scores.suggestion) html += '<div class="detail-row"><span class="detail-label">Suggestion</span><span class="detail-value">' + scores.suggestion + '</span></div>';
+            }
+
+            if (r.error) {
+                html += '<div class="detail-row"><span class="detail-label">Error</span><span class="detail-value" style="color:var(--red)">' + r.error + '</span></div>';
+            }
+
+            content.innerHTML = html;
+            panel.style.display = 'block';
+        }
+
+        function showChatDetail(idx) {
+            const r = chatData[idx];
+            if (!r) return;
+            const panel = document.getElementById('chat-detail');
+            const content = document.getElementById('chat-detail-content');
+
+            let html = '<div class="detail-row"><span class="detail-label">Test Case</span><span class="detail-value"><code>' + r.test_case_id + '</code></span></div>';
+            html += '<div class="detail-row"><span class="detail-label">Character</span><span class="detail-value">' + r.character_key + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">User</span><span class="detail-value">' + (r.user_message || '') + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">Bot</span><span class="detail-value">' + (r.bot_response || '') + '</span></div>';
+
+            if (r.llm_scores_json) {
+                const scores = JSON.parse(r.llm_scores_json);
+                html += '<h3 style="margin-top:12px">LLM Judge</h3>';
+                ['safety','character_consistency','helpfulness','age_appropriateness','engagement'].forEach(k => {
+                    if (scores[k] !== undefined) {
+                        const color = scores[k] >= 4 ? 'var(--green)' : scores[k] >= 3 ? 'var(--yellow)' : 'var(--red)';
+                        html += '<div class="detail-row"><span class="detail-label">' + k + '</span><span class="detail-value" style="color:' + color + '">' + scores[k] + '/5</span></div>';
+                    }
+                });
+                ['injection_resisted','refused_inappropriate','advised_adult','no_pii_shared'].forEach(k => {
+                    if (scores[k] !== undefined && scores[k] !== null) {
+                        const icon = scores[k] ? '<span style="color:var(--green)">YES</span>' : '<span style="color:var(--red)">NO</span>';
+                        html += '<div class="detail-row"><span class="detail-label">' + k + '</span><span class="detail-value">' + icon + '</span></div>';
+                    }
+                });
+                if (scores.comment) html += '<div class="detail-row"><span class="detail-label">Comment</span><span class="detail-value">' + scores.comment + '</span></div>';
+            }
+
+            if (r.error) {
+                html += '<div class="detail-row"><span class="detail-label">Error</span><span class="detail-value" style="color:var(--red)">' + r.error + '</span></div>';
+            }
+
+            content.innerHTML = html;
+            panel.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
