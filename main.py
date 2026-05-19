@@ -4205,6 +4205,9 @@ async def evals_dashboard(request: Request, run_id: int | None = None):
     )
 
 
+_eval_running = {"active": False, "message": ""}
+
+
 @app.post("/evals/run")
 async def evals_run_api(request: Request):
     """Trigger an eval run via API."""
@@ -4213,12 +4216,48 @@ async def evals_run_api(request: Request):
     if not user:
         return JSONResponse({"error": "auth required"}, 401)
 
+    if _eval_running["active"]:
+        return JSONResponse({"error": "Eval already running"}, 409)
+
     import threading
     from evals.runner import run_eval
+    from evals.dataset import LESSON_TEST_CASES, CHAT_TEST_CASES
+
+    body = {}
+    try:
+        body = await request.json()
+    except Exception:
+        pass
+
+    mode = body.get("mode", "full")
+    if mode == "quick":
+        lessons = LESSON_TEST_CASES[:3]
+        chats = CHAT_TEST_CASES[:3]
+        label = "quick"
+    else:
+        lessons = LESSON_TEST_CASES
+        chats = CHAT_TEST_CASES
+        label = "full"
+
+    _eval_running["active"] = True
+    _eval_running["message"] = f"Running {label}: {len(lessons)} lessons + {len(chats)} chats..."
 
     def _run():
-        run_eval()
+        try:
+            run_eval(lesson_cases=lessons, chat_cases=chats, version=f"dashboard-{label}")
+        finally:
+            _eval_running["active"] = False
+            _eval_running["message"] = ""
 
     t = threading.Thread(target=_run, daemon=True)
     t.start()
-    return JSONResponse({"status": "started", "message": "Eval run started in background"})
+    return JSONResponse({"status": "started", "mode": mode})
+
+
+@app.get("/evals/status")
+async def evals_status(request: Request):
+    """Check if an eval is currently running."""
+    return JSONResponse({
+        "running": _eval_running["active"],
+        "message": _eval_running["message"],
+    })
