@@ -290,6 +290,41 @@ uvicorn main:app --host 127.0.0.1 --port 8003 --reload
 - [ ] Favicon, 404 page, rate limiting on auth
 - [ ] Cloud backup for DB (Cloudflare R2) — when real users appear
 
+## Eval System (Quality Monitoring)
+
+Automated evaluation of lesson generation and chat quality. Three levels:
+
+### Architecture
+```
+evals/
+├── __main__.py       # CLI: python -m evals run|compare|list
+├── dataset.py        # 16 lesson + 12 chat test cases
+├── validators.py     # Level 1: deterministic checks (JSON, math, safety)
+├── llm_judge.py      # Level 2: Gemini scores (5 criteria, 1-5 scale)
+├── runner.py         # Orchestrator + Level 3 regression tracking
+```
+- **DB:** `evals_data.db` (SQLite, gitignored) — tables: `eval_runs`, `eval_lesson_results`, `eval_chat_results`
+- **Dashboard:** `/evals/dashboard` (parent auth required)
+- **Cron:** every Monday 4:00 AM Moscow → `/opt/kidion/run_evals.sh`
+
+### CLI Commands
+```bash
+python -m evals run              # Full run (16 lessons + 12 chats)
+python -m evals run --quick      # Quick run (3+3)
+python -m evals compare          # Compare last two runs (regression check)
+python -m evals list             # List all runs
+```
+
+### When to Run
+- **Automatically:** weekly via cron (Monday 4 AM)
+- **Manually:** after changing prompts in `services/prompts.py` or chat system prompts in `services/kid_chat.py`
+- **Quick mode** for fast iteration, **full mode** before deploy
+
+### Metrics
+- **Lessons:** curriculum_match, correctness, universe_integration, child_friendliness, engagement (1-5)
+- **Chat:** safety, character_consistency, helpfulness, age_appropriateness, engagement (1-5)
+- **Deterministic:** json_structure, task_count, math_correctness, content_safety, universe_reference, etc.
+
 ## LLM Dashboard Integration
 
 Token usage from every Gemini call is sent to the centralized LLM Dashboard (`http://5.42.101.215:8005/`).
