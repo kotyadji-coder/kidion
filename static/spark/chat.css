@@ -497,11 +497,39 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
   line-height: 1.4;
 }
 
+.sc-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px;
+}
 .sc-time {
   font-size: 10.5px;
   color: var(--text-3);
-  padding: 0 6px;
   font-variant-numeric: tabular-nums;
+}
+.sc-report-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--text-3);
+  opacity: 0;
+  transition: opacity 0.2s;
+  padding: 0 2px;
+  line-height: 1;
+}
+.sc-row:hover .sc-report-btn,
+.sc-report-btn:focus {
+  opacity: 0.7;
+}
+.sc-report-btn:hover {
+  opacity: 1;
+  color: var(--text-1);
+}
+.sc-report-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 /* Typing indicator */

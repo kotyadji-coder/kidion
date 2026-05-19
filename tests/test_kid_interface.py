@@ -46,11 +46,11 @@ async def child_profile(parent_client: AsyncClient) -> dict:
         "birth_date": "2017-06-15",
         "grade": 1,
         "universe": "Холодное сердце",
-        "pin_code": "1234",
+        "pin_code": "5739",
     })
     assert resp.status_code == 201
     data = resp.json()
-    data["_pin"] = "1234"
+    data["_pin"] = "5739"
     return data
 
 
@@ -232,7 +232,7 @@ async def test_kid_lesson_detail_wrong_child(child_profile: dict, pending_lesson
             "birth_date": "2016-01-01",
             "grade": 2,
             "universe": "Лего",
-            "pin_code": "5678",
+            "pin_code": "5947",
         })
         assert resp.status_code == 201
         child2_id = resp.json()["id"]
@@ -241,7 +241,7 @@ async def test_kid_lesson_detail_wrong_child(child_profile: dict, pending_lesson
         transport=ASGITransport(app=app),
         base_url="http://testserver",
     ) as kid2:
-        resp = await kid2.post("/api/kid/auth", json={"child_id": child2_id, "pin": "5678"})
+        resp = await kid2.post("/api/kid/auth", json={"child_id": child2_id, "pin": "5947"})
         assert resp.status_code == 200
         resp = await kid2.get(f"/api/kid/lessons/{pending_lesson['id']}")
         assert resp.status_code == 403
@@ -358,7 +358,7 @@ async def test_kid_lesson_page_wrong_child_redirects(kid_client: AsyncClient):
             "birth_date": "2015-07-01",
             "grade": 3,
             "universe": "Человек-паук",
-            "pin_code": "0000",
+            "pin_code": "8274",
         })
         other_child_id = resp.json()["id"]
         with patch("services.generation.generate_lesson_content"):

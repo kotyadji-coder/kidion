@@ -31,7 +31,7 @@ async def _create_child(client: AsyncClient, grade=1, name="Маша") -> dict:
         "birth_date": "2017-05-10",
         "grade": grade,
         "universe": "Фиксики",
-        "pin_code": "1234",
+        "pin_code": "5739",
     })
     assert resp.status_code == 201, resp.text
     return resp.json()
@@ -628,7 +628,7 @@ class TestKidLessonsWeekly:
         # Login as kid
         kid_resp = await client.post("/api/kid/auth", json={
             "child_id": child["id"],
-            "pin": "1234",
+            "pin": "5739",
         })
         assert kid_resp.status_code == 200
         

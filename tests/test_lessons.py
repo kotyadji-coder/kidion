@@ -37,12 +37,12 @@ async def child_data(auth_client: AsyncClient) -> dict:
         "gender": "boy",
         "grade": 3,
         "universe": "Minecraft",
-        "pin_code": "1234",
+        "pin_code": "5739",
     }
     resp = await auth_client.post("/api/children", json=payload)
     assert resp.status_code == 201
     data = resp.json()
-    data["_pin"] = "1234"  # preserve raw PIN for tests
+    data["_pin"] = "5739"  # preserve raw PIN for tests
     return data
 
 
@@ -69,12 +69,12 @@ async def second_user_child(second_user_client: AsyncClient) -> dict:
         "gender": "boy",
         "grade": 2,
         "universe": "Harry Potter",
-        "pin_code": "5678",
+        "pin_code": "5947",
     }
     resp = await second_user_client.post("/api/children", json=payload)
     assert resp.status_code == 201
     data = resp.json()
-    data["_pin"] = "5678"
+    data["_pin"] = "5947"
     return data
 
 
@@ -794,7 +794,7 @@ async def test_submit_result_forbidden_wrong_child_session(
             "gender": "girl",
             "grade": 1,
             "universe": "Disney",
-            "pin_code": "9999",
+            "pin_code": "9427",
         }
     )
     child2 = resp.json()
@@ -820,7 +820,7 @@ async def test_submit_result_forbidden_wrong_child_session(
             "/api/kid/auth",
             json={
                 "child_id": child2["id"],
-                "pin": "9999",
+                "pin": "9427",
             }
         )
         assert resp.status_code == 200

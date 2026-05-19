@@ -29,7 +29,7 @@ async def _create_child(client: AsyncClient, grade=1, name="Тест") -> dict:
         "birth_date": "2017-05-10",
         "grade": grade,
         "universe": "Фиксики",
-        "pin_code": "1234",
+        "pin_code": "5739",
     })
     assert resp.status_code == 201, resp.text
     return resp.json()

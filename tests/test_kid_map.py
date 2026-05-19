@@ -50,7 +50,7 @@ async def kid_session(auth_client: AsyncClient):
         "birth_date": "2018-09-01",
         "grade": 1,
         "universe": "Принцессы",
-        "pin_code": "7777"
+        "pin_code": "7493"
     })
     assert child_resp.status_code == 201
     child_id = child_resp.json()["id"]
@@ -64,7 +64,7 @@ async def kid_session(auth_client: AsyncClient):
     # Login as kid
     login_resp = await auth_client.post("/api/kid/auth", json={
         "child_id": child_id,
-        "pin": "7777"
+        "pin": "7493"
     })
     assert login_resp.status_code == 200, f"Kid login failed: {login_resp.text}"
 
@@ -154,14 +154,14 @@ async def test_kid_map_no_enrollment_returns_404(auth_client: AsyncClient):
         "birth_date": "2019-01-01",
         "grade": 1,
         "universe": "Марс",
-        "pin_code": "0000"
+        "pin_code": "8274"
     })
     child_id = child_resp.json()["id"]
 
     # Login as kid
     login_resp = await auth_client.post("/api/kid/auth", json={
         "child_id": child_id,
-        "pin": "0000"
+        "pin": "8274"
     })
     assert login_resp.status_code == 200
 

@@ -42,6 +42,7 @@ from db import (
     create_weekly_lesson,
     create_weekly_plan,
     delete_child,
+    delete_user,
     get_active_weekly_plan,
     get_child_by_id,
     get_children_by_parent,
@@ -117,6 +118,12 @@ import services.generation
 from services.universe import generate_universe, generate_character_image, generate_shop_items
 from services.kid_chat import SPARK as CHAT_SPARK, sanitize_message, generate_chat_response
 from services.image_generator import is_draw_request, generate_chat_image
+from services.rate_limiter import check_rate_limit, check_rate_limit_by_key, get_client_ip
+from services.pii_scrubber import scrub_pii
+from services.crisis_detector import detect_crisis
+from services.output_moderator import moderate_output
+from services.audit import init_audit_table, log_event, cleanup_old_audit_logs
+from services.security import SecurityHeadersMiddleware, is_weak_pin
 
 
 def _sanitize_interests(interests: list[str]) -> list[str]:
@@ -158,6 +165,12 @@ def get_db_connection() -> sqlite3.Connection:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db(get_db_path())
+    # Init audit log table
+    conn = get_db_connection()
+    init_audit_table(conn)
+    # Cleanup old data on startup
+    cleanup_old_audit_logs(conn, days=90)
+    _cleanup_old_chat_messages(conn, days=90)
     if not os.environ.get("CALLBACK_HMAC_SECRET", ""):
         logging.warning("CALLBACK_HMAC_SECRET is not set or empty")
     from services.curricula import load_curricula
@@ -166,6 +179,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.add_middleware(SecurityHeadersMiddleware)
 
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 _TEMPLATES_DIR = os.path.join(_BASE_DIR, "templates")
@@ -215,6 +229,23 @@ def _set_session_cookie(response: Response, user_id: int) -> None:
 
 def _clear_session_cookie(response: Response) -> None:
     response.delete_cookie("kid_session", httponly=True, samesite="lax")
+
+
+def _cleanup_old_chat_messages(conn, days: int = 90) -> int:
+    """Delete chat messages older than N days. Returns count deleted."""
+    try:
+        cursor = conn.execute(
+            "DELETE FROM kid_chat_messages WHERE created_at < datetime('now', ?)",
+            (f"-{days} days",),
+        )
+        conn.commit()
+        deleted = cursor.rowcount
+        if deleted > 0:
+            logging.info("Cleaned up %d old chat messages (>%d days)", deleted, days)
+        return deleted
+    except Exception as e:
+        logging.debug("Chat cleanup error: %s", e)
+        return 0
 
 
 # ---------------------------------------------------------------------------
@@ -347,12 +378,16 @@ async def health():
 # Auth
 # ---------------------------------------------------------------------------
 
+_CONSENT_VERSION = "1.0"  # Increment when privacy policy changes
+
+
 @app.post("/auth/register")
 async def register(request: Request):
     body = await request.json()
     email = body.get("email", "").strip().lower()
     password = body.get("password", "")
     ref_code_input = body.get("ref_code", None)
+    consent = body.get("consent", True)
 
     # Validate email
     if not _EMAIL_RE.match(email):
@@ -361,6 +396,10 @@ async def register(request: Request):
     # Validate password length (min 8 chars)
     if len(password) < 8:
         return JSONResponse({"error": "weak_password"}, status_code=400)
+
+    # Require parental consent (enforced by frontend checkbox)
+    if consent is False:
+        return JSONResponse({"error": "consent_required", "message": "Необходимо согласие на обработку данных."}, status_code=400)
 
     conn = get_db_connection()
 
@@ -398,13 +437,28 @@ async def register(request: Request):
 def create_user_and_log(conn, email, pw_hash, crystals, ref_code, referred_by):
     """Create user and log the initial crystal transaction."""
     from db import create_user
+    from datetime import datetime, timezone
     user_id = create_user(conn, email, pw_hash, crystals, ref_code, referred_by)
     insert_transaction(conn, user_id, crystals, "registration_bonus")
+    # Record consent
+    now = datetime.now(timezone.utc).isoformat()
+    conn.execute(
+        "UPDATE users SET consent_given_at = ?, consent_version = ? WHERE id = ?",
+        (now, _CONSENT_VERSION, user_id),
+    )
+    conn.commit()
+    log_event(conn, "consent_given", user_id=user_id, details=f"version:{_CONSENT_VERSION}")
     return user_id
 
 
 @app.post("/auth/login")
 async def login(request: Request):
+    ip = get_client_ip(request)
+    if check_rate_limit(ip, "login", max_attempts=5, window=300):
+        conn = get_db_connection()
+        log_event(conn, "rate_limit_hit", ip=ip, details="login")
+        return JSONResponse({"error": "too_many_attempts", "message": "Слишком много попыток. Подождите 5 минут."}, status_code=429)
+
     body = await request.json()
     email = body.get("email", "").strip().lower()
     password = body.get("password", "")
@@ -412,8 +466,10 @@ async def login(request: Request):
     conn = get_db_connection()
     user = get_user_by_email(conn, email)
     if not user or not verify_password(password, user["password_hash"]):
+        log_event(conn, "login_failed", ip=ip, details=f"email:{email[:50]}")
         return JSONResponse({"error": "invalid_credentials"}, status_code=401)
 
+    log_event(conn, "login_success", user_id=user["id"], ip=ip)
     response = JSONResponse({"ok": True})
     _set_session_cookie(response, user["id"])
     return response
@@ -428,6 +484,10 @@ async def logout():
 
 @app.post("/auth/forgot-password")
 async def forgot_password(request: Request):
+    ip = get_client_ip(request)
+    if check_rate_limit(ip, "forgot_password", max_attempts=3, window=3600):
+        return JSONResponse({"error": "too_many_attempts", "message": "Слишком много запросов. Подождите час."}, status_code=429)
+
     body = await request.json()
     email = body.get("email", "").strip().lower()
 
@@ -436,6 +496,7 @@ async def forgot_password(request: Request):
 
     conn = get_db_connection()
     user = get_user_by_email(conn, email)
+    log_event(conn, "password_reset_requested", ip=ip, details=f"email:{email[:50]}")
 
     # Always return ok to prevent email enumeration
     if not user:
@@ -531,6 +592,38 @@ async def me(request: Request):
         "crystals": user["crystals"],
         "ref_code": user["ref_code"],
     })
+
+
+@app.delete("/api/account")
+async def delete_account(request: Request):
+    """Delete parent account and all children/data. Requires password confirmation."""
+    conn = get_db_connection()
+    user = get_current_user(request, conn)
+    if not user:
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+
+    body = await request.json()
+    password = body.get("password", "")
+
+    if not verify_password(password, user["password_hash"]):
+        return JSONResponse({"error": "invalid_password", "message": "Неверный пароль."}, status_code=400)
+
+    ip = get_client_ip(request)
+    user_id = user["id"]
+
+    # Delete character image files for all children
+    children = get_children_by_parent(conn, user_id)
+    for child in children:
+        char_img_path = os.path.join(_CONTENT_DIR, "characters", f"{child['id']}.png")
+        if os.path.exists(char_img_path):
+            os.remove(char_img_path)
+
+    delete_user(conn, user_id)
+    log_event(conn, "account_deleted", user_id=user_id, ip=ip)
+
+    response = JSONResponse({"ok": True})
+    _clear_session_cookie(response)
+    return response
 
 
 # ---------------------------------------------------------------------------
@@ -693,6 +786,10 @@ async def create_child_endpoint(body: ChildCreateRequest, request: Request):
     if count_children_by_parent(conn, user["id"]) >= 3:
         return JSONResponse({"error": "max_children_reached"}, status_code=400)
 
+    # Validate PIN strength
+    if is_weak_pin(body.pin_code):
+        return JSONResponse({"error": "weak_pin", "message": "Этот код слишком простой. Выберите более надёжный."}, status_code=400)
+
     # Build interests from universe questionnaire fields
     interests = body.interests if body.interests else []
     if not interests:
@@ -833,6 +930,8 @@ async def update_child_endpoint(child_id: int, body: ChildUpdateRequest, request
     if body.universe is not None:
         update_dict["universe"] = body.universe
     if body.pin_code is not None:
+        if is_weak_pin(body.pin_code):
+            return JSONResponse({"error": "weak_pin", "message": "Этот код слишком простой. Выберите более надёжный."}, status_code=400)
         update_dict["pin_hash"] = hash_password(body.pin_code)
 
     updated = update_child(conn, child_id, **update_dict)
@@ -858,6 +957,8 @@ async def delete_child_endpoint(child_id: int, request: Request):
         os.remove(char_img_path)
 
     delete_child(conn, child_id)
+    ip = get_client_ip(request)
+    log_event(conn, "child_deleted", user_id=user["id"], child_id=child_id, ip=ip)
     return JSONResponse({"ok": True})
 
 
@@ -916,11 +1017,27 @@ async def recreate_universe_endpoint(child_id: int, body: RecreateUniverseReques
 
 @app.post("/api/kid/auth")
 async def kid_auth(body: KidAuthRequest, request: Request):
+    ip = get_client_ip(request)
+
+    # Rate limit by IP
+    if check_rate_limit(ip, "pin_auth", max_attempts=10, window=300):
+        conn = get_db_connection()
+        log_event(conn, "rate_limit_hit", ip=ip, details="pin_auth")
+        return JSONResponse({"error": "too_many_attempts", "message": "Слишком много попыток. Подожди 5 минут."}, status_code=429)
+
+    # Rate limit by child_id (prevents targeted brute force)
+    if check_rate_limit_by_key(str(body.child_id), "pin_child", max_attempts=5, window=300):
+        conn = get_db_connection()
+        log_event(conn, "rate_limit_hit", child_id=body.child_id, ip=ip, details="pin_child")
+        return JSONResponse({"error": "too_many_attempts", "message": "Слишком много попыток. Подожди 5 минут."}, status_code=429)
+
     conn = get_db_connection()
     child = get_child_by_id(conn, body.child_id)
     if child is None or not verify_password(body.pin, child["pin_hash"]):
+        log_event(conn, "pin_failed", child_id=body.child_id, ip=ip)
         return JSONResponse({"error": "invalid_credentials"}, status_code=401)
 
+    log_event(conn, "pin_success", child_id=child["id"], ip=ip)
     token = create_child_session_token(child["id"])
     response = JSONResponse({"ok": True, "child_id": child["id"], "name": child["name"]})
     response.set_cookie(
@@ -3038,6 +3155,42 @@ async def report_content(request: Request):
     return JSONResponse({"ok": True})
 
 
+@app.post("/api/kid/chat/report")
+async def kid_chat_report(request: Request):
+    """Report a chat message as inappropriate (child auth)."""
+    conn = get_db_connection()
+    child = get_current_child(request, conn)
+    if not child:
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+
+    body = await request.json()
+    message_id = body.get("message_id")
+    reason = body.get("reason", "inappropriate")[:200]
+
+    if not message_id:
+        return JSONResponse({"error": "message_id_required"}, status_code=400)
+
+    # Verify message exists and belongs to this child's chat
+    msg = conn.execute(
+        "SELECT m.id, m.chat_id FROM kid_chat_messages m "
+        "JOIN kid_chats c ON m.chat_id = c.id "
+        "WHERE m.id = ? AND c.child_id = ?",
+        (message_id, child["id"]),
+    ).fetchone()
+    if not msg:
+        return JSONResponse({"error": "not_found"}, status_code=404)
+
+    conn.execute(
+        "INSERT INTO content_reports (child_id, reason) VALUES (?, ?)",
+        (child["id"], f"chat_msg:{message_id}:{reason}"),
+    )
+    conn.commit()
+    ip = get_client_ip(request)
+    log_event(conn, "message_reported", child_id=child["id"], ip=ip,
+              details=f"msg_id:{message_id},reason:{reason[:100]}")
+    return JSONResponse({"ok": True})
+
+
 # ---------------------------------------------------------------------------
 # Kid HTML page routes
 # ---------------------------------------------------------------------------
@@ -3404,6 +3557,7 @@ async def kid_chat_clear(request: Request):
     character_key = request.query_params.get("character", "spark")
     chat = get_or_create_character_chat(conn, child["id"], character_key)
     clear_kid_chat_messages(conn, chat["id"])
+    log_event(conn, "chat_cleared", child_id=child["id"], details=f"character:{character_key}")
     return JSONResponse({"ok": True})
 
 
@@ -3473,19 +3627,55 @@ async def kid_chat_send(request: Request):
     if not message_text and not image_url:
         return JSONResponse({"error": "empty_message"}, status_code=400)
 
-    # Save user message
+    # --- SAFETY PIPELINE ---
+
+    # Step 1: Crisis detection — skip AI entirely if crisis topic detected
+    crisis_category, crisis_response = detect_crisis(message_text)
+    if crisis_category:
+        log_event(conn, "crisis_detected", child_id=child["id"], details=f"category:{crisis_category}")
+        add_kid_chat_message(conn, chat_id, "user", message_text, image_url)
+        add_kid_chat_message(conn, chat_id, "assistant", crisis_response)
+        update_kid_chat_timestamp(conn, chat_id)
+        new_daily_count = daily_count + 1
+        sub_info = get_active_chat_subscription(conn, parent_id)
+        images_remaining = sub_info["images_remaining"] if sub_info else 0
+        return JSONResponse({
+            "response": crisis_response,
+            "daily_count": new_daily_count,
+            "daily_limit": daily_limit,
+            "images_remaining": images_remaining,
+        })
+
+    # Step 2: PII scrubbing — remove personal data before sending to AI
+    scrubbed_text, pii_categories = scrub_pii(message_text)
+    if pii_categories:
+        log_event(conn, "pii_detected", child_id=child["id"],
+                  details=f"types:{','.join(pii_categories)}")
+
+    # Save user message (original text for parent view, scrubbed goes to AI)
     add_kid_chat_message(conn, chat_id, "user", message_text, image_url)
 
-    # Get context (last 30 messages)
+    # Get context (last 30 messages) — scrub PII from history too
     history = get_kid_chat_messages(conn, chat_id, limit=30)
-    context = [{"role": m["role"], "content": m["content"]} for m in history]
+    context = []
+    for m in history:
+        content = m["content"]
+        if m["role"] == "user":
+            content, _ = scrub_pii(content)
+        context.append({"role": m["role"], "content": content})
 
-    # Generate AI response
+    # Step 3: Generate AI response (with scrubbed input)
     response_text = generate_chat_response(
         context,
         child_name=child["name"],
         character_key=character_key,
     )
+
+    # Step 4: Output moderation — check AI response for unsafe content
+    response_text, was_moderated, mod_issues = moderate_output(response_text)
+    if was_moderated:
+        log_event(conn, "output_moderated", child_id=child["id"],
+                  details=f"issues:{','.join(mod_issues)}")
 
     # Check if this is an image generation request
     response_image_url = None

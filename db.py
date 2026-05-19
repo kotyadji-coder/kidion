@@ -422,6 +422,15 @@ def _migrate(conn: sqlite3.Connection) -> None:
         conn.execute("ALTER TABLE lessons ADD COLUMN icon TEXT")
         conn.commit()
 
+    # Add consent columns to users table
+    user_cols = [row[1] for row in conn.execute("PRAGMA table_info(users)").fetchall()]
+    if "consent_given_at" not in user_cols:
+        conn.execute("ALTER TABLE users ADD COLUMN consent_given_at TEXT")
+        conn.commit()
+    if "consent_version" not in user_cols:
+        conn.execute("ALTER TABLE users ADD COLUMN consent_version TEXT")
+        conn.commit()
+
 
 # ---------------------------------------------------------------------------
 # User operations
@@ -456,6 +465,34 @@ def get_user_by_id(conn: sqlite3.Connection, user_id: int) -> dict | None:
         "SELECT * FROM users WHERE id = ?", (user_id,)
     ).fetchone()
     return dict(row) if row else None
+
+
+def delete_user(conn: sqlite3.Connection, user_id: int) -> bool:
+    """
+    Delete user and all associated data (children cascade-delete their own data).
+    Returns True if deleted, False if not found.
+    """
+    # Get all children to delete their character images
+    children = conn.execute(
+        "SELECT id FROM children WHERE parent_id = ?", (user_id,)
+    ).fetchall()
+    child_ids = [row[0] for row in children]
+
+    # Delete children first (cascades to lessons, chats, etc.)
+    for cid in child_ids:
+        conn.execute("DELETE FROM children WHERE id = ?", (cid,))
+
+    # Delete user-level data
+    conn.execute("DELETE FROM transactions WHERE user_id = ?", (user_id,))
+    conn.execute("DELETE FROM payments WHERE user_id = ?", (user_id,))
+    conn.execute("DELETE FROM generations WHERE user_id = ?", (user_id,))
+    conn.execute("DELETE FROM referrals WHERE referrer_id = ? OR referred_id = ?", (user_id, user_id))
+    conn.execute("DELETE FROM chat_subscriptions WHERE user_id = ?", (user_id,))
+    conn.execute("DELETE FROM content_reports WHERE user_id = ?", (user_id,))
+
+    cursor = conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    conn.commit()
+    return cursor.rowcount == 1
 
 
 def get_user_by_ref_code(conn: sqlite3.Connection, ref_code: str) -> dict | None:

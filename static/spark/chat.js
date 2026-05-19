@@ -255,13 +255,38 @@
       stack.appendChild(bub);
     }
 
-    // Time
+    // Time + report button for assistant messages
     if (m.created_at) {
+      const meta = document.createElement("div");
+      meta.className = "sc-meta";
       const time = document.createElement("span");
       time.className = "sc-time";
       const d = new Date(m.created_at);
       time.textContent = d.getHours().toString().padStart(2, "0") + ":" + d.getMinutes().toString().padStart(2, "0");
-      stack.appendChild(time);
+      meta.appendChild(time);
+
+      if (!isUser && m.id) {
+        const reportBtn = document.createElement("button");
+        reportBtn.className = "sc-report-btn";
+        reportBtn.title = "Пожаловаться на ответ";
+        reportBtn.textContent = "\u26A0";
+        reportBtn.onclick = async function() {
+          if (reportBtn.disabled) return;
+          reportBtn.disabled = true;
+          reportBtn.textContent = "...";
+          try {
+            await api("/api/kid/chat/report", "POST", { message_id: m.id, reason: "inappropriate" });
+            reportBtn.textContent = "\u2713";
+            reportBtn.title = "Жалоба отправлена";
+          } catch(e) {
+            reportBtn.textContent = "\u26A0";
+            reportBtn.disabled = false;
+          }
+        };
+        meta.appendChild(reportBtn);
+      }
+
+      stack.appendChild(meta);
     }
 
     row.appendChild(stack);

@@ -44,7 +44,7 @@ async def enrolled_child(auth_client: AsyncClient) -> dict:
         "birth_date": "2018-01-01",
         "grade": 1,
         "universe": "Космос",
-        "pin_code":"1234"
+        "pin_code":"5739"
     })
     assert child_resp.status_code == 201, f"Child creation failed: {child_resp.text}"
     child_id = child_resp.json()["id"]
@@ -77,7 +77,7 @@ async def child_with_crystals(auth_client: AsyncClient) -> dict:
         "birth_date": "2018-05-15",
         "grade": 1,
         "universe": "Феи",
-        "pin_code":"5678"
+        "pin_code":"5947"
     })
     assert child_resp.status_code == 201
     child_id = child_resp.json()["id"]
@@ -142,7 +142,7 @@ async def test_enroll_subject_creates_60_progress_rows(auth_client: AsyncClient)
         "birth_date": "2019-01-01",
         "grade": 1,
         "universe": "Марс",
-        "pin_code":"1111"
+        "pin_code":"6381"
     })
     assert child_resp.status_code == 201
     child_id = child_resp.json()["id"]
@@ -174,7 +174,7 @@ async def test_enroll_subject_first_lesson_available(auth_client: AsyncClient):
         "birth_date": "2019-01-01",
         "grade": 1,
         "universe": "Солнце",
-        "pin_code":"2222"
+        "pin_code":"7429"
     })
     child_id = child_resp.json()["id"]
 
@@ -207,7 +207,7 @@ async def test_enroll_subject_idempotent(auth_client: AsyncClient):
         "birth_date": "2019-01-01",
         "grade": 1,
         "universe": "Луна",
-        "pin_code":"3333"
+        "pin_code":"3849"
     })
     child_id = child_resp.json()["id"]
 
@@ -239,7 +239,7 @@ async def test_enroll_subject_no_curriculum_returns_400(auth_client: AsyncClient
         "birth_date": "2019-01-01",
         "grade": 3,
         "universe": "Роботы",
-        "pin_code":"4444"
+        "pin_code":"4917"
     })
     child_id = child_resp.json()["id"]
 
@@ -718,7 +718,7 @@ async def test_skip_test_no_crystals_returns_402(auth_client: AsyncClient):
         "birth_date": "2019-01-01",
         "grade": 1,
         "universe": "Пустыня",
-        "pin_code":"9999"
+        "pin_code":"9427"
     })
     child_id = child_resp.json()["id"]
 

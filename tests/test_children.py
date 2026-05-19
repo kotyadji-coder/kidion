@@ -54,7 +54,7 @@ CHILD_PAYLOAD = {
     "birth_date": "2018-05-10",
     "grade": 2,
     "universe": "Майнкрафт",
-    "pin_code": "1234",
+    "pin_code": "5739",
 }
 
 
@@ -351,10 +351,10 @@ async def test_update_child_partial_fields(auth_client: AsyncClient, registered_
 async def test_update_child_pin(auth_client: AsyncClient, registered_child: dict):
     """PUT /api/children/{id} with pin_code changes the PIN."""
     child_id = registered_child["id"]
-    resp = await auth_client.put(f"/api/children/{child_id}", json={"pin_code": "9999"})
+    resp = await auth_client.put(f"/api/children/{child_id}", json={"pin_code": "4826"})
     assert resp.status_code == 200
     # After updating PIN, kid/auth with new PIN must succeed
-    auth_resp = await auth_client.post("/api/kid/auth", json={"child_id": child_id, "pin": "9999"})
+    auth_resp = await auth_client.post("/api/kid/auth", json={"child_id": child_id, "pin": "4826"})
     assert auth_resp.status_code == 200
 
 
@@ -450,7 +450,7 @@ async def test_kid_auth_correct_pin(auth_client: AsyncClient, registered_child: 
     """POST /api/kid/auth with correct PIN returns 200 and ok:true."""
     resp = await auth_client.post(
         "/api/kid/auth",
-        json={"child_id": registered_child["id"], "pin": "1234"},
+        json={"child_id": registered_child["id"], "pin": "5739"},
     )
     assert resp.status_code == 200
     body = resp.json()
@@ -461,7 +461,7 @@ async def test_kid_auth_wrong_pin_returns_401(auth_client: AsyncClient, register
     """POST /api/kid/auth with wrong PIN returns 401 invalid_credentials."""
     resp = await auth_client.post(
         "/api/kid/auth",
-        json={"child_id": registered_child["id"], "pin": "0000"},
+        json={"child_id": registered_child["id"], "pin": "8274"},
     )
     assert resp.status_code == 401
     assert resp.json()["error"] == "invalid_credentials"
@@ -471,7 +471,7 @@ async def test_kid_auth_unknown_child_returns_401(client: AsyncClient):
     """POST /api/kid/auth with non-existent child_id returns 401 (no info leakage)."""
     resp = await client.post(
         "/api/kid/auth",
-        json={"child_id": 99999, "pin": "1234"},
+        json={"child_id": 99999, "pin": "5739"},
     )
     assert resp.status_code == 401
     assert resp.json()["error"] == "invalid_credentials"
@@ -481,7 +481,7 @@ async def test_kid_auth_sets_cookie(auth_client: AsyncClient, registered_child: 
     """POST /api/kid/auth sets kid_session_child cookie on success."""
     resp = await auth_client.post(
         "/api/kid/auth",
-        json={"child_id": registered_child["id"], "pin": "1234"},
+        json={"child_id": registered_child["id"], "pin": "5739"},
     )
     assert resp.status_code == 200
     assert "kid_session_child" in resp.cookies
@@ -491,7 +491,7 @@ async def test_kid_auth_response_has_name(auth_client: AsyncClient, registered_c
     """POST /api/kid/auth response includes child_id and name."""
     resp = await auth_client.post(
         "/api/kid/auth",
-        json={"child_id": registered_child["id"], "pin": "1234"},
+        json={"child_id": registered_child["id"], "pin": "5739"},
     )
     assert resp.status_code == 200
     body = resp.json()

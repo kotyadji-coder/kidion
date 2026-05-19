@@ -29,6 +29,7 @@ def set_test_env(monkeypatch):
     monkeypatch.setenv("YOOKASSA_SHOP_ID", "test-shop-id")
     monkeypatch.setenv("YOOKASSA_SECRET_KEY", "test-yookassa-key")
     monkeypatch.setenv("APP_BASE_URL", "http://testserver")
+    monkeypatch.setenv("TESTING", "1")
 
 
 @pytest.fixture(autouse=True)
@@ -83,7 +84,7 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
 @pytest_asyncio.fixture
 async def registered_user(client: AsyncClient) -> dict:
     """Register a user and return {"email", "password"}."""
-    payload = {"email": "user@example.com", "password": "password123"}
+    payload = {"email": "user@example.com", "password": "password123", "consent": True}
     resp = await client.post("/auth/register", json=payload)
     assert resp.status_code == 200, f"Registration failed: {resp.text}"
     return payload
@@ -100,7 +101,7 @@ async def auth_client(client: AsyncClient, registered_user: dict) -> AsyncClient
 @pytest_asyncio.fixture
 async def second_user(client: AsyncClient) -> dict:
     """A second registered user for isolation tests."""
-    payload = {"email": "other@example.com", "password": "password456"}
+    payload = {"email": "other@example.com", "password": "password456", "consent": True}
     resp = await client.post("/auth/register", json=payload)
     assert resp.status_code == 200, f"Second user registration failed: {resp.text}"
     return payload
@@ -137,7 +138,7 @@ def add_crystals_direct(db_path: str, user_id: int, amount: int) -> None:
 @pytest_asyncio.fixture
 async def blogger_user(client: AsyncClient) -> dict:
     """A user marked as blogger (is_blogger=1) in the DB."""
-    payload = {"email": "blogger@example.com", "password": "blogpass1"}
+    payload = {"email": "blogger@example.com", "password": "blogpass1", "consent": True}
     resp = await client.post("/auth/register", json=payload)
     assert resp.status_code == 200
 

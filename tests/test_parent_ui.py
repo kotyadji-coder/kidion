@@ -22,7 +22,7 @@ CHILD_PAYLOAD = {
     "birth_date": "2018-03-15",
     "grade": 2,
     "universe": "Щенячий патруль",
-    "pin_code": "1234",
+    "pin_code": "5739",
 }
 
 
