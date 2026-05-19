@@ -38,12 +38,12 @@ _ADDRESS_RU = re.compile(
 
 # --- School/institution names ---
 _SCHOOL = re.compile(
-    r'(?:школа|гимназия|лицей|детский сад|садик|колледж|техникум)'
-    r'\s*(?:№|номер)?\s*\d+[а-яА-Я]?',
+    r'(?:школ[аеуыиой]|гимнази[яиюейю]|лице[йяюеи]|детский сад|садик[еу]?|колледж[еа]?|техникум[еа]?)'
+    r'\s*(?:№|номер|#)?\s*\d+[а-яА-Я]?',
     re.IGNORECASE
 )
 _SCHOOL_NAMED = re.compile(
-    r'(?:школа|гимназия|лицей)\s+(?:им\.|имени)\s+[А-ЯЁ][а-яё]+',
+    r'(?:школ[аеуыиой]|гимнази[яиюейю]|лице[йяюеи])\s+(?:им\.|имени)\s+[А-ЯЁ][а-яё]+',
     re.IGNORECASE
 )
 
@@ -66,6 +66,18 @@ _FULLNAME_RU = re.compile(
     r'\s+[А-ЯЁ][а-яё]+(?:\s+[А-ЯЁ][а-яё]+ович|евич|ич|овна|евна|ична)?\b'
 )
 
+# Trigger-phrase based surname detection (catches any surname, not just suffix-based)
+# "моя фамилия Хан", "фамилия: Петров"
+_SURNAME_TRIGGER = re.compile(
+    r'((?:моя\s+)?фамилия\s*[-—–:.]?\s*)[А-ЯЁ][а-яё]{1,}',
+    re.IGNORECASE,
+)
+# "меня зовут Маша Иванова" — Name + Capitalized word after trigger phrase
+_NAME_SURNAME_TRIGGER = re.compile(
+    r'((?:меня\s+зовут|я\s*[-—–]\s*)\s+[А-ЯЁ][а-яё]+\s+)[А-ЯЁ][а-яё]{2,}',
+    re.IGNORECASE,
+)
+
 # Compile all patterns in order of priority
 _PII_PATTERNS = [
     ("email", _EMAIL),
@@ -84,9 +96,13 @@ _PII_PATTERNS = [
 ]
 
 
-def scrub_pii(text: str) -> tuple[str, list[str]]:
+def scrub_pii(text: str, child_name: str = "") -> tuple[str, list[str]]:
     """
     Remove PII from text.
+
+    Args:
+        text: input text to scrub
+        child_name: if known, detect "ChildName Surname" pattern anywhere in text
 
     Returns:
         (cleaned_text, list_of_detected_categories)
@@ -103,6 +119,28 @@ def scrub_pii(text: str) -> tuple[str, list[str]]:
             result = pattern.sub(_REDACTED, result)
             if category not in detected:
                 detected.append(category)
+
+    # Trigger-phrase based surname detection
+    if _SURNAME_TRIGGER.search(result):
+        result = _SURNAME_TRIGGER.sub(r'\1' + _REDACTED, result)
+        if "surname" not in detected:
+            detected.append("surname")
+
+    if _NAME_SURNAME_TRIGGER.search(result):
+        result = _NAME_SURNAME_TRIGGER.sub(r'\1' + _REDACTED, result)
+        if "surname" not in detected:
+            detected.append("surname")
+
+    # If we know the child's name, catch "Маша Иванова" anywhere
+    if child_name and len(child_name) >= 2:
+        name_pattern = re.compile(
+            rf'({re.escape(child_name)}\s+)[А-ЯЁ][а-яё]{{2,}}',
+            re.IGNORECASE,
+        )
+        if name_pattern.search(result):
+            result = name_pattern.sub(r'\1' + _REDACTED, result)
+            if "surname" not in detected:
+                detected.append("surname")
 
     # Clean up multiple consecutive redactions
     result = re.sub(r'(\[УДАЛЕНО\]\s*){2,}', _REDACTED + ' ', result)

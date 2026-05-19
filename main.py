@@ -3647,7 +3647,8 @@ async def kid_chat_send(request: Request):
         })
 
     # Step 2: PII scrubbing — remove personal data before sending to AI
-    scrubbed_text, pii_categories = scrub_pii(message_text)
+    child_name = child.get("name", "")
+    scrubbed_text, pii_categories = scrub_pii(message_text, child_name=child_name)
     if pii_categories:
         log_event(conn, "pii_detected", child_id=child["id"],
                   details=f"types:{','.join(pii_categories)}")
@@ -3661,7 +3662,7 @@ async def kid_chat_send(request: Request):
     for m in history:
         content = m["content"]
         if m["role"] == "user":
-            content, _ = scrub_pii(content)
+            content, _ = scrub_pii(content, child_name=child_name)
         context.append({"role": m["role"], "content": content})
 
     # Step 3: Generate AI response (with scrubbed input)

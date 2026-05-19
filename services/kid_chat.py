@@ -79,7 +79,7 @@ _INJECTION_PATTERNS = [
 
 
 def sanitize_message(text: str) -> str:
-    """Sanitize child message input."""
+    """Sanitize child message input: strip injection patterns."""
     if not text or not isinstance(text, str):
         return ""
     clean = text.strip()[:2000]
