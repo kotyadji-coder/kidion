@@ -182,16 +182,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(SecurityHeadersMiddleware)
 
-# Subdomain routing: chat.kidion.ru → redirect root to /spark
+# Subdomain routing: chat.kidion.ru serves landing directly (no redirect)
 _CHAT_SUBDOMAIN = os.environ.get("CHAT_SUBDOMAIN", "chat.kidion.ru")
-
-
-@app.middleware("http")
-async def subdomain_redirect(request: Request, call_next):
-    host = request.headers.get("host", "").split(":")[0]
-    if host == _CHAT_SUBDOMAIN and request.url.path == "/":
-        return RedirectResponse(url="/spark", status_code=302)
-    return await call_next(request)
 
 
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
