@@ -2824,6 +2824,23 @@ async def page_privacy(request: Request):
 
 @app.get("/chat", response_class=HTMLResponse)
 async def page_chat(request: Request):
+    # chat.kidion.ru → Киди Chat (child auth)
+    if _is_chat_subdomain(request):
+        conn = get_db_connection()
+        child = get_current_child(request, conn)
+        if not child:
+            return RedirectResponse(url="/chat/login", status_code=302)
+        if templates is None:
+            return HTMLResponse("<h1>Киди</h1>")
+        parent_id = child["parent_id"]
+        has_sub = get_active_chat_subscription(conn, parent_id) is not None
+        characters = get_chat_characters(conn)
+        return templates.TemplateResponse(
+            request, "spark/chat.html",
+            {"child": child, "has_subscription": has_sub, "characters": characters},
+        )
+
+    # kidion.ru → Parent chat (parent auth)
     conn = get_db_connection()
     user = get_current_user(request, conn)
     if not user:
@@ -3382,32 +3399,6 @@ async def kid_chat_page(request: Request):
             "child": child,
             "chat_id": chat["id"],
             "has_subscription": has_sub,
-        },
-    )
-
-
-@app.get("/chat", response_class=HTMLResponse)
-async def spark_chat_page(request: Request):
-    """New Spark Chat page (multi-character, redesigned)."""
-    conn = get_db_connection()
-    child = get_current_child(request, conn)
-    if not child:
-        return RedirectResponse(url="/chat/login", status_code=302)
-
-    if templates is None:
-        return HTMLResponse("<h1>Киди</h1>")
-
-    parent_id = child["parent_id"]
-    has_sub = get_active_chat_subscription(conn, parent_id) is not None
-    characters = get_chat_characters(conn)
-
-    return templates.TemplateResponse(
-        request,
-        "spark/chat.html",
-        {
-            "child": child,
-            "has_subscription": has_sub,
-            "characters": characters,
         },
     )
 
