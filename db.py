@@ -1297,9 +1297,9 @@ def get_last_lesson_result_for_enrollment_topic(
 
 
 def _seed_chat_characters(conn: sqlite3.Connection) -> None:
-    """Idempotent seed: 4 chat characters for Киди Chat."""
+    """Idempotent seed: 3 chat characters for Киди Chat."""
     existing = conn.execute("SELECT COUNT(*) FROM chat_characters").fetchone()[0]
-    if existing >= 4:
+    if existing >= 3:
         return
 
     import json as _json
@@ -1325,9 +1325,9 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
         },
         {
             "key": "owl",
-            "name_ru": "Профессор Сова",
+            "name_ru": "Профессор Уху",
             "role_ru": "Учитель",
-            "avatar_type": "svg",
+            "avatar_type": "png",
             "system_prompt": "",
             "greeting_ru": "Добро пожаловать в класс!",
             "greeting_sub_ru": "Какой предмет сегодня разберём? Я объясню по шагам и проверю, что всё понятно.",
@@ -1343,11 +1343,11 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
         },
         {
             "key": "captain",
-            "name_ru": "Капитан Сказка",
+            "name_ru": "Сказочник Лука",
             "role_ru": "Рассказчик",
-            "avatar_type": "svg",
+            "avatar_type": "png",
             "system_prompt": "",
-            "greeting_ru": "Ого, новый путешественник!",
+            "greeting_ru": "Ого, новый слушатель!",
             "greeting_sub_ru": "Какую историю придумаем сегодня? Можешь стать главным героем — расскажи, где хочешь побывать.",
             "suggestions_json": _json.dumps([
                 {"ico": "\U0001f3f4\u200d\u2620\ufe0f", "label": "Придумай сказку"},
@@ -1358,24 +1358,6 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
             "accent_color": "captain",
             "is_free": 0,
             "sort_order": 2,
-        },
-        {
-            "key": "pixie",
-            "name_ru": "Друг Пикси",
-            "role_ru": "Ровесник",
-            "avatar_type": "svg",
-            "system_prompt": "",
-            "greeting_ru": "Привет-привет!",
-            "greeting_sub_ru": "Что нового расскажешь? У меня тут пара секретов и одна несмешная шутка — выбирай!",
-            "suggestions_json": _json.dumps([
-                {"ico": "\U0001f4ac", "label": "Что нового?"},
-                {"ico": "\U0001f602", "label": "Расскажи шутку"},
-                {"ico": "\U0001f3b2", "label": "Давай играть"},
-                {"ico": "\u2728", "label": "Угадай настроение"},
-            ]),
-            "accent_color": "pixie",
-            "is_free": 0,
-            "sort_order": 3,
         },
     ]
 
@@ -1393,11 +1375,20 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
         )
     conn.commit()
 
-    # Rename Spark → Kidi for existing databases
+    # Update existing databases: rename characters, remove pixie, switch to PNG
     conn.execute(
         "UPDATE chat_characters SET name_ru='Киди', greeting_ru='Привет! Я Киди!' "
         "WHERE key='spark' AND name_ru != 'Киди'"
     )
+    conn.execute(
+        "UPDATE chat_characters SET name_ru='Профессор Уху', avatar_type='png' "
+        "WHERE key='owl'"
+    )
+    conn.execute(
+        "UPDATE chat_characters SET name_ru='Сказочник Лука', avatar_type='png', "
+        "greeting_ru='Ого, новый слушатель!' WHERE key='captain'"
+    )
+    conn.execute("DELETE FROM chat_characters WHERE key='pixie'")
     conn.commit()
 
 

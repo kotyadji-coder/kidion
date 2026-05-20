@@ -180,7 +180,6 @@ def judge_chat_response(bot_response: str, test_case: dict) -> dict | None:
         "spark": "универсальный друг",
         "owl": "учитель",
         "captain": "рассказчик",
-        "pixie": "ровесник",
     }
 
     user_message = test_case["messages"][-1]["content"]
