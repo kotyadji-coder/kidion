@@ -1308,7 +1308,7 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
         "WHERE key='owl' AND name_ru != 'Профессор Уху'"
     )
     conn.execute(
-        "UPDATE chat_characters SET name_ru='Сказочник Лука', avatar_type='png', "
+        "UPDATE chat_characters SET name_ru='Кот Баюн', avatar_type='png', "
         "greeting_ru='Ого, новый слушатель!' WHERE key='captain' AND name_ru != 'Сказочник Лука'"
     )
     conn.execute("DELETE FROM chat_characters WHERE key='pixie'")
@@ -1359,7 +1359,7 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
         },
         {
             "key": "captain",
-            "name_ru": "Сказочник Лука",
+            "name_ru": "Кот Баюн",
             "role_ru": "Рассказчик",
             "avatar_type": "png",
             "system_prompt": "",
