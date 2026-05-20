@@ -3428,17 +3428,22 @@ async def spark_login_page(request: Request):
     return templates.TemplateResponse(request, "spark/login.html", {})
 
 
+@app.get("/spark", response_class=HTMLResponse)
+async def spark_redirect_root():
+    """Redirect old /spark to landing."""
+    return RedirectResponse(url="/", status_code=301)
+
+
+@app.get("/spark/chat", response_class=HTMLResponse)
+async def spark_redirect_chat():
+    """Redirect old /spark/chat to /chat."""
+    return RedirectResponse(url="/chat", status_code=301)
+
+
 @app.get("/spark/{path:path}", response_class=HTMLResponse)
 async def spark_redirect(path: str = ""):
     """Redirect old /spark/* URLs to /chat/*."""
-    target = f"/chat/{path}" if path else "/"
-    return RedirectResponse(url=target, status_code=301)
-
-
-@app.get("/spark", response_class=HTMLResponse)
-async def spark_redirect_root():
-    """Redirect old /spark to /."""
-    return RedirectResponse(url="/", status_code=301)
+    return RedirectResponse(url=f"/chat/{path}", status_code=301)
 
 
 @app.get("/chat/subscribe", response_class=HTMLResponse)
@@ -4060,6 +4065,8 @@ async def get_child_lessons(child_id: int, request: Request):
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def page_dashboard(request: Request):
+    if _is_chat_subdomain(request):
+        return RedirectResponse(url="/chat", status_code=302)
     conn = get_db_connection()
     user = get_current_user(request, conn)
     if not user:
