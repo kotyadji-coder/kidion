@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Подписка Kidi — Kidion</title>
+<title>Подписка Киди — Kidion</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -60,7 +60,7 @@
   <nav class="sp-nav">
     <a class="sp-brand" href="/spark">
       <span class="sp-brand-mark">K</span>
-      <span>Kidi</span>
+      <span>Киди</span>
     </a>
     <div class="sp-nav-cta">
       <a class="sp-btn sp-btn-ghost" href="/spark/chat">Назад в чат</a>
@@ -69,14 +69,14 @@
 
   <div class="sub-page">
     <div class="sub-head">
-      <h1 class="sub-h1">Подписка Kidi</h1>
+      <h1 class="sub-h1">Подписка Киди</h1>
       <p class="sub-h1-sub">Все персонажи, голосовые сообщения, 30 картинок от AI и еженедельный отчёт</p>
     </div>
 
     {% if subscription %}
     <div class="sub-status">
       <p class="sub-status-label">Подписка активна</p>
-      <p class="sub-status-value">Kidi Pro</p>
+      <p class="sub-status-value">Киди Pro</p>
       <p class="sub-status-expires">Действует до {{ subscription.expires_at[:10] }} &middot; Картинок осталось: {{ subscription.images_remaining }}</p>
     </div>
     {% endif %}

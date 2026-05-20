@@ -1,7 +1,7 @@
 """
 kid_chat.py — Safe AI chat for children using Gemini.
 
-Multi-character chat: Kidi (free), Owl, Captain, Pixie (pro).
+Multi-character chat: Киди (free), Owl, Captain, Pixie (pro).
 Each character has its own personality prompt layered on shared safety rules.
 """
 
@@ -14,7 +14,7 @@ logger = logging.getLogger("kidion")
 
 SPARK = {
     "key": "spark",
-    "name_ru": "Kidi",
+    "name_ru": "Киди",
     "avatar_url": "/static/kid/img/spark.png",
 }
 
@@ -35,7 +35,7 @@ _SAFETY_BASE = """
 # Per-character personality prompts (layered on top of _SAFETY_BASE)
 _CHARACTER_PROMPTS = {
     "spark": f"""
-Ты — Kidi, дружелюбный помощник для детей на платформе Kidion.
+Ты — Киди, дружелюбный помощник для детей на платформе Kidion.
 Ты маленький огонёк в очках и фиолетовой мантии — любознательный, весёлый и всегда готов помочь.
 Ты умеешь объяснять сложное простыми словами, придумывать истории и рассказывать интересные факты.
 Ты любишь хвалить ребёнка за хорошие вопросы и поддерживать интерес к учёбе.

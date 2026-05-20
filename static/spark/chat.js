@@ -67,7 +67,7 @@
     } catch (e) {
       console.error("Failed to load characters:", e);
       // Fallback
-      characters = [{ key: "spark", name_ru: "Kidi", role_ru: "Универсальный друг", is_free: true, locked: false, greeting_ru: "Привет! Я Kidi!", greeting_sub_ru: "", suggestions: [], accent_color: "spark" }];
+      characters = [{ key: "spark", name_ru: "Киди", role_ru: "Универсальный друг", is_free: true, locked: false, greeting_ru: "Привет! Я Киди!", greeting_sub_ru: "", suggestions: [], accent_color: "spark" }];
     }
   }
 
