@@ -110,6 +110,7 @@ from db import (
     get_active_chat_subscription,
     use_chat_image,
     get_chat_reports,
+    create_chat_report,
     get_kid_chats_by_child,
 )
 from payments import PACKAGES, create_yookassa_payment, handle_webhook
@@ -181,6 +182,18 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(SecurityHeadersMiddleware)
 
+# Subdomain routing: chat.kidion.ru → redirect root to /spark
+_CHAT_SUBDOMAIN = os.environ.get("CHAT_SUBDOMAIN", "chat.kidion.ru")
+
+
+@app.middleware("http")
+async def subdomain_redirect(request: Request, call_next):
+    host = request.headers.get("host", "").split(":")[0]
+    if host == _CHAT_SUBDOMAIN and request.url.path == "/":
+        return RedirectResponse(url="/spark", status_code=302)
+    return await call_next(request)
+
+
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 _TEMPLATES_DIR = os.path.join(_BASE_DIR, "templates")
 _STATIC_DIR = os.path.join(_BASE_DIR, "static")
@@ -213,6 +226,15 @@ _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 _COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "").lower() in ("1", "true", "yes")
+_COOKIE_DOMAIN = os.environ.get("COOKIE_DOMAIN", "")  # ".kidion.ru" in production
+
+
+def _cookie_kwargs() -> dict:
+    """Common cookie kwargs — includes domain if configured for cross-subdomain support."""
+    kw: dict = {"httponly": True, "samesite": "lax", "secure": _COOKIE_SECURE}
+    if _COOKIE_DOMAIN:
+        kw["domain"] = _COOKIE_DOMAIN
+    return kw
 
 
 def _set_session_cookie(response: Response, user_id: int) -> None:
@@ -220,15 +242,13 @@ def _set_session_cookie(response: Response, user_id: int) -> None:
     response.set_cookie(
         "kid_session",
         token,
-        httponly=True,
-        samesite="lax",
         max_age=60 * 60 * 24 * 30,
-        secure=_COOKIE_SECURE,
+        **_cookie_kwargs(),
     )
 
 
 def _clear_session_cookie(response: Response) -> None:
-    response.delete_cookie("kid_session", httponly=True, samesite="lax")
+    response.delete_cookie("kid_session", **_cookie_kwargs())
 
 
 def _cleanup_old_chat_messages(conn, days: int = 90) -> int:
@@ -260,6 +280,7 @@ class ChildCreateRequest(BaseModel):
     universe: str = ""
     interests: list[str] = []
     pin_code: str
+    source: str = ""  # "chat" = simplified Spark registration (skip universe)
     # Universe questionnaire (step 2)
     favorite_heroes: str = ""
     favorite_animals: str = ""
@@ -811,11 +832,12 @@ async def create_child_endpoint(body: ChildCreateRequest, request: Request):
         pin_hash=pin_hash,
     )
 
-    # Generate universe, character, and shop items in background
-    import asyncio
-    task = asyncio.create_task(_setup_child_universe(child["id"], body.name, body.gender, body.grade, interests))
-    _background_tasks.add(task)
-    task.add_done_callback(_background_tasks.discard)
+    # Skip universe generation for chat-only registration (simplified Spark flow)
+    if body.source != "chat":
+        import asyncio
+        task = asyncio.create_task(_setup_child_universe(child["id"], body.name, body.gender, body.grade, interests))
+        _background_tasks.add(task)
+        task.add_done_callback(_background_tasks.discard)
 
     return JSONResponse(child, status_code=201)
 
@@ -1043,10 +1065,8 @@ async def kid_auth(body: KidAuthRequest, request: Request):
     response.set_cookie(
         "kid_session_child",
         token,
-        httponly=True,
-        samesite="lax",
         max_age=60 * 60 * 24 * 30,
-        secure=_COOKIE_SECURE,
+        **_cookie_kwargs(),
     )
     return response
 
@@ -3127,7 +3147,7 @@ async def _regenerate_character(child_id: int):
 @app.post("/api/kid/logout")
 async def kid_logout():
     response = JSONResponse({"ok": True})
-    response.delete_cookie("kid_session_child", httponly=True, samesite="lax")
+    response.delete_cookie("kid_session_child", **_cookie_kwargs())
     return response
 
 
@@ -3471,6 +3491,11 @@ async def spark_report_page(child_id: int, request: Request):
             "messages": msgs,
         })
 
+    # Get weekly AI reports
+    reports = get_chat_reports(conn, child_id, limit=10)
+    for r in reports:
+        r["topics"] = json.loads(r.get("topics_json") or "[]")
+
     return templates.TemplateResponse(
         request,
         "spark/report.html",
@@ -3480,6 +3505,7 @@ async def spark_report_page(child_id: int, request: Request):
             "total_messages": total_messages,
             "has_subscription": has_sub,
             "subscription": dict(subscription) if subscription else None,
+            "reports": reports,
         },
     )
 
@@ -3803,6 +3829,58 @@ async def child_chat_report_api(child_id: int, request: Request):
         "total_messages": total_messages,
         "reports": reports,
     })
+
+
+@app.post("/api/children/{child_id}/chat-report/generate")
+async def generate_child_chat_report(child_id: int, request: Request):
+    """Generate a chat report for a child right now (parent auth, subscription required)."""
+    conn = get_db_connection()
+    user = get_current_user(request, conn)
+    if not user:
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    child = get_child_by_id(conn, child_id)
+    if not child or child["parent_id"] != user["id"]:
+        return JSONResponse({"error": "forbidden"}, status_code=403)
+
+    has_sub = get_active_chat_subscription(conn, user["id"]) is not None
+    if not has_sub:
+        return JSONResponse({"error": "subscription_required"}, status_code=403)
+
+    from services.chat_report import generate_weekly_report
+    from datetime import datetime, timedelta, timezone
+
+    now = datetime.now(timezone.utc)
+    week_ago = (now - timedelta(days=7)).isoformat()
+    today_str = now.strftime("%Y-%m-%d")
+
+    # Collect messages from last 7 days
+    chats = get_kid_chats_by_child(conn, child_id)
+    all_messages = []
+    for chat in chats:
+        msgs = get_kid_chat_messages(conn, chat["id"], limit=200)
+        for m in msgs:
+            if m.get("created_at", "") >= week_ago:
+                m["character_key"] = chat.get("character_key", "spark")
+                all_messages.append(m)
+
+    if not all_messages:
+        return JSONResponse({"error": "no_messages", "message": "Нет сообщений за последнюю неделю."}, status_code=400)
+
+    import asyncio
+    report = await asyncio.to_thread(
+        generate_weekly_report, child["name"], child["grade"], all_messages
+    )
+
+    report_id = create_chat_report(
+        conn,
+        child_id=child_id,
+        date=today_str,
+        summary=report["summary"],
+        topics_json=json.dumps(report["topics"], ensure_ascii=False),
+        message_count=report["message_count"],
+    )
+
+    return JSONResponse({"ok": True, "report_id": report_id, "summary": report["summary"]})
 
 
 @app.get("/kid/lesson/{lesson_id}", response_class=HTMLResponse)

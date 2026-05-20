@@ -37,6 +37,15 @@
   .rpt-msg-user { align-self: flex-end; background: var(--spark-violet-soft); color: var(--spark-violet-ink); }
   .rpt-msg-bot { align-self: flex-start; background: var(--surface-2); color: var(--text); }
   .rpt-empty { text-align: center; padding: 40px 20px; color: var(--text-3); font-size: 14px; }
+
+  .rpt-reports { display: flex; flex-direction: column; gap: 14px; margin-bottom: 32px; }
+  .rpt-report { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+  .rpt-report-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .rpt-report-date { font-size: 13px; font-weight: 600; color: var(--text-2); }
+  .rpt-report-count { font-size: 12px; color: var(--text-3); }
+  .rpt-report-summary { font-size: 14px; line-height: 1.65; color: var(--text); white-space: pre-line; }
+  .rpt-report-topics { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .rpt-topic-tag { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: var(--spark-violet-soft); color: var(--spark-violet-ink); font-weight: 500; }
 </style>
 </head>
 <body>
@@ -52,8 +61,15 @@
   </nav>
 
   <div class="rpt-page">
-    <h1 class="rpt-h">Чат-отчёт — {{ child.name }}</h1>
-    <p class="rpt-sub">Что обсуждал ваш ребёнок с AI-персонажами</p>
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px">
+      <div>
+        <h1 class="rpt-h">Чат-отчёт — {{ child.name }}</h1>
+        <p class="rpt-sub" style="margin-bottom:0">Что обсуждал ваш ребёнок с AI-персонажами</p>
+      </div>
+      {% if has_subscription %}
+      <button class="sp-btn sp-btn-primary" id="btn-gen-report" onclick="generateReport()">Создать отчёт</button>
+      {% endif %}
+    </div>
 
     <div class="rpt-stats">
       <div class="rpt-stat">
@@ -72,6 +88,28 @@
         {% endif %}
       </div>
     </div>
+
+    {% if reports %}
+    <h2 class="rpt-section-h">Еженедельные отчёты</h2>
+    <div class="rpt-reports">
+      {% for report in reports %}
+      <div class="rpt-report">
+        <div class="rpt-report-head">
+          <span class="rpt-report-date">Неделя до {{ report.date }}</span>
+          <span class="rpt-report-count">{{ report.message_count }} сообщений</span>
+        </div>
+        <div class="rpt-report-summary">{{ report.summary }}</div>
+        {% if report.topics %}
+        <div class="rpt-report-topics">
+          {% for topic in report.topics %}
+          <span class="rpt-topic-tag">{{ topic }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
 
     <h2 class="rpt-section-h">Разговоры</h2>
 
@@ -113,5 +151,31 @@
     {% endif %}
   </div>
 </div>
+
+<script>
+async function generateReport() {
+  const btn = document.getElementById('btn-gen-report');
+  btn.disabled = true;
+  btn.textContent = 'Создаём...';
+  try {
+    const res = await fetch('/api/children/{{ child.id }}/chat-report/generate', {
+      method: 'POST',
+      credentials: 'same-origin',
+    });
+    const data = await res.json();
+    if (res.ok) {
+      window.location.reload();
+    } else {
+      alert(data.message || data.error || 'Ошибка');
+      btn.disabled = false;
+      btn.textContent = 'Создать отчёт';
+    }
+  } catch(e) {
+    alert('Ошибка сети');
+    btn.disabled = false;
+    btn.textContent = 'Создать отчёт';
+  }
+}
+</script>
 </body>
 </html>
