@@ -158,12 +158,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const res = await fetch('/api/chat/subscribe', { method: 'POST', credentials: 'same-origin' });
       const data = await res.json();
       if (res.ok) {
-        document.getElementById('sub-success').style.display = '';
+        document.getElementById('sub-success').style.display = 'block';
         document.getElementById('sub-success').textContent = 'Подписка оформлена! Перенаправляем в чат...';
         btn.style.display = 'none';
         setTimeout(() => window.location.href = '/chat', 1500);
       } else {
-        document.getElementById('sub-error').style.display = '';
+        document.getElementById('sub-error').style.display = 'block';
         document.getElementById('sub-error').textContent = data.message || data.error || 'Ошибка';
         btn.disabled = false;
         btn.textContent = 'Попробовать ещё раз';

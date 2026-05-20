@@ -79,7 +79,7 @@ kidion/
 │   ├── chat.js                # Multi-character chat JS
 │   ├── spark-hero.png         # Киди character PNG
 │   ├── owl.png                # Профессор Уху character PNG
-│   ├── captain.png            # Сказочник Лука character PNG
+│   ├── captain.png            # Кот Баюн character PNG
 │   ├── favicon.ico            # Favicon (from Киди image)
 │   └── apple-touch-icon.png   # Apple touch icon
 ├── static/kid/style.css       # Kid CSS (Nunito, pastels, mobile-first)
@@ -164,7 +164,7 @@ Multi-character AI chat for children. New design at `/spark/chat`, landing at `/
 |-----------|-----|------|------|-------|
 | Киди | spark | Универсальный друг | free | gemini-2.5-flash |
 | Профессор Уху | owl | Учитель | pro | gemini-2.5-flash |
-| Сказочник Лука | captain | Рассказчик | pro | gemini-2.5-flash |
+| Кот Баюн | captain | Рассказчик | pro | gemini-2.5-flash |
 
 Each has a unique system prompt layered on shared safety rules (10 rules in `_SAFETY_BASE`). Per-character chat history (separate `kid_chats` row per child+character). All characters use PNG avatar images (`static/spark/`).
 
@@ -233,12 +233,13 @@ Web Speech API (browser-side, free). Opens overlay, speech → text → editable
 - `/kid/result/{id}` — confetti + stars animation + shop button
 
 ### Киди Chat
-- `/spark` — landing page (public, no auth)
-- `/spark/chat` — multi-character chat (child auth via PIN)
-- `/spark/login` — login page (parent auth → pick child → PIN)
-- `/spark/register` — simplified registration (parent + child, no universe)
-- `/spark/subscribe` — subscription purchase (parent auth)
-- `/spark/report/{child_id}` — weekly parent report
+- `/` — landing page on chat.kidion.ru (public, no auth)
+- `/chat` — multi-character chat (child auth via PIN)
+- `/chat/login` — login page (parent auth → pick child → PIN)
+- `/chat/register` — simplified registration (parent + child, no universe)
+- `/chat/subscribe` — subscription purchase (parent auth)
+- `/chat/report/{child_id}` — weekly parent report
+- Old `/spark/*` URLs redirect 301 → `/chat/*`
 
 ### Parent
 - `/dashboard`, `/children/new`, `/children/{id}`, `/children/{id}/subject/{subject}`, `/children/{id}/history`
@@ -292,7 +293,7 @@ uvicorn main:app --host 127.0.0.1 --port 8003 --reload
 - [x] Киди Chat: AI image generation in chat (detect "нарисуй", call Vertex AI)
 - [x] Киди Chat: parent reports (weekly chat summaries)
 - [x] Киди Chat: independent registration flow (simplified, no universe)
-- [x] Киди Chat: rebrand Spark → Киди, remove Pixie, rename Owl → Уху, Captain → Лука
+- [x] Киди Chat: rebrand Spark → Киди, remove Pixie, rename Owl → Уху, Captain → Кот Баюн
 - [x] Connect print worksheet generation (worksheets generated alongside lessons)
 - [ ] Add curricula for grades 3-4 and more subjects (world)
 - [x] Pass universe_description into lesson generation prompts (so lessons are themed)

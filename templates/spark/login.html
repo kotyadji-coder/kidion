@@ -18,7 +18,7 @@
   .auth-sub { margin: 0 0 28px; font-size: 14px; color: var(--text-2); text-align: center; }
   .auth-field { margin-bottom: 14px; }
   .auth-label { display: block; font-size: 13px; font-weight: 500; color: var(--text-2); margin-bottom: 6px; }
-  .auth-input { width: 100%; height: 44px; padding: 0 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; font-family: inherit; background: var(--surface-2); color: var(--text); outline: none; }
+  .auth-input { width: 100%; height: 44px; padding: 0 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 16px; font-family: inherit; background: var(--surface-2); color: var(--text); outline: none; }
   .auth-input:focus { border-color: var(--spark-violet-border); box-shadow: 0 0 0 3px var(--spark-violet-soft); }
   .auth-btn { width: 100%; margin-top: 8px; }
   .auth-error { color: oklch(0.55 0.2 25); font-size: 13px; text-align: center; margin-top: 10px; display: none; }
@@ -112,7 +112,7 @@
     if (!res.ok) {
       const d = await res.json();
       errEl.textContent = d.detail || d.error || 'Неверный email или пароль';
-      errEl.style.display = '';
+      errEl.style.display = 'block';
       return;
     }
 
@@ -173,7 +173,7 @@
         window.location.href = '/chat';
       } else {
         errEl.textContent = 'Неверный код';
-        errEl.style.display = '';
+        errEl.style.display = 'block';
         this.value = '';
         this.focus();
       }
