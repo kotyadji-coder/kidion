@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Отчёт — {{ child.name }} — Спарк Чат</title>
+<title>Отчёт — {{ child.name }} — Kidi</title>
 <link rel="icon" href="/static/spark/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -52,8 +52,8 @@
 <div class="sp">
   <nav class="sp-nav">
     <a class="sp-brand" href="/spark">
-      <span class="sp-brand-mark">S</span>
-      <span>Спарк Чат</span>
+      <span class="sp-brand-mark">K</span>
+      <span>Kidi</span>
     </a>
     <div class="sp-nav-cta">
       <a class="sp-btn sp-btn-ghost" href="/spark/chat">Назад в чат</a>
@@ -120,7 +120,7 @@
         <div class="rpt-chat-head">
           <div class="rpt-chat-av">
             {% if chat.character_key == 'spark' %}
-            <img src="/static/spark/spark-hero.png" alt="Спарк">
+            <img src="/static/spark/spark-hero.png" alt="Kidi">
             {% else %}
             <div style="width:100%;height:100%;background:var(--surface-2);display:grid;place-items:center;font-size:16px">
               {% if chat.character_key == 'owl' %}🦉{% elif chat.character_key == 'captain' %}🧑‍✈️{% elif chat.character_key == 'pixie' %}🧚{% endif %}

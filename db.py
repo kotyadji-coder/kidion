@@ -1297,7 +1297,7 @@ def get_last_lesson_result_for_enrollment_topic(
 
 
 def _seed_chat_characters(conn: sqlite3.Connection) -> None:
-    """Idempotent seed: 4 chat characters for Spark Chat."""
+    """Idempotent seed: 4 chat characters for Kidi Chat."""
     existing = conn.execute("SELECT COUNT(*) FROM chat_characters").fetchone()[0]
     if existing >= 4:
         return
@@ -1307,11 +1307,11 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
     chars = [
         {
             "key": "spark",
-            "name_ru": "Спарк",
+            "name_ru": "Kidi",
             "role_ru": "Универсальный друг",
             "avatar_type": "png",
             "system_prompt": "",  # filled from kid_chat.py
-            "greeting_ru": "Привет! Я Спарк!",
+            "greeting_ru": "Привет! Я Kidi!",
             "greeting_sub_ru": "Спроси меня о чём угодно — про космос, динозавров, домашку или просто поболтаем.",
             "suggestions_json": _json.dumps([
                 {"ico": "\u2728", "label": "Интересный факт"},
@@ -1391,6 +1391,13 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
                 c["suggestions_json"], c["accent_color"], c["is_free"], c["sort_order"],
             ),
         )
+    conn.commit()
+
+    # Rename Spark → Kidi for existing databases
+    conn.execute(
+        "UPDATE chat_characters SET name_ru='Kidi', greeting_ru='Привет! Я Kidi!' "
+        "WHERE key='spark' AND name_ru != 'Kidi'"
+    )
     conn.commit()
 
 
@@ -1814,7 +1821,7 @@ def create_kid_chat(
     conn: sqlite3.Connection,
     child_id: int,
     character_key: str = "spark",
-    title: str = "Спарк",
+    title: str = "Kidi",
 ) -> int:
     cursor = conn.execute(
         "INSERT INTO kid_chats (child_id, character_key, title, created_at, updated_at) "

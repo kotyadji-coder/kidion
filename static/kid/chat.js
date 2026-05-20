@@ -63,8 +63,8 @@
     if (!chatMessages) return;
     chatMessages.innerHTML =
       '<div class="chat-empty-state" id="chat-empty">' +
-      '<div class="chat-empty__avatar"><img src="/static/kid/img/spark.png" alt="Спарк"></div>' +
-      '<div class="chat-empty__title">Привет! Я Спарк!</div>' +
+      '<div class="chat-empty__avatar"><img src="/static/kid/img/spark.png" alt="Kidi"></div>' +
+      '<div class="chat-empty__title">Привет! Я Kidi!</div>' +
       '<div class="chat-empty__text">Я знаю много интересного и всегда готов помочь. Спроси меня о чём угодно!</div>' +
       '<div class="chat-empty__hints">' +
       '<button class="chat-empty__hint" data-text="Расскажи интересный факт">Интересный факт</button>' +
@@ -79,7 +79,7 @@
     const cls = isUser ? 'chat-msg--user' : 'chat-msg--assistant';
     const avatar = isUser
       ? '<div class="chat-msg__avatar">' + CFG.childName.charAt(0).toUpperCase() + '</div>'
-      : '<div class="chat-msg__avatar"><img src="/static/kid/img/spark.png" alt="Спарк"></div>';
+      : '<div class="chat-msg__avatar"><img src="/static/kid/img/spark.png" alt="Kidi"></div>';
     const time = formatTime(msg.created_at);
     const imgHtml = msg.image_url
       ? '<img class="chat-msg__image" src="' + escAttr(msg.image_url) + '" alt="image">'
@@ -98,7 +98,7 @@
     const el = document.createElement('div');
     el.className = 'chat-msg chat-msg--assistant';
     el.id = 'typing-indicator';
-    el.innerHTML = '<div class="chat-msg__avatar"><img src="/static/kid/img/spark.png" alt="Спарк"></div>' +
+    el.innerHTML = '<div class="chat-msg__avatar"><img src="/static/kid/img/spark.png" alt="Kidi"></div>' +
       '<div class="chat-msg__bubble chat-typing">' +
       '<span class="chat-typing__dot"></span><span class="chat-typing__dot"></span><span class="chat-typing__dot"></span>' +
       '</div>';
@@ -163,7 +163,7 @@
       } else if (result.status === 429) {
         chatMessages.insertAdjacentHTML('beforeend',
           '<div class="chat-msg chat-msg--assistant">' +
-          '<div class="chat-msg__avatar"><img src="/static/kid/img/spark.png" alt="Спарк"></div>' +
+          '<div class="chat-msg__avatar"><img src="/static/kid/img/spark.png" alt="Kidi"></div>' +
           '<div class="chat-msg__bubble" style="background:#FFF3E0;color:#E8503F;">' +
           escHtml(result.data.message || 'На сегодня сообщения закончились!') +
           '</div></div>');

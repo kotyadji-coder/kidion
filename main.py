@@ -2755,7 +2755,7 @@ async def page_index(request: Request):
     # chat.kidion.ru → Spark Chat landing
     if _is_chat_subdomain(request):
         if templates is None:
-            return HTMLResponse("<h1>Spark Chat</h1>")
+            return HTMLResponse("<h1>Kidi</h1>")
         return templates.TemplateResponse(request, "spark/landing.html", {})
 
     conn = get_db_connection()
@@ -3403,7 +3403,7 @@ async def spark_chat_page(request: Request):
         return RedirectResponse(url="/kid/login", status_code=302)
 
     if templates is None:
-        return HTMLResponse("<h1>Spark Chat</h1>")
+        return HTMLResponse("<h1>Kidi</h1>")
 
     parent_id = child["parent_id"]
     has_sub = get_active_chat_subscription(conn, parent_id) is not None
@@ -3440,7 +3440,7 @@ async def spark_login_page(request: Request):
 async def spark_landing_page(request: Request):
     """Spark Chat landing page (public, no auth required)."""
     if templates is None:
-        return HTMLResponse("<h1>Spark Chat</h1>")
+        return HTMLResponse("<h1>Kidi</h1>")
     return templates.TemplateResponse(request, "spark/landing.html", {})
 
 
