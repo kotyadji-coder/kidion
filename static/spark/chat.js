@@ -450,7 +450,7 @@
     btnMic.addEventListener("click", () => {
       if (!CFG.hasSubscription) {
         if (confirm("Голосовой ввод доступен по подписке. Оформить?")) {
-          window.location.href = "/spark/subscribe";
+          window.location.href = "/chat/subscribe";
         }
         return;
       }

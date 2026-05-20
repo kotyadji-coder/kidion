@@ -1298,6 +1298,22 @@ def get_last_lesson_result_for_enrollment_topic(
 
 def _seed_chat_characters(conn: sqlite3.Connection) -> None:
     """Idempotent seed: 3 chat characters for Киди Chat."""
+    # Migrate existing databases: rename characters, remove pixie, switch to PNG
+    conn.execute(
+        "UPDATE chat_characters SET name_ru='Киди', greeting_ru='Привет! Я Киди!' "
+        "WHERE key='spark' AND name_ru != 'Киди'"
+    )
+    conn.execute(
+        "UPDATE chat_characters SET name_ru='Профессор Уху', avatar_type='png' "
+        "WHERE key='owl' AND name_ru != 'Профессор Уху'"
+    )
+    conn.execute(
+        "UPDATE chat_characters SET name_ru='Сказочник Лука', avatar_type='png', "
+        "greeting_ru='Ого, новый слушатель!' WHERE key='captain' AND name_ru != 'Сказочник Лука'"
+    )
+    conn.execute("DELETE FROM chat_characters WHERE key='pixie'")
+    conn.commit()
+
     existing = conn.execute("SELECT COUNT(*) FROM chat_characters").fetchone()[0]
     if existing >= 3:
         return
@@ -1375,21 +1391,6 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
         )
     conn.commit()
 
-    # Update existing databases: rename characters, remove pixie, switch to PNG
-    conn.execute(
-        "UPDATE chat_characters SET name_ru='Киди', greeting_ru='Привет! Я Киди!' "
-        "WHERE key='spark' AND name_ru != 'Киди'"
-    )
-    conn.execute(
-        "UPDATE chat_characters SET name_ru='Профессор Уху', avatar_type='png' "
-        "WHERE key='owl'"
-    )
-    conn.execute(
-        "UPDATE chat_characters SET name_ru='Сказочник Лука', avatar_type='png', "
-        "greeting_ru='Ого, новый слушатель!' WHERE key='captain'"
-    )
-    conn.execute("DELETE FROM chat_characters WHERE key='pixie'")
-    conn.commit()
 
 
 def _seed_math_grade1(conn: sqlite3.Connection) -> None:

@@ -43,12 +43,12 @@
 <body>
 <div class="sp">
   <nav class="sp-nav">
-    <a class="sp-brand" href="/spark">
+    <a class="sp-brand" href="/">
       <span class="sp-brand-mark">K</span>
       <span>Киди</span>
     </a>
     <div class="sp-nav-cta">
-      <a class="sp-btn sp-btn-primary" href="/spark/register">Регистрация</a>
+      <a class="sp-btn sp-btn-primary" href="/chat/register">Регистрация</a>
     </div>
   </nav>
 
@@ -70,7 +70,7 @@
           <button class="sp-btn sp-btn-primary sp-btn-lg auth-btn" type="submit">Войти</button>
         </form>
         <p class="auth-error" id="login-error"></p>
-        <p class="auth-switch">Нет аккаунта? <a href="/spark/register">Зарегистрироваться</a></p>
+        <p class="auth-switch">Нет аккаунта? <a href="/chat/register">Зарегистрироваться</a></p>
       </div>
 
       <!-- Step 2: Pick child -->
@@ -123,7 +123,7 @@
 
     if (children.length === 0) {
       // No children — redirect to registration to add one
-      window.location.href = '/spark/register';
+      window.location.href = '/chat/register';
       return;
     }
 
@@ -170,7 +170,7 @@
         body: JSON.stringify({ child_id: selectedChild.id, pin: this.value }),
       });
       if (res.ok) {
-        window.location.href = '/spark/chat';
+        window.location.href = '/chat';
       } else {
         errEl.textContent = 'Неверный код';
         errEl.style.display = '';

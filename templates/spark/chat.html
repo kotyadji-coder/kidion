@@ -16,7 +16,7 @@
 
   <!-- Top nav -->
   <nav class="sc-nav">
-    <a class="sc-nav-brand" href="/spark/chat">
+    <a class="sc-nav-brand" href="/chat">
       <span class="sc-nav-mark">K</span>
       <span>Киди</span>
     </a>
@@ -26,12 +26,12 @@
         <strong id="nav-msg-count">5</strong> сообщений сегодня
       </span>
       {% if not has_subscription %}
-      <a href="/spark/subscribe" class="sc-nav-pro" style="text-decoration:none">
+      <a href="/chat/subscribe" class="sc-nav-pro" style="text-decoration:none">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5l1.4 4.1L12.5 7l-4.1 1.4L7 12.5 5.6 8.4 1.5 7l4.1-1.4L7 1.5z" fill="currentColor"/></svg>
         Pro
       </a>
       {% endif %}
-      <a href="/" class="sc-nav-avatar" title="Домой">
+      <a href="https://kidion.ru/dashboard" class="sc-nav-avatar" title="Панель родителей">
         {{ child.name[0] if child.name else 'K' }}
       </a>
     </div>
@@ -42,7 +42,6 @@
     <aside class="sc-side" id="sidebar">
       <div class="sc-side-head">
         <p class="sc-side-title">Персонажи</p>
-        <h2 class="sc-side-h">Киди</h2>
       </div>
       <ul class="sc-side-list" id="side-list">
         <!-- Populated by JS -->
@@ -154,7 +153,7 @@
         </div>
         {% if not has_subscription %}
         <p style="font-size:12px; color:var(--text-3); margin-top:12px;">
-          Хотите больше? <a href="/spark/subscribe" style="color:var(--spark-violet); font-weight:600;">Подписка — 100 сообщений/день</a>
+          Хотите больше? <a href="/chat/subscribe" style="color:var(--spark-violet); font-weight:600;">Подписка — 100 сообщений/день</a>
         </p>
         {% endif %}
       </div>

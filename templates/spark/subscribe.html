@@ -58,12 +58,12 @@
 <div class="sp">
   <!-- Nav -->
   <nav class="sp-nav">
-    <a class="sp-brand" href="/spark">
+    <a class="sp-brand" href="/">
       <span class="sp-brand-mark">K</span>
       <span>Киди</span>
     </a>
     <div class="sp-nav-cta">
-      <a class="sp-btn sp-btn-ghost" href="/spark/chat">Назад в чат</a>
+      <a class="sp-btn sp-btn-ghost" href="/chat">Назад в чат</a>
     </div>
   </nav>
 
@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('sub-success').style.display = '';
         document.getElementById('sub-success').textContent = 'Подписка оформлена! Перенаправляем в чат...';
         btn.style.display = 'none';
-        setTimeout(() => window.location.href = '/spark/chat', 1500);
+        setTimeout(() => window.location.href = '/chat', 1500);
       } else {
         document.getElementById('sub-error').style.display = '';
         document.getElementById('sub-error').textContent = data.message || data.error || 'Ошибка';

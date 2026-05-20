@@ -35,12 +35,12 @@
 <body>
 <div class="sp">
   <nav class="sp-nav">
-    <a class="sp-brand" href="/spark">
+    <a class="sp-brand" href="/">
       <span class="sp-brand-mark">K</span>
       <span>Киди</span>
     </a>
     <div class="sp-nav-cta">
-      <a class="sp-btn sp-btn-ghost" href="/spark/login">Войти</a>
+      <a class="sp-btn sp-btn-ghost" href="/chat/login">Войти</a>
     </div>
   </nav>
 
@@ -83,7 +83,7 @@
 
       <button class="sp-btn sp-btn-primary sp-btn-lg auth-btn" type="submit">Начать бесплатно</button>
       <p class="auth-error" id="auth-error"></p>
-      <p class="auth-switch">Уже есть аккаунт? <a href="/spark/login">Войти</a></p>
+      <p class="auth-switch">Уже есть аккаунт? <a href="/chat/login">Войти</a></p>
     </form>
   </div>
 </div>
@@ -94,29 +94,29 @@ document.getElementById('register-form').addEventListener('submit', async functi
   const errEl = document.getElementById('auth-error');
   const btn = this.querySelector('button[type="submit"]');
   errEl.style.display = 'none';
-  btn.disabled = true;
-  btn.textContent = 'Создаём аккаунт...';
   const fd = new FormData(this);
 
-  function showError(msg) {
-    errEl.textContent = msg;
-    errEl.style.display = '';
-    errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    btn.disabled = false;
-    btn.textContent = 'Начать бесплатно';
-  }
-
-  // Frontend weak PIN check (mirrors backend)
+  // Frontend weak PIN check — before disabling button
   const WEAK_PINS = new Set([
     '0000','1111','2222','3333','4444','5555','6666','7777','8888','9999',
     '0123','1234','2345','3456','4567','5678','6789',
     '9876','8765','7654','6543','5432','4321','3210',
     '1122','2233','1212','2121','1221','2112','1010','2020','6969','1357','2468',
   ]);
-
-  // Validate PIN before any API calls
   if (WEAK_PINS.has(fd.get('pin'))) {
-    return showError('PIN слишком простой (1234, 0000 и т.п.). Придумайте другой.');
+    errEl.textContent = 'PIN слишком простой (1234, 0000 и т.п.). Придумайте другой.';
+    errEl.style.display = '';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Создаём аккаунт...';
+
+  function showError(msg) {
+    errEl.textContent = msg;
+    errEl.style.display = '';
+    btn.disabled = false;
+    btn.textContent = 'Начать бесплатно';
   }
 
   try {
@@ -175,7 +175,7 @@ document.getElementById('register-form').addEventListener('submit', async functi
 
     // 4. Go to chat
     btn.textContent = 'Готово! Переходим в чат...';
-    window.location.href = '/spark/chat';
+    window.location.href = '/chat';
   } catch(e) {
     showError('Ошибка сети. Попробуйте ещё раз.');
   }

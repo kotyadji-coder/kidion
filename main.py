@@ -2762,7 +2762,7 @@ async def page_index(request: Request):
 @app.get("/login", response_class=HTMLResponse)
 async def page_login(request: Request):
     if _is_chat_subdomain(request):
-        return RedirectResponse(url="/spark/login", status_code=302)
+        return RedirectResponse(url="/chat/login", status_code=302)
     if templates is None:
         return HTMLResponse("<h1>Login</h1>")
     return templates.TemplateResponse(
@@ -2773,7 +2773,7 @@ async def page_login(request: Request):
 @app.get("/register", response_class=HTMLResponse)
 async def page_register(request: Request, ref: str = ""):
     if _is_chat_subdomain(request):
-        return RedirectResponse(url="/spark/register", status_code=302)
+        return RedirectResponse(url="/chat/register", status_code=302)
     if templates is None:
         return HTMLResponse("<h1>Register</h1>")
     return templates.TemplateResponse(
@@ -3386,7 +3386,7 @@ async def kid_chat_page(request: Request):
     )
 
 
-@app.get("/spark/chat", response_class=HTMLResponse)
+@app.get("/chat", response_class=HTMLResponse)
 async def spark_chat_page(request: Request):
     """New Spark Chat page (multi-character, redesigned)."""
     conn = get_db_connection()
@@ -3412,7 +3412,7 @@ async def spark_chat_page(request: Request):
     )
 
 
-@app.get("/spark/register", response_class=HTMLResponse)
+@app.get("/chat/register", response_class=HTMLResponse)
 async def spark_register_page(request: Request):
     """Spark Chat registration (simplified, for chat-only users)."""
     if templates is None:
@@ -3420,7 +3420,7 @@ async def spark_register_page(request: Request):
     return templates.TemplateResponse(request, "spark/register.html", {})
 
 
-@app.get("/spark/login", response_class=HTMLResponse)
+@app.get("/chat/login", response_class=HTMLResponse)
 async def spark_login_page(request: Request):
     """Spark Chat login → pick child → PIN → chat."""
     if templates is None:
@@ -3428,15 +3428,20 @@ async def spark_login_page(request: Request):
     return templates.TemplateResponse(request, "spark/login.html", {})
 
 
+@app.get("/spark/{path:path}", response_class=HTMLResponse)
+async def spark_redirect(path: str = ""):
+    """Redirect old /spark/* URLs to /chat/*."""
+    target = f"/chat/{path}" if path else "/"
+    return RedirectResponse(url=target, status_code=301)
+
+
 @app.get("/spark", response_class=HTMLResponse)
-async def spark_landing_page(request: Request):
-    """Spark Chat landing page (public, no auth required)."""
-    if templates is None:
-        return HTMLResponse("<h1>Киди</h1>")
-    return templates.TemplateResponse(request, "spark/landing.html", {})
+async def spark_redirect_root():
+    """Redirect old /spark to /."""
+    return RedirectResponse(url="/", status_code=301)
 
 
-@app.get("/spark/subscribe", response_class=HTMLResponse)
+@app.get("/chat/subscribe", response_class=HTMLResponse)
 async def spark_subscribe_page(request: Request):
     """Spark Chat subscription purchase page (parent auth required)."""
     conn = get_db_connection()
@@ -3456,13 +3461,13 @@ async def spark_subscribe_page(request: Request):
     )
 
 
-@app.get("/spark/report/{child_id}", response_class=HTMLResponse)
+@app.get("/chat/report/{child_id}", response_class=HTMLResponse)
 async def spark_report_page(child_id: int, request: Request):
     """Parent chat report page for a child."""
     conn = get_db_connection()
     user = get_current_user(request, conn)
     if not user:
-        return RedirectResponse(url="/spark/login", status_code=302)
+        return RedirectResponse(url="/chat/login", status_code=302)
 
     child = get_child_by_id(conn, child_id)
     if not child or child["parent_id"] != user["id"]:
