@@ -285,7 +285,7 @@ uvicorn main:app --host 127.0.0.1 --port 8003 --reload
 - [ ] Spark Chat: independent registration flow (simplified, no universe)
 - [x] Connect print worksheet generation (worksheets generated alongside lessons)
 - [ ] Add curricula for grades 3-4 and more subjects (world)
-- [ ] Pass universe_description into lesson generation prompts (so lessons are themed)
+- [x] Pass universe_description into lesson generation prompts (so lessons are themed)
 - [ ] Update registry.json with kidion entry
 - [ ] Favicon, 404 page, rate limiting on auth
 - [ ] Cloud backup for DB (Cloudflare R2) — when real users appear
