@@ -21,7 +21,7 @@
   .auth-input { width: 100%; height: 44px; padding: 0 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; font-family: inherit; background: var(--surface-2); color: var(--text); outline: none; }
   .auth-input:focus { border-color: var(--spark-violet-border); box-shadow: 0 0 0 3px var(--spark-violet-soft); }
   .auth-btn { width: 100%; margin-top: 8px; }
-  .auth-error { color: oklch(0.55 0.2 25); font-size: 13px; text-align: center; margin-top: 10px; display: none; }
+  .auth-error { color: oklch(0.45 0.2 25); font-size: 14px; font-weight: 500; text-align: center; margin-top: 12px; padding: 10px 14px; background: oklch(0.97 0.02 25); border: 1px solid oklch(0.90 0.05 25); border-radius: 10px; display: none; }
   .auth-switch { text-align: center; margin-top: 18px; font-size: 13px; color: var(--text-3); }
   .auth-switch a { color: var(--spark-violet); text-decoration: none; font-weight: 500; }
   .auth-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; font-size: 12px; color: var(--text-3); }
@@ -101,8 +101,22 @@ document.getElementById('register-form').addEventListener('submit', async functi
   function showError(msg) {
     errEl.textContent = msg;
     errEl.style.display = '';
+    errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     btn.disabled = false;
     btn.textContent = 'Начать бесплатно';
+  }
+
+  // Frontend weak PIN check (mirrors backend)
+  const WEAK_PINS = new Set([
+    '0000','1111','2222','3333','4444','5555','6666','7777','8888','9999',
+    '0123','1234','2345','3456','4567','5678','6789',
+    '9876','8765','7654','6543','5432','4321','3210',
+    '1122','2233','1212','2121','1221','2112','1010','2020','6969','1357','2468',
+  ]);
+
+  // Validate PIN before any API calls
+  if (WEAK_PINS.has(fd.get('pin'))) {
+    return showError('PIN слишком простой (1234, 0000 и т.п.). Придумайте другой.');
   }
 
   try {
