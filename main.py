@@ -3392,7 +3392,7 @@ async def spark_chat_page(request: Request):
     conn = get_db_connection()
     child = get_current_child(request, conn)
     if not child:
-        return RedirectResponse(url="/kid/login", status_code=302)
+        return RedirectResponse(url="/chat/login", status_code=302)
 
     if templates is None:
         return HTMLResponse("<h1>Киди</h1>")
