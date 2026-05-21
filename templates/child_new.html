@@ -237,11 +237,6 @@
         <input type="date" id="birth_date">
       </div>
 
-      <div class="form-group">
-        <label for="pin_code">ПИН-код (4 цифры)</label>
-        <input type="password" id="pin_code" minlength="4" maxlength="4" pattern="\d{4}" inputmode="numeric" required placeholder="1234">
-        <div class="hint">С помощью этого кода ребёнок будет сам входить в свой игровой кабинет. Вы всегда сможете изменить его в настройках.</div>
-      </div>
 
       <div class="btn-row">
         <a href="/dashboard" class="btn btn--outline">Отмена</a>
@@ -335,10 +330,8 @@
   // Validate step 1
   document.getElementById('btn-next').addEventListener('click', function() {
     var name = document.getElementById('name').value.trim();
-    var pin = document.getElementById('pin_code').value;
 
     if (!name) { document.getElementById('name').focus(); return; }
-    if (!/^\d{4}$/.test(pin)) { document.getElementById('pin_code').focus(); return; }
 
     showStep(2);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -376,7 +369,6 @@
       gender: document.getElementById('gender').value,
       birth_date: document.getElementById('birth_date').value || null,
       grade: parseInt(document.getElementById('grade').value),
-      pin_code: document.getElementById('pin_code').value,
       favorite_heroes: document.getElementById('favorite_heroes').value.trim(),
       favorite_animals: document.getElementById('favorite_animals').value.trim(),
       favorite_activities: document.getElementById('favorite_activities').value.trim(),

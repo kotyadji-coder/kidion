@@ -19,7 +19,6 @@
   const chatInput = document.getElementById("chat-input");
   const btnSend = document.getElementById("btn-send");
   const btnNewChat = document.getElementById("btn-new-chat");
-  const btnBack = document.getElementById("btn-back");
   const btnMic = document.getElementById("btn-mic");
   const fileInput = document.getElementById("file-input");
   const attachPreview = document.getElementById("attach-preview");
@@ -28,6 +27,7 @@
   const typingRow = document.getElementById("typing-row");
   const typingAvatar = document.getElementById("typing-avatar");
   const sideList = document.getElementById("side-list");
+  const charStrip = document.getElementById("char-strip");
   const drawerList = document.getElementById("drawer-list");
   const drawer = document.getElementById("char-drawer");
   const voiceOverlay = document.getElementById("voice-overlay");
@@ -63,6 +63,7 @@
       const { data } = await api("/api/kid/characters", "GET");
       characters = data.characters || [];
       renderSidebar();
+      renderCharStrip();
       renderDrawer();
     } catch (e) {
       console.error("Failed to load characters:", e);
@@ -102,6 +103,33 @@
       li.querySelector(".sc-side-av").appendChild(getCharAvatar(c.key));
       li.addEventListener("click", () => switchCharacter(c.key, true));
       sideList.appendChild(li);
+    });
+  }
+
+  function renderCharStrip() {
+    charStrip.innerHTML = "";
+    characters.forEach((c) => {
+      const btn = document.createElement("button");
+      btn.className = "sc-char-btn" + (c.key === activeChar ? " is-active" : "") + (c.locked ? " is-locked" : "");
+      btn.dataset.char = c.key;
+      const av = document.createElement("div");
+      av.className = "sc-char-av";
+      av.appendChild(getCharAvatar(c.key));
+      const name = document.createElement("span");
+      name.className = "sc-char-name";
+      name.textContent = c.name_ru;
+      btn.appendChild(av);
+      btn.appendChild(name);
+      btn.addEventListener("click", () => {
+        if (c.locked) {
+          if (confirm("Этот персонаж доступен по подписке. Оформить?")) {
+            window.location.href = "/chat/subscribe";
+          }
+          return;
+        }
+        switchCharacter(c.key, true);
+      });
+      charStrip.appendChild(btn);
     });
   }
 
@@ -173,8 +201,11 @@
     // Update placeholder
     chatInput.placeholder = `Напиши ${c.name_ru}...`;
 
-    // Update sidebar & drawer active states
+    // Update sidebar, char strip & drawer active states
     sideList.querySelectorAll(".sc-side-item").forEach((el) => {
+      el.classList.toggle("is-active", el.dataset.char === key);
+    });
+    charStrip.querySelectorAll(".sc-char-btn").forEach((el) => {
       el.classList.toggle("is-active", el.dataset.char === key);
     });
     drawerList.querySelectorAll(".sc-drawer-item").forEach((el) => {
@@ -426,7 +457,9 @@
     });
     btnSend.addEventListener("click", sendMessage);
     btnNewChat.addEventListener("click", clearChat);
-    btnBack.addEventListener("click", () => { window.location.href = "/"; });
+
+    // Adult gate for parent area
+    setupAdultGate();
 
     // File attachment
     fileInput.addEventListener("change", () => {
@@ -439,11 +472,7 @@
     });
     btnRemoveAttach.addEventListener("click", clearAttachment);
 
-    // Mobile drawer
-    document.getElementById("tab-chars").addEventListener("click", (e) => {
-      e.preventDefault();
-      openDrawer();
-    });
+    // Mobile drawer (still accessible from desktop sidebar)
     document.getElementById("btn-close-drawer").addEventListener("click", closeDrawer);
 
     // Voice (placeholder — opens overlay, cancel closes it)
@@ -500,6 +529,50 @@
     if (recognition) {
       recognition.stop();
       recognition = null;
+    }
+  }
+
+  // ---------- Adult gate ----------
+  function setupAdultGate() {
+    const gateOverlay = document.getElementById("adult-gate");
+    const gateQuestion = document.getElementById("gate-question");
+    const gateAnswer = document.getElementById("gate-answer");
+    const gateError = document.getElementById("gate-error");
+    const btnParent = document.getElementById("btn-parent-gate");
+    let correctAnswer = 0;
+
+    function generateProblem() {
+      const a = 10 + Math.floor(Math.random() * 40);
+      const b = 10 + Math.floor(Math.random() * 40);
+      correctAnswer = a + b;
+      gateQuestion.textContent = `${a} + ${b} = ?`;
+      gateAnswer.value = "";
+      gateError.style.display = "none";
+    }
+
+    btnParent.addEventListener("click", () => {
+      generateProblem();
+      gateOverlay.classList.add("is-open");
+      setTimeout(() => gateAnswer.focus(), 100);
+    });
+
+    document.getElementById("btn-gate-check").addEventListener("click", checkGate);
+    gateAnswer.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") checkGate();
+    });
+    document.getElementById("btn-gate-cancel").addEventListener("click", () => {
+      gateOverlay.classList.remove("is-open");
+    });
+
+    function checkGate() {
+      if (parseInt(gateAnswer.value, 10) === correctAnswer) {
+        gateOverlay.classList.remove("is-open");
+        window.location.href = `/chat/report/${CFG.childId}`;
+      } else {
+        gateError.style.display = "";
+        gateAnswer.value = "";
+        gateAnswer.focus();
+      }
     }
   }
 })();

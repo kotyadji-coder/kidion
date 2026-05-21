@@ -339,18 +339,46 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
 @media (min-width: 769px) {
   .sc-head { padding: 14px 22px; }
 }
-.sc-head-back {
-  display: inline-grid; place-items: center;
-  width: 36px; height: 36px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
+/* ============ Character strip (mobile) ============ */
+.sc-chars {
+  display: none;
+  padding: 10px 16px;
+  gap: 16px;
   background: var(--surface);
-  color: var(--text-2);
-  padding: 0;
+  border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
+  justify-content: center;
 }
-@media (min-width: 769px) {
-  .sc-head-back { display: none; }
+@media (max-width: 768px) {
+  .sc-chars { display: flex; }
 }
+.sc-char-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: none; border: 0; padding: 0; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.sc-char-av {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 2.5px solid var(--border);
+  transition: border-color .15s, box-shadow .15s;
+}
+.sc-char-btn.is-active .sc-char-av {
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 2px var(--c-soft);
+}
+.sc-char-btn.is-locked .sc-char-av { opacity: 0.5; }
+.sc-char-av img { width: 100%; height: 100%; object-fit: cover; object-position: center 18%; transform: scale(1.08); }
+.sc-char-av svg { width: 100%; height: 100%; }
+.sc-char-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-3);
+  line-height: 1.2;
+}
+.sc-char-btn.is-active .sc-char-name { color: var(--c-ink); font-weight: 600; }
 .sc-head-av {
   width: 40px; height: 40px;
   border-radius: 50%;
@@ -730,12 +758,17 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
 }
 
 .sc-bar {
-  display: flex; align-items: center; gap: 8px;
-  padding: 6px 6px 6px 10px;
+  display: flex; align-items: center; gap: 4px;
+  padding: 4px 4px 4px 8px;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 999px;
   transition: border-color .12s, background .12s;
+  min-height: 48px;
+  max-height: 48px;
+}
+@media (min-width: 769px) {
+  .sc-bar { gap: 8px; padding: 6px 6px 6px 10px; min-height: auto; max-height: none; }
 }
 .sc-bar:focus-within {
   border-color: var(--c-border);
@@ -767,11 +800,15 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
   border: 0;
   background: transparent;
   outline: none;
-  font-size: 14px;
+  font-size: 16px;
   color: var(--text);
   font-family: inherit;
   letter-spacing: -0.005em;
   min-width: 0;
+  max-width: 100%;
+}
+@media (min-width: 769px) {
+  .sc-bar-input { font-size: 14px; }
 }
 .sc-bar-input::placeholder { color: var(--text-3); }
 .sc-bar-send {
@@ -800,40 +837,6 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
   text-align: center;
 }
 
-/* ============ Mobile tab bar ============ */
-.sc-tabs {
-  display: none;
-  flex: 0 0 auto;
-  border-top: 1px solid var(--border);
-  background: var(--surface);
-  padding: 6px 8px calc(10px + env(safe-area-inset-bottom, 0px));
-}
-@media (max-width: 768px) {
-  .sc-tabs { display: flex; }
-}
-.sc-tab {
-  flex: 1;
-  background: transparent;
-  border: 0;
-  padding: 6px 4px 4px;
-  display: flex; flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  font-size: 11px; font-weight: 500;
-  color: var(--text-3);
-  border-radius: 10px;
-  text-decoration: none;
-}
-.sc-tab.is-active { color: var(--c-ink); }
-.sc-tab-ico {
-  display: grid; place-items: center;
-  width: 28px; height: 28px;
-  color: inherit;
-}
-.sc-tab.is-active .sc-tab-ico {
-  background: var(--c-soft);
-  border-radius: 8px;
-}
 
 /* ============ Mobile drawer ============ */
 .sc-drawer {

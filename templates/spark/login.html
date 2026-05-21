@@ -33,11 +33,6 @@
   .child-pick-name { font-size: 16px; font-weight: 600; }
   .child-pick-grade { font-size: 12px; color: var(--text-3); }
 
-  .pin-section { margin-top: 20px; display: none; text-align: center; }
-  .pin-section.is-show { display: block; }
-  .pin-label { font-size: 14px; color: var(--text-2); margin-bottom: 10px; }
-  .pin-input { width: 140px; height: 48px; text-align: center; font-size: 24px; letter-spacing: 8px; border: 1px solid var(--border); border-radius: 12px; font-family: inherit; background: var(--surface-2); outline: none; }
-  .pin-input:focus { border-color: var(--spark-violet-border); box-shadow: 0 0 0 3px var(--spark-violet-soft); }
 </style>
 </head>
 <body>
@@ -77,16 +72,7 @@
       <div id="step-child" style="display:none">
         <h1 class="auth-h">Выберите ребёнка</h1>
         <div class="child-picker is-show" id="child-list"></div>
-      </div>
-
-      <!-- Step 3: Enter PIN -->
-      <div id="step-pin" style="display:none">
-        <h1 class="auth-h" id="pin-child-name"></h1>
-        <div class="pin-section is-show">
-          <p class="pin-label">Введи свой секретный код</p>
-          <input class="pin-input" id="pin-input" type="text" inputmode="numeric" maxlength="4" pattern="\d{4}" autofocus>
-        </div>
-        <p class="auth-error" id="pin-error"></p>
+        <p class="auth-error" id="child-error"></p>
       </div>
     </div>
   </div>
@@ -95,7 +81,6 @@
 <script>
 (function() {
   let children = [];
-  let selectedChild = null;
 
   document.getElementById('login-form').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -122,13 +107,12 @@
     children = childData.children || childData || [];
 
     if (children.length === 0) {
-      // No children — redirect to registration to add one
       window.location.href = '/chat/register';
       return;
     }
 
     if (children.length === 1) {
-      selectChild(children[0]);
+      authChild(children[0]);
     } else {
       showChildPicker();
     }
@@ -143,42 +127,26 @@
       const div = document.createElement('div');
       div.className = 'child-pick';
       div.innerHTML = '<div class="child-pick-av">' + (c.gender === 'girl' ? '👧' : '👦') + '</div><div><div class="child-pick-name">' + c.name + '</div><div class="child-pick-grade">' + c.grade + ' класс</div></div>';
-      div.addEventListener('click', () => selectChild(c));
+      div.addEventListener('click', () => authChild(c));
       list.appendChild(div);
     });
   }
 
-  function selectChild(child) {
-    selectedChild = child;
-    document.getElementById('step-login').style.display = 'none';
-    document.getElementById('step-child').style.display = 'none';
-    document.getElementById('step-pin').style.display = '';
-    document.getElementById('pin-child-name').textContent = child.name;
-    const pinInput = document.getElementById('pin-input');
-    pinInput.value = '';
-    pinInput.focus();
-  }
-
-  document.getElementById('pin-input').addEventListener('input', async function() {
-    if (this.value.length === 4) {
-      const errEl = document.getElementById('pin-error');
-      errEl.style.display = 'none';
-      const res = await fetch('/api/kid/auth', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        credentials: 'same-origin',
-        body: JSON.stringify({ child_id: selectedChild.id, pin: this.value }),
-      });
-      if (res.ok) {
-        window.location.href = '/chat';
-      } else {
-        errEl.textContent = 'Неверный код';
-        errEl.style.display = 'block';
-        this.value = '';
-        this.focus();
-      }
+  async function authChild(child) {
+    const errEl = document.getElementById('child-error') || document.getElementById('login-error');
+    const res = await fetch('/api/kid/auth', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'same-origin',
+      body: JSON.stringify({ child_id: child.id }),
+    });
+    if (res.ok) {
+      window.location.href = '/chat';
+    } else {
+      errEl.textContent = 'Ошибка входа';
+      errEl.style.display = 'block';
     }
-  });
+  }
 })();
 </script>
 </body>

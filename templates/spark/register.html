@@ -75,10 +75,6 @@
             </select>
           </div>
         </div>
-        <div class="auth-field">
-          <label class="auth-label">PIN-код ребёнка (4 цифры)</label>
-          <input class="auth-input" type="text" name="pin" required pattern="\d{4}" maxlength="4" placeholder="1234" inputmode="numeric">
-        </div>
       </div>
 
       <button class="sp-btn sp-btn-primary sp-btn-lg auth-btn" type="submit">Начать бесплатно</button>
@@ -95,19 +91,6 @@ document.getElementById('register-form').addEventListener('submit', async functi
   const btn = this.querySelector('button[type="submit"]');
   errEl.style.display = 'none';
   const fd = new FormData(this);
-
-  // Frontend weak PIN check — before disabling button
-  const WEAK_PINS = new Set([
-    '0000','1111','2222','3333','4444','5555','6666','7777','8888','9999',
-    '0123','1234','2345','3456','4567','5678','6789',
-    '9876','8765','7654','6543','5432','4321','3210',
-    '1122','2233','1212','2121','1221','2112','1010','2020','6969','1357','2468',
-  ]);
-  if (WEAK_PINS.has(fd.get('pin'))) {
-    errEl.textContent = 'PIN слишком простой (1234, 0000 и т.п.). Придумайте другой.';
-    errEl.style.display = 'block';
-    return;
-  }
 
   btn.disabled = true;
   btn.textContent = 'Создаём аккаунт...';
@@ -151,7 +134,6 @@ document.getElementById('register-form').addEventListener('submit', async functi
         gender: 'boy',
         birth_date: '2018-01-01',
         grade: parseInt(fd.get('grade')),
-        pin_code: fd.get('pin'),
         interests: [],
         source: 'chat',
       }),
@@ -162,15 +144,12 @@ document.getElementById('register-form').addEventListener('submit', async functi
     }
     const childData = await childRes.json();
 
-    // 3. Auth child with PIN
+    // 3. Auth child (no PIN needed)
     await fetch('/api/kid/auth', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       credentials: 'same-origin',
-      body: JSON.stringify({
-        child_id: childData.id,
-        pin: fd.get('pin'),
-      }),
+      body: JSON.stringify({ child_id: childData.id }),
     });
 
     // 4. Go to chat

@@ -706,16 +706,10 @@ async def test_submit_result_by_child_session(client: AsyncClient, child_data: d
 
     lesson_id = resp.json()["lesson_id"]
 
-    # Logout parent
-    await client.post("/auth/logout")
-
-    # Login as child with PIN
+    # Auth as child (parent session still active)
     resp = await client.post(
         "/api/kid/auth",
-        json={
-            "child_id": child_data["id"],
-            "pin": child_data["_pin"],
-        }
+        json={"child_id": child_data["id"]}
     )
     assert resp.status_code == 200
 
@@ -811,20 +805,18 @@ async def test_submit_result_forbidden_wrong_child_session(
 
     lesson_id = resp.json()["lesson_id"]
 
-    # Use a separate client to login as second child
+    # Auth as second child (using parent's auth_client)
+    resp = await auth_client.post(
+        "/api/kid/auth",
+        json={"child_id": child2["id"]}
+    )
+    assert resp.status_code == 200
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://testserver",
+        cookies=dict(auth_client.cookies),
     ) as kid_client:
-        resp = await kid_client.post(
-            "/api/kid/auth",
-            json={
-                "child_id": child2["id"],
-                "pin": "9427",
-            }
-        )
-        assert resp.status_code == 200
-
         # Try to submit result for first child's lesson
         resp = await kid_client.post(
             f"/api/lessons/{lesson_id}/result",

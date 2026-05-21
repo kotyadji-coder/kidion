@@ -31,9 +31,9 @@
         Pro
       </a>
       {% endif %}
-      <a href="https://kidion.ru/dashboard" class="sc-nav-avatar" title="Панель родителей">
+      <button class="sc-nav-avatar" id="btn-parent-gate" title="Для родителей">
         {{ child.name[0] if child.name else 'K' }}
-      </a>
+      </button>
     </div>
   </nav>
 
@@ -59,9 +59,6 @@
     <main class="sc-main" id="chat-main">
       <!-- Chat header -->
       <header class="sc-head" id="chat-head">
-        <button class="sc-head-back" id="btn-back" aria-label="Назад">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 4L6 9l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
         <div class="sc-head-av" id="head-avatar"></div>
         <div class="sc-head-info">
           <h2 class="sc-head-name">
@@ -72,10 +69,15 @@
         </div>
         <div class="sc-head-actions">
           <button class="sc-head-action" id="btn-new-chat" aria-label="Новый разговор" title="Новый разговор">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2.5 4.5V8h3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.5 11.5V8H10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.7 6.5C4.5 4.5 6.6 3 9 3c2.5 0 4.7 1.6 5.5 4M12.3 9.5C11.5 11.5 9.4 13 7 13c-2.5 0-4.7-1.6-5.5-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M3 7.5h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
           </button>
         </div>
       </header>
+
+      <!-- Character strip (mobile) -->
+      <div class="sc-chars" id="char-strip">
+        <!-- Populated by JS -->
+      </div>
 
       <!-- Empty state (shown when no messages) -->
       <div class="sc-empty" id="empty-state">
@@ -158,6 +160,21 @@
         {% endif %}
       </div>
 
+      <!-- Adult gate overlay -->
+      <div class="sc-voice" id="adult-gate">
+        <div style="font-size:48px">🔒</div>
+        <h3 class="sc-voice-h">Позови взрослых к экрану!</h3>
+        <p class="sc-voice-sub" id="gate-question"></p>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+          <input type="number" id="gate-answer" class="sc-bar-input" style="width:100px;text-align:center;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:10px;font-size:18px" inputmode="numeric" autocomplete="off">
+          <button class="sc-voice-stop" id="btn-gate-check">Войти</button>
+        </div>
+        <p class="sc-voice-sub" id="gate-error" style="color:oklch(0.55 0.2 25);display:none">Неправильно, попробуй ещё!</p>
+        <div class="sc-voice-actions" style="margin-top:8px">
+          <button class="sc-voice-cancel" id="btn-gate-cancel">Назад</button>
+        </div>
+      </div>
+
       <!-- Character drawer (mobile) -->
       <div class="sc-drawer" id="char-drawer">
         <div class="sc-drawer-head">
@@ -171,21 +188,6 @@
     </main>
   </div>
 
-  <!-- Mobile tab bar -->
-  <nav class="sc-tabs">
-    <a class="sc-tab is-active" id="tab-chat" href="#">
-      <span class="sc-tab-ico"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 6a3 3 0 013-3h8a3 3 0 013 3v5a3 3 0 01-3 3H8l-3.5 3v-3.4A3 3 0 013 11V6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
-      <span>Чат</span>
-    </a>
-    <button class="sc-tab" id="tab-chars">
-      <span class="sc-tab-ico"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="7" cy="8" r="3" stroke="currentColor" stroke-width="1.6"/><circle cx="14" cy="7" r="2.4" stroke="currentColor" stroke-width="1.6"/><path d="M2 16c0-2.4 2.2-4 5-4s5 1.6 5 4M12 16c0-1.6 1.6-3 4-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>
-      <span>Персонажи</span>
-    </button>
-    <a class="sc-tab" href="/">
-      <span class="sc-tab-ico"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 9l7-6 7 6v7a2 2 0 01-2 2h-3v-5h-4v5H5a2 2 0 01-2-2V9z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
-      <span>Домой</span>
-    </a>
-  </nav>
 </div>
 
 <!-- Character avatar templates (hidden, cloned by JS) -->
@@ -202,6 +204,7 @@
 <script>
   window.SPARK_CHAT = {
     childName: {{ child.name | tojson }},
+    childId: {{ child.id | tojson }},
     hasSubscription: {{ "true" if has_subscription else "false" }},
     freeLimit: 10,
     paidLimit: 100,

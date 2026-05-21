@@ -55,25 +55,20 @@ async def child_profile(parent_client: AsyncClient) -> dict:
 
 
 @pytest_asyncio.fixture
-async def kid_client(client: AsyncClient, child_profile: dict) -> AsyncClient:
-    """A separate client authenticated as the child (has kid_session_child cookie)."""
+async def kid_client(parent_client: AsyncClient, child_profile: dict) -> AsyncClient:
+    """A client authenticated as the child (has kid_session_child cookie)."""
     # Mark child as onboarded so /kid/home doesn't redirect to /kid/onboarding
     from db import update_child_character_name
     from main import get_db_connection
     conn = get_db_connection()
     update_child_character_name(conn, child_profile["id"], "Искатель")
 
-    # We need a fresh client because parent is logged in on `client`
-    async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://testserver",
-    ) as kc:
-        resp = await kc.post("/api/kid/auth", json={
-            "child_id": child_profile["id"],
-            "pin": child_profile["_pin"],
-        })
-        assert resp.status_code == 200
-        yield kc
+    # Auth child via parent session (no PIN needed)
+    resp = await parent_client.post("/api/kid/auth", json={
+        "child_id": child_profile["id"],
+    })
+    assert resp.status_code == 200
+    yield parent_client
 
 
 @pytest_asyncio.fixture
@@ -218,12 +213,11 @@ async def test_kid_lesson_detail_no_auth(client: AsyncClient, pending_lesson: di
 @pytest.mark.asyncio
 async def test_kid_lesson_detail_wrong_child(child_profile: dict, pending_lesson: dict):
     """Child cannot access another child's lesson."""
-    # Create a second child and authenticate as them
+    # Create a second parent + child, auth as that child
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://testserver",
     ) as parent2:
-        # Register second parent
         await parent2.post("/auth/register", json={"email": "parent2@example.com", "password": "pass12345"})
         await parent2.post("/auth/login", json={"email": "parent2@example.com", "password": "pass12345"})
         resp = await parent2.post("/api/children", json={
@@ -232,18 +226,12 @@ async def test_kid_lesson_detail_wrong_child(child_profile: dict, pending_lesson
             "birth_date": "2016-01-01",
             "grade": 2,
             "universe": "Лего",
-            "pin_code": "5947",
         })
         assert resp.status_code == 201
         child2_id = resp.json()["id"]
-
-    async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://testserver",
-    ) as kid2:
-        resp = await kid2.post("/api/kid/auth", json={"child_id": child2_id, "pin": "5947"})
+        resp = await parent2.post("/api/kid/auth", json={"child_id": child2_id})
         assert resp.status_code == 200
-        resp = await kid2.get(f"/api/kid/lessons/{pending_lesson['id']}")
+        resp = await parent2.get(f"/api/kid/lessons/{pending_lesson['id']}")
         assert resp.status_code == 403
 
 

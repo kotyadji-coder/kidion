@@ -271,7 +271,7 @@ class ChildCreateRequest(BaseModel):
     grade: int
     universe: str = ""
     interests: list[str] = []
-    pin_code: str
+    pin_code: Optional[str] = None
     source: str = ""  # "chat" = simplified Spark registration (skip universe)
     # Universe questionnaire (step 2)
     favorite_heroes: str = ""
@@ -304,7 +304,7 @@ class ChildCreateRequest(BaseModel):
     @field_validator("pin_code")
     @classmethod
     def validate_pin(cls, v):
-        if not re.fullmatch(r"\d{4}", v):
+        if v is not None and not re.fullmatch(r"\d{4}", v):
             raise ValueError("pin_code must be exactly 4 digits")
         return v
 
@@ -341,7 +341,7 @@ class ChildUpdateRequest(BaseModel):
 
 class KidAuthRequest(BaseModel):
     child_id: int
-    pin: str
+    pin: Optional[str] = None
 
 
 class GenerateLessonRequest(BaseModel):
@@ -799,10 +799,6 @@ async def create_child_endpoint(body: ChildCreateRequest, request: Request):
     if count_children_by_parent(conn, user["id"]) >= 3:
         return JSONResponse({"error": "max_children_reached"}, status_code=400)
 
-    # Validate PIN strength
-    if is_weak_pin(body.pin_code):
-        return JSONResponse({"error": "weak_pin", "message": "Этот код слишком простой. Выберите более надёжный."}, status_code=400)
-
     # Build interests from universe questionnaire fields
     interests = body.interests if body.interests else []
     if not interests:
@@ -812,7 +808,7 @@ async def create_child_endpoint(body: ChildCreateRequest, request: Request):
     interests = _sanitize_interests(interests)
     universe_text = body.universe or ", ".join(interests) or "приключения"
 
-    pin_hash = hash_password(body.pin_code)
+    pin_hash = hash_password(body.pin_code or "0000")
     child = create_child(
         conn,
         parent_id=user["id"],
@@ -1032,26 +1028,18 @@ async def recreate_universe_endpoint(child_id: int, body: RecreateUniverseReques
 @app.post("/api/kid/auth")
 async def kid_auth(body: KidAuthRequest, request: Request):
     ip = get_client_ip(request)
-
-    # Rate limit by IP
-    if check_rate_limit(ip, "pin_auth", max_attempts=10, window=300):
-        conn = get_db_connection()
-        log_event(conn, "rate_limit_hit", ip=ip, details="pin_auth")
-        return JSONResponse({"error": "too_many_attempts", "message": "Слишком много попыток. Подожди 5 минут."}, status_code=429)
-
-    # Rate limit by child_id (prevents targeted brute force)
-    if check_rate_limit_by_key(str(body.child_id), "pin_child", max_attempts=5, window=300):
-        conn = get_db_connection()
-        log_event(conn, "rate_limit_hit", child_id=body.child_id, ip=ip, details="pin_child")
-        return JSONResponse({"error": "too_many_attempts", "message": "Слишком много попыток. Подожди 5 минут."}, status_code=429)
-
     conn = get_db_connection()
+
+    # Verify parent is logged in and owns this child
+    user = get_current_user(request, conn)
+    if not user:
+        return JSONResponse({"error": "unauthorized", "message": "Войдите в аккаунт родителя."}, status_code=401)
+
     child = get_child_by_id(conn, body.child_id)
-    if child is None or not verify_password(body.pin, child["pin_hash"]):
-        log_event(conn, "pin_failed", child_id=body.child_id, ip=ip)
+    if child is None or child["parent_id"] != user["id"]:
         return JSONResponse({"error": "invalid_credentials"}, status_code=401)
 
-    log_event(conn, "pin_success", child_id=child["id"], ip=ip)
+    log_event(conn, "kid_auth_success", child_id=child["id"], ip=ip)
     token = create_child_session_token(child["id"])
     response = JSONResponse({"ok": True, "child_id": child["id"], "name": child["name"]})
     response.set_cookie(

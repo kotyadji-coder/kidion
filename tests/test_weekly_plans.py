@@ -625,10 +625,9 @@ class TestKidLessonsWeekly:
         with patch("services.generation.generate_lesson_content"):
             await client.post(f"/api/weekly-plans/{plan_id}/next")
         
-        # Login as kid
+        # Auth as kid (parent session active on client)
         kid_resp = await client.post("/api/kid/auth", json={
             "child_id": child["id"],
-            "pin": "5739",
         })
         assert kid_resp.status_code == 200
         

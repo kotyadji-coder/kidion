@@ -176,21 +176,15 @@
       </button>
       {% endfor %}
 
-      <div class="picker__hint">После выбора ты введёшь свой секретный код 🔒</div>
+      <div class="picker__hint">Нажми на себя, чтобы войти!</div>
     </div>
   </div>
   {% endif %}
 
-  <!-- ── STEP 2: PIN ENTRY ── -->
-  <div class="pin-screen" id="pin-section" {% if children|length > 1 %}style="display:none"{% endif %}>
+  {% if children|length == 1 %}
+  <!-- Single child: auto-login -->
+  <div class="pin-screen" id="single-child-screen">
     <div class="pin-screen__top">
-      {% if children|length > 1 %}
-      <button class="pin-screen__back" id="pin-back-btn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F2418" stroke-width="3" stroke-linecap="round"><path d="M15 6 L9 12 L15 18"/></svg>
-      </button>
-      {% endif %}
-
-      {% if children|length == 1 %}
       <div class="pin-screen__avatar">
         {% if children[0].character_image_url %}
         <img src="{{ children[0].character_image_url }}" alt="{{ children[0].name }}"
@@ -201,150 +195,48 @@
         {% endif %}
       </div>
       <div class="pin-screen__name">Привет, {{ children[0].name }}!</div>
+      <div class="pin-screen__label">Загружаю...</div>
       <input type="hidden" id="child-id-input" value="{{ children[0].id }}">
-      {% elif children|length > 1 %}
-      <div class="pin-screen__avatar" id="pin-avatar"></div>
-      <div class="pin-screen__name" id="pin-name"></div>
-      <input type="hidden" id="child-id-input" value="">
-      {% else %}
-      <div style="font-size:11px;font-weight:800;color:#15803D;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:16px;">kidion</div>
-      <input type="hidden" id="child-id-input" value="{{ child_id or '' }}">
-      {% endif %}
-
-      <div class="pin-screen__label">Введи свой секретный код</div>
-
-      <div class="pin-screen__dots" id="pin-dots">
-        <div class="pin-screen__dot"></div>
-        <div class="pin-screen__dot"></div>
-        <div class="pin-screen__dot"></div>
-        <div class="pin-screen__dot"></div>
-      </div>
-
-      <div class="pin-screen__error" id="pin-error"></div>
-    </div>
-
-    <div class="pin-screen__keyboard">
-      <div class="pin-screen__keys">
-        <button class="pin-key" data-digit="1">1</button>
-        <button class="pin-key" data-digit="2">2</button>
-        <button class="pin-key" data-digit="3">3</button>
-        <button class="pin-key" data-digit="4">4</button>
-        <button class="pin-key" data-digit="5">5</button>
-        <button class="pin-key" data-digit="6">6</button>
-        <button class="pin-key" data-digit="7">7</button>
-        <button class="pin-key" data-digit="8">8</button>
-        <button class="pin-key" data-digit="9">9</button>
-        <button class="pin-key pin-key--backspace" id="pin-backspace">
-          <svg width="28" height="20" viewBox="0 0 30 22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 1 L1 11 L9 21 H29 V1 Z"/><path d="M14 7 L22 15 M22 7 L14 15"/></svg>
-        </button>
-        <button class="pin-key" data-digit="0">0</button>
-        <button class="pin-key pin-key--submit" id="pin-submit-btn">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 L10 17 L20 7"/></svg>
-        </button>
-      </div>
-      <div class="pin-screen__forgot">Забыл? Попроси маму или папу</div>
     </div>
   </div>
+  {% endif %}
 
   <script src="/static/kid/app.js"></script>
   <script>
   (function() {
-    var pin = '';
-    var dots = document.querySelectorAll('.pin-screen__dot');
-    var errorEl = document.getElementById('pin-error');
-    var childIdInput = document.getElementById('child-id-input');
-
-    // PIN key events (new selectors)
-    document.querySelectorAll('.pin-key[data-digit]').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        if (pin.length >= 4) return;
-        pin += btn.dataset.digit;
-        updateDots();
-      });
-    });
-
-    document.getElementById('pin-backspace').addEventListener('click', function() {
-      pin = pin.slice(0, -1);
-      updateDots();
-      if (errorEl) { errorEl.textContent = ''; }
-    });
-
-    document.getElementById('pin-submit-btn').addEventListener('click', submitPin);
-
-    function updateDots() {
-      dots.forEach(function(d, i) {
-        d.classList.toggle('filled', i < pin.length);
-      });
-    }
-
-    async function submitPin() {
-      if (pin.length < 4) return;
-      var childId = childIdInput.value;
-      if (!childId) { if (errorEl) errorEl.textContent = 'Выбери ребёнка'; return; }
-
+    async function authChild(childId) {
       try {
         var resp = await fetch('/api/kid/auth', {
           method: 'POST',
           credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ child_id: parseInt(childId), pin: pin })
+          body: JSON.stringify({ child_id: parseInt(childId) })
         });
         var data = await resp.json();
         if (resp.ok && data.ok) {
           window.location.href = data.redirect || '/kid/home';
         } else {
-          if (errorEl) errorEl.textContent = data.message || 'Неверный код';
-          pin = '';
-          updateDots();
+          alert(data.message || 'Ошибка входа');
         }
       } catch(e) {
-        if (errorEl) errorEl.textContent = 'Ошибка соединения';
-        pin = '';
-        updateDots();
+        alert('Ошибка соединения');
       }
     }
 
-    // Multi-child picker logic
+    // Multi-child picker: tap card → auth directly
     var picker = document.getElementById('child-picker');
-    var pinSection = document.getElementById('pin-section');
-    if (!picker) return;
-
-    document.querySelectorAll('.picker__card').forEach(function(card) {
-      card.addEventListener('click', function() {
-        var childId = card.dataset.childId;
-        var name = card.dataset.name;
-        var imgUrl = card.dataset.img;
-        childIdInput.value = childId;
-
-        // Build avatar
-        var avatarEl = document.getElementById('pin-avatar');
-        var nameEl = document.getElementById('pin-name');
-        if (avatarEl) {
-          if (imgUrl) {
-            avatarEl.innerHTML = '<img src="' + imgUrl + '" alt="' + name + '" onerror="this.outerHTML=\'<div class=pin-screen__avatar-letter>' + name[0].toUpperCase() + '</div>\'">';
-          } else {
-            avatarEl.innerHTML = '<div class="pin-screen__avatar-letter">' + name[0].toUpperCase() + '</div>';
-          }
-        }
-        if (nameEl) nameEl.textContent = 'Привет, ' + name + '!';
-
-        picker.style.display = 'none';
-        pinSection.style.display = '';
-        pin = '';
-        updateDots();
+    if (picker) {
+      document.querySelectorAll('.picker__card').forEach(function(card) {
+        card.addEventListener('click', function() {
+          authChild(card.dataset.childId);
+        });
       });
-    });
+    }
 
-    var backBtn = document.getElementById('pin-back-btn');
-    if (backBtn) {
-      backBtn.addEventListener('click', function() {
-        pinSection.style.display = 'none';
-        picker.style.display = '';
-        childIdInput.value = '';
-        pin = '';
-        updateDots();
-        if (errorEl) errorEl.textContent = '';
-      });
+    // Single child: auto-auth on page load
+    var singleChildInput = document.getElementById('child-id-input');
+    if (!picker && singleChildInput && singleChildInput.value) {
+      authChild(singleChildInput.value);
     }
   })();
   </script>
