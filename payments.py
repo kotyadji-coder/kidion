@@ -157,9 +157,10 @@ def handle_webhook(conn: sqlite3.Connection, event_body: dict) -> None:
     Process a Prodamus webhook event.
     Handles crystal packages and chat subscriptions.
     """
-    # Log webhook data for debugging
-    logging.info("Webhook data keys: %s", list(event_body.keys()))
-    logging.info("Webhook order_num=%s, payment_status=%s", event_body.get("order_num"), event_body.get("payment_status"))
+    # Log webhook data for debugging (WARNING level to ensure visibility)
+    logging.warning("WEBHOOK RECEIVED: keys=%s", list(event_body.keys()))
+    logging.warning("WEBHOOK order_num=%s order_id=%s payment_status=%s",
+                    event_body.get("order_num"), event_body.get("order_id"), event_body.get("payment_status"))
 
     # Verify signature
     signature = event_body.get("sign", "")
@@ -171,10 +172,14 @@ def handle_webhook(conn: sqlite3.Connection, event_body: dict) -> None:
     order_id = event_body.get("order_num", "") or event_body.get("order_id", "")
     payment_status = event_body.get("payment_status", "")
 
+    logging.warning("WEBHOOK resolved order_id=%s, payment_status=%s", order_id, payment_status)
+
     if not order_id:
+        logging.warning("WEBHOOK no order_id, ignoring")
         return
 
     if payment_status != "success":
+        logging.warning("WEBHOOK status is not success, ignoring")
         return
 
     # Subscription payments (order_id starts with "kidion_sub_")
@@ -185,10 +190,14 @@ def handle_webhook(conn: sqlite3.Connection, event_body: dict) -> None:
     # Crystal package payments
     payment = get_payment_by_yk_id(conn, order_id)
     if payment is None:
+        logging.warning("WEBHOOK payment not found in DB for order_id=%s", order_id)
         return
+
+    logging.warning("WEBHOOK found payment id=%s, status=%s, crystals=%s", payment["id"], payment["status"], payment["crystals"])
 
     # Idempotency: only process pending payments
     if payment["status"] != "pending":
+        logging.warning("WEBHOOK payment already processed (status=%s)", payment["status"])
         return
 
     user_id = payment["user_id"]
