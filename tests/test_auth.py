@@ -210,7 +210,7 @@ async def test_login_invalid_password_returns_401(client: AsyncClient, registere
         json={"email": registered_user["email"], "password": "wrongpassword"},
     )
     assert resp.status_code == 401
-    assert resp.json()["error"] == "invalid_credentials"
+    assert resp.json()["error"] == "wrong_password"
 
 
 async def test_login_unknown_email_returns_401(client: AsyncClient):
@@ -219,7 +219,7 @@ async def test_login_unknown_email_returns_401(client: AsyncClient):
         json={"email": "nobody@example.com", "password": "password123"},
     )
     assert resp.status_code == 401
-    assert resp.json()["error"] == "invalid_credentials"
+    assert resp.json()["error"] == "user_not_found"
 
 
 # ---------------------------------------------------------------------------

@@ -21,6 +21,12 @@
   .auth-input { width: 100%; height: 44px; padding: 0 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 16px; font-family: inherit; background: var(--surface-2); color: var(--text); outline: none; }
   .auth-input:focus { border-color: var(--spark-violet-border); box-shadow: 0 0 0 3px var(--spark-violet-soft); }
   .auth-btn { width: 100%; margin-top: 8px; }
+  .auth-pw-wrap { position: relative; }
+  .auth-pw-wrap .auth-input { padding-right: 44px; }
+  .auth-pw-toggle { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-3); padding: 6px; line-height: 1; }
+  .auth-pw-toggle:hover { color: var(--text-2); }
+  .auth-forgot { text-align: right; margin-top: 4px; }
+  .auth-forgot a { font-size: 12.5px; color: var(--spark-violet); text-decoration: none; font-weight: 500; }
   .auth-error { color: oklch(0.55 0.2 25); font-size: 13px; text-align: center; margin-top: 10px; display: none; }
   .auth-switch { text-align: center; margin-top: 18px; font-size: 13px; color: var(--text-3); }
   .auth-switch a { color: var(--spark-violet); text-decoration: none; font-weight: 500; }
@@ -60,7 +66,13 @@
           </div>
           <div class="auth-field">
             <label class="auth-label">Пароль</label>
-            <input class="auth-input" type="password" name="password" required>
+            <div class="auth-pw-wrap">
+              <input class="auth-input" type="password" name="password" id="pw-input" required>
+              <button type="button" class="auth-pw-toggle" id="pw-toggle" aria-label="Показать пароль">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1.5 9s3-5.5 7.5-5.5S16.5 9 16.5 9s-3 5.5-7.5 5.5S1.5 9 1.5 9z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="9" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>
+              </button>
+            </div>
+            <div class="auth-forgot"><a href="/forgot-password">Забыли пароль?</a></div>
           </div>
           <button class="sp-btn sp-btn-primary sp-btn-lg auth-btn" type="submit">Войти</button>
         </form>
@@ -82,6 +94,16 @@
 (function() {
   let children = [];
 
+  // Show/hide password toggle
+  const pwInput = document.getElementById('pw-input');
+  document.getElementById('pw-toggle').addEventListener('click', function() {
+    const show = pwInput.type === 'password';
+    pwInput.type = show ? 'text' : 'password';
+    this.innerHTML = show
+      ? '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1.5 9s3-5.5 7.5-5.5S16.5 9 16.5 9s-3 5.5-7.5 5.5S1.5 9 1.5 9z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="9" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/><line x1="2" y1="16" x2="16" y2="2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'
+      : '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1.5 9s3-5.5 7.5-5.5S16.5 9 16.5 9s-3 5.5-7.5 5.5S1.5 9 1.5 9z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="9" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>';
+  });
+
   document.getElementById('login-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     const errEl = document.getElementById('login-error');
@@ -96,7 +118,7 @@
     });
     if (!res.ok) {
       const d = await res.json();
-      errEl.textContent = d.detail || d.error || 'Неверный email или пароль';
+      errEl.textContent = d.message || 'Неверный email или пароль';
       errEl.style.display = 'block';
       return;
     }

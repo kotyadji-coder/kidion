@@ -478,9 +478,12 @@ async def login(request: Request):
 
     conn = get_db_connection()
     user = get_user_by_email(conn, email)
-    if not user or not verify_password(password, user["password_hash"]):
+    if not user:
         log_event(conn, "login_failed", ip=ip, details=f"email:{email[:50]}")
-        return JSONResponse({"error": "invalid_credentials"}, status_code=401)
+        return JSONResponse({"error": "user_not_found", "message": "Пользователь с таким email не найден"}, status_code=401)
+    if not verify_password(password, user["password_hash"]):
+        log_event(conn, "login_failed", ip=ip, details=f"email:{email[:50]}")
+        return JSONResponse({"error": "wrong_password", "message": "Неверный пароль"}, status_code=401)
 
     log_event(conn, "login_success", user_id=user["id"], ip=ip)
     response = JSONResponse({"ok": True})

@@ -300,6 +300,8 @@ uvicorn main:app --host 127.0.0.1 --port 8003 --reload
 - [ ] Update registry.json with kidion entry
 - [x] Favicon (from Киди character image)
 - [ ] 404 page, rate limiting on auth
+- [x] Password reset: "Забыли пароль?" link on all login pages (flow was already implemented)
+- [x] Login error messages: "Неверный пароль" / "Пользователь не найден" + show password toggle
 - [ ] Cloud backup for DB (Cloudflare R2) — when real users appear
 
 ## Eval System (Quality Monitoring)
