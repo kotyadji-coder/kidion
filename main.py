@@ -2777,7 +2777,7 @@ async def page_index(request: Request):
     if _is_chat_subdomain(request):
         if templates is None:
             return HTMLResponse("<h1>Киди</h1>")
-        return templates.TemplateResponse(request, "spark/landing.html", {})
+        return templates.TemplateResponse(request, "chat/landing.html", {})
 
     conn = get_db_connection()
     user = get_current_user(request, conn)
@@ -2875,7 +2875,7 @@ async def page_chat(request: Request):
         has_sub = get_active_chat_subscription(conn, parent_id) is not None
         characters = get_chat_characters(conn)
         return templates.TemplateResponse(
-            request, "spark/chat.html",
+            request, "chat/chat.html",
             {"child": child, "has_subscription": has_sub, "characters": characters},
         )
 
@@ -3454,7 +3454,7 @@ async def spark_register_page(request: Request):
     """Spark Chat registration (simplified, for chat-only users)."""
     if templates is None:
         return HTMLResponse("<h1>Register</h1>")
-    return templates.TemplateResponse(request, "spark/register.html", {})
+    return templates.TemplateResponse(request, "chat/register.html", {})
 
 
 @app.get("/chat/login", response_class=HTMLResponse)
@@ -3462,7 +3462,7 @@ async def spark_login_page(request: Request):
     """Spark Chat login → pick child → PIN → chat."""
     if templates is None:
         return HTMLResponse("<h1>Login</h1>")
-    return templates.TemplateResponse(request, "spark/login.html", {})
+    return templates.TemplateResponse(request, "chat/login.html", {})
 
 
 @app.get("/spark", response_class=HTMLResponse)
@@ -3496,7 +3496,7 @@ async def spark_subscribe_page(request: Request):
 
     return templates.TemplateResponse(
         request,
-        "spark/subscribe.html",
+        "chat/subscribe.html",
         {
             "crystals": user["crystals"],
             "subscription": dict(subscription) if subscription else None,
@@ -3539,7 +3539,7 @@ async def spark_report_page(child_id: int, request: Request):
 
     return templates.TemplateResponse(
         request,
-        "spark/report.html",
+        "chat/report.html",
         {
             "child": child,
             "chats": chats,
