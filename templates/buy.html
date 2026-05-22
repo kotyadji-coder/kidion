@@ -218,6 +218,9 @@
     </div>
 
     <div id="buy-error" class="alert alert--error" style="display:none"></div>
+    <div id="buy-success" style="display:none; background:#d4edda; border:1.5px solid #28a745; border-radius:var(--radius-lg); padding:1.25rem 1.5rem; margin-bottom:1.5rem; text-align:center;">
+        <div id="buy-success-text" style="font-size:1rem; font-weight:600; color:#155724;"></div>
+    </div>
 
     <!-- Chat Subscription Section -->
     <div class="chat-section">
@@ -336,6 +339,7 @@ async function buyPackage(packageId) {
         });
         var data = await resp.json();
         if (resp.ok && data.confirmation_url) {
+            localStorage.setItem('kidion_payment_id', data.payment_id);
             window.location.href = data.confirmation_url;
         } else {
             errorEl.textContent = data.error || 'Произошла ошибка. Попробуйте позже.';
@@ -346,5 +350,47 @@ async function buyPackage(packageId) {
         errorEl.style.display = 'block';
     }
 }
+
+// Poll payment status after return from Prodamus
+(function() {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('_payform_status') !== 'success' && params.get('status') !== 'success') return;
+
+    var paymentId = localStorage.getItem('kidion_payment_id');
+    if (!paymentId) return;
+    localStorage.removeItem('kidion_payment_id');
+
+    var successEl = document.getElementById('buy-success');
+    var textEl = document.getElementById('buy-success-text');
+    successEl.style.display = '';
+    textEl.textContent = 'Оплата прошла! Ожидаем начисление кристаллов...';
+
+    // Clean URL
+    history.replaceState(null, '', '/buy');
+
+    var attempts = 0;
+    var maxAttempts = 30;
+    var timer = setInterval(async function() {
+        attempts++;
+        try {
+            var resp = await fetch('/api/payment/status/' + paymentId, {credentials: 'same-origin'});
+            var data = await resp.json();
+            if (data.status === 'succeeded') {
+                clearInterval(timer);
+                textEl.textContent = 'Кристаллы начислены!';
+                var crystalsEl = document.getElementById('crystal-count');
+                if (crystalsEl) {
+                    var meResp = await fetch('/auth/me', {credentials: 'same-origin'});
+                    var me = await meResp.json();
+                    crystalsEl.textContent = me.crystals;
+                }
+            }
+        } catch(e) {}
+        if (attempts >= maxAttempts) {
+            clearInterval(timer);
+            textEl.textContent = 'Оплата прошла. Кристаллы будут начислены в течение минуты.';
+        }
+    }, 2000);
+})();
 </script>
 {% endblock %}
