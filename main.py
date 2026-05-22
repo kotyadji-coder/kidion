@@ -758,13 +758,23 @@ async def payment_create(request: Request):
 async def payment_webhook(request: Request):
     try:
         content_type = request.headers.get("content-type", "")
+        raw_body = await request.body()
+        logging.info("Webhook received: content-type=%s, body=%s", content_type, raw_body[:500])
         if "json" in content_type:
             body = await request.json()
-        else:
+        elif "urlencoded" in content_type:
             form = await request.form()
             body = dict(form)
+        else:
+            # Try JSON first, fall back to form
+            import json as _json
+            try:
+                body = _json.loads(raw_body)
+            except Exception:
+                form = await request.form()
+                body = dict(form)
     except Exception:
-        logging.warning("Webhook body parse error")
+        logging.exception("Webhook body parse error")
         return JSONResponse({"ok": True})
 
     conn = get_db_connection()
