@@ -113,7 +113,7 @@ from db import (
     create_chat_report,
     get_kid_chats_by_child,
 )
-from payments import PACKAGES, create_prodamus_payment, handle_webhook
+from payments import PACKAGES, create_prodamus_payment, create_prodamus_subscription_payment, handle_webhook
 from referral import generate_ref_code, process_registration_referral
 import services.generation
 from services.universe import generate_universe, generate_character_image, generate_shop_items
@@ -3445,6 +3445,7 @@ async def spark_subscribe_page(request: Request):
         return RedirectResponse(url="/login", status_code=302)
 
     subscription = get_active_chat_subscription(conn, user["id"])
+    payment_status = request.query_params.get("status", "")
 
     return templates.TemplateResponse(
         request,
@@ -3452,6 +3453,7 @@ async def spark_subscribe_page(request: Request):
         {
             "crystals": user["crystals"],
             "subscription": dict(subscription) if subscription else None,
+            "payment_status": payment_status,
         },
     )
 
@@ -3760,22 +3762,22 @@ async def chat_subscribe(request: Request):
     if existing:
         return JSONResponse({"error": "already_subscribed", "expires_at": existing["expires_at"]}, status_code=400)
 
-    # For now: direct activation (no YooKassa yet — same as crystal flow for testing)
-    # TODO: integrate YooKassa payment for real money
-    from datetime import datetime, timedelta, timezone
-    now = datetime.now(timezone.utc)
-    expires = now + timedelta(days=30)
-    sub_id = create_chat_subscription(
-        conn, user["id"], now.isoformat(), expires.isoformat(),
-        images_remaining=CHAT_SUB_IMAGES,
-        amount_rub=CHAT_SUB_PRICE_RUB,
-    )
+    base_url = os.environ.get("APP_BASE_URL", "http://localhost:8000")
+    return_url = f"{base_url}/chat/subscribe?status=success"
+
+    try:
+        result = create_prodamus_subscription_payment(
+            user["id"], return_url,
+            price_rub=CHAT_SUB_PRICE_RUB,
+            customer_email=user.get("email", ""),
+        )
+    except Exception:
+        logging.exception("Prodamus subscription payment creation failed")
+        return JSONResponse({"error": "payment_provider_error"}, status_code=502)
 
     return JSONResponse({
         "ok": True,
-        "subscription_id": sub_id,
-        "expires_at": expires.isoformat(),
-        "images_remaining": CHAT_SUB_IMAGES,
+        "confirmation_url": result["confirmation_url"],
     })
 
 

@@ -111,7 +111,9 @@
         </li>
       </ul>
 
-      {% if not subscription %}
+      {% if payment_status == "success" and not subscription %}
+      <p class="sub-success" style="display:block">Оплата получена! Подписка активируется в течение минуты. Обновите страницу.</p>
+      {% elif not subscription %}
       <button class="sp-btn sp-btn-primary sp-btn-lg sub-buy-btn" id="btn-subscribe">
           Оформить за 500 ₽/мес
       </button>
@@ -153,15 +155,12 @@ document.addEventListener('DOMContentLoaded', function() {
   if (!btn) return;
   btn.addEventListener('click', async function() {
     btn.disabled = true;
-    btn.textContent = 'Оформляем...';
+    btn.textContent = 'Переходим к оплате...';
     try {
       const res = await fetch('/api/chat/subscribe', { method: 'POST', credentials: 'same-origin' });
       const data = await res.json();
-      if (res.ok) {
-        document.getElementById('sub-success').style.display = 'block';
-        document.getElementById('sub-success').textContent = 'Подписка оформлена! Перенаправляем в чат...';
-        btn.style.display = 'none';
-        setTimeout(() => window.location.href = '/chat', 1500);
+      if (res.ok && data.confirmation_url) {
+        window.location.href = data.confirmation_url;
       } else {
         document.getElementById('sub-error').style.display = 'block';
         document.getElementById('sub-error').textContent = data.message || data.error || 'Ошибка';
@@ -170,7 +169,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     } catch(e) {
       btn.disabled = false;
-      btn.textContent = 'Оформить за 300 💎';
+      btn.textContent = 'Оформить за 500 ₽/мес';
     }
   });
 });

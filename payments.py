@@ -108,10 +108,44 @@ def verify_prodamus_signature(data: dict, signature: str) -> bool:
     return hmac.compare_digest(expected, signature)
 
 
+def create_prodamus_subscription_payment(
+    user_id: int,
+    return_url: str,
+    price_rub: int = 500,
+    customer_email: str = "",
+) -> dict:
+    """
+    Build a Prodamus payment URL for chat subscription.
+    Returns dict with order_id, confirmation_url, amount_rub.
+    """
+    order_id = f"kidion_sub_{user_id}_{os.urandom(8).hex()}"
+    domain = os.environ.get("PRODAMUS_DOMAIN", PRODAMUS_DOMAIN)
+
+    params = {
+        "do": "pay",
+        "products[0][name]": "Kidion: подписка Киди Pro (1 месяц)",
+        "products[0][price]": str(price_rub),
+        "products[0][quantity]": "1",
+        "order_id": order_id,
+        "urlSuccess": return_url,
+        "urlReturn": return_url,
+    }
+    if customer_email:
+        params["customer_email"] = customer_email
+
+    confirmation_url = f"https://{domain}/?{urlencode(params)}"
+
+    return {
+        "order_id": order_id,
+        "confirmation_url": confirmation_url,
+        "amount_rub": price_rub,
+    }
+
+
 def handle_webhook(conn: sqlite3.Connection, event_body: dict) -> None:
     """
     Process a Prodamus webhook event.
-    Credits crystals on successful payment.
+    Handles crystal packages and chat subscriptions.
     """
     # Verify signature
     signature = event_body.get("sign", "")
@@ -128,6 +162,12 @@ def handle_webhook(conn: sqlite3.Connection, event_body: dict) -> None:
     if payment_status != "success":
         return
 
+    # Subscription payments (order_id starts with "kidion_sub_")
+    if order_id.startswith("kidion_sub_"):
+        _handle_subscription_webhook(conn, order_id)
+        return
+
+    # Crystal package payments
     payment = get_payment_by_yk_id(conn, order_id)
     if payment is None:
         return
@@ -149,3 +189,38 @@ def handle_webhook(conn: sqlite3.Connection, event_body: dict) -> None:
 
     # Process referral bonus (only on first payment)
     process_payment_referral(conn, user_id, amount_rub)
+
+
+def _handle_subscription_webhook(conn: sqlite3.Connection, order_id: str) -> None:
+    """Activate chat subscription after successful Prodamus payment."""
+    from db import create_chat_subscription, get_active_chat_subscription
+    from datetime import datetime, timedelta, timezone
+
+    # Parse user_id from order_id: "kidion_sub_{user_id}_{random}"
+    parts = order_id.split("_")
+    if len(parts) < 3:
+        logging.warning("Invalid subscription order_id: %s", order_id)
+        return
+
+    try:
+        user_id = int(parts[2])
+    except (ValueError, IndexError):
+        logging.warning("Cannot parse user_id from order_id: %s", order_id)
+        return
+
+    # Idempotency: check if already has active subscription
+    existing = get_active_chat_subscription(conn, user_id)
+    if existing:
+        logging.info("User %d already has active subscription, skipping", user_id)
+        return
+
+    now = datetime.now(timezone.utc)
+    expires = now + timedelta(days=30)
+    create_chat_subscription(
+        conn, user_id,
+        started_at=now.isoformat(),
+        expires_at=expires.isoformat(),
+        images_remaining=30,
+        amount_rub=500,
+        payment_id=order_id,
+    )
