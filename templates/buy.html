@@ -42,6 +42,9 @@
   text-align: center;
   position: relative;
   transition: transform 0.15s, box-shadow 0.15s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .package-card:hover {
@@ -74,12 +77,6 @@
   margin-bottom: 0.25rem;
 }
 
-.package-card__lessons {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-bottom: 0.75rem;
-}
-
 .package-card__price {
   font-size: 1.5rem;
   font-weight: 800;
@@ -87,10 +84,19 @@
   margin-bottom: 0.25rem;
 }
 
-.package-card__per {
-  font-size: 0.8rem;
-  color: var(--text-muted);
+.package-card__discount {
+  display: inline-block;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
   margin-bottom: 1rem;
+}
+
+.package-card__spacer {
+  flex: 1;
 }
 
 /* Chat section */
@@ -264,34 +270,30 @@
     <div class="packages-grid">
         <div class="package-card" data-package="60_60">
             <div class="package-card__crystals">💎 60</div>
-            <div class="package-card__lessons">Хватит на ~3 урока</div>
             <div class="package-card__price">60 ₽</div>
-            <div class="package-card__per">1 ₽ / кристалл</div>
+            <div class="package-card__spacer"></div>
             <button class="btn btn--primary btn--full" onclick="buyPackage('60_60')">Купить</button>
         </div>
 
         <div class="package-card package-card--popular" data-package="360_320">
             <div class="package-card__badge">Популярный</div>
             <div class="package-card__crystals">💎 360</div>
-            <div class="package-card__lessons">Хватит на ~18 уроков</div>
             <div class="package-card__price">320 ₽</div>
-            <div class="package-card__per">0.89 ₽ / кристалл</div>
+            <div class="package-card__discount">-11%</div>
             <button class="btn btn--primary btn--full" onclick="buyPackage('360_320')">Купить</button>
         </div>
 
         <div class="package-card" data-package="600_490">
             <div class="package-card__crystals">💎 600</div>
-            <div class="package-card__lessons">Хватит на ~30 уроков</div>
             <div class="package-card__price">490 ₽</div>
-            <div class="package-card__per">0.82 ₽ / кристалл</div>
+            <div class="package-card__discount">-18%</div>
             <button class="btn btn--primary btn--full" onclick="buyPackage('600_490')">Купить</button>
         </div>
 
         <div class="package-card" data-package="1000_800">
             <div class="package-card__crystals">💎 1000</div>
-            <div class="package-card__lessons">Хватит на ~50 уроков</div>
             <div class="package-card__price">800 ₽</div>
-            <div class="package-card__per">0.80 ₽ / кристалл</div>
+            <div class="package-card__discount">-20%</div>
             <button class="btn btn--primary btn--full" onclick="buyPackage('1000_800')">Купить</button>
         </div>
     </div>
