@@ -759,7 +759,6 @@ async def payment_webhook(request: Request):
     try:
         content_type = request.headers.get("content-type", "")
         raw_body = await request.body()
-        logging.info("Webhook received: content-type=%s, body=%s", content_type, raw_body[:500])
         if "json" in content_type:
             body = await request.json()
         elif "urlencoded" in content_type:
@@ -777,9 +776,11 @@ async def payment_webhook(request: Request):
         logging.exception("Webhook body parse error")
         return JSONResponse({"ok": True})
 
+    sign_header = request.headers.get("Sign", "")
+
     conn = get_db_connection()
     try:
-        handle_webhook(conn, body)
+        handle_webhook(conn, body, sign_header=sign_header)
     except Exception:
         logging.exception("Webhook processing error")
         return JSONResponse({"ok": True})

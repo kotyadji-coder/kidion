@@ -61,16 +61,14 @@ async def _simulate_payment_webhook(
     con.close()
     order_id = row[0]
 
-    # Build signed Prodamus webhook
+    # Build signed Prodamus webhook (signature in Sign header, order_num field)
     import hashlib, hmac, json as _json
-    data = {"order_id": order_id, "payment_status": "success", "sum": "50.00"}
+    data = {"order_num": order_id, "payment_status": "success", "sum": "50.00"}
     secret = os.environ.get("PRODAMUS_SECRET_KEY", "test-prodamus-secret-key")
-    sorted_data = dict(sorted(data.items()))
-    msg = _json.dumps(sorted_data, ensure_ascii=False, separators=(",", ":"))
+    msg = _json.dumps(data, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
     sign = hmac.new(secret.encode(), msg.encode(), hashlib.sha256).hexdigest()
-    data["sign"] = sign
 
-    await client.post("/api/payment/webhook", json=data)
+    await client.post("/api/payment/webhook", json=data, headers={"Sign": sign})
 
 
 # ---------------------------------------------------------------------------

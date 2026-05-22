@@ -42,24 +42,26 @@ def _build_prodamus_webhook(
     order_id: str,
     payment_status: str = "success",
     sum_value: str = "50.00",
-) -> dict:
-    """Construct a Prodamus webhook payload with valid signature."""
+) -> tuple[dict, dict]:
+    """Construct a Prodamus webhook payload + headers with valid signature.
+
+    Returns (body_dict, headers_dict).
+    Uses order_num (Prodamus field name for our order_id).
+    """
     data = {
-        "order_id": order_id,
+        "order_num": order_id,
         "payment_status": payment_status,
         "sum": sum_value,
     }
-    # Sign the payload
+    # Compute Sign header (matching Prodamus algorithm)
     secret = os.environ.get("PRODAMUS_SECRET_KEY", "test-prodamus-secret-key")
-    sorted_data = dict(sorted(data.items()))
-    message = json.dumps(sorted_data, ensure_ascii=False, separators=(",", ":"))
+    message = json.dumps(data, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
     sign = hmac.new(
         secret.encode("utf-8"),
         message.encode("utf-8"),
         hashlib.sha256,
     ).hexdigest()
-    data["sign"] = sign
-    return data
+    return data, {"Sign": sign}
 
 
 def _get_order_id_from_db(temp_db_path: str, payment_id: int) -> str:
@@ -136,8 +138,8 @@ async def test_webhook_credits_crystals_on_payment_succeeded(
 
     crystals_before = (await client.get("/auth/me")).json()["crystals"]
 
-    webhook_payload = _build_prodamus_webhook(order_id, "success", "60.00")
-    resp = await client.post("/api/payment/webhook", json=webhook_payload)
+    webhook_payload, sign_headers = _build_prodamus_webhook(order_id, "success", "60.00")
+    resp = await client.post("/api/payment/webhook", json=webhook_payload, headers=sign_headers)
     assert resp.status_code == 200
 
     crystals_after = (await client.get("/auth/me")).json()["crystals"]
@@ -148,7 +150,7 @@ async def test_webhook_always_returns_200(client: AsyncClient):
     """Prodamus expects HTTP 200 even for unrecognised events."""
     resp = await client.post(
         "/api/payment/webhook",
-        json={"order_id": "unknown", "payment_status": "canceled", "sign": "bad"},
+        json={"order_num": "unknown", "payment_status": "canceled"},
     )
     assert resp.status_code == 200
 
@@ -169,10 +171,10 @@ async def test_webhook_idempotent_does_not_credit_twice(
     internal_payment_id = create_resp.json()["payment_id"]
     order_id = _get_order_id_from_db(temp_db_path, internal_payment_id)
 
-    webhook_payload = _build_prodamus_webhook(order_id, "success", "60.00")
+    webhook_payload, sign_headers = _build_prodamus_webhook(order_id, "success", "60.00")
 
-    await client.post("/api/payment/webhook", json=webhook_payload)
-    await client.post("/api/payment/webhook", json=webhook_payload)
+    await client.post("/api/payment/webhook", json=webhook_payload, headers=sign_headers)
+    await client.post("/api/payment/webhook", json=webhook_payload, headers=sign_headers)
 
     crystals = (await client.get("/auth/me")).json()["crystals"]
     # 60 initial + 60 from package, no double-credit
@@ -202,8 +204,8 @@ async def test_webhook_records_transaction_in_db(
     con.close()
     order_id, user_id = row
 
-    webhook_payload = _build_prodamus_webhook(order_id, "success", "320.00")
-    await client.post("/api/payment/webhook", json=webhook_payload)
+    webhook_payload, sign_headers = _build_prodamus_webhook(order_id, "success", "320.00")
+    await client.post("/api/payment/webhook", json=webhook_payload, headers=sign_headers)
 
     con = sqlite3.connect(temp_db_path)
     txn = con.execute(
@@ -246,9 +248,11 @@ async def test_payment_status_returns_succeeded_after_webhook(
     payment_id = create_resp.json()["payment_id"]
     order_id = _get_order_id_from_db(temp_db_path, payment_id)
 
+    webhook_payload, sign_headers = _build_prodamus_webhook(order_id, "success", "60.00")
     await client.post(
         "/api/payment/webhook",
-        json=_build_prodamus_webhook(order_id, "success", "60.00"),
+        json=webhook_payload,
+        headers=sign_headers,
     )
 
     status_resp = await client.get(f"/api/payment/status/{payment_id}")

@@ -7,12 +7,15 @@ Flow:
 3. We verify HMAC-SHA256 signature and credit crystals.
 """
 
+import collections.abc
 import hashlib
 import hmac
 import json
 import logging
 import os
+import re
 import sqlite3
+from copy import deepcopy
 from urllib.parse import urlencode
 
 from db import (
@@ -80,13 +83,58 @@ def create_prodamus_payment(
     }
 
 
+def _php2dict(flat: dict) -> dict:
+    """Convert flat PHP-style keys (e.g. products[0][name]) into nested dict."""
+
+    def _build(idx: list, value):
+        value = deepcopy(value)
+        if not idx:
+            return value
+        i = idx.pop(0)
+        if re.fullmatch(r"[0-9]+", i):
+            return [{} for _ in range(int(i))] + [_build(idx, value)]
+        return {i: _build(idx, value)}
+
+    def _merge(dct: dict, merge_dct: dict) -> dict:
+        dct = deepcopy(dct)
+        for k, v in merge_dct.items():
+            if not dct.get(k):
+                dct[k] = deepcopy(v)
+            elif k in dct and type(v) != type(dct[k]):
+                raise TypeError(f"Type mismatch for key {k}")
+            elif isinstance(dct[k], dict) and isinstance(v, collections.abc.Mapping):
+                dct[k] = _merge(dct[k], v)
+            elif isinstance(v, list):
+                for li, lv in enumerate(v):
+                    if len(dct[k]) <= li:
+                        dct[k].append(lv)
+                    else:
+                        dct[k][li] = _merge(dct[k][li], lv)
+            else:
+                dct[k] = v
+        return dct
+
+    result: dict = {}
+    for k, v in flat.items():
+        m = re.fullmatch(r"([^\[]+)(\[.+\])", k)
+        if m:
+            idx = [m.group(1)] + list(re.findall(r"\[([^\]]+)\]", m.group(2)))
+            sub = _build(idx, v)
+        else:
+            sub = {k: v}
+        result = _merge(result, sub)
+    return result
+
+
 def verify_prodamus_signature(data: dict, signature: str) -> bool:
     """
     Verify HMAC-SHA256 signature from Prodamus webhook.
 
-    Prodamus sends signature in the 'sign' field of the body OR in
-    the request data. The signature covers all fields except 'sign' itself,
-    sorted by key, as a JSON string.
+    Prodamus sends the signature in the HTTP header 'Sign'.
+    Algorithm (matching official prodamuspy library):
+    1. Parse flat PHP-style keys into nested dict
+    2. JSON-encode with sort_keys=True, ensure_ascii=False, separators=(',',':')
+    3. HMAC-SHA256 with the secret key
     """
     secret = _get_secret()
     if not secret:
@@ -94,27 +142,32 @@ def verify_prodamus_signature(data: dict, signature: str) -> bool:
         return True
 
     if not signature:
-        logging.warning("No signature provided, skipping check")
+        logging.warning("No webhook signature provided (Sign header missing)")
+        return False
+
+    # Convert flat form keys (products[0][name]) to nested dict
+    nested = _php2dict(data)
+
+    message = json.dumps(nested, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+
+    def _hmac_hex(key: str) -> str:
+        return hmac.new(
+            key.encode("utf-8"),
+            message.encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
+
+    sig_lower = signature.lower()
+
+    if hmac.compare_digest(_hmac_hex(secret), sig_lower):
         return True
 
-    # Remove 'sign' from data before verification
-    check_data = {k: v for k, v in data.items() if k != "sign"}
-
-    # Sort keys and build canonical JSON string
-    sorted_data = dict(sorted(check_data.items()))
-    message = json.dumps(sorted_data, ensure_ascii=False, separators=(",", ":"))
-
-    expected = hmac.new(
-        secret.encode("utf-8"),
-        message.encode("utf-8"),
-        hashlib.sha256,
-    ).hexdigest()
-
-    if hmac.compare_digest(expected, signature):
+    # Prodamus demo mode uses secret + "demo" as the key
+    if hmac.compare_digest(_hmac_hex(secret + "demo"), sig_lower):
+        logging.info("Prodamus demo payment accepted (demo key matched)")
         return True
 
-    # Fallback: maybe Prodamus uses a different serialization
-    logging.info("Signature mismatch: expected=%s, got=%s", expected, signature)
+    logging.warning("Prodamus signature mismatch")
     return False
 
 
@@ -152,19 +205,14 @@ def create_prodamus_subscription_payment(
     }
 
 
-def handle_webhook(conn: sqlite3.Connection, event_body: dict) -> None:
+def handle_webhook(conn: sqlite3.Connection, event_body: dict, sign_header: str = "") -> None:
     """
     Process a Prodamus webhook event.
     Handles crystal packages and chat subscriptions.
+    sign_header: value of the HTTP 'Sign' header from the request.
     """
-    # Log webhook data for debugging (WARNING level to ensure visibility)
-    logging.warning("WEBHOOK RECEIVED: keys=%s", list(event_body.keys()))
-    logging.warning("WEBHOOK order_num=%s order_id=%s payment_status=%s",
-                    event_body.get("order_num"), event_body.get("order_id"), event_body.get("payment_status"))
-
-    # Verify signature
-    signature = event_body.get("sign", "")
-    if not verify_prodamus_signature(event_body, signature):
+    # Verify signature (from Sign header, per Prodamus docs)
+    if not verify_prodamus_signature(event_body, sign_header):
         logging.warning("Invalid Prodamus webhook signature")
         return
 
@@ -172,14 +220,11 @@ def handle_webhook(conn: sqlite3.Connection, event_body: dict) -> None:
     order_id = event_body.get("order_num", "") or event_body.get("order_id", "")
     payment_status = event_body.get("payment_status", "")
 
-    logging.warning("WEBHOOK resolved order_id=%s, payment_status=%s", order_id, payment_status)
-
     if not order_id:
-        logging.warning("WEBHOOK no order_id, ignoring")
+        logging.warning("Prodamus webhook: no order_id found")
         return
 
     if payment_status != "success":
-        logging.warning("WEBHOOK status is not success, ignoring")
         return
 
     # Subscription payments (order_id starts with "kidion_sub_")
@@ -190,14 +235,11 @@ def handle_webhook(conn: sqlite3.Connection, event_body: dict) -> None:
     # Crystal package payments
     payment = get_payment_by_yk_id(conn, order_id)
     if payment is None:
-        logging.warning("WEBHOOK payment not found in DB for order_id=%s", order_id)
+        logging.warning("Prodamus webhook: payment not found for order_id=%s", order_id)
         return
-
-    logging.warning("WEBHOOK found payment id=%s, status=%s, crystals=%s", payment["id"], payment["status"], payment["crystals"])
 
     # Idempotency: only process pending payments
     if payment["status"] != "pending":
-        logging.warning("WEBHOOK payment already processed (status=%s)", payment["status"])
         return
 
     user_id = payment["user_id"]
