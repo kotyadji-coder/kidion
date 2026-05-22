@@ -22,7 +22,7 @@ Parent creates child (name, grade, interests) → AI generates universe + charac
 - **Frontend:** Jinja2 templates + vanilla JS (no React/Vue)
 - **Auth:** bcrypt (passwords) + itsdangerous (signed cookies `kid_session` for parents, `kid_session_child` for kids)
 - **AI Generation:** Google AI Studio (primary, API key) + Vertex AI (fallback). See AI Models section below.
-- **Payments:** YooKassa Python SDK (not yet connected with real keys)
+- **Payments:** Prodamus (payment link + HMAC webhook, no SDK needed)
 - **Tests:** pytest + pytest-asyncio + httpx (306 tests)
 
 ## File Structure
@@ -32,7 +32,7 @@ kidion/
 ├── main.py                    # FastAPI app, all routes (~3000 lines)
 ├── db.py                      # SQLite: 17 tables, all CRUD functions
 ├── auth.py                    # bcrypt, session tokens (parent + child)
-├── payments.py                # YooKassa integration, crystal packages
+├── payments.py                # Prodamus integration, crystal packages
 ├── referral.py                # Referral codes, bonuses
 ├── callbacks.py               # HMAC validation for legacy bot callbacks
 ├── services/
@@ -108,7 +108,7 @@ kidion/
 | `curriculum_enrollments` | Program routes (legacy) | child_id, curriculum_id, current_topic_index |
 | `weekly_plans` | Weekly topic plans | child_id, curriculum_id, topic_ids_json |
 | `transactions` | Crystal transaction log | user_id, delta, reason |
-| `payments` | YooKassa payments | user_id, yookassa_payment_id, amount_rub, crystals, status |
+| `payments` | Prodamus payments | user_id, yookassa_payment_id (=order_id), amount_rub, crystals, status |
 | `generations` | Legacy generation records | user_id, type, status, result_url |
 | `referrals` | Referral relationships | referrer_id, referred_id |
 | `kid_chats` | Kid AI chat sessions | child_id, character_key, title |
@@ -288,7 +288,7 @@ uvicorn main:app --host 127.0.0.1 --port 8003 --reload
 
 - [x] Deploy to VPS (systemd + nginx + certbot SSL)
 - [x] DNS: A-record kidion.ru -> 72.56.126.111
-- [ ] YooKassa: get real SHOP_ID and SECRET_KEY (for crystal packages + chat subscription)
+- [x] Prodamus: payment integration for crystal packages (edtale.payform.ru)
 - [x] Киди Chat: subdomain chat.kidion.ru (nginx + DNS + cookie domain=.kidion.ru)
 - [x] Киди Chat: AI image generation in chat (detect "нарисуй", call Vertex AI)
 - [x] Киди Chat: parent reports (weekly chat summaries)

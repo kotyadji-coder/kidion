@@ -113,7 +113,7 @@ from db import (
     create_chat_report,
     get_kid_chats_by_child,
 )
-from payments import PACKAGES, create_yookassa_payment, handle_webhook
+from payments import PACKAGES, create_prodamus_payment, handle_webhook
 from referral import generate_ref_code, process_registration_referral
 import services.generation
 from services.universe import generate_universe, generate_character_image, generate_shop_items
@@ -729,18 +729,21 @@ async def payment_create(request: Request):
         return JSONResponse({"error": "unknown_package"}, status_code=400)
 
     base_url = os.environ.get("APP_BASE_URL", "http://localhost:8000")
-    return_url = f"{base_url}/payment/success"
+    return_url = f"{base_url}/buy?status=success"
 
     try:
-        result = create_yookassa_payment(user["id"], package_id, return_url)
+        result = create_prodamus_payment(
+            user["id"], package_id, return_url,
+            customer_email=user.get("email", ""),
+        )
     except Exception:
-        logging.exception("YooKassa payment creation failed")
+        logging.exception("Prodamus payment creation failed")
         return JSONResponse({"error": "payment_provider_error"}, status_code=502)
 
     payment_id = create_payment(
         conn,
         user["id"],
-        result["yk_payment_id"],
+        result["order_id"],
         result["amount_rub"],
         result["crystals"],
     )
@@ -754,9 +757,14 @@ async def payment_create(request: Request):
 @app.post("/api/payment/webhook")
 async def payment_webhook(request: Request):
     try:
-        body = await request.json()
+        content_type = request.headers.get("content-type", "")
+        if "json" in content_type:
+            body = await request.json()
+        else:
+            form = await request.form()
+            body = dict(form)
     except Exception:
-        logging.warning("Webhook body is not valid JSON")
+        logging.warning("Webhook body parse error")
         return JSONResponse({"ok": True})
 
     conn = get_db_connection()

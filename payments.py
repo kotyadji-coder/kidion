@@ -1,13 +1,19 @@
 """
-payments.py — YooKassa payment integration.
+payments.py — Prodamus payment integration.
+
+Flow:
+1. Server builds a payment URL → redirects user to edtale.payform.ru
+2. User pays → Prodamus POSTs webhook to /api/payment/webhook
+3. We verify HMAC-SHA256 signature and credit crystals.
 """
 
+import hashlib
+import hmac
+import json
+import logging
 import os
 import sqlite3
-import uuid
-
-import yookassa
-from yookassa import Payment
+from urllib.parse import urlencode
 
 from db import (
     create_payment,
@@ -26,74 +32,103 @@ PACKAGES = {
     "1000_800": {"crystals": 1000, "price_rub": 800},
 }
 
-
-def _configure_yookassa() -> None:
-    yookassa.Configuration.account_id = os.environ.get("YOOKASSA_SHOP_ID", "")
-    yookassa.Configuration.secret_key = os.environ.get("YOOKASSA_SECRET_KEY", "")
+PRODAMUS_DOMAIN = os.environ.get("PRODAMUS_DOMAIN", "edtale.payform.ru")
+PRODAMUS_SECRET = os.environ.get("PRODAMUS_SECRET_KEY", "")
 
 
-def create_yookassa_payment(
+def _get_secret() -> str:
+    return os.environ.get("PRODAMUS_SECRET_KEY", PRODAMUS_SECRET)
+
+
+def create_prodamus_payment(
     user_id: int,
     package_id: str,
     return_url: str,
+    customer_email: str = "",
 ) -> dict:
     """
-    Create a YooKassa payment and return dict with:
-      - yk_payment_id: str
+    Build a Prodamus payment URL and return dict with:
+      - order_id: str (unique, stored as yookassa_payment_id for DB compat)
       - confirmation_url: str
       - amount_rub: float
       - crystals: int
     """
-    _configure_yookassa()
     package = PACKAGES[package_id]
-    idempotency_key = str(uuid.uuid4())
+    order_id = f"kidion_{user_id}_{package_id}_{os.urandom(8).hex()}"
 
-    payment = Payment.create(
-        {
-            "amount": {
-                "value": f"{package['price_rub']:.2f}",
-                "currency": "RUB",
-            },
-            "confirmation": {
-                "type": "redirect",
-                "return_url": return_url,
-            },
-            "capture": True,
-            "description": f"Kidion: {package['crystals']} кристаллов",
-            "metadata": {
-                "user_id": str(user_id),
-                "package_id": package_id,
-            },
-        },
-        idempotency_key,
-    )
+    domain = os.environ.get("PRODAMUS_DOMAIN", PRODAMUS_DOMAIN)
+
+    params = {
+        "do": "pay",
+        "products[0][name]": f"Kidion: {package['crystals']} кристаллов",
+        "products[0][price]": str(package["price_rub"]),
+        "products[0][quantity]": "1",
+        "order_id": order_id,
+        "urlSuccess": return_url,
+        "urlReturn": return_url,
+    }
+    if customer_email:
+        params["customer_email"] = customer_email
+
+    confirmation_url = f"https://{domain}/?{urlencode(params)}"
 
     return {
-        "yk_payment_id": payment.id,
-        "confirmation_url": payment.confirmation.confirmation_url,
+        "order_id": order_id,
+        "confirmation_url": confirmation_url,
         "amount_rub": package["price_rub"],
         "crystals": package["crystals"],
     }
 
 
+def verify_prodamus_signature(data: dict, signature: str) -> bool:
+    """
+    Verify HMAC-SHA256 signature from Prodamus webhook.
+
+    Prodamus signs the webhook body: HMAC-SHA256 of JSON-encoded sorted data
+    using the secret key.
+    """
+    secret = _get_secret()
+    if not secret:
+        logging.warning("PRODAMUS_SECRET_KEY not set, skipping signature check")
+        return True
+
+    # Remove 'sign' from data before verification
+    check_data = {k: v for k, v in data.items() if k != "sign"}
+
+    # Sort keys and build canonical JSON string
+    sorted_data = dict(sorted(check_data.items()))
+    message = json.dumps(sorted_data, ensure_ascii=False, separators=(",", ":"))
+
+    expected = hmac.new(
+        secret.encode("utf-8"),
+        message.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+    return hmac.compare_digest(expected, signature)
+
+
 def handle_webhook(conn: sqlite3.Connection, event_body: dict) -> None:
     """
-    Process a YooKassa webhook event.
-    Handles 'payment.succeeded': credits crystals and triggers referral processing.
+    Process a Prodamus webhook event.
+    Credits crystals on successful payment.
     """
-    event = event_body.get("event", "")
-    if not event.startswith("payment."):
+    # Verify signature
+    signature = event_body.get("sign", "")
+    if not verify_prodamus_signature(event_body, signature):
+        logging.warning("Invalid Prodamus webhook signature")
         return
 
-    obj = event_body.get("object", {})
-    yk_payment_id = obj.get("id")
-    if not yk_payment_id:
+    order_id = event_body.get("order_id", "")
+    payment_status = event_body.get("payment_status", "")
+
+    if not order_id:
         return
 
-    if event != "payment.succeeded":
+    if payment_status != "success":
         return
 
-    payment = get_payment_by_yk_id(conn, yk_payment_id)
+    payment = get_payment_by_yk_id(conn, order_id)
     if payment is None:
         return
 

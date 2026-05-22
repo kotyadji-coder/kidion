@@ -1,5 +1,5 @@
 """
-Tests for payment endpoints.
+Tests for payment endpoints (Prodamus integration).
 
 Covers:
   POST /api/payment/create
@@ -7,8 +7,11 @@ Covers:
   GET  /api/payment/status/{payment_id}
 """
 
+import hashlib
+import hmac
+import json
+import os
 import sqlite3
-import uuid
 
 import pytest
 from httpx import AsyncClient
@@ -35,23 +38,38 @@ async def _register_and_login(
     await client.post("/auth/login", json={"email": email, "password": password})
 
 
-def _build_yookassa_webhook(
-    yookassa_payment_id: str,
-    status: str = "succeeded",
-    amount_value: str = "50.00",
-    metadata: dict | None = None,
+def _build_prodamus_webhook(
+    order_id: str,
+    payment_status: str = "success",
+    sum_value: str = "50.00",
 ) -> dict:
-    """Construct a minimal YooKassa webhook payload."""
-    return {
-        "type": "notification",
-        "event": f"payment.{status}",
-        "object": {
-            "id": yookassa_payment_id,
-            "status": status,
-            "amount": {"value": amount_value, "currency": "RUB"},
-            "metadata": metadata or {},
-        },
+    """Construct a Prodamus webhook payload with valid signature."""
+    data = {
+        "order_id": order_id,
+        "payment_status": payment_status,
+        "sum": sum_value,
     }
+    # Sign the payload
+    secret = os.environ.get("PRODAMUS_SECRET_KEY", "test-prodamus-secret-key")
+    sorted_data = dict(sorted(data.items()))
+    message = json.dumps(sorted_data, ensure_ascii=False, separators=(",", ":"))
+    sign = hmac.new(
+        secret.encode("utf-8"),
+        message.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    data["sign"] = sign
+    return data
+
+
+def _get_order_id_from_db(temp_db_path: str, payment_id: int) -> str:
+    con = sqlite3.connect(temp_db_path)
+    row = con.execute(
+        "SELECT yookassa_payment_id FROM payments WHERE id = ?",
+        (payment_id,),
+    ).fetchone()
+    con.close()
+    return row[0]
 
 
 # ---------------------------------------------------------------------------
@@ -97,11 +115,11 @@ async def test_create_payment_returns_payment_id_and_confirmation_url(
     assert "payment_id" in data
     assert "confirmation_url" in data
     assert isinstance(data["confirmation_url"], str)
-    assert data["confirmation_url"].startswith("http")
+    assert "payform.ru" in data["confirmation_url"]
 
 
 # ---------------------------------------------------------------------------
-# POST /api/payment/webhook — credits crystals on "payment.succeeded"
+# POST /api/payment/webhook — credits crystals on success
 # ---------------------------------------------------------------------------
 
 async def test_webhook_credits_crystals_on_payment_succeeded(
@@ -109,25 +127,16 @@ async def test_webhook_credits_crystals_on_payment_succeeded(
 ):
     await _register_and_login(client)
 
-    # Simulate payment creation to get a yookassa_payment_id in DB
     create_resp = await client.post(
         "/api/payment/create",
         json={"package_id": "60_60"},
     )
     internal_payment_id = create_resp.json()["payment_id"]
-
-    # Read yookassa_payment_id from DB
-    con = sqlite3.connect(temp_db_path)
-    row = con.execute(
-        "SELECT yookassa_payment_id FROM payments WHERE id = ?",
-        (internal_payment_id,),
-    ).fetchone()
-    con.close()
-    yookassa_id = row[0]
+    order_id = _get_order_id_from_db(temp_db_path, internal_payment_id)
 
     crystals_before = (await client.get("/auth/me")).json()["crystals"]
 
-    webhook_payload = _build_yookassa_webhook(yookassa_id, "succeeded", "50.00")
+    webhook_payload = _build_prodamus_webhook(order_id, "success", "60.00")
     resp = await client.post("/api/payment/webhook", json=webhook_payload)
     assert resp.status_code == 200
 
@@ -136,10 +145,10 @@ async def test_webhook_credits_crystals_on_payment_succeeded(
 
 
 async def test_webhook_always_returns_200(client: AsyncClient):
-    """YooKassa expects HTTP 200 even for unrecognised events."""
+    """Prodamus expects HTTP 200 even for unrecognised events."""
     resp = await client.post(
         "/api/payment/webhook",
-        json={"type": "notification", "event": "payment.canceled", "object": {"id": "unknown"}},
+        json={"order_id": "unknown", "payment_status": "canceled", "sign": "bad"},
     )
     assert resp.status_code == 200
 
@@ -158,16 +167,9 @@ async def test_webhook_idempotent_does_not_credit_twice(
         json={"package_id": "60_60"},
     )
     internal_payment_id = create_resp.json()["payment_id"]
+    order_id = _get_order_id_from_db(temp_db_path, internal_payment_id)
 
-    con = sqlite3.connect(temp_db_path)
-    row = con.execute(
-        "SELECT yookassa_payment_id FROM payments WHERE id = ?",
-        (internal_payment_id,),
-    ).fetchone()
-    con.close()
-    yookassa_id = row[0]
-
-    webhook_payload = _build_yookassa_webhook(yookassa_id, "succeeded", "50.00")
+    webhook_payload = _build_prodamus_webhook(order_id, "success", "60.00")
 
     await client.post("/api/payment/webhook", json=webhook_payload)
     await client.post("/api/payment/webhook", json=webhook_payload)
@@ -198,9 +200,9 @@ async def test_webhook_records_transaction_in_db(
         (internal_payment_id,),
     ).fetchone()
     con.close()
-    yookassa_id, user_id = row
+    order_id, user_id = row
 
-    webhook_payload = _build_yookassa_webhook(yookassa_id, "succeeded", "300.00")
+    webhook_payload = _build_prodamus_webhook(order_id, "success", "320.00")
     await client.post("/api/payment/webhook", json=webhook_payload)
 
     con = sqlite3.connect(temp_db_path)
@@ -242,17 +244,11 @@ async def test_payment_status_returns_succeeded_after_webhook(
         json={"package_id": "60_60"},
     )
     payment_id = create_resp.json()["payment_id"]
-
-    con = sqlite3.connect(temp_db_path)
-    row = con.execute(
-        "SELECT yookassa_payment_id FROM payments WHERE id = ?", (payment_id,)
-    ).fetchone()
-    con.close()
-    yookassa_id = row[0]
+    order_id = _get_order_id_from_db(temp_db_path, payment_id)
 
     await client.post(
         "/api/payment/webhook",
-        json=_build_yookassa_webhook(yookassa_id, "succeeded", "50.00"),
+        json=_build_prodamus_webhook(order_id, "success", "60.00"),
     )
 
     status_resp = await client.get(f"/api/payment/status/{payment_id}")

@@ -10,6 +10,7 @@ Covers:
   - Blogger receives rub reward, not crystals
 """
 
+import os
 import sqlite3
 
 import pytest
@@ -58,21 +59,18 @@ async def _simulate_payment_webhook(
         (payment_id,),
     ).fetchone()
     con.close()
-    yookassa_id = row[0]
+    order_id = row[0]
 
-    await client.post(
-        "/api/payment/webhook",
-        json={
-            "type": "notification",
-            "event": "payment.succeeded",
-            "object": {
-                "id": yookassa_id,
-                "status": "succeeded",
-                "amount": {"value": "50.00", "currency": "RUB"},
-                "metadata": {},
-            },
-        },
-    )
+    # Build signed Prodamus webhook
+    import hashlib, hmac, json as _json
+    data = {"order_id": order_id, "payment_status": "success", "sum": "50.00"}
+    secret = os.environ.get("PRODAMUS_SECRET_KEY", "test-prodamus-secret-key")
+    sorted_data = dict(sorted(data.items()))
+    msg = _json.dumps(sorted_data, ensure_ascii=False, separators=(",", ":"))
+    sign = hmac.new(secret.encode(), msg.encode(), hashlib.sha256).hexdigest()
+    data["sign"] = sign
+
+    await client.post("/api/payment/webhook", json=data)
 
 
 # ---------------------------------------------------------------------------

@@ -3,9 +3,7 @@ import hmac
 import os
 import sqlite3
 import tempfile
-import uuid
 from typing import AsyncGenerator
-from unittest.mock import MagicMock, patch
 
 import pytest
 import pytest_asyncio
@@ -26,25 +24,10 @@ TEST_HMAC_SECRET = "test-hmac-secret-for-bot-callbacks"
 def set_test_env(monkeypatch):
     monkeypatch.setenv("SECRET_KEY", TEST_SECRET_KEY)
     monkeypatch.setenv("CALLBACK_HMAC_SECRET", TEST_HMAC_SECRET)
-    monkeypatch.setenv("YOOKASSA_SHOP_ID", "test-shop-id")
-    monkeypatch.setenv("YOOKASSA_SECRET_KEY", "test-yookassa-key")
+    monkeypatch.setenv("PRODAMUS_DOMAIN", "test.payform.ru")
+    monkeypatch.setenv("PRODAMUS_SECRET_KEY", "test-prodamus-secret-key")
     monkeypatch.setenv("APP_BASE_URL", "http://testserver")
     monkeypatch.setenv("TESTING", "1")
-
-
-@pytest.fixture(autouse=True)
-def mock_yookassa_payment(monkeypatch):
-    """Mock yookassa.Payment.create to avoid real HTTP calls during tests."""
-    def _fake_create(payload, idempotency_key=None):
-        fake_id = str(uuid.uuid4())
-        mock_payment = MagicMock()
-        mock_payment.id = fake_id
-        mock_payment.confirmation.confirmation_url = (
-            f"https://yookassa.ru/checkout/payments/{fake_id}"
-        )
-        return mock_payment
-
-    monkeypatch.setattr("payments.Payment.create", _fake_create)
 
 
 # ---------------------------------------------------------------------------
