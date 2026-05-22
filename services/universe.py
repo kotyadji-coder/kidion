@@ -19,6 +19,59 @@ def _get_text_model():
     return get_model("gemini-2.5-flash")
 
 
+def _stub_universe(child_name: str, interests_str: str) -> dict:
+    """Return a predefined structured universe for stub/test mode."""
+    return {
+        "name": "Мастерская Искателей",
+        "premise": (
+            f"Мастерская Искателей — уютная база на вершине дерева, "
+            f"где юные исследователи изучают мир вокруг. "
+            f"Здесь всё связано с тем, что любит {child_name}: {interests_str}."
+        ),
+        "tone": "приключенческий, дружелюбный",
+        "subject_zones": {
+            "math": {
+                "zone_name": "Конструкторский цех",
+                "description": "Здесь проектируют и строят изобретения — нужны точные расчёты.",
+                "lesson_frame": "Чтобы построить новое изобретение, нужно разобраться в [тема урока]",
+            },
+            "russian": {
+                "zone_name": "Радиорубка",
+                "description": "Отсюда передают сообщения по всему миру — нужно писать чётко и грамотно.",
+                "lesson_frame": "Чтобы передать важное сообщение, нужно знать [тема урока]",
+            },
+            "english": {
+                "zone_name": "Портал Дальних Земель",
+                "description": "Портал связывает с англоговорящими друзьями из другого мира.",
+                "lesson_frame": "Чтобы поговорить с друзьями из Дальних Земель, нужно выучить [тема урока]",
+            },
+            "world": {
+                "zone_name": "Экспедиционный штаб",
+                "description": "Отсюда уходят исследовательские группы изучать природу и окружающий мир.",
+                "lesson_frame": "Чтобы подготовиться к экспедиции, нужно узнать про [тема урока]",
+            },
+        },
+        "year_mission": "Построить Летающий Корабль и отправиться в Большую Экспедицию",
+        "progression": "Каждые 5 уроков — новый модуль корабля собран",
+        "npcs": [
+            {"name": "Тинкер", "role": "наставник", "personality": "мудрый, терпеливый", "appearance": "старый ёж в очках и фартуке с инструментами"},
+            {"name": "Зипка", "role": "друг", "personality": "весёлая, любопытная", "appearance": "маленькая белка с рюкзачком и картой"},
+        ],
+        "character_name": "Искорка",
+        "character_prompt": (
+            "A cute friendly fox character, wearing a wizard hat and a backpack with books. "
+            "The fox has bright orange fur, big green eyes, and a fluffy tail with a star-shaped tip. "
+            "Style: cute cartoon, Pixar-like, friendly. Full body, white background."
+        ),
+    }
+
+
+def _universe_to_description(data: dict) -> str:
+    """Convert structured universe dict to a rich text description for storage."""
+    import json as _json
+    return _json.dumps(data, ensure_ascii=False)
+
+
 def _extract_json(raw: str) -> dict:
     """Strip markdown fences and extract JSON."""
     cleaned = re.sub(r"^```(?:json)?\s*", "", raw.strip(), flags=re.MULTILINE)
@@ -48,7 +101,7 @@ def generate_universe(
     interests_str = ", ".join(interests) if interests else "приключения, природа"
     gender_ru = "мальчик" if gender == "boy" else "девочка"
 
-    prompt = f"""Ты — сценарист детских образовательных вселенных.
+    prompt = f"""Ты — сценарист детских образовательных вселенных и геймдизайнер.
 
 БЕЗОПАСНОСТЬ КОНТЕНТА (ОБЯЗАТЕЛЬНО):
 - ЗАПРЕЩЕНО генерировать контент с насилием, жестокостью, оружием, кровью.
@@ -59,47 +112,67 @@ def generate_universe(
 Ребёнок: {gender_ru}, {grade} класс.
 Интересы: {interests_str}
 
-## Задача 1: Описание вселенной
-Придумай уникальную учебную вселенную для этого ребёнка, где переплетаются все его интересы.
-Вселенная должна быть яркой, дружелюбной и подходить для образовательных уроков по математике, русскому языку, английскому языку, окружающему миру.
-Опиши 2-3 абзаца: как устроен этот мир, какие там есть локации, ключевые персонажи-помощники.
+## ГЛАВНАЯ ЗАДАЧА
+Придумай СТРУКТУРИРОВАННУЮ учебную вселенную, которая:
+1. Объединяет ВСЕ интересы ребёнка в одном ярком, конкретном мире (не "волшебный мир знаний", а конкретный сеттинг: лаборатория, корабль, остров, станция и т.д.)
+2. Имеет 4 предметные зоны (по одной для каждого школьного предмета)
+3. Имеет годовую миссию — глобальную цель, к которой ребёнок идёт весь учебный год
+4. Имеет NPC-персонажей с именами и ролями
 
-## Задача 2: Персонаж-проводник
-Придумай персонажа-проводника для ребёнка в этой вселенной. Опиши его внешность максимально подробно:
-- Тип существа (человек, зверь, фантастическое существо)
-- Рост, телосложение
-- Цвет волос/шерсти, глаз
-- Стиль одежды (в тематике вселенной)
-- Отличительные черты (шрам, очки, крылья и т.д.)
-- Характер (2-3 слова)
+## ПРАВИЛА СОЗДАНИЯ ВСЕЛЕННОЙ
+- Название вселенной должно быть КОНКРЕТНЫМ и отражать интересы (не "Мир Знаний", а "Лаборатория Дино-Тех" или "Космическая Ферма Роботов")
+- Каждая предметная зона — это МЕСТО в мире, логически связанное с предметом:
+  * math — место, где считают, строят, проектируют (мастерская, верфь, лаборатория)
+  * russian — место, где работают со словами (архив, радиостанция, библиотека, редакция)
+  * english — место контакта с другим миром/культурой (порт, посольство, портал) — логичный повод для другого языка
+  * world — место наблюдения за природой (экспедиционная база, обсерватория, сад, заповедник)
+- lesson_frame для каждой зоны — шаблон, как вписать ЛЮБУЮ школьную тему в контекст этой зоны
+- Годовая миссия должна быть конкретной и достижимой: построить корабль, подготовить экспедицию, спасти остров, открыть все земли
+- NPC: 2-3 персонажа с УНИКАЛЬНЫМИ именами (не "Мудрая Сова"), один из них — наставник, один — друг-ровесник
 
-## Формат ответа (строго JSON):
+## ПЕРСОНАЖ-ПРОВОДНИК
+Придумай персонажа-проводника. Опиши внешность подробно: тип существа, телосложение, цвет, одежда в тематике вселенной, отличительные черты.
+
+## ФОРМАТ ОТВЕТА (строго JSON):
 {{
-  "universe_description": "Описание вселенной, 2-3 абзаца",
-  "character_name": "Имя персонажа",
-  "character_prompt": "Детальное описание внешности персонажа на АНГЛИЙСКОМ языке для генерации картинки. Формат: A [type] character named [name], [detailed appearance]. Style: cute cartoon, Pixar-like, friendly, educational theme. Full body, white background.",
-  "locations": ["Локация 1", "Локация 2", "Локация 3"],
-  "helpers": ["Помощник 1", "Помощник 2"]
+  "name": "Название вселенной (конкретное, яркое)",
+  "premise": "Один абзац: суть мира, почему он существует, что в нём происходит. Упомяни ВСЕ интересы ребёнка как части мира.",
+  "tone": "стиль мира (научно-приключенческий / сказочный / фэнтези-уютный и т.д.)",
+  "subject_zones": {{
+    "math": {{
+      "zone_name": "Название зоны",
+      "description": "Что здесь делают, 1 предложение",
+      "lesson_frame": "Чтобы [действие в мире], нужно [тема урока]"
+    }},
+    "russian": {{
+      "zone_name": "Название зоны",
+      "description": "Что здесь делают, 1 предложение",
+      "lesson_frame": "Чтобы [действие в мире], нужно [тема урока]"
+    }},
+    "english": {{
+      "zone_name": "Название зоны",
+      "description": "Что здесь делают, 1 предложение",
+      "lesson_frame": "Чтобы [действие в мире], нужно [тема урока]"
+    }},
+    "world": {{
+      "zone_name": "Название зоны",
+      "description": "Что здесь делают, 1 предложение",
+      "lesson_frame": "Чтобы [действие в мире], нужно [тема урока]"
+    }}
+  }},
+  "year_mission": "Конкретная годовая миссия (построить/открыть/спасти/создать что-то)",
+  "progression": "Что происходит каждые 5 уроков (новый модуль/новая земля/новый уровень)",
+  "npcs": [
+    {{"name": "Имя", "role": "наставник/друг/заказчик", "personality": "2-3 слова", "appearance": "краткое описание внешности"}},
+    {{"name": "Имя", "role": "...", "personality": "...", "appearance": "..."}}
+  ],
+  "character_name": "Имя персонажа-проводника",
+  "character_prompt": "Детальное описание внешности персонажа на АНГЛИЙСКОМ для генерации картинки. Формат: A [type] character, [detailed appearance]. Style: cute cartoon, Pixar-like, friendly. Full body, white background."
 }}"""
 
     if model is None:
         # Stub mode
-        return {
-            "universe_description": (
-                f"Добро пожаловать в Мир Знаний — волшебную вселенную, созданную специально для {child_name}! "
-                f"Здесь живут удивительные существа, которые обожают {interests_str}. "
-                "В этом мире каждый урок — это новое приключение, а каждая задача — загадка, "
-                "которую нужно разгадать, чтобы открыть новые территории."
-            ),
-            "character_name": "Искорка",
-            "character_prompt": (
-                f"A cute friendly fox character named Iskorka, wearing a wizard hat and a backpack with books. "
-                f"The fox has bright orange fur, big green eyes, and a fluffy tail with a star-shaped tip. "
-                f"Style: cute cartoon, Pixar-like, friendly, educational theme. Full body, white background."
-            ),
-            "locations": ["Башня Знаний", "Лес Загадок", "Озеро Открытий"],
-            "helpers": ["Мудрая Сова", "Весёлый Робот"],
-        }
+        return _stub_universe(child_name, interests_str)
 
     try:
         from vertexai.generative_models import GenerationConfig, HarmBlockThreshold, HarmCategory, SafetySetting
@@ -119,20 +192,26 @@ def generate_universe(
             logger.warning("Universe generation blocked by safety filter for child interests: %s", interests_str)
             return generate_universe(child_name, gender, grade, ["приключения", "природа"])
         result = _extract_json(response.text)
-        # Ensure required keys
-        result.setdefault("universe_description", "")
+        # Ensure required keys for structured universe
+        result.setdefault("name", "Мир Приключений")
+        result.setdefault("premise", "")
+        result.setdefault("tone", "приключенческий")
+        result.setdefault("subject_zones", {})
+        result.setdefault("year_mission", "")
+        result.setdefault("progression", "")
+        result.setdefault("npcs", [])
         result.setdefault("character_prompt", "")
         result.setdefault("character_name", "Проводник")
+        # Ensure each subject zone has required fields
+        for subj in ("math", "russian", "english", "world"):
+            zone = result["subject_zones"].setdefault(subj, {})
+            zone.setdefault("zone_name", subj)
+            zone.setdefault("description", "")
+            zone.setdefault("lesson_frame", "")
         return result
     except Exception:
         logger.exception("Universe generation failed, using stub")
-        return generate_universe.__wrapped__(child_name, gender, grade, interests) if hasattr(generate_universe, '__wrapped__') else {
-            "universe_description": f"Волшебный мир для {child_name}",
-            "character_name": "Искорка",
-            "character_prompt": "A cute friendly fox character, cartoon style, white background",
-            "locations": [],
-            "helpers": [],
-        }
+        return _stub_universe(child_name, interests_str)
 
 
 def generate_character_image(character_prompt: str, equipped_items: list[dict] | None = None) -> bytes | None:

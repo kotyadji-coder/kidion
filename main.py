@@ -879,14 +879,18 @@ async def _setup_child_universe(child_id: int, name: str, gender: str, grade: in
     try:
         conn = get_db_connection()
 
-        # Step 1: Generate universe description and character prompt
+        # Step 1: Generate structured universe
         universe_data = await asyncio.to_thread(generate_universe, name, gender, grade, interests)
+
+        # Store structured universe as JSON string in universe_description
+        from services.universe import _universe_to_description
+        universe_json_str = _universe_to_description(universe_data)
 
         update_child_universe(
             conn,
             child_id,
             interests=_json.dumps(interests, ensure_ascii=False),
-            universe_description=universe_data.get("universe_description", ""),
+            universe_description=universe_json_str,
             character_prompt=universe_data.get("character_prompt", ""),
         )
 
@@ -903,7 +907,7 @@ async def _setup_child_universe(child_id: int, name: str, gender: str, grade: in
 
         # Step 3: Generate and save shop items
         char_name = universe_data.get("character_name", "Проводник")
-        universe_desc = universe_data.get("universe_description", "")
+        universe_desc = universe_data.get("premise", "")
         items = await asyncio.to_thread(generate_shop_items, universe_desc, char_name)
         if items:
             create_shop_items(conn, child_id, items)

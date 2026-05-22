@@ -155,7 +155,72 @@ def validate_lesson(lesson_json: dict, visual_blocks: list[dict] | None,
         _val_logger.info("Lesson %s (topic='%s'): validation passed", lesson_id, topic)
 
 
-def build_question(child: dict, topic: str, subject: str, prev_lesson_titles: list[str]) -> str:
+def _parse_universe(raw: str) -> dict | None:
+    """Try to parse universe_description as structured JSON. Returns None for old plain-text format."""
+    if not raw:
+        return None
+    try:
+        data = json.loads(raw)
+        if isinstance(data, dict) and "subject_zones" in data:
+            return data
+    except (json.JSONDecodeError, TypeError):
+        pass
+    return None
+
+
+def _build_universe_context(universe_data: dict | None, raw_desc: str,
+                            subject: str, lesson_number: int = 1) -> str:
+    """Build focused universe context for the lesson prompt."""
+    if universe_data is None:
+        # Old plain-text format — pass as-is for backward compatibility
+        return f" Описание вселенной: {raw_desc}" if raw_desc else ""
+
+    parts = []
+    parts.append(f"\n--- ВСЕЛЕННАЯ РЕБЁНКА ---")
+    parts.append(f"Название: {universe_data.get('name', '')}")
+    parts.append(f"Описание: {universe_data.get('premise', '')}")
+
+    # Subject-specific zone
+    zone = universe_data.get("subject_zones", {}).get(subject, {})
+    if zone:
+        parts.append(f"\nЗона для этого предмета: {zone.get('zone_name', '')}")
+        parts.append(f"Что здесь происходит: {zone.get('description', '')}")
+        parts.append(f"Контекст урока: {zone.get('lesson_frame', '')}")
+
+    # Year mission & progression
+    mission = universe_data.get("year_mission", "")
+    if mission:
+        parts.append(f"\nГодовая миссия: {mission}")
+    progression = universe_data.get("progression", "")
+    if progression:
+        parts.append(f"Прогресс: {progression}")
+
+    # NPCs
+    npcs = universe_data.get("npcs", [])
+    if npcs:
+        npc_lines = []
+        for npc in npcs:
+            npc_lines.append(f"  - {npc.get('name', '?')} ({npc.get('role', '')}, {npc.get('personality', '')})")
+        parts.append(f"\nПерсонажи мира:\n" + "\n".join(npc_lines))
+
+    # Lesson arc stage
+    arc_labels = {
+        1: "ПРИБЫТИЕ — герой приходит в новую локацию, обнаруживает проблему. Начало мини-сюжета.",
+        2: "РАЗВЕДКА — герой изучает основы, первые попытки разобраться.",
+        3: "ТРЕНИРОВКА — практика, углубление, герой набирается опыта.",
+        4: "ИСПЫТАНИЕ — сложный вызов, герой применяет всё выученное.",
+        5: "ПОБЕДА — герой решает проблему, локация 'спасена', награда и переход к следующей теме.",
+    }
+    arc = arc_labels.get(lesson_number)
+    if arc:
+        parts.append(f"\nЭтап урока ({lesson_number}/5): {arc}")
+
+    parts.append("--- КОНЕЦ ВСЕЛЕННОЙ ---")
+    return "\n".join(parts)
+
+
+def build_question(child: dict, topic: str, subject: str,
+                   prev_lesson_titles: list[str], lesson_number: int = 1) -> str:
     """Build the question string for METHODOLOGIST_PROMPT."""
     # Compute age from birth_date or estimate from grade
     birth_str = child.get("birth_date", "")
@@ -179,12 +244,13 @@ def build_question(child: dict, topic: str, subject: str, prev_lesson_titles: li
     if prev_lesson_titles:
         context_text = f"\nПредыдущие уроки (не повторять): {', '.join(prev_lesson_titles)}"
 
-    universe_desc = child.get("universe_description") or ""
-    universe_line = f" Описание вселенной: {universe_desc}" if universe_desc else ""
+    raw_desc = child.get("universe_description") or ""
+    universe_data = _parse_universe(raw_desc)
+    universe_context = _build_universe_context(universe_data, raw_desc, subject, lesson_number)
 
     return (
         f"Пол: {gender_text}. Возраст: {age} лет. "
-        f"Класс: {child['grade']}. Любимая вселенная: {child['universe']}.{universe_line} "
+        f"Класс: {child['grade']}. Любимая вселенная: {child['universe']}.{universe_context} "
         f"Тема урока: {topic}. Предмет: {subject}. "
         f"{difficulty_text}{context_text}"
     )
@@ -245,7 +311,7 @@ def generate_lesson_content(lesson_id: int, child: dict, topic: str, subject: st
     try:
         conn = get_connection(db_path)
         prev_titles = get_recent_lesson_titles(conn, child["id"], limit=3)
-        question = build_question(child, topic, subject, prev_titles)
+        question = build_question(child, topic, subject, prev_titles, lesson_number=lesson_number)
 
         if mode == "skip_test":
             # Skip test: only generate 5 tasks, no theory/images/worksheets
@@ -281,7 +347,14 @@ def generate_lesson_content(lesson_id: int, child: dict, topic: str, subject: st
 
             character_name = child.get("character_name") or "Искатель"
             character_emoji = "🦊"
-            universe_desc = child.get("universe_description") or ""
+            raw_desc = child.get("universe_description") or ""
+            uni_data = _parse_universe(raw_desc)
+            # For visual layout, pass a short summary, not raw JSON
+            if uni_data:
+                zone = uni_data.get("subject_zones", {}).get(subject, {})
+                universe_desc = f"{uni_data.get('name', '')}. {zone.get('zone_name', '')} — {zone.get('description', '')}"
+            else:
+                universe_desc = raw_desc
             visual_blocks = generate_visual_layout(
                 lesson_json.get("story_blocks", []),
                 topic, subject,
