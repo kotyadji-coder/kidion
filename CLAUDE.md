@@ -11,7 +11,7 @@
 
 ## What This Is
 
-**kidion.ru** — a personalized educational platform for children ages 6–10. Parents create child profiles with interests, AI generates a personalized universe and character, then creates interactive lessons set in that universe. Children access lessons through a kid-friendly interface with PIN login, earn stars, and spend them on character customization.
+**kidion.ru** — a personalized educational platform for children ages 6–10. Parents create child profiles with interests, AI generates a personalized universe and character, then creates interactive lessons set in that universe. Children access lessons through a kid-friendly interface, earn stars, and spend them on character customization. **chat.kidion.ru** — AI chat for children with 3 characters.
 
 ### Core Flow
 Parent creates child (name, grade, interests) → AI generates universe + character + shop → parent generates lessons → child completes them → earns stars → customizes character in star shop.
@@ -22,7 +22,7 @@ Parent creates child (name, grade, interests) → AI generates universe + charac
 - **Frontend:** Jinja2 templates + vanilla JS (no React/Vue)
 - **Auth:** bcrypt (passwords) + itsdangerous (signed cookies `kid_session` for parents, `kid_session_child` for kids)
 - **AI Generation:** Google AI Studio (primary, API key) + Vertex AI (fallback). See AI Models section below.
-- **Payments:** Prodamus (payment link + HMAC webhook, no SDK needed)
+- **Payments:** Prodamus (edtale.payform.ru, HMAC-SHA256 webhook via Sign header, demo mode active)
 - **Tests:** pytest + pytest-asyncio + httpx (306 tests)
 
 ## File Structure
@@ -66,12 +66,12 @@ kidion/
 │   ├── chat.html              # Киди AI chat (single assistant, simple layout)
 │   ├── lesson.html            # Lesson iframe + auto-score via postMessage
 │   └── result.html            # Stars animation + confetti + shop button
-├── templates/spark/
+├── templates/chat/
 │   ├── chat.html              # Киди Chat (multi-character, Geist font)
-│   ├── landing.html           # Киди Chat landing page (/spark)
-│   ├── login.html             # Киди Chat login page
+│   ├── landing.html           # Киди Chat landing page (/)
+│   ├── login.html             # Киди Chat login (parent email → pick child, no PIN)
 │   ├── register.html          # Киди Chat registration (simplified)
-│   ├── subscribe.html         # Subscription purchase page (/spark/subscribe)
+│   ├── subscribe.html         # Subscription purchase page (/chat/subscribe)
 │   └── report.html            # Weekly parent report page
 ├── static/spark/
 │   ├── chat.css               # Chat CSS (oklch, per-character tints)
@@ -143,9 +143,9 @@ All generation functions return predefined defaults when neither `GEMINI_API_KEY
 - Equip/unequip: toggles `child_items.equipped` → triggers background character regeneration
 
 ### Kid Login (`/kid/login`)
-- Multi-child: shows child picker cards (avatar + name), click → PIN keyboard
-- Single child: shows avatar + PIN keyboard directly
-- PIN label: "Введи свой секретный код"
+- Multi-child: shows child picker cards (avatar + name)
+- Single child: auto-selects
+- No PIN required (removed)
 
 ### Shop Item Categories & Pricing
 - outfit (5 items, 5-20 stars), accessory (5 items, 10-25 stars), pet (4 items, 20-40 stars), background (3 items, 15-30 stars)
@@ -157,7 +157,7 @@ All generation functions return predefined defaults when neither `GEMINI_API_KEY
 
 ## Киди Chat (chat.kidion.ru)
 
-Multi-character AI chat for children. New design at `/spark/chat`, landing at `/spark`.
+Multi-character AI chat for children. Templates in `templates/chat/`. Old `/spark/*` URLs redirect 301 → `/chat/*`.
 
 ### 3 Characters
 | Character | Key | Role | Tier | Model |
@@ -172,9 +172,9 @@ Each has a unique system prompt layered on shared safety rules (10 rules in `_SA
 - **Free:** 10 messages/day, only Киди, no voice/images
 - **Pro (500 ₽/month real money):** 100 msg/day, all 3 characters, voice input, 30 AI images/month included, parent reports
 - **Extra images:** 5💎 per image (from crystal balance)
-- Limits counted across all children of the same parent
-- Subscription page: `/spark/subscribe` (parent auth)
-- TODO: integrate YooKassa for real payment (currently direct activation)
+- Subscription is per parent account (all children share it)
+- Subscription page: `/chat/subscribe` and `/buy` (parent auth)
+- Payment via Prodamus (500 ₽/month, same as crystal packages)
 
 ### Chat API
 - `GET /api/kid/chat?character=spark` — get chat + messages + limits
@@ -193,7 +193,8 @@ Web Speech API (browser-side, free). Opens overlay, speech → text → editable
 - **Packages:** 60/60 rub, 360/320 rub, 600/490 rub, 1000/800 rub
 - **Adaptive difficulty** (1-3): auto-adjusts based on last 2 lesson results
 - **Auto-scoring:** iframe postMessage → auto-submit result. Stub mode → 5/5.
-- **Chat subscription:** 500 rub/month (real money), 100 msg/day (10 free), 30 images/month, extra images 5💎 each. 3 characters (was 4, Pixie removed).
+- **Chat subscription:** 500 ₽/month via Prodamus, 100 msg/day (10 free), 30 images/month, extra images 5💎 each. 3 characters. Per-parent (covers all children).
+- **Payment polling:** `/buy` page polls `/api/payment/status-by-order` after Prodamus redirect, shows animated success banner when crystals credited.
 
 ## API Endpoints
 
@@ -205,7 +206,7 @@ Web Speech API (browser-side, free). Opens overlay, speech → text → editable
 - Progress: `/stats`, `/lessons`, `/program-progress`, `/curriculum/{subject}`, `/free-lessons`, `/enrolled-subjects`, `/subject-progress/{subject}`
 - Actions: `/enroll-subject` (auto-generates first 4 lessons FREE), `/skip-test` (inline fullscreen test), `/generate-topic`, `/generate-month`
 
-### Kid Interface (child auth via PIN)
+### Kid Interface (child auth, no PIN)
 - Auth: `POST /api/kid/auth`, `POST /api/kid/logout`
 - Data: `GET /api/kid/me` (includes character_image_url, universe_description), `/lessons`, `/lessons/{id}`, `/subjects`, `/subject/{s}/map`, `/free-lessons`
 - Actions: `POST /api/kid/lessons/{curriculum_lesson_id}/start`
@@ -214,7 +215,7 @@ Web Speech API (browser-side, free). Opens overlay, speech → text → editable
 
 ### Payments & Lessons (parent auth)
 - `POST /api/lessons/generate`, `POST /api/lessons/generate-topic`, `GET /api/lessons/{id}/poll`, `POST /api/lessons/{id}/result`
-- `POST /api/payment/create`, `POST /api/payment/webhook`, `GET /api/payment/status/{id}`
+- `POST /api/payment/create`, `POST /api/payment/webhook` (Sign header HMAC), `GET /api/payment/status/{id}`, `GET /api/payment/status-by-order?order_id=X`
 - `GET /api/children/{id}/worksheets?topic_id=X` — batch print worksheets for topic (5 pages)
 - `GET /api/children/{id}/worksheets?subject=X` — batch print all worksheets for subject
 - `POST /api/chat/subscribe` — buy chat subscription (500 rub/month)
@@ -223,7 +224,7 @@ Web Speech API (browser-side, free). Opens overlay, speech → text → editable
 ## Pages
 
 ### Kid
-- `/kid/login` — child picker cards + PIN keyboard
+- `/kid/login` — child picker cards (no PIN)
 - `/kid/onboarding` — first-login character naming (redirects to home after)
 - `/kid/home` — character avatar + subjects + streak + shop button
 - `/kid/character` — RPG character page + star shop + name editing + speech bubble
@@ -234,8 +235,8 @@ Web Speech API (browser-side, free). Opens overlay, speech → text → editable
 
 ### Киди Chat
 - `/` — landing page on chat.kidion.ru (public, no auth)
-- `/chat` — multi-character chat (child auth via PIN)
-- `/chat/login` — login page (parent auth → pick child → PIN)
+- `/chat` — multi-character chat (child auth)
+- `/chat/login` — login page (parent email → pick child, no PIN)
 - `/chat/register` — simplified registration (parent + child, no universe)
 - `/chat/subscribe` — subscription purchase (parent auth)
 - `/chat/report/{child_id}` — weekly parent report
@@ -288,7 +289,7 @@ uvicorn main:app --host 127.0.0.1 --port 8003 --reload
 
 - [x] Deploy to VPS (systemd + nginx + certbot SSL)
 - [x] DNS: A-record kidion.ru -> 72.56.126.111
-- [x] Prodamus: payment integration for crystal packages (edtale.payform.ru)
+- [x] Prodamus: payment integration for crystals + chat subscription (edtale.payform.ru, HMAC via Sign header)
 - [x] Киди Chat: subdomain chat.kidion.ru (nginx + DNS + cookie domain=.kidion.ru)
 - [x] Киди Chat: AI image generation in chat (detect "нарисуй", call Vertex AI)
 - [x] Киди Chat: parent reports (weekly chat summaries)
