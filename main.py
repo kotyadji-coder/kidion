@@ -56,6 +56,7 @@ from db import (
     get_lessons_by_child,
     get_lessons_by_plan,
     get_payment_by_id,
+    get_payment_by_yk_id,
     get_program_progress,
     get_recent_lesson_results,
     get_shop_items_for_child,
@@ -801,6 +802,24 @@ async def payment_status(payment_id: int, request: Request):
 
     fresh_user = get_user_by_id(conn, user["id"])
 
+    return JSONResponse({
+        "status": payment["status"],
+        "crystals": fresh_user["crystals"] if fresh_user else user["crystals"],
+    })
+
+
+@app.get("/api/payment/status-by-order")
+async def payment_status_by_order(order_id: str, request: Request):
+    conn = get_db_connection()
+    user = get_current_user(request, conn)
+    if not user:
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+
+    payment = get_payment_by_yk_id(conn, order_id)
+    if payment is None or payment["user_id"] != user["id"]:
+        return JSONResponse({"error": "not_found"}, status_code=404)
+
+    fresh_user = get_user_by_id(conn, user["id"])
     return JSONResponse({
         "status": payment["status"],
         "crystals": fresh_user["crystals"] if fresh_user else user["crystals"],
