@@ -3659,7 +3659,7 @@ async def kid_chat_send(request: Request):
     daily_limit = 100 if has_sub else 10
 
     if daily_count >= daily_limit:
-        msg = "На сегодня сообщения закончились! Приходи завтра!" if not has_sub else "Лимит 50 сообщений в день достигнут. Приходи завтра!"
+        msg = "На сегодня сообщения закончились! Приходи завтра!" if not has_sub else "Лимит 100 сообщений в день достигнут. Приходи завтра!"
         if not has_sub:
             msg += " Попроси родителей подключить подписку для безлимита."
         return JSONResponse({"error": "limit_reached", "message": msg}, status_code=429)
