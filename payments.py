@@ -147,10 +147,14 @@ def handle_webhook(conn: sqlite3.Connection, event_body: dict) -> None:
     Process a Prodamus webhook event.
     Handles crystal packages and chat subscriptions.
     """
+    # Log webhook data for debugging
+    logging.info("Webhook data keys: %s", list(event_body.keys()))
+    logging.info("Webhook order_id=%s, payment_status=%s", event_body.get("order_id"), event_body.get("payment_status"))
+
     # Verify signature
     signature = event_body.get("sign", "")
     if not verify_prodamus_signature(event_body, signature):
-        logging.warning("Invalid Prodamus webhook signature")
+        logging.warning("Invalid Prodamus webhook signature, data=%s", {k: v[:50] if isinstance(v, str) and len(v) > 50 else v for k, v in event_body.items()})
         return
 
     order_id = event_body.get("order_id", "")
