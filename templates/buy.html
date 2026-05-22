@@ -357,39 +357,34 @@ async function buyPackage(packageId) {
 }
 
 // Poll payment status after return from Prodamus
-(function() {
-    var params = new URLSearchParams(window.location.search);
-    if (params.get('_payform_status') !== 'success') return;
-
-    var orderId = params.get('_payform_order_id');
-    if (!orderId) return;
-
+var _payformStatus = '{{ payform_status|default("", true) }}';
+var _payformOrderId = '{{ payform_order_id|default("", true) }}';
+if (_payformStatus === 'success' && _payformOrderId) {
     var successEl = document.getElementById('buy-success');
     var textEl = document.getElementById('buy-success-text');
-    successEl.style.display = '';
+    successEl.style.display = 'block';
     textEl.textContent = 'Оплата прошла! Ожидаем начисление кристаллов...';
 
     history.replaceState(null, '', '/buy');
 
-    var attempts = 0;
-    var maxAttempts = 30;
-    var timer = setInterval(async function() {
-        attempts++;
+    var _attempts = 0;
+    var _timer = setInterval(async function() {
+        _attempts++;
         try {
-            var resp = await fetch('/api/payment/status-by-order?order_id=' + encodeURIComponent(orderId), {credentials: 'same-origin'});
+            var resp = await fetch('/api/payment/status-by-order?order_id=' + encodeURIComponent(_payformOrderId), {credentials: 'same-origin'});
             var data = await resp.json();
             if (data.status === 'succeeded') {
-                clearInterval(timer);
-                textEl.textContent = 'Кристаллы начислены! 🎉';
+                clearInterval(_timer);
+                textEl.textContent = 'Кристаллы начислены!';
                 var crystalsEl = document.getElementById('crystal-count');
                 if (crystalsEl) crystalsEl.textContent = data.crystals;
             }
         } catch(e) {}
-        if (attempts >= maxAttempts) {
-            clearInterval(timer);
+        if (_attempts >= 30) {
+            clearInterval(_timer);
             textEl.textContent = 'Оплата прошла. Кристаллы будут начислены в течение минуты.';
         }
     }, 2000);
-})();
+}
 </script>
 {% endblock %}

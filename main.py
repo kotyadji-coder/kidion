@@ -2908,7 +2908,14 @@ async def page_buy(request: Request):
         return RedirectResponse(url="/login", status_code=302)
     if templates is None:
         return HTMLResponse("<h1>Buy</h1>")
-    return templates.TemplateResponse(request, "buy.html", {"user": user})
+    # Pass Prodamus redirect params to template for payment polling
+    payform_status = request.query_params.get("_payform_status", "")
+    payform_order_id = request.query_params.get("_payform_order_id", "")
+    return templates.TemplateResponse(request, "buy.html", {
+        "user": user,
+        "payform_status": payform_status,
+        "payform_order_id": payform_order_id,
+    })
 
 
 # ---------------------------------------------------------------------------
