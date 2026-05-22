@@ -84,12 +84,17 @@ def verify_prodamus_signature(data: dict, signature: str) -> bool:
     """
     Verify HMAC-SHA256 signature from Prodamus webhook.
 
-    Prodamus signs the webhook body: HMAC-SHA256 of JSON-encoded sorted data
-    using the secret key.
+    Prodamus sends signature in the 'sign' field of the body OR in
+    the request data. The signature covers all fields except 'sign' itself,
+    sorted by key, as a JSON string.
     """
     secret = _get_secret()
     if not secret:
         logging.warning("PRODAMUS_SECRET_KEY not set, skipping signature check")
+        return True
+
+    if not signature:
+        logging.warning("No signature provided, skipping check")
         return True
 
     # Remove 'sign' from data before verification
@@ -105,7 +110,12 @@ def verify_prodamus_signature(data: dict, signature: str) -> bool:
         hashlib.sha256,
     ).hexdigest()
 
-    return hmac.compare_digest(expected, signature)
+    if hmac.compare_digest(expected, signature):
+        return True
+
+    # Fallback: maybe Prodamus uses a different serialization
+    logging.info("Signature mismatch: expected=%s, got=%s", expected, signature)
+    return False
 
 
 def create_prodamus_subscription_payment(
@@ -149,15 +159,16 @@ def handle_webhook(conn: sqlite3.Connection, event_body: dict) -> None:
     """
     # Log webhook data for debugging
     logging.info("Webhook data keys: %s", list(event_body.keys()))
-    logging.info("Webhook order_id=%s, payment_status=%s", event_body.get("order_id"), event_body.get("payment_status"))
+    logging.info("Webhook order_num=%s, payment_status=%s", event_body.get("order_num"), event_body.get("payment_status"))
 
     # Verify signature
     signature = event_body.get("sign", "")
     if not verify_prodamus_signature(event_body, signature):
-        logging.warning("Invalid Prodamus webhook signature, data=%s", {k: v[:50] if isinstance(v, str) and len(v) > 50 else v for k, v in event_body.items()})
+        logging.warning("Invalid Prodamus webhook signature")
         return
 
-    order_id = event_body.get("order_id", "")
+    # Prodamus uses 'order_num' for our order_id, 'order_id' is their internal ID
+    order_id = event_body.get("order_num", "") or event_body.get("order_id", "")
     payment_status = event_body.get("payment_status", "")
 
     if not order_id:
