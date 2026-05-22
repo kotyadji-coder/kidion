@@ -547,7 +547,7 @@ var COLORS = ['mint','peach','lilac'];
   try {
     var resp = await fetch('/api/kid/subject/' + SUBJECT + '/map', {credentials:'same-origin'});
     if (!resp.ok) {
-      document.getElementById('lesson-map').innerHTML = '<div class="map-empty"><div style="font-size:48px;margin-bottom:12px;">📚</div>Попроси маму или папу открыть этот предмет!</div>';
+      document.getElementById('lesson-map').innerHTML = '<div class="map-empty"><div style="font-size:48px;margin-bottom:12px;">📚</div>Попроси взрослого открыть этот мир!</div>';
       return;
     }
     renderMap(await resp.json());

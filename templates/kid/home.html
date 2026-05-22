@@ -380,6 +380,53 @@
   .hub-footer-link:hover { background: rgba(0,0,0,.04); }
   .hub-footer-copy { flex: 1; text-align: right; opacity: .7; font-size: 12px; }
 
+  /* === ADULT GATE === */
+  .hub-gate {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(42,31,26,0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    align-items: center; justify-content: center;
+  }
+  .hub-gate.is-open { display: flex; }
+  .hub-gate-card {
+    background: var(--k-surface); border-radius: 28px; padding: 32px;
+    text-align: center; max-width: 340px; width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  }
+  .hub-gate-title {
+    font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 22px;
+    color: var(--k-ink); margin: 12px 0 4px;
+  }
+  .hub-gate-sub {
+    font-family: "Fredoka", sans-serif; font-weight: 700; font-size: 28px;
+    color: var(--k-primary); margin: 8px 0;
+  }
+  .hub-gate-input {
+    width: 100px; text-align: center; padding: 10px;
+    font-size: 20px; font-family: "Fredoka", sans-serif; font-weight: 700;
+    border: 2px solid var(--k-line); border-radius: 14px;
+    background: #FFF8EC; color: var(--k-ink); outline: none;
+  }
+  .hub-gate-input:focus { border-color: var(--k-primary); }
+  .hub-gate-btn {
+    padding: 10px 20px; border-radius: 14px; border: none;
+    background: var(--k-primary); color: #fff;
+    font-family: "Fredoka", sans-serif; font-weight: 700; font-size: 16px;
+    cursor: pointer; box-shadow: 0 4px 0 var(--k-primary-deep);
+  }
+  .hub-gate-btn:active { transform: translateY(2px); box-shadow: none; }
+  .hub-gate-error {
+    color: #D94040; font-weight: 700; font-size: 14px; margin-top: 8px;
+  }
+  .hub-gate-cancel {
+    margin-top: 12px; background: none; border: none;
+    color: var(--k-ink-soft); font-weight: 700; font-size: 14px;
+    cursor: pointer; padding: 8px 16px; border-radius: 10px;
+  }
+  .hub-gate-cancel:hover { background: rgba(0,0,0,.04); }
+  .hub-footer-link {
+    background: none; border: none; font-family: inherit; cursor: pointer;
+  }
+
   /* === MOBILE === */
   @media (max-width: 860px) {
     .hub-header-inner { padding: 12px 16px; gap: 8px; }
@@ -547,7 +594,7 @@
       В магазин
     </span>
   </a>
-  <a href="/kid/chat" class="hub-bottom-card hub-bottom-card--chat k-card-hover">
+  <a href="https://chat.kidion.ru/chat" class="hub-bottom-card hub-bottom-card--chat k-card-hover">
     <span class="hub-bottom-card-bg">
       <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#3DAEA3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.6L3 21l1.9-5.6A8.5 8.5 0 1 1 21 11.5z"/></svg>
     </span>
@@ -566,6 +613,21 @@
   </a>
 </section>
 
+<!-- === ADULT GATE OVERLAY === -->
+<div class="hub-gate" id="adult-gate">
+  <div class="hub-gate-card">
+    <div style="font-size:48px">🔒</div>
+    <h3 class="hub-gate-title">Позови взрослых к экрану!</h3>
+    <p class="hub-gate-sub" id="gate-question"></p>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+      <input type="number" id="gate-answer" class="hub-gate-input" inputmode="numeric" autocomplete="off" placeholder="?">
+      <button class="hub-gate-btn" id="btn-gate-check">Войти</button>
+    </div>
+    <p class="hub-gate-error" id="gate-error" style="display:none">Неправильно, попробуй ещё!</p>
+    <button class="hub-gate-cancel" id="btn-gate-cancel">Назад</button>
+  </div>
+</div>
+
 <!-- === FOOTER === -->
 <footer class="hub-footer">
   <div class="hub-footer-brand">
@@ -573,14 +635,14 @@
     kidion.ru
   </div>
   <div class="hub-footer-links">
-    <a href="/dashboard" class="hub-footer-link">
+    <button class="hub-footer-link" id="btn-parent-gate">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 1 1 8 0v3"/></svg>
       Родительский кабинет
-    </a>
-    <a href="#" class="hub-footer-link" onclick="fetch('/api/kid/logout',{method:'POST',credentials:'same-origin'}).then(function(){location.href='/kid/login'});return false">
+    </button>
+    <button class="hub-footer-link" id="btn-logout-gate">
       <span style="font-size:14px;line-height:1">&#8617;</span>
       Выйти
-    </a>
+    </button>
   </div>
   <div class="hub-footer-copy">kidion.ru</div>
 </footer>
@@ -725,5 +787,54 @@ function pluralLessons(n) {
   if ([2,3,4].indexOf(n % 10) !== -1 && [12,13,14].indexOf(n % 100) === -1) return 'урока';
   return 'уроков';
 }
+
+// Adult gate
+(function() {
+  var gate = document.getElementById('adult-gate');
+  var question = document.getElementById('gate-question');
+  var answer = document.getElementById('gate-answer');
+  var error = document.getElementById('gate-error');
+  var correctAnswer = 0;
+  var gateAction = null;
+
+  function generateProblem() {
+    var a = 10 + Math.floor(Math.random() * 40);
+    var b = 10 + Math.floor(Math.random() * 40);
+    correctAnswer = a + b;
+    question.textContent = a + ' + ' + b + ' = ?';
+    answer.value = '';
+    error.style.display = 'none';
+  }
+
+  function openGate(action) {
+    gateAction = action;
+    generateProblem();
+    gate.classList.add('is-open');
+    setTimeout(function() { answer.focus(); }, 100);
+  }
+
+  function checkGate() {
+    if (parseInt(answer.value, 10) === correctAnswer) {
+      gate.classList.remove('is-open');
+      if (gateAction === 'dashboard') {
+        window.location.href = '/dashboard';
+      } else if (gateAction === 'logout') {
+        fetch('/api/kid/logout', {method:'POST', credentials:'same-origin'}).then(function() {
+          window.location.href = '/kid/login';
+        });
+      }
+    } else {
+      error.style.display = '';
+      answer.value = '';
+      answer.focus();
+    }
+  }
+
+  document.getElementById('btn-parent-gate').addEventListener('click', function() { openGate('dashboard'); });
+  document.getElementById('btn-logout-gate').addEventListener('click', function() { openGate('logout'); });
+  document.getElementById('btn-gate-check').addEventListener('click', checkGate);
+  answer.addEventListener('keydown', function(e) { if (e.key === 'Enter') checkGate(); });
+  document.getElementById('btn-gate-cancel').addEventListener('click', function() { gate.classList.remove('is-open'); });
+})();
 </script>
 {% endblock %}
