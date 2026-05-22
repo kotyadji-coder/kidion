@@ -694,16 +694,19 @@
     html += '</a>';
   }
 
-  // Free lessons
-  if (freeLessons.length > 0) {
-    html += '<a class="hub-world k-card-hover" href="/kid/free-lessons">';
-    html += '<div class="hub-world-planet" style="background:radial-gradient(circle at 30% 30%, #8E6BFF, #5A3DBE); box-shadow: inset -8px -10px 16px rgba(0,0,0,.2), 0 12px 26px -10px rgba(142,107,255,.6); color: #8E6BFF;">';
-    html += '<svg width="58" height="58" viewBox="0 0 48 48" fill="none"><path d="M24 6l4 12 12 4-12 4-4 12-4-12-12-4 12-4z" fill="#fff" opacity=".3"/><path d="M38 8l1.5 4.5L44 14l-4.5 1.5L38 20l-1.5-4.5L32 14l4.5-1.5z" fill="#fff"/></svg>';
-    html += '</div>';
-    html += '<div class="hub-world-name">Свободные</div>';
-    html += '<div class="hub-world-soon" style="background:rgba(142,107,255,.12);color:#5A3DBE"><svg width="12" height="12" viewBox="0 0 24 24" fill="#8E6BFF"><path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6z"/></svg> Любая тема</div>';
-    html += '</a>';
+  // Free lessons — always show, locked if none
+  var hasFree = freeLessons.length > 0;
+  html += '<a class="hub-world k-card-hover" href="' + (hasFree ? '/kid/free-lessons' : '#') + '" style="' + (hasFree ? '' : 'opacity:.7;cursor:default') + '">';
+  html += '<div class="hub-world-planet" style="background:radial-gradient(circle at 30% 30%, #8E6BFF, #5A3DBE); box-shadow: inset -8px -10px 16px rgba(0,0,0,.2), 0 12px 26px -10px rgba(142,107,255,.6); color: #8E6BFF;">';
+  html += '<svg width="58" height="58" viewBox="0 0 48 48" fill="none"><path d="M24 6l4 12 12 4-12 4-4 12-4-12-12-4 12-4z" fill="#fff" opacity=".3"/><path d="M38 8l1.5 4.5L44 14l-4.5 1.5L38 20l-1.5-4.5L32 14l4.5-1.5z" fill="#fff"/></svg>';
+  html += '</div>';
+  html += '<div class="hub-world-name">Свободные</div>';
+  if (hasFree) {
+    html += '<div class="hub-world-soon" style="background:rgba(142,107,255,.12);color:#5A3DBE"><svg width="12" height="12" viewBox="0 0 24 24" fill="#8E6BFF"><path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6z"/></svg> ' + freeLessons.length + ' ' + pluralLessons(freeLessons.length) + '</div>';
+  } else {
+    html += '<div class="hub-world-soon" style="background:rgba(142,107,255,.10);color:#7B6657"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 1 1 8 0v3"/></svg> Скоро</div>';
   }
+  html += '</a>';
 
   grid.innerHTML = html || '<p style="text-align:center;color:var(--k-ink-mute);padding:20px;grid-column:1/-1">Предметы скоро появятся!</p>';
 })();
