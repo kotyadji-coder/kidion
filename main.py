@@ -2821,6 +2821,16 @@ async def page_privacy(request: Request):
     )
 
 
+@app.get("/offer", response_class=HTMLResponse)
+async def page_offer(request: Request):
+    if templates is None:
+        return HTMLResponse("<h1>Offer</h1>")
+    return templates.TemplateResponse(
+        request, "legal.html",
+        {"user": None, "title": "Договор оказания услуг (публичная оферта)", "page": "offer"},
+    )
+
+
 @app.get("/chat", response_class=HTMLResponse)
 async def page_chat(request: Request):
     # chat.kidion.ru → Киди Chat (child auth)
