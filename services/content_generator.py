@@ -74,193 +74,223 @@ def save_lesson_html(image_bytes: bytes | None, lesson_json: dict,
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Урок</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after {{ margin: 0; padding: 0; box-sizing: border-box; }}
 
 :root {{
-    --glass-bg: rgba(255,255,255,0.70);
-    --glass-border: rgba(255,255,255,0.90);
-    --glass-shadow: 0 8px 32px rgba(99,102,241,0.12);
-    --blur: blur(16px);
-    --text-dark: #1f2937;
-    --text-muted: #6b7280;
-    --accent: #6366f1;
-    --accent-glow: rgba(99,102,241,0.12);
-    --green: #10b981;
-    --red: #ef4444;
+    --bg: #FFF8EC;
+    --surface: #FFFFFF;
+    --ink: #2A1F1A;
+    --ink-soft: #7B6657;
+    --primary: #FF6B4A;
+    --star: #FFB627;
+    --streak: #3DAEA3;
+    --line: rgba(42,31,26,.10);
+    --green: #3DAEA3;
+    --red: #FF6B4A;
     --radius: 20px;
+    --subj-accent: #FF6B4A;
+    --subj-bg: #FFE3D6;
 }}
 
-html, body {{ min-height: 100%; background: #f0f0f5; }}
+html, body {{ min-height: 100%; background: var(--bg); }}
 
 .bg-layer {{
     position: fixed; inset: 0; z-index: -2;
     background-size: cover; background-position: center;
+    opacity: .18;
 }}
 body {{
     font-family: 'Nunito', sans-serif;
-    color: var(--text-dark);
-    line-height: 1.7;
+    color: var(--ink);
+    line-height: 1.6;
     min-height: 100vh;
 }}
 
 .bg-overlay {{
     position: fixed; inset: 0; z-index: -1;
-    background: linear-gradient(135deg,
-        rgba(199,210,254,0.38) 0%,
-        rgba(167,243,208,0.28) 50%,
-        rgba(253,230,138,0.25) 100%);
+    background: linear-gradient(180deg,
+        rgba(255,248,236,.96) 0%,
+        rgba(255,248,236,.98) 35%,
+        rgba(255,248,236,.98) 70%,
+        rgba(255,248,236,.96) 100%);
 }}
 
 .page {{
-    max-width: 900px;
+    max-width: 760px;
     margin: 0 auto;
-    padding: 48px 20px 80px;
-}}
-
-.glass-card {{
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: var(--blur);
-    -webkit-backdrop-filter: var(--blur);
-    border-radius: var(--radius);
-    box-shadow: var(--glass-shadow);
+    padding: 20px 16px 80px;
 }}
 
 /* ── Hero image ── */
 .lesson-hero {{
     width: 100%;
-    border-radius: var(--radius);
+    border-radius: 24px;
     margin-bottom: 20px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    box-shadow: 0 24px 60px -28px rgba(0,0,0,.18);
+    border: 1px solid var(--line);
 }}
 
 /* ── Old-style story blocks (fallback) ── */
 .story-block {{
-    display: flex; gap: 20px; align-items: flex-start;
-    padding: 24px 28px; margin-bottom: 16px;
-    font-size: 1.15rem; line-height: 1.8;
-    opacity: 0; transform: translateY(30px);
-    transition: opacity 0.55s ease, transform 0.55s ease;
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 16px; margin-bottom: 12px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: 0 1px 0 var(--line), 0 8px 20px -14px rgba(0,0,0,.18);
+    font-size: 1rem; line-height: 1.55;
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
 }}
 .story-block.visible {{ opacity: 1; transform: translateY(0); }}
 .story-emoji {{
-    flex-shrink: 0; width: 54px; height: 54px;
+    flex-shrink: 0; width: 44px; height: 44px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 2rem; background: rgba(255,255,255,0.55);
-    border: 1px solid rgba(255,255,255,0.88);
-    border-radius: 14px;
+    font-size: 1.6rem;
+    background: var(--subj-bg);
+    border-radius: 12px;
 }}
 .story-text {{ flex: 1; min-width: 0; }}
 
 /* ── Tasks section ── */
-.tasks-section {{ margin-top: 3rem; }}
+.tasks-section {{ margin-top: 2rem; }}
 
 .tasks-heading {{
-    font-size: 1.4rem; font-weight: 900; color: #fff;
-    background: var(--accent);
-    display: inline-block;
-    padding: 5px 18px; border-radius: 50px;
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: var(--ink);
+    margin-bottom: 8px;
+}}
+.tasks-heading::before, .tasks-heading::after {{
+    content: ''; height: 1px; width: 48px; background: var(--line);
+}}
+.tasks-sub {{
+    text-align: center;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--ink-soft);
     margin-bottom: 16px;
-    box-shadow: 0 2px 10px rgba(99,102,241,0.35);
 }}
 
 /* ── Task card ── */
 .task-card {{
-    padding: 28px 32px;
-    margin-bottom: 16px;
+    background: var(--surface);
+    border-radius: 22px;
+    border: 1px solid var(--line);
+    box-shadow: 0 2px 0 var(--line), 0 16px 30px -22px rgba(0,0,0,.20);
+    padding: 16px 16px 18px;
+    margin-bottom: 18px;
+    position: relative;
+    overflow: hidden;
 }}
 
 .task-header {{
-    display: flex; align-items: center; gap: 10px;
-    margin-bottom: 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
 }}
 
 .task-num {{
-    width: 26px; height: 26px;
-    background: var(--accent); color: #fff;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 0.82rem; flex-shrink: 0;
+    font-size: 0.78rem; font-weight: 800; color: var(--ink-soft);
 }}
 
 .task-type-label {{
-    font-size: 0.72rem; font-weight: 800;
-    letter-spacing: 0.07em; text-transform: uppercase;
-    padding: 4px 12px; border-radius: 50px;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 0.68rem; font-weight: 800;
+    letter-spacing: 0.06em; text-transform: uppercase;
 }}
-.task-type-quiz            {{ background: rgba(99,102,241,0.12);  color: #4338ca; }}
-.task-type-multiple_choice {{ background: rgba(139,92,246,0.12);  color: #6d28d9; }}
-.task-type-drag_and_drop   {{ background: rgba(13,148,136,0.12);  color: #0f766e; }}
-.task-type-fill_in_the_blank {{ background: rgba(245,158,11,0.12); color: #b45309; }}
-.task-type-ordering        {{ background: rgba(236,72,153,0.12);  color: #be185d; }}
+.task-type-label::before {{
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+}}
+.task-type-quiz            {{ background: rgba(255,107,74,0.08); color: var(--primary); }}
+.task-type-quiz::before    {{ background: var(--primary); }}
+.task-type-multiple_choice {{ background: rgba(61,174,163,0.08); color: var(--streak); }}
+.task-type-multiple_choice::before {{ background: var(--streak); }}
+.task-type-drag_and_drop   {{ background: rgba(255,182,39,0.08); color: #8C5A00; }}
+.task-type-drag_and_drop::before {{ background: #FFB627; }}
+.task-type-fill_in_the_blank {{ background: rgba(124,179,66,0.08); color: #456B1F; }}
+.task-type-fill_in_the_blank::before {{ background: #7CB342; }}
+.task-type-ordering        {{ background: rgba(142,107,255,0.08); color: #5A3DBE; }}
+.task-type-ordering::before {{ background: #8E6BFF; }}
 
 .task-question {{
-    font-size: 1.05rem; font-weight: 700;
-    color: var(--text-dark); line-height: 1.5;
-    margin-bottom: 16px;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--ink);
+    line-height: 1.25;
+    margin-bottom: 12px;
 }}
 
 /* ── Options (quiz / multiple choice) ── */
-.options-grid {{ display: flex; flex-wrap: wrap; gap: 10px; }}
+.options-grid {{ display: flex; flex-direction: column; gap: 8px; }}
 
 .option-btn {{
-    padding: 9px 20px; border-radius: 50px;
-    border: 2px solid rgba(99,102,241,0.25);
-    background: rgba(255,255,255,0.80);
-    color: var(--text-dark);
+    padding: 12px 14px; border-radius: 14px;
+    border: 1.5px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
     font-family: 'Nunito', sans-serif;
-    font-size: 1rem; font-weight: 700;
+    font-size: 0.95rem; font-weight: 600;
     cursor: pointer;
     transition: all 0.15s ease;
     user-select: none;
+    display: flex; align-items: center; gap: 10px;
+    text-align: left;
+    width: 100%;
 }}
 .option-btn:hover:not(:disabled):not(.correct):not(.wrong) {{
-    background: rgba(99,102,241,0.08);
-    border-color: rgba(99,102,241,0.55);
-    transform: translateY(-1px);
+    background: rgba(255,107,74,0.05);
+    border-color: var(--primary);
 }}
 .option-btn.correct {{
-    background: rgba(16,185,129,0.14);
-    border-color: var(--green); color: #065f46;
+    background: rgba(61,174,163,0.1);
+    border-color: var(--streak);
 }}
 .option-btn.wrong {{
-    background: rgba(239,68,68,0.11);
-    border-color: var(--red); color: #991b1b;
-    animation: shake 0.3s;
+    background: rgba(255,107,74,0.08);
+    border-color: var(--primary);
+    animation: shake 0.4s;
 }}
 .option-btn:disabled {{ cursor: default; }}
 
 @keyframes shake {{
     0%,100% {{ transform: translateX(0); }}
-    25% {{ transform: translateX(-5px); }}
-    75% {{ transform: translateX(5px); }}
+    20% {{ transform: translateX(-4px); }}
+    40% {{ transform: translateX(4px); }}
+    60% {{ transform: translateX(-2px); }}
+    80% {{ transform: translateX(2px); }}
 }}
 
 /* ── Check button ── */
 .check-btn {{
     display: inline-block;
     margin-top: 14px;
-    padding: 10px 28px;
-    border-radius: 50px;
+    padding: 12px 28px;
+    border-radius: 14px;
     border: none;
-    background: var(--accent);
+    background: var(--primary);
     color: #fff;
-    font-family: 'Nunito', sans-serif;
+    font-family: 'Fredoka', sans-serif;
     font-size: 0.95rem;
-    font-weight: 800;
+    font-weight: 700;
     cursor: pointer;
     transition: opacity 0.15s, transform 0.15s;
+    box-shadow: 0 10px 24px -10px rgba(255,107,74,.45);
 }}
-.check-btn:hover  {{ opacity: 0.87; transform: translateY(-1px); }}
+.check-btn:hover  {{ opacity: 0.9; transform: translateY(-1px); }}
 .check-btn:active {{ transform: translateY(0); }}
 
 /* ── Multiple choice (selected state) ── */
 .option-btn.selected {{
-    background: rgba(99,102,241,0.12);
-    border-color: var(--accent);
-    color: #4338ca;
+    background: rgba(255,107,74,0.08);
+    border-color: var(--primary);
+    color: var(--ink);
 }}
 
 /* ── Fill in the blank ── */
@@ -273,89 +303,95 @@ body {{
 .fitb-row .check-btn {{ margin-top: 0; }}
 .fill-input {{
     flex: 1; min-width: 160px;
-    padding: 10px 18px;
-    border-radius: 50px;
-    border: 2px solid rgba(99,102,241,0.25);
-    background: rgba(255,255,255,0.85);
-    font-family: 'Nunito', sans-serif;
-    font-size: 1rem; font-weight: 600;
-    color: var(--text-dark);
+    padding: 12px 18px;
+    border-radius: 14px;
+    border: 2px solid var(--line);
+    background: var(--bg);
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1.1rem; font-weight: 700;
+    color: var(--ink);
     outline: none;
     transition: border-color 0.15s, background 0.15s;
 }}
-.fill-input:focus {{ border-color: var(--accent); }}
-.fill-input.correct {{ border-color: var(--green); background: rgba(16,185,129,0.09); }}
-.fill-input.wrong   {{ border-color: var(--red);   background: rgba(239,68,68,0.08); }}
+.fill-input:focus {{ border-color: var(--primary); }}
+.fill-input.correct {{ border-color: var(--streak); background: rgba(61,174,163,0.06); }}
+.fill-input.wrong   {{ border-color: var(--primary); background: rgba(255,107,74,0.06); }}
 
 /* ── Drag and drop ── */
-.dnd-wrapper {{ display: flex; flex-direction: column; gap: 14px; }}
+.dnd-wrapper {{ display: flex; flex-direction: column; gap: 10px; }}
 .drag-pool {{
-    display: flex; flex-wrap: wrap; gap: 10px;
-    min-height: 52px; padding: 10px 14px;
-    background: rgba(255,255,255,0.45);
-    border: 2px dashed rgba(99,102,241,0.28);
+    display: flex; flex-wrap: wrap; gap: 8px;
+    min-height: 48px; padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--line);
     border-radius: 14px;
 }}
 .drag-item {{
-    padding: 8px 20px; border-radius: 50px;
-    background: rgba(255,255,255,0.92);
-    border: 2px solid rgba(99,102,241,0.28);
-    color: var(--text-dark);
-    font-weight: 800; font-size: 1rem;
+    padding: 6px 14px; border-radius: 999px;
+    background: var(--surface);
+    border: 1.5px solid var(--primary);
+    color: var(--primary);
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700; font-size: 0.95rem;
     cursor: grab; user-select: none;
-    transition: border-color 0.15s, transform 0.15s, opacity 0.15s;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    transition: all 0.15s;
+    box-shadow: 0 4px 10px -6px rgba(255,107,74,.45);
 }}
-.drag-item:hover {{ border-color: var(--accent); transform: translateY(-2px); }}
+.drag-item:hover {{ transform: translateY(-2px); }}
 .drag-item.dragging {{ opacity: 0.35; cursor: grabbing; }}
-.drop-zones {{ display: flex; gap: 10px; flex-wrap: wrap; }}
+.drop-zones {{ display: flex; flex-direction: column; gap: 8px; }}
 .drop-zone {{
-    flex: 1; min-width: 100px;
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-    padding: 10px 8px; border-radius: 14px;
-    border: 2px dashed rgba(99,102,241,0.25);
-    background: rgba(255,255,255,0.38);
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 14px;
+    border: 1.5px dashed var(--line);
+    background: var(--bg);
     transition: all 0.15s;
 }}
-.drop-zone.drag-over  {{ border-color: var(--accent); background: rgba(99,102,241,0.08); }}
-.drop-zone.matched    {{ border-color: var(--green);  background: rgba(16,185,129,0.09); border-style: solid; }}
-.drop-zone.wrong-match {{ border-color: var(--red);   background: rgba(239,68,68,0.08);  border-style: solid; }}
-.zone-slot {{ min-height: 44px; width: 100%; display: flex; align-items: center; justify-content: center; }}
-.zone-label {{ font-size: 0.82rem; font-weight: 700; color: var(--text-muted); text-align: center; }}
+.drop-zone.drag-over  {{ border-color: var(--star); background: rgba(255,182,39,.08); box-shadow: 0 0 0 6px rgba(255,182,39,.14); }}
+.drop-zone.matched    {{ border-color: var(--streak); background: rgba(61,174,163,.06); border-style: solid; }}
+.drop-zone.wrong-match {{ border-color: var(--primary); background: rgba(255,107,74,.06); border-style: solid; }}
+.zone-slot {{ min-height: 38px; flex: 0 0 70px; display: flex; align-items: center; justify-content: center; border-radius: 999px; border: 2px dashed var(--line); }}
+.zone-slot:has(.drag-item) {{ border: none; }}
+.zone-label {{ font-size: 0.85rem; font-weight: 700; color: var(--ink); flex: 1; }}
 
 /* ── Ordering ── */
-.ordering-list {{ list-style: none; display: flex; flex-direction: column; gap: 8px; }}
+.ordering-list {{ list-style: none; display: flex; flex-direction: column; gap: 6px; }}
 .ordering-item {{
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px 18px; border-radius: 14px;
-    background: rgba(255,255,255,0.85);
-    border: 2px solid rgba(99,102,241,0.18);
-    font-weight: 700; font-size: 1rem; color: var(--text-dark);
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 14px;
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700; font-size: 1.1rem; color: var(--subj-accent);
     cursor: grab; user-select: none;
     transition: all 0.15s;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }}
-.ordering-item:hover {{ border-color: rgba(99,102,241,0.42); }}
+.ordering-item:hover {{ border-color: var(--primary); }}
 .ordering-item.dragging {{ opacity: 0.32; cursor: grabbing; }}
-.ordering-item.drag-over {{ border-color: var(--accent); background: rgba(99,102,241,0.07); }}
-.ordering-item.correct {{ border-color: var(--green); background: rgba(16,185,129,0.10); }}
-.drag-handle {{ color: #9ca3af; font-size: 1.15rem; line-height: 1; flex-shrink: 0; }}
+.ordering-item.drag-over {{ border-color: var(--star); background: rgba(255,182,39,.08); }}
+.ordering-item.correct {{ border-color: var(--streak); background: rgba(61,174,163,.06); }}
+.drag-handle {{ color: var(--ink-soft); font-size: 1rem; line-height: 1; flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; }}
+.drag-handle span {{ width: 14px; height: 2px; background: var(--ink-soft); border-radius: 1px; display: block; }}
 
 /* ── Feedback ── */
 .task-feedback {{
     margin-top: 12px;
-    font-size: 0.95rem; font-weight: 700;
-    padding: 9px 16px; border-radius: 12px;
+    font-size: 0.85rem; font-weight: 700;
+    padding: 8px 12px; border-radius: 12px;
     display: none;
 }}
-.task-feedback.visible {{ display: block; }}
-.task-feedback.success {{ background: rgba(16,185,129,0.13); color: #065f46; }}
-.task-feedback.error   {{ background: rgba(239,68,68,0.11);  color: #991b1b; }}
+.task-feedback.visible {{ display: flex; align-items: center; gap: 6px; }}
+.task-feedback.success {{ background: rgba(61,174,163,.08); color: var(--streak); }}
+.task-feedback.error   {{ background: rgba(255,107,74,.08); color: var(--primary); }}
 
 /* ── Congrats banner ── */
 .congrats-banner {{
-    margin-top: 24px; padding: 32px 28px;
+    margin-top: 24px; padding: 22px 18px 18px;
     text-align: center;
+    background: linear-gradient(160deg, var(--subj-bg), var(--surface) 65%);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    position: relative; overflow: hidden;
     opacity: 0; transform: translateY(24px);
     pointer-events: none;
     transition: opacity 0.6s ease, transform 0.6s ease;
@@ -363,17 +399,31 @@ body {{
 .congrats-banner.visible {{
     opacity: 1; transform: translateY(0); pointer-events: auto;
 }}
-.congrats-trophy {{ font-size: 3rem; line-height: 1; margin-bottom: 12px; }}
-.congrats-title  {{ font-size: 1.35rem; font-weight: 900; color: var(--text-dark); margin-bottom: 6px; }}
-.congrats-sub    {{ font-size: 1rem; color: var(--text-muted); font-weight: 600; }}
+.congrats-trophy {{
+    width: 88px; height: 88px; border-radius: 50%;
+    background: linear-gradient(160deg, var(--star), var(--primary));
+    margin: 0 auto; display: flex; align-items: center; justify-content: center;
+    font-size: 46px; line-height: 1;
+    box-shadow: 0 14px 30px -10px rgba(255,107,74,.5);
+    border: 4px solid var(--surface);
+    animation: kFloat 3s ease-in-out infinite;
+    position: relative; z-index: 1;
+}}
+.congrats-title {{
+    margin: 14px 0 4px;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--ink);
+    letter-spacing: -.01em;
+}}
+.congrats-sub {{ font-size: 0.95rem; color: var(--ink-soft); font-weight: 600; }}
+@keyframes kFloat {{ 0%,100%{{transform:translateY(0)}} 50%{{transform:translateY(-8px)}} }}
 
 /* ── Responsive ── */
 @media (max-width: 480px) {{
-    .page {{ padding: 24px 12px 60px; }}
-    .task-card {{ padding: 22px 18px; }}
-    .options-grid {{ flex-direction: column; }}
-    .option-btn {{ width: 100%; text-align: left; }}
-    .drop-zones {{ flex-direction: column; }}
+    .page {{ padding: 14px 12px 60px; }}
+    .task-card {{ padding: 14px 14px 16px; }}
     .fitb-row {{ flex-direction: column; align-items: stretch; }}
     .fitb-row .check-btn {{ align-self: flex-start; }}
 }}
@@ -390,14 +440,16 @@ body {{
 {story_html}
 
 <div class="tasks-section">
-    <span class="tasks-heading">Задания</span>
+    <div style="text-align:center;padding:22px 16px 4px;">
+      <span class="tasks-heading">Теперь твоя очередь</span>
+    </div>
     {tasks_html}
 </div>
 
-<div class="congrats-banner glass-card" id="congrats">
+<div class="congrats-banner" id="congrats">
     <div class="congrats-trophy">🏆</div>
     <div class="congrats-title">Урок завершён!</div>
-    <div class="congrats-sub">Отличная работа!</div>
+    <div class="congrats-sub">Отличная работа! 🎉</div>
 </div>
 
 </div>
@@ -411,9 +463,9 @@ var wrongAttempts = {{}};
 function showFeedback(cardId, ok, msg) {{
   var fb = document.getElementById(cardId).querySelector('.task-feedback');
   if (!fb) return;
-  fb.textContent = msg || (ok ? 'Правильно!' : 'Попробуй ещё раз!');
+  fb.innerHTML = (ok ? '\u2728 ' : '\uD83D\uDCAA ') + (msg || (ok ? 'Точно! Молодец!' : 'Почти! Попробуй ещё раз'));
   fb.className = 'task-feedback visible ' + (ok ? 'success' : 'error');
-  if (!ok) setTimeout(function() {{ fb.className = 'task-feedback'; }}, 1500);
+  if (!ok) setTimeout(function() {{ fb.className = 'task-feedback'; }}, 2000);
 }}
 
 function markDone(cardId, ok) {{
@@ -421,7 +473,14 @@ function markDone(cardId, ok) {{
   card.dataset.done = '1';
   completedTasks++;
   if (ok && !wrongAttempts[cardId]) correctCount++;
-  showFeedback(cardId, true, 'Правильно!');
+  showFeedback(cardId, true, 'Точно! Молодец!');
+  // Notify parent about progress
+  if (window.parent && window.parent !== window) {{
+    window.parent.postMessage({{
+      type: 'kidion_task_progress',
+      completed: completedTasks
+    }}, '*');
+  }}
   if (completedTasks >= totalTasks) finishLesson();
 }}
 
@@ -646,10 +705,10 @@ def _build_tasks_html(tasks: list[dict]) -> str:
             body = _build_quiz(card_id, task)
 
         html += f"""
-<div class="task-card glass-card" id="{card_id}" data-done="0">
+<div class="task-card" id="{card_id}" data-done="0">
     <div class="task-header">
-        <span class="task-num">{i + 1}</span>
         <span class="task-type-label task-type-{task_type}">{type_label}</span>
+        <span class="task-num">{i + 1}<span style="opacity:.4">/{len(tasks)}</span></span>
     </div>
     <div class="task-question">{question}</div>
     {body}
