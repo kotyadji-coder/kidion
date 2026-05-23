@@ -3,59 +3,416 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <meta name="theme-color" content="#22C55E">
+  <meta name="theme-color" content="#FFF8EC">
   <title>Kidion — {{ lesson.topic_title }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/kid/style.css?v=2">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { padding: 0; }
+    :root {
+      --bg: #FFF8EC;
+      --surface: #FFFFFF;
+      --ink: #2A1F1A;
+      --ink-soft: #7B6657;
+      --primary: #FF6B4A;
+      --star: #FFB627;
+      --streak: #3DAEA3;
+      --line: rgba(42,31,26,.10);
+      /* subject colors — set by JS based on lesson.subject */
+      --subj-bg: #FFE3D6;
+      --subj-ink: #B33A1A;
+      --subj-accent: #FF6B4A;
+    }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg);
+      font-family: 'Nunito', system-ui, sans-serif;
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+
     .lesson-layout {
       display: flex;
       flex-direction: column;
       height: 100vh;
-      max-width: 1100px;
+      height: 100dvh;
+      max-width: 1280px;
+      margin: 0 auto;
       width: 100%;
     }
-    .lesson-topbar { flex-shrink: 0; }
+
+    /* ─── Top bar ─── */
+    .lesson-topbar {
+      flex-shrink: 0;
+      background: rgba(255,255,255,.96);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+      padding: 10px 14px 8px;
+    }
+    .topbar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-back {
+      width: 36px; height: 36px;
+      border-radius: 12px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--ink);
+      text-decoration: none;
+      flex-shrink: 0;
+      padding: 0;
+    }
+    .topbar-title { flex: 1; min-width: 0; }
+    .topbar-subject {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--subj-accent);
+      line-height: 1;
+    }
+    .topbar-name {
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--ink);
+      line-height: 1.15;
+      margin-top: 3px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .progress-chip {
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--ink);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .progress-chip .dim { opacity: .4; }
+    .btn-print {
+      width: 36px; height: 36px;
+      border-radius: 12px;
+      background: var(--subj-bg);
+      color: var(--subj-ink);
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+      text-decoration: none;
+    }
+
+    /* Progress bar */
+    .progress-bar {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .progress-seg {
+      flex: 1; height: 6px;
+      border-radius: 999px;
+      background: rgba(var(--subj-accent-rgb, 255,107,74), .13);
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-seg.done { background: var(--subj-accent); }
+    .progress-seg.active .progress-fill {
+      position: absolute; left: 0; top: 0; bottom: 0;
+      width: 40%; border-radius: 999px;
+      background: var(--subj-accent);
+      animation: kPulse 1.4s ease-in-out infinite;
+    }
+    .progress-dot {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .progress-dot.done {
+      background: var(--subj-accent);
+    }
+    .progress-dot.pending {
+      background: var(--bg);
+      border: 1.5px solid var(--line);
+    }
+
+    /* ─── Desktop top bar ─── */
+    @media (min-width: 768px) {
+      .lesson-topbar { padding: 14px 40px; }
+      .topbar-row { gap: 16px; }
+      .btn-back {
+        width: auto; padding: 8px 14px 8px 10px;
+        gap: 8px; font-family: 'Nunito', sans-serif;
+        font-weight: 700; font-size: 13px;
+      }
+      .btn-back-label { display: inline; }
+      .topbar-subject {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 6px 12px; border-radius: 999px;
+        background: var(--subj-bg); color: var(--subj-ink);
+        font-size: 12px; font-weight: 800; letter-spacing: .04em;
+      }
+      .topbar-subject::before {
+        content: ''; width: 6px; height: 6px;
+        border-radius: 50%; background: var(--subj-accent);
+      }
+      .topbar-name { font-size: 18px; margin-top: 0; }
+      .topbar-title {
+        display: flex; align-items: center; gap: 12px;
+      }
+      .progress-chip {
+        padding: 7px 14px; font-size: 13px;
+      }
+      .btn-print {
+        width: auto; padding: 8px 14px;
+        border-radius: 12px; gap: 8px;
+        font-family: 'Fredoka', sans-serif;
+        font-weight: 600; font-size: 13px;
+      }
+      .btn-print-label { display: inline; }
+      .progress-bar { max-width: 1200px; margin: 12px auto 0; width: 100%; gap: 6px; }
+      .progress-seg { height: 8px; }
+      .progress-dot { width: 18px; height: 18px; }
+    }
+    @media (max-width: 767px) {
+      .btn-back-label { display: none; }
+      .btn-print-label { display: none; }
+    }
+
+    /* ─── Iframe ─── */
     .lesson-iframe {
       flex: 1;
       border: none;
       width: 100%;
       min-height: 0;
     }
-    .lesson-bottom-bar { flex-shrink: 0; }
-    .auto-saving {
-      text-align: center;
-      padding: 16px;
-      color: var(--kk-muted, #7E9786);
-      font-size: 14px;
-      font-weight: 600;
+
+    /* ─── Bottom bar ─── */
+    .lesson-bottom {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px 12px;
+      border-top: 1px solid var(--line);
+      background: rgba(255,255,255,.8);
+      font-size: 11px;
+      color: var(--ink-soft);
     }
+    .btn-report {
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--ink-soft);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    @media (min-width: 768px) {
+      .lesson-bottom { padding: 12px 40px 16px; }
+    }
+
+    /* ─── Loading state ─── */
+    .loading-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 24px;
+      text-align: center;
+    }
+    .loading-orbit {
+      width: 140px; height: 140px;
+      position: relative;
+    }
+    .loading-ring {
+      position: absolute; inset: 0;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, var(--primary), var(--star), var(--streak), var(--primary));
+      filter: blur(.5px);
+      opacity: .35;
+      animation: kSpin 4s linear infinite;
+    }
+    .loading-center {
+      position: absolute; inset: 14px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 2px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 52px;
+      animation: kBob 2.6s ease-in-out infinite;
+    }
+    .loading-particle {
+      position: absolute;
+      font-size: 22px; line-height: 1;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,.15));
+    }
+    .loading-title {
+      margin: 28px 0 6px;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      font-size: 24px;
+      color: var(--ink);
+    }
+    .loading-desc {
+      font-size: 14px;
+      color: var(--ink-soft);
+      font-weight: 600;
+      max-width: 280px;
+      line-height: 1.45;
+    }
+    .loading-steps {
+      margin-top: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      max-width: 280px;
+    }
+    .loading-step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      text-align: left;
+    }
+    .loading-step.done {
+      background: rgba(61,174,163,.08);
+      border: 1px solid rgba(61,174,163,.2);
+    }
+    .loading-step.active {
+      background: var(--surface);
+      border: 1px solid var(--primary);
+    }
+    .loading-step.pending {
+      border: 1px dashed var(--line);
+    }
+    .loading-step-dot {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .loading-step.done .loading-step-dot {
+      background: var(--streak);
+    }
+    .loading-step.active .loading-step-dot {
+      border: 2px solid var(--primary);
+      animation: kPulse 1.2s ease-in-out infinite;
+    }
+    .loading-step.active .loading-step-dot::after {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--primary);
+    }
+    .loading-step.pending .loading-step-dot {
+      background: rgba(42,31,26,.04);
+    }
+    .loading-step-text {
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .loading-step.done .loading-step-text { color: var(--streak); }
+    .loading-step.active .loading-step-text { color: var(--ink); }
+    .loading-step.pending .loading-step-text { color: var(--ink-soft); }
+
+    /* ─── Auto-save status ─── */
+    .auto-status {
+      text-align: center;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'Fredoka', sans-serif;
+      color: var(--ink-soft);
+      display: none;
+    }
+
+    /* ─── Animations ─── */
+    @keyframes kFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    @keyframes kSpin  { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+    @keyframes kPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
+    @keyframes kBob   { 0%,100%{transform:translateY(0) rotate(-1deg)} 50%{transform:translateY(-3px) rotate(1deg)} }
   </style>
 </head>
 <body data-page="lesson">
 
   <input type="hidden" id="lesson-id" value="{{ lesson.id }}">
+  <input type="hidden" id="lesson-subject" value="{{ lesson.subject or 'math' }}">
 
   <div class="lesson-layout">
+    <!-- Top bar -->
     <div class="lesson-topbar">
-      <a href="/kid/home" class="btn-back">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M15 6 L9 12 L15 18"/></svg>
-      </a>
-      <div class="lesson-topbar-title">
-        <div class="lesson-topbar-title__subject">{{ lesson.subject if lesson.subject else '' }}</div>
-        <div class="lesson-topbar-title__name">{{ lesson.topic_title }}</div>
+      <div class="topbar-row">
+        <a href="/kid/home" class="btn-back" aria-label="На главную">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          <span class="btn-back-label">На главную</span>
+        </a>
+        <div class="topbar-title">
+          <div class="topbar-subject">
+            {% set subj_names = {'math': 'Математика', 'russian': 'Русский язык', 'english': 'Английский', 'world': 'Окр. мир'} %}
+            {{ subj_names.get(lesson.subject, lesson.subject or '') }}
+          </div>
+          <div class="topbar-name">{{ lesson.topic_title }}</div>
+        </div>
+        <div class="progress-chip" id="progress-chip">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--star)" stroke="none"><path d="M12 2.5l2.9 6.5 7.1.7-5.4 4.8 1.6 7-6.2-3.6L5.8 21.5l1.6-7L2 9.7l7.1-.7z"/></svg>
+          <span id="progress-current">0</span><span class="dim">/5</span>
+        </div>
+        {% if lesson.worksheet_url %}
+        <a href="{{ lesson.worksheet_url }}" target="_blank" class="btn-print" aria-label="Распечатать квест">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="6" y="3" width="12" height="6" rx="1"/>
+            <rect x="4" y="9" width="16" height="9" rx="2"/>
+            <rect x="7" y="14" width="10" height="7" rx="1"/>
+          </svg>
+          <span class="btn-print-label">Распечатать квест</span>
+        </a>
+        {% endif %}
       </div>
-      {% if lesson.worksheet_url %}
-      <a href="{{ lesson.worksheet_url }}" target="_blank" class="btn btn-sm btn-secondary" style="width:auto; font-size:12px;">
-        🖨️ Квест
-      </a>
-      {% endif %}
+      <!-- Progress bar -->
+      <div class="progress-bar" id="progress-bar">
+        {% for i in range(5) %}
+        <div class="progress-seg" id="seg-{{ i }}">
+          <div class="progress-fill"></div>
+        </div>
+        {% if not loop.last %}
+        <div class="progress-dot pending" id="dot-{{ i }}"></div>
+        {% endif %}
+        {% endfor %}
+      </div>
     </div>
 
     {% if lesson.content_url %}
+    <!-- Lesson iframe -->
     <iframe
       class="lesson-iframe"
       src="{{ lesson.content_url }}"
@@ -63,74 +420,193 @@
       title="{{ lesson.topic_title }}"
       sandbox="allow-scripts allow-same-origin allow-popups"
     ></iframe>
-    <div style="display:flex; align-items:center; justify-content:space-between; padding:4px 16px; font-size:11px; color:#7E9786;">
+    <!-- Bottom bar -->
+    <div class="lesson-bottom">
       <span>Урок создан с помощью ИИ</span>
-      <button onclick="reportLesson()" style="background:none; border:1px solid var(--kk-line); border-radius:12px; padding:2px 10px; font-size:11px; color:#7E9786; cursor:pointer; font-family:inherit;">Пожаловаться</button>
+      <button class="btn-report" onclick="reportLesson()">Пожаловаться</button>
     </div>
     {% else %}
-    <div style="flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:16px; padding:40px;">
-      <div class="spinner"></div>
-      <p style="color: var(--kk-muted); font-size: 16px; font-weight: 600;">Урок ещё готовится...</p>
+    <!-- Loading state -->
+    <div class="loading-screen">
+      <div class="loading-orbit">
+        <div class="loading-ring"></div>
+        <div class="loading-center" id="loading-emoji">📚</div>
+        <span class="loading-particle" style="left:10%;top:15%;animation:kFloat 2.4s ease-in-out infinite">✨</span>
+        <span class="loading-particle" style="left:82%;top:25%;animation:kFloat 2.6s ease-in-out .6s infinite">⭐</span>
+        <span class="loading-particle" style="left:18%;top:78%;animation:kFloat 2.8s ease-in-out 1.2s infinite">✏️</span>
+        <span class="loading-particle" style="left:78%;top:78%;animation:kFloat 3.0s ease-in-out .3s infinite">📐</span>
+      </div>
+      <h2 class="loading-title">Урок готовится…</h2>
+      <div class="loading-desc">ИИ собирает урок в твоей вселенной. Это займёт 10–20 секунд.</div>
+      <div class="loading-steps" id="loading-steps">
+        <div class="loading-step done">
+          <span class="loading-step-dot">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>
+          </span>
+          <span class="loading-step-text">Подбираем сюжет</span>
+        </div>
+        <div class="loading-step active">
+          <span class="loading-step-dot"></span>
+          <span class="loading-step-text">Пишем теорию</span>
+        </div>
+        <div class="loading-step pending">
+          <span class="loading-step-dot"></span>
+          <span class="loading-step-text">Готовим 5 заданий</span>
+        </div>
+        <div class="loading-step pending">
+          <span class="loading-step-dot"></span>
+          <span class="loading-step-text">Рисуем картинку мира</span>
+        </div>
+      </div>
     </div>
     {% endif %}
 
-    <div class="lesson-bottom-bar" id="bottom-bar">
-      <div class="auto-saving" id="auto-status" style="display:none">⏳ Сохраняю результат...</div>
-    </div>
+    <div class="auto-status" id="auto-status"></div>
   </div>
 
   <script>
-  var lessonId = document.getElementById('lesson-id').value;
-  var resultSaved = false;
+  (function() {
+    var lessonId = document.getElementById('lesson-id').value;
+    var subject = document.getElementById('lesson-subject').value;
+    var resultSaved = false;
 
-  // Listen for auto-scored result from lesson iframe
-  window.addEventListener('message', async function(event) {
-    if (!event.data || event.data.type !== 'kidion_lesson_complete') return;
-    if (resultSaved) return;
-    resultSaved = true;
+    // Subject color palette
+    var SUBJ = {
+      math:    { bg: '#FFE3D6', ink: '#B33A1A', accent: '#FF6B4A' },
+      russian: { bg: '#D6F1EC', ink: '#1F6E64', accent: '#3DAEA3' },
+      english: { bg: '#FFF0CF', ink: '#8C5A00', accent: '#FFB627' },
+      world:   { bg: '#E3F2D2', ink: '#456B1F', accent: '#7CB342' },
+    };
+    var s = SUBJ[subject] || SUBJ.math;
+    var root = document.documentElement;
+    root.style.setProperty('--subj-bg', s.bg);
+    root.style.setProperty('--subj-ink', s.ink);
+    root.style.setProperty('--subj-accent', s.accent);
 
-    var correct = event.data.correct;
-    var total = event.data.total;
+    // Subject emoji for loading
+    var emojiMap = { math: '🔢', russian: '📝', english: '🌍', world: '🌿' };
+    var emojiEl = document.getElementById('loading-emoji');
+    if (emojiEl) emojiEl.textContent = emojiMap[subject] || '📚';
 
-    var statusEl = document.getElementById('auto-status');
-    statusEl.style.display = 'block';
-    statusEl.textContent = '⏳ Сохраняю результат...';
-
-    try {
-      var resp = await fetch('/api/lessons/' + lessonId + '/result', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ correct_answers: correct, total_answers: total || 5 })
-      });
-
-      if (resp.ok) {
-        window.location.href = '/kid/result/' + lessonId;
-      } else {
-        statusEl.textContent = '❌ Ошибка сохранения. Попробуй обновить страницу.';
-        resultSaved = false;
+    // Progress bar update from iframe
+    var currentTask = 0;
+    function updateProgress(n) {
+      currentTask = n;
+      var chip = document.getElementById('progress-current');
+      if (chip) chip.textContent = n;
+      for (var i = 0; i < 5; i++) {
+        var seg = document.getElementById('seg-' + i);
+        var dot = document.getElementById('dot-' + i);
+        if (!seg) continue;
+        seg.className = 'progress-seg';
+        if (i < n) {
+          seg.classList.add('done');
+        } else if (i === n) {
+          seg.classList.add('active');
+        }
+        if (dot) {
+          dot.className = 'progress-dot';
+          dot.innerHTML = '';
+          if (i < n) {
+            dot.classList.add('done');
+            dot.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>';
+          } else {
+            dot.classList.add('pending');
+          }
+        }
       }
-    } catch(e) {
-      statusEl.textContent = '❌ Ошибка соединения.';
-      resultSaved = false;
     }
-  });
 
-  async function reportLesson() {
-    if (confirm('Пожаловаться на содержание урока?')) {
+    // Listen for task completion and lesson result from iframe
+    window.addEventListener('message', async function(event) {
+      if (!event.data) return;
+
+      // Task progress updates
+      if (event.data.type === 'kidion_task_progress') {
+        updateProgress(event.data.completed || 0);
+        return;
+      }
+
+      // Lesson complete
+      if (event.data.type !== 'kidion_lesson_complete') return;
+      if (resultSaved) return;
+      resultSaved = true;
+
+      var correct = event.data.correct;
+      var total = event.data.total;
+      updateProgress(total || 5);
+
+      var statusEl = document.getElementById('auto-status');
+      statusEl.style.display = 'block';
+      statusEl.textContent = '⭐ Сохраняю результат...';
+
       try {
-        await fetch('/api/report', {
+        var resp = await fetch('/api/lessons/' + lessonId + '/result', {
           method: 'POST',
           credentials: 'same-origin',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({lesson_id: parseInt(lessonId), reason: 'inappropriate_content'})
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ correct_answers: correct, total_answers: total || 5 })
         });
-        alert('Спасибо! Мы проверим этот урок.');
+
+        if (resp.ok) {
+          window.location.href = '/kid/result/' + lessonId;
+        } else {
+          statusEl.textContent = 'Ошибка сохранения. Попробуй обновить страницу.';
+          resultSaved = false;
+        }
       } catch(e) {
-        alert('Ошибка отправки. Попробуйте позже.');
+        statusEl.textContent = 'Ошибка соединения.';
+        resultSaved = false;
       }
-    }
-  }
+    });
+
+    window.reportLesson = async function() {
+      if (confirm('Пожаловаться на содержание урока?')) {
+        try {
+          await fetch('/api/report', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({lesson_id: parseInt(lessonId), reason: 'inappropriate_content'})
+          });
+          alert('Спасибо! Мы проверим этот урок.');
+        } catch(e) {
+          alert('Ошибка отправки. Попробуйте позже.');
+        }
+      }
+    };
+
+    {% if not lesson.content_url %}
+    // Poll for lesson readiness
+    var pollCount = 0;
+    var pollInterval = setInterval(async function() {
+      pollCount++;
+      if (pollCount > 60) { clearInterval(pollInterval); return; }
+      try {
+        var resp = await fetch('/api/lessons/' + lessonId + '/poll');
+        var data = await resp.json();
+        if (data.status === 'done' && data.content_url) {
+          clearInterval(pollInterval);
+          window.location.reload();
+        }
+      } catch(e) {}
+    }, 3000);
+
+    // Animate loading steps
+    var steps = document.querySelectorAll('.loading-step');
+    var stepIdx = 1;
+    setInterval(function() {
+      if (stepIdx >= steps.length) return;
+      steps[stepIdx].className = 'loading-step done';
+      steps[stepIdx].querySelector('.loading-step-dot').innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>';
+      stepIdx++;
+      if (stepIdx < steps.length) {
+        steps[stepIdx].className = 'loading-step active';
+        steps[stepIdx].querySelector('.loading-step-dot').innerHTML = '';
+      }
+    }, 5000);
+    {% endif %}
+  })();
   </script>
 </body>
 </html>
