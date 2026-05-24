@@ -104,6 +104,24 @@
       : '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1.5 9s3-5.5 7.5-5.5S16.5 9 16.5 9s-3 5.5-7.5 5.5S1.5 9 1.5 9z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="9" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>';
   });
 
+  // Auto-detect if already logged in (e.g. after registration redirect)
+  (async function() {
+    try {
+      const res = await fetch('/api/children', { credentials: 'same-origin' });
+      if (res.ok) {
+        const data = await res.json();
+        children = data.children || data || [];
+        if (children.length === 1) {
+          authChild(children[0]);
+          return;
+        } else if (children.length > 1) {
+          showChildPicker();
+          return;
+        }
+      }
+    } catch(e) {}
+  })();
+
   document.getElementById('login-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     const errEl = document.getElementById('login-error');
