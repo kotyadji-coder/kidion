@@ -54,6 +54,43 @@
 
   .rpt-empty { text-align: center; padding: 40px 20px; color: var(--text-3); font-size: 14px; }
 
+  .rpt-children { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+  .rpt-child {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    font-size: 14px; font-weight: 500; color: var(--text);
+    text-decoration: none; transition: border-color .12s, background .12s;
+  }
+  .rpt-child:hover { border-color: var(--spark-violet-border); background: var(--spark-violet-soft); text-decoration: none; color: var(--text); }
+  .rpt-child.is-active { border-color: var(--spark-violet); background: var(--spark-violet-soft); }
+  .rpt-child-grade { font-size: 12px; color: var(--text-3); }
+  .rpt-child-add {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: 10px;
+    background: none; border: 1px dashed var(--border);
+    font-size: 13px; color: var(--text-3); cursor: pointer;
+    font-family: inherit; transition: background .12s, color .12s;
+  }
+  .rpt-child-add:hover { background: var(--surface-2); color: var(--text-2); }
+
+  .rpt-add-form {
+    display: none; gap: 8px; align-items: flex-end; flex-wrap: wrap;
+    padding: 14px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; margin-bottom: 20px;
+  }
+  .rpt-add-form.is-open { display: flex; }
+  .rpt-add-form input, .rpt-add-form select {
+    height: 40px; padding: 0 12px; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 14px; font-family: inherit;
+    background: var(--surface-2); color: var(--text); outline: none;
+  }
+  .rpt-add-form input:focus, .rpt-add-form select:focus {
+    border-color: var(--spark-violet-border); box-shadow: 0 0 0 3px var(--spark-violet-soft);
+  }
+  .rpt-add-form input { flex: 1; min-width: 120px; }
+  .rpt-add-form select { width: 90px; appearance: auto; }
+
   .rpt-kidion-banner {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -81,6 +118,30 @@
   </nav>
 
   <div class="rpt-page">
+    <!-- Child switcher -->
+    <div class="rpt-children">
+      {% for c in children %}
+      <a href="/chat/report/{{ c.id }}" class="rpt-child {{ 'is-active' if c.id == child.id else '' }}">
+        {{ c.name }} <span class="rpt-child-grade">{{ c.grade }} кл</span>
+      </a>
+      {% endfor %}
+      {% if children|length < 3 %}
+      <button class="rpt-child-add" id="btn-show-add">+ Добавить</button>
+      {% endif %}
+    </div>
+
+    <!-- Add child form (hidden) -->
+    <div class="rpt-add-form" id="add-child-form">
+      <input type="text" id="new-child-name" placeholder="Имя ребёнка" required>
+      <select id="new-child-grade">
+        <option value="1">1 кл</option><option value="2">2 кл</option>
+        <option value="3" selected>3 кл</option><option value="4">4 кл</option>
+        <option value="5">5 кл</option><option value="6">6 кл</option>
+        <option value="7">7 кл</option><option value="8">8 кл</option>
+      </select>
+      <button class="sp-btn sp-btn-primary" style="height:40px" id="btn-add-child">Добавить</button>
+    </div>
+
     <div class="rpt-header">
       <div>
         <h1 class="rpt-h">Отчёт — {{ child.name }}</h1>
@@ -158,22 +219,13 @@
     </div>
     {% endif %}
 
-    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:28px">
-      <a href="/chat/login" class="rpt-kidion-banner" style="text-decoration:none;color:inherit;flex:1;min-width:200px;margin-top:0">
-        <div class="rpt-kidion-banner-icon">&#128101;</div>
-        <div class="rpt-kidion-banner-text">
-          <p class="rpt-kidion-banner-title">Сменить ребёнка</p>
-          <p class="rpt-kidion-banner-body">Переключиться на другого ребёнка или добавить нового</p>
-        </div>
-      </a>
-      <a href="https://kidion.ru/dashboard" class="rpt-kidion-banner" style="text-decoration:none;color:inherit;flex:1;min-width:200px;margin-top:0">
-        <div class="rpt-kidion-banner-icon">&#128218;</div>
-        <div class="rpt-kidion-banner-text">
-          <p class="rpt-kidion-banner-title">Kidion — уроки</p>
-          <p class="rpt-kidion-banner-body">Школьная программа в формате приключения</p>
-        </div>
-      </a>
-    </div>
+    <a href="https://kidion.ru/dashboard" class="rpt-kidion-banner" style="text-decoration:none;color:inherit">
+      <div class="rpt-kidion-banner-icon">&#128218;</div>
+      <div class="rpt-kidion-banner-text">
+        <p class="rpt-kidion-banner-title">Kidion — уроки</p>
+        <p class="rpt-kidion-banner-body">Школьная программа в формате приключения</p>
+      </div>
+    </a>
   </div>
 </div>
 
@@ -201,6 +253,59 @@ async function generateReport() {
     btn.textContent = 'Создать отчёт';
   }
 }
+
+// Add child form
+(function() {
+  var showBtn = document.getElementById('btn-show-add');
+  var form = document.getElementById('add-child-form');
+  var addBtn = document.getElementById('btn-add-child');
+  if (!showBtn || !form) return;
+
+  showBtn.addEventListener('click', function() {
+    form.classList.toggle('is-open');
+    if (form.classList.contains('is-open')) {
+      document.getElementById('new-child-name').focus();
+    }
+  });
+
+  addBtn.addEventListener('click', async function() {
+    var name = document.getElementById('new-child-name').value.trim();
+    var grade = parseInt(document.getElementById('new-child-grade').value);
+    if (!name) { document.getElementById('new-child-name').focus(); return; }
+
+    addBtn.disabled = true;
+    addBtn.textContent = 'Создаём...';
+
+    try {
+      var res = await fetch('/api/children', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'same-origin',
+        body: JSON.stringify({ name: name, gender: 'boy', birth_date: '2018-01-01', grade: grade, interests: [], source: 'chat' }),
+      });
+      if (res.ok) {
+        var data = await res.json();
+        // Auth as new child and go to chat
+        await fetch('/api/kid/auth', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          credentials: 'same-origin',
+          body: JSON.stringify({ child_id: data.id }),
+        });
+        window.location.href = '/chat';
+      } else {
+        var err = await res.json();
+        alert(err.message || err.error || 'Ошибка');
+        addBtn.disabled = false;
+        addBtn.textContent = 'Добавить';
+      }
+    } catch(e) {
+      alert('Ошибка сети');
+      addBtn.disabled = false;
+      addBtn.textContent = 'Добавить';
+    }
+  });
+})();
 </script>
 </body>
 </html>

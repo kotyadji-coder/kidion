@@ -3541,11 +3541,15 @@ async def spark_report_page(child_id: int, request: Request):
     for r in reports:
         r["topics"] = json.loads(r.get("topics_json") or "[]")
 
+    # Get all children for switcher
+    all_children = get_children_by_parent(conn, user["id"])
+
     return templates.TemplateResponse(
         request,
         "chat/report.html",
         {
             "child": child,
+            "children": all_children,
             "chats": chats,
             "total_messages": total_messages,
             "has_subscription": has_sub,
