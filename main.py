@@ -3752,13 +3752,38 @@ async def kid_chat_send(request: Request):
             content, _ = scrub_pii(content, child_name=child_name)
         context.append({"role": m["role"], "content": content})
 
-    # Step 3: Generate AI response (with scrubbed input)
-    response_text = generate_chat_response(
-        context,
-        child_name=child["name"],
-        character_key=character_key,
-        grade=child.get("grade", 3),
-    )
+    # Arty shortcut: photo + style mentioned → skip AI dialogue, generate directly
+    _ARTY_STYLES = {
+        "аниме": "anime style",
+        "стикер": "sticker, chibi style, white background",
+        "открытка": "greeting card illustration",
+        "пиксель": "pixel art, minecraft style",
+        "мультик": "Pixar Disney 3D cartoon style",
+        "волшебное": "fantasy art, magical glow, ethereal",
+        "комикс": "comic book style, bold lines, dynamic",
+        "скетч": "pencil sketch, hand drawn, hatching",
+    }
+    if character_key == "artist" and image_url:
+        # Detect style from message
+        style_en = "anime style"  # default
+        msg_lower = message_text.lower()
+        for ru, en in _ARTY_STYLES.items():
+            if ru in msg_lower:
+                style_en = en
+                break
+        # Build draw prompt directly — no AI dialogue needed
+        draw_prompt_direct = f"{style_en} version of the uploaded photo, child-safe, high quality"
+        response_text = "Рисую!"
+        # Inject DRAW: so the image generation block picks it up
+        response_text = f"DRAW: {draw_prompt_direct}\n{response_text}"
+    else:
+        # Step 3: Generate AI response (with scrubbed input)
+        response_text = generate_chat_response(
+            context,
+            child_name=child["name"],
+            character_key=character_key,
+            grade=child.get("grade", 3),
+        )
 
     # Step 4: Output moderation — check AI response for unsafe content
     response_text, was_moderated, mod_issues = moderate_output(response_text)
