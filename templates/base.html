@@ -19,10 +19,16 @@
         </span>
         <span class="navbar__brand-text">kidion<span class="navbar__brand-dot">.</span>ru</span>
       </a>
+      {% if user %}
+      <a href="/dashboard" class="navbar__cabinet" title="Кабинет">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align:middle"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm0 1.5c-3 0-6 1.5-6 3V14h12v-1.5c0-1.5-3-3-6-3z" fill="currentColor"/></svg>
+        <span>Кабинет</span>
+      </a>
+      {% endif %}
       <div class="navbar__actions">
         {% if user %}
           <a href="/buy" class="navbar__crystals" title="&#1055;&#1086;&#1087;&#1086;&#1083;&#1085;&#1080;&#1090;&#1100; &#1082;&#1088;&#1080;&#1089;&#1090;&#1072;&#1083;&#1083;&#1099;">&#128142; <span class="navbar__crystals-label">&#1050;&#1088;&#1080;&#1089;&#1090;&#1072;&#1083;&#1083;&#1099;</span> <span id="crystal-count">{{ user.crystals }}</span></a>
-          <a href="/profile" class="navbar__avatar-btn">{{ user.email[0]|upper }}</a>
+          <a href="/profile" class="navbar__avatar-btn" title="Профиль">{{ user.email[0]|upper }}</a>
         {% else %}
           <a href="/login" class="btn btn--primary btn--sm">&#1042;&#1086;&#1081;&#1090;&#1080;</a>
         {% endif %}

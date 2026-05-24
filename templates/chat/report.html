@@ -13,32 +13,23 @@
 <style>
   body { min-height: 100vh; display: flex; flex-direction: column; }
   .rpt-page { flex: 1; padding: 32px 20px 60px; max-width: 800px; margin: 0 auto; width: 100%; }
-  .rpt-h { margin: 0 0 6px; font-size: 24px; font-weight: 600; letter-spacing: -0.025em; }
-  @media (min-width: 769px) { .rpt-h { font-size: 30px; } }
-  .rpt-sub { margin: 0 0 28px; font-size: 14px; color: var(--text-2); }
 
-  .rpt-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 32px; }
+  .rpt-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+  .rpt-h { margin: 0 0 4px; font-size: 24px; font-weight: 600; letter-spacing: -0.025em; }
+  @media (min-width: 769px) { .rpt-h { font-size: 30px; } }
+  .rpt-sub { margin: 0; font-size: 14px; color: var(--text-2); }
+
+  .rpt-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 28px; }
   @media (max-width: 600px) { .rpt-stats { grid-template-columns: 1fr; } }
   .rpt-stat { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
   .rpt-stat-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); margin: 0 0 6px; }
   .rpt-stat-value { font-size: 24px; font-weight: 600; margin: 0; letter-spacing: -0.02em; }
   .rpt-stat-note { font-size: 12px; color: var(--text-3); margin: 4px 0 0; }
 
+  .rpt-section { margin-bottom: 28px; }
   .rpt-section-h { font-size: 16px; font-weight: 600; margin: 0 0 14px; }
-  .rpt-chats { display: flex; flex-direction: column; gap: 10px; }
-  .rpt-chat { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
-  .rpt-chat-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .rpt-chat-av { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: var(--surface-2); border: 1px solid var(--border); flex: 0 0 36px; }
-  .rpt-chat-av img, .rpt-chat-av svg { width: 100%; height: 100%; }
-  .rpt-chat-name { font-size: 14px; font-weight: 600; }
-  .rpt-chat-count { font-size: 12px; color: var(--text-3); }
-  .rpt-chat-msgs { display: flex; flex-direction: column; gap: 6px; max-height: 300px; overflow: auto; }
-  .rpt-msg { font-size: 13px; line-height: 1.5; padding: 8px 12px; border-radius: 12px; max-width: 85%; }
-  .rpt-msg-user { align-self: flex-end; background: var(--spark-violet-soft); color: var(--spark-violet-ink); }
-  .rpt-msg-bot { align-self: flex-start; background: var(--surface-2); color: var(--text); }
-  .rpt-empty { text-align: center; padding: 40px 20px; color: var(--text-3); font-size: 14px; }
 
-  .rpt-reports { display: flex; flex-direction: column; gap: 14px; margin-bottom: 32px; }
+  .rpt-reports { display: flex; flex-direction: column; gap: 14px; }
   .rpt-report { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
   .rpt-report-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
   .rpt-report-date { font-size: 13px; font-weight: 600; color: var(--text-2); }
@@ -46,6 +37,35 @@
   .rpt-report-summary { font-size: 14px; line-height: 1.65; color: var(--text); white-space: pre-line; }
   .rpt-report-topics { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   .rpt-topic-tag { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: var(--spark-violet-soft); color: var(--spark-violet-ink); font-weight: 500; }
+
+  .rpt-sub-banner {
+    background: linear-gradient(135deg, oklch(0.96 0.035 268), oklch(0.94 0.04 295));
+    border: 1px solid oklch(0.88 0.05 268);
+    border-radius: 14px;
+    padding: 20px;
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 28px;
+  }
+  .rpt-sub-banner-icon { font-size: 32px; flex: 0 0 auto; }
+  .rpt-sub-banner-text { flex: 1; }
+  .rpt-sub-banner-title { font-size: 15px; font-weight: 600; margin: 0 0 4px; color: oklch(0.34 0.16 268); }
+  .rpt-sub-banner-body { font-size: 13px; color: var(--text-2); margin: 0; line-height: 1.4; }
+  .rpt-sub-banner .sp-btn { flex: 0 0 auto; }
+
+  .rpt-empty { text-align: center; padding: 40px 20px; color: var(--text-3); font-size: 14px; }
+
+  .rpt-kidion-banner {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex; align-items: center; gap: 14px;
+    margin-top: 28px;
+  }
+  .rpt-kidion-banner-icon { font-size: 28px; flex: 0 0 auto; }
+  .rpt-kidion-banner-text { flex: 1; }
+  .rpt-kidion-banner-title { font-size: 14px; font-weight: 600; margin: 0 0 2px; }
+  .rpt-kidion-banner-body { font-size: 12px; color: var(--text-2); margin: 0; }
 </style>
 </head>
 <body>
@@ -61,24 +81,31 @@
   </nav>
 
   <div class="rpt-page">
-    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px">
+    <div class="rpt-header">
       <div>
-        <h1 class="rpt-h">Чат-отчёт — {{ child.name }}</h1>
-        <p class="rpt-sub" style="margin-bottom:0">Что обсуждал ваш ребёнок с AI-персонажами</p>
+        <h1 class="rpt-h">Отчёт — {{ child.name }}</h1>
+        <p class="rpt-sub">Аналитика общения ребёнка с AI-персонажами</p>
       </div>
       {% if has_subscription %}
       <button class="sp-btn sp-btn-primary" id="btn-gen-report" onclick="generateReport()">Создать отчёт</button>
       {% endif %}
     </div>
 
+    {% if not has_subscription %}
+    <div class="rpt-sub-banner">
+      <div class="rpt-sub-banner-icon">&#10024;</div>
+      <div class="rpt-sub-banner-text">
+        <p class="rpt-sub-banner-title">Откройте все возможности</p>
+        <p class="rpt-sub-banner-body">С подпиской: 100 сообщений/день, все персонажи, AI-картинки и еженедельная аналитика.</p>
+      </div>
+      <a href="/chat/subscribe" class="sp-btn sp-btn-primary">Подписка</a>
+    </div>
+    {% endif %}
+
     <div class="rpt-stats">
       <div class="rpt-stat">
         <p class="rpt-stat-label">Сообщений всего</p>
         <p class="rpt-stat-value">{{ total_messages }}</p>
-      </div>
-      <div class="rpt-stat">
-        <p class="rpt-stat-label">Персонажей</p>
-        <p class="rpt-stat-value">{{ chats | length }}</p>
       </div>
       <div class="rpt-stat">
         <p class="rpt-stat-label">Подписка</p>
@@ -90,65 +117,54 @@
     </div>
 
     {% if reports %}
-    <h2 class="rpt-section-h">Еженедельные отчёты</h2>
-    <div class="rpt-reports">
-      {% for report in reports %}
-      <div class="rpt-report">
-        <div class="rpt-report-head">
-          <span class="rpt-report-date">Неделя до {{ report.date }}</span>
-          <span class="rpt-report-count">{{ report.message_count }} сообщений</span>
+    <div class="rpt-section">
+      <h2 class="rpt-section-h">Еженедельная аналитика</h2>
+      <div class="rpt-reports">
+        {% for report in reports %}
+        <div class="rpt-report">
+          <div class="rpt-report-head">
+            <span class="rpt-report-date">Неделя до {{ report.date }}</span>
+            <span class="rpt-report-count">{{ report.message_count }} сообщений</span>
+          </div>
+          <div class="rpt-report-summary">{{ report.summary }}</div>
+          {% if report.topics %}
+          <div class="rpt-report-topics">
+            {% for topic in report.topics %}
+            <span class="rpt-topic-tag">{{ topic }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
         </div>
-        <div class="rpt-report-summary">{{ report.summary }}</div>
-        {% if report.topics %}
-        <div class="rpt-report-topics">
-          {% for topic in report.topics %}
-          <span class="rpt-topic-tag">{{ topic }}</span>
-          {% endfor %}
-        </div>
-        {% endif %}
+        {% endfor %}
       </div>
-      {% endfor %}
     </div>
     {% endif %}
 
-    <h2 class="rpt-section-h">Разговоры</h2>
-
-    {% if chats %}
-    <div class="rpt-chats">
-      {% for chat in chats %}
-      <div class="rpt-chat">
-        <div class="rpt-chat-head">
-          <div class="rpt-chat-av">
-            {% if chat.character_key == 'spark' %}
-            <img src="/static/spark/spark-hero.png" alt="Киди">
-            {% else %}
-            <div style="width:100%;height:100%;background:var(--surface-2);display:grid;place-items:center;font-size:16px">
-              {% if chat.character_key == 'owl' %}🦉{% elif chat.character_key == 'captain' %}🧑‍✈️{% elif chat.character_key == 'pixie' %}🧚{% endif %}
-            </div>
-            {% endif %}
-          </div>
-          <div>
-            <div class="rpt-chat-name">{{ chat.title }}</div>
-            <div class="rpt-chat-count">{{ chat.messages | length }} сообщений</div>
-          </div>
-        </div>
-        {% if chat.messages %}
-        <div class="rpt-chat-msgs">
-          {% for m in chat.messages[-20:] %}
-          <div class="rpt-msg {{ 'rpt-msg-user' if m.role == 'user' else 'rpt-msg-bot' }}">{{ m.content[:200] }}{% if m.content|length > 200 %}…{% endif %}</div>
-          {% endfor %}
-        </div>
+    {% if not reports and total_messages > 0 %}
+    <div class="rpt-section">
+      <div class="rpt-empty">
+        {% if has_subscription %}
+        <p>Нажмите «Создать отчёт», чтобы получить аналитику общения</p>
         {% else %}
-        <p style="font-size:13px; color:var(--text-3); margin:0">Пока нет сообщений</p>
+        <p>Аналитика доступна по подписке</p>
         {% endif %}
       </div>
-      {% endfor %}
     </div>
-    {% else %}
-    <div class="rpt-empty">
-      <p>Ребёнок пока не общался с персонажами</p>
+    {% elif total_messages == 0 %}
+    <div class="rpt-section">
+      <div class="rpt-empty">
+        <p>Ребёнок пока не общался с персонажами</p>
+      </div>
     </div>
     {% endif %}
+
+    <a href="https://kidion.ru/dashboard" class="rpt-kidion-banner" style="text-decoration:none;color:inherit">
+      <div class="rpt-kidion-banner-icon">&#128218;</div>
+      <div class="rpt-kidion-banner-text">
+        <p class="rpt-kidion-banner-title">Kidion — персональные уроки</p>
+        <p class="rpt-kidion-banner-body">Уроки по школьной программе в уникальной вселенной вашего ребёнка</p>
+      </div>
+    </a>
   </div>
 </div>
 

@@ -3,208 +3,232 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#22C55E">
+  <meta name="theme-color" content="#FF6B4A">
   <title>Kidion — Вход</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/kid/style.css?v=3">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { margin:0; padding:0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Nunito', -apple-system, system-ui, sans-serif;
+      background: #FFF8EC;
+      color: #2A1F1A;
+      min-height: 100vh; min-height: 100dvh;
+    }
+
     .login-screen {
       width: 100%; min-height: 100vh; min-height: 100dvh;
-      background: #fff;
-      font-family: 'Plus Jakarta Sans', -apple-system, system-ui, sans-serif;
-      color: #0F2418;
       display: flex; flex-direction: column;
-      position: relative;
+      align-items: center;
+      padding: 40px 20px 32px;
+    }
+
+    .login-logo {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 32px;
+    }
+    .login-logo-mark {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(140deg, #FF6B4A, #FFB627);
+      display: grid; place-items: center;
+      color: white; font-weight: 800; font-size: 18px;
+      box-shadow: 0 3px 8px rgba(255,107,74,0.3);
+    }
+    .login-logo-text {
+      font-size: 18px; font-weight: 800; color: #2A1F1A;
+      letter-spacing: -0.02em;
+    }
+
+    .login-title {
+      font-size: 28px; font-weight: 800;
+      text-align: center; letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    .login-sub {
+      font-size: 15px; color: #8B7355;
+      text-align: center; margin-bottom: 28px;
+      font-weight: 600;
+    }
+
+    .picker-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 14px;
+      width: 100%; max-width: 400px;
+    }
+
+    .picker-card {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 10px;
+      padding: 22px 14px 18px;
+      border-radius: 20px;
+      background: #fff;
+      border: 2px solid #F0E6D6;
+      cursor: pointer;
+      transition: transform 0.12s, border-color 0.2s, box-shadow 0.2s;
+      text-decoration: none; color: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .picker-card:hover {
+      border-color: #FF6B4A;
+      box-shadow: 0 4px 16px rgba(255,107,74,0.15);
+      transform: translateY(-2px);
+    }
+    .picker-card:active {
+      transform: scale(0.97);
+    }
+
+    .picker-avatar {
+      width: 72px; height: 72px;
+      border-radius: 50%;
       overflow: hidden;
+      background: linear-gradient(135deg, #FFE4D6, #FFF0D6);
+      display: flex; align-items: center; justify-content: center;
+      border: 3px solid #F0E6D6;
+    }
+    .picker-avatar img {
+      width: 100%; height: 100%;
+      object-fit: cover; border-radius: 50%;
+    }
+    .picker-avatar-letter {
+      width: 100%; height: 100%;
+      background: linear-gradient(135deg, #FF6B4A, #FFB627);
+      color: #fff; font-size: 28px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
     }
 
-    /* ── Picker step ── */
-    .picker { padding: 52px 20px 24px; flex:1; }
-    .picker__brand { font-size:11px; font-weight:800; color:#15803D; letter-spacing:2.5px; text-transform:uppercase; text-align:center; margin-bottom:10px; }
-    .picker__title { font-size:32px; font-weight:800; text-align:center; letter-spacing:-1px; margin:0; }
-    .picker__sub   { font-size:14px; color:#7E9786; font-weight:600; text-align:center; margin-top:6px; margin-bottom:28px; }
-
-    .picker__card {
-      display:flex; align-items:center; gap:16px;
-      padding:14px 18px; border-radius:22px; background:#fff;
-      box-shadow: 0 3px 0 rgba(15,36,24,0.08), 0 0 0 1.5px rgba(15,36,24,0.08);
-      margin-bottom:14px; cursor:pointer; border:none; width:100%;
-      font-family:inherit; text-align:left;
-      transition: transform 0.1s;
-    }
-    .picker__card:active { transform:scale(0.97); }
-    .picker__card--first {
-      box-shadow: 0 4px 0 #22C55E, 0 0 0 2.5px #22C55E;
-    }
-    .picker__avatar {
-      width:64px; height:64px; border-radius:50%; background:#F6FAF4;
-      display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden;
-    }
-    .picker__avatar img { width:56px; height:56px; border-radius:50%; object-fit:cover; }
-    .picker__avatar-letter {
-      width:56px; height:56px; border-radius:50%;
-      background:linear-gradient(135deg, #FF6B5B, #FFB627);
-      color:#fff; font-size:22px; font-weight:800;
-      display:flex; align-items:center; justify-content:center;
-    }
-    .picker__name { font-size:18px; font-weight:800; letter-spacing:-0.3px; flex:1; }
-    .picker__grade { font-size:12px; color:#7E9786; margin-top:2px; font-weight:600; }
-    .picker__arrow {
-      width:32px; height:32px; border-radius:50%; background:rgba(15,36,24,0.08);
-      display:flex; align-items:center; justify-content:center; flex-shrink:0;
-    }
-    .picker__card--first .picker__arrow { background:#22C55E; }
-    .picker__card--first .picker__arrow svg path { stroke:#fff; }
-    .picker__hint {
-      margin-top:32px; padding:16px; border-radius:18px; background:#F6FAF4;
-      font-size:13px; color:#3F5F4C; font-weight:600; text-align:center; line-height:1.4;
+    .picker-name {
+      font-size: 16px; font-weight: 800;
+      text-align: center; letter-spacing: -0.01em;
     }
 
-    /* ── PIN step ── */
-    .pin-screen {
-      width:100%; min-height:100vh; min-height:100dvh;
-      background:#fff; display:flex; flex-direction:column;
+    /* Loading state */
+    .login-loading {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 16px;
+      margin-top: 20px;
     }
-    .pin-screen__top {
-      flex:1; display:flex; flex-direction:column; align-items:center;
-      padding-top:40px; position:relative;
+    .login-loading-avatar {
+      width: 100px; height: 100px;
+      border-radius: 50%; overflow: hidden;
+      background: linear-gradient(135deg, #FFE4D6, #FFF0D6);
+      display: flex; align-items: center; justify-content: center;
+      border: 3px solid #FF6B4A;
+      box-shadow: 0 0 0 6px rgba(255,107,74,0.15);
     }
-    .pin-screen__back {
-      position:absolute; top:18px; left:18px;
-      width:38px; height:38px; border-radius:50%; border:none;
-      background:#F6FAF4; display:flex; align-items:center; justify-content:center;
-      cursor:pointer;
+    .login-loading-avatar img {
+      width: 100%; height: 100%;
+      object-fit: cover; border-radius: 50%;
     }
-    .pin-screen__avatar {
-      width:110px; height:110px; border-radius:50%;
-      background:#F6FAF4; display:flex; align-items:center; justify-content:center;
-      box-shadow: 0 6px 0 rgba(34,197,94,0.2), 0 0 0 4px #fff, 0 0 0 6px #22C55E;
-      overflow:hidden;
+    .login-loading-name {
+      font-size: 22px; font-weight: 800;
     }
-    .pin-screen__avatar img { width:94px; height:94px; border-radius:50%; object-fit:cover; }
-    .pin-screen__avatar-letter {
-      width:94px; height:94px; border-radius:50%;
-      background:linear-gradient(135deg, #FF6B5B, #FFB627);
-      color:#fff; font-size:36px; font-weight:800;
-      display:flex; align-items:center; justify-content:center;
+    .login-loading-status {
+      font-size: 14px; color: #8B7355; font-weight: 600;
     }
-    .pin-screen__name { font-size:22px; font-weight:800; margin-top:16px; letter-spacing:-0.4px; }
-    .pin-screen__label { font-size:14px; color:#7E9786; margin-top:4px; font-weight:600; }
+    .login-loading-spinner {
+      width: 20px; height: 20px;
+      border: 3px solid #F0E6D6;
+      border-top-color: #FF6B4A;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    .pin-screen__dots {
-      display:flex; gap:14px; justify-content:center; margin-top:24px;
-    }
-    .pin-screen__dot {
-      width:16px; height:16px; border-radius:50%;
-      background:transparent; border:3px solid rgba(126,151,134,0.3);
-      transition: all 0.15s;
-    }
-    .pin-screen__dot.filled {
-      background:#22C55E; border-color:#22C55E;
-      box-shadow: 0 3px 0 #15803D;
-    }
-
-    .pin-screen__keyboard {
-      padding:24px 20px 28px;
-      border-top: 2px solid rgba(15,36,24,0.08);
-    }
-    .pin-screen__keys {
-      display:grid; grid-template-columns:repeat(3,1fr); gap:12px;
-      max-width:300px; margin:0 auto;
-    }
-    .pin-key {
-      height:64px; border-radius:22px; border:none; background:#fff;
-      font-family:inherit; font-size:28px; font-weight:800; color:#0F2418;
-      cursor:pointer;
-      box-shadow: 0 4px 0 rgba(15,36,24,0.08), 0 0 0 1.5px rgba(15,36,24,0.08);
-      display:flex; align-items:center; justify-content:center;
-      transition: transform 0.08s;
-    }
-    .pin-key:active {
-      transform:translateY(3px);
-      box-shadow: 0 1px 0 rgba(15,36,24,0.08), 0 0 0 1.5px rgba(15,36,24,0.08);
-    }
-    .pin-key--backspace {
-      background:transparent; box-shadow:none; color:#7E9786;
-    }
-    .pin-key--backspace:active { box-shadow:none; }
-    .pin-key--submit {
-      background:#22C55E; color:#fff;
-      box-shadow: 0 4px 0 #15803D, 0 6px 16px rgba(34,197,94,0.4);
-    }
-
-    .pin-screen__error {
-      color:#FF6B5B; font-size:14px; font-weight:600; margin-top:16px;
-      min-height:20px; text-align:center;
-    }
-    .pin-screen__forgot {
-      margin-top:14px; text-align:center; font-size:12px; color:#7E9786; font-weight:600;
+    .login-error {
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: #FFF0F0;
+      border: 1px solid #FFD0D0;
+      border-radius: 12px;
+      color: #C53030;
+      font-size: 14px; font-weight: 600;
+      text-align: center;
+      display: none;
     }
   </style>
 </head>
 <body data-page="login">
 
   {% if children|length > 1 %}
-  <!-- ── STEP 1: CHILD PICKER ── -->
   <div class="login-screen" id="child-picker">
-    <div class="picker">
-      <div class="picker__brand">kidion</div>
-      <h1 class="picker__title">Кто ты?</h1>
-      <div class="picker__sub">Выбери себя, чтобы войти</div>
+    <div class="login-logo">
+      <div class="login-logo-mark">k</div>
+      <span class="login-logo-text">kidion.ru</span>
+    </div>
+    <h1 class="login-title">Кто будет учиться?</h1>
+    <p class="login-sub">Выбери свою карточку</p>
 
+    <div class="picker-grid">
       {% for c in children %}
-      <button class="picker__card {% if loop.first %}picker__card--first{% endif %}" data-child-id="{{ c.id }}"
+      <button class="picker-card" data-child-id="{{ c.id }}"
               data-name="{{ c.name }}" data-img="{{ c.character_image_url or '' }}">
-        <div class="picker__avatar">
+        <div class="picker-avatar">
           {% if c.character_image_url %}
           <img src="{{ c.character_image_url }}" alt="{{ c.name }}"
                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-          <div class="picker__avatar-letter" style="display:none">{{ c.name[0]|upper }}</div>
+          <div class="picker-avatar-letter" style="display:none">{{ c.name[0]|upper }}</div>
           {% else %}
-          <div class="picker__avatar-letter">{{ c.name[0]|upper }}</div>
+          <div class="picker-avatar-letter">{{ c.name[0]|upper }}</div>
           {% endif %}
         </div>
-        <div style="flex:1">
-          <div class="picker__name">{{ c.name }}</div>
-        </div>
-        <div class="picker__arrow">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7E9786" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 L15 12 L9 18"/></svg>
-        </div>
+        <div class="picker-name">{{ c.name }}</div>
       </button>
       {% endfor %}
-
-      <div class="picker__hint">Нажми на себя, чтобы войти!</div>
     </div>
+
+    <div class="login-error" id="login-error"></div>
   </div>
   {% endif %}
 
   {% if children|length == 1 %}
-  <!-- Single child: auto-login -->
-  <div class="pin-screen" id="single-child-screen">
-    <div class="pin-screen__top">
-      <div class="pin-screen__avatar">
+  <div class="login-screen" id="single-child-screen">
+    <div class="login-logo">
+      <div class="login-logo-mark">k</div>
+      <span class="login-logo-text">kidion.ru</span>
+    </div>
+    <div class="login-loading">
+      <div class="login-loading-avatar">
         {% if children[0].character_image_url %}
         <img src="{{ children[0].character_image_url }}" alt="{{ children[0].name }}"
              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-        <div class="pin-screen__avatar-letter" style="display:none">{{ children[0].name[0]|upper }}</div>
+        <div class="picker-avatar-letter" style="display:none">{{ children[0].name[0]|upper }}</div>
         {% else %}
-        <div class="pin-screen__avatar-letter">{{ children[0].name[0]|upper }}</div>
+        <div class="picker-avatar-letter" style="width:100%;height:100%">{{ children[0].name[0]|upper }}</div>
         {% endif %}
       </div>
-      <div class="pin-screen__name">Привет, {{ children[0].name }}!</div>
-      <div class="pin-screen__label">Загружаю...</div>
+      <div class="login-loading-name">{{ children[0].name }}</div>
+      <div class="login-loading-spinner"></div>
+      <div class="login-loading-status">Загружаю...</div>
       <input type="hidden" id="child-id-input" value="{{ children[0].id }}">
     </div>
+    <div class="login-error" id="login-error"></div>
   </div>
   {% endif %}
 
-  <script src="/static/kid/app.js"></script>
+  {% if children|length == 0 %}
+  <div class="login-screen">
+    <div class="login-logo">
+      <div class="login-logo-mark">k</div>
+      <span class="login-logo-text">kidion.ru</span>
+    </div>
+    <h1 class="login-title">Пока нет профилей</h1>
+    <p class="login-sub">Попросите родителя создать профиль в кабинете</p>
+  </div>
+  {% endif %}
+
   <script>
   (function() {
-    async function authChild(childId) {
+    var errorEl = document.getElementById('login-error');
+
+    async function authChild(childId, cardEl) {
+      if (cardEl) {
+        cardEl.style.borderColor = '#FF6B4A';
+        cardEl.style.boxShadow = '0 4px 16px rgba(255,107,74,0.25)';
+        cardEl.style.pointerEvents = 'none';
+      }
       try {
         var resp = await fetch('/api/kid/auth', {
           method: 'POST',
@@ -216,27 +240,44 @@
         if (resp.ok && data.ok) {
           window.location.href = data.redirect || '/kid/home';
         } else {
-          alert(data.message || 'Ошибка входа');
+          showError(data.message || 'Ошибка входа');
+          if (cardEl) {
+            cardEl.style.borderColor = '';
+            cardEl.style.boxShadow = '';
+            cardEl.style.pointerEvents = '';
+          }
         }
       } catch(e) {
-        alert('Ошибка соединения');
+        showError('Ошибка соединения');
+        if (cardEl) {
+          cardEl.style.borderColor = '';
+          cardEl.style.boxShadow = '';
+          cardEl.style.pointerEvents = '';
+        }
       }
     }
 
-    // Multi-child picker: tap card → auth directly
+    function showError(msg) {
+      if (errorEl) {
+        errorEl.textContent = msg;
+        errorEl.style.display = 'block';
+      }
+    }
+
+    // Multi-child picker
     var picker = document.getElementById('child-picker');
     if (picker) {
-      document.querySelectorAll('.picker__card').forEach(function(card) {
+      document.querySelectorAll('.picker-card').forEach(function(card) {
         card.addEventListener('click', function() {
-          authChild(card.dataset.childId);
+          authChild(card.dataset.childId, card);
         });
       });
     }
 
-    // Single child: auto-auth on page load
+    // Single child: auto-auth
     var singleChildInput = document.getElementById('child-id-input');
     if (!picker && singleChildInput && singleChildInput.value) {
-      authChild(singleChildInput.value);
+      authChild(singleChildInput.value, null);
     }
   })();
   </script>

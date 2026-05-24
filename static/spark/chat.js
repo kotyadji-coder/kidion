@@ -121,13 +121,7 @@
       btn.appendChild(av);
       btn.appendChild(name);
       btn.addEventListener("click", () => {
-        if (c.locked) {
-          if (confirm("Этот персонаж доступен по подписке. Оформить?")) {
-            window.location.href = "/chat/subscribe";
-          }
-          return;
-        }
-        switchCharacter(c.key, true);
+        switchCharacter(c.key, !c.locked);
       });
       charStrip.appendChild(btn);
     });
@@ -151,8 +145,7 @@
         </div>`;
       li.querySelector(".sc-drawer-av").appendChild(getCharAvatar(c.key));
       li.addEventListener("click", () => {
-        if (c.locked) return;
-        switchCharacter(c.key, true);
+        switchCharacter(c.key, !c.locked);
         closeDrawer();
       });
       drawerList.appendChild(li);
@@ -212,7 +205,21 @@
       el.classList.toggle("is-active", el.dataset.char === key);
     });
 
-    if (reload) loadChat();
+    // Handle locked character: show greeting but hide composer
+    const c_locked = c.locked;
+    const composer = document.getElementById("composer");
+    if (c_locked) {
+      messagesEl.style.display = "none";
+      emptyState.style.display = "";
+      // Override empty sub with subscribe CTA
+      document.getElementById("empty-sub").innerHTML =
+        c.greeting_sub_ru || c.role_ru + "<br><br>" +
+        '<a href="/chat/subscribe" style="color:var(--spark-violet);font-weight:600;text-decoration:underline">Оформите подписку</a>, чтобы общаться с ' + esc(c.name_ru);
+      composer.style.display = "none";
+    } else {
+      composer.style.display = "";
+      if (reload) loadChat();
+    }
   }
 
   // ---------- Chat ----------
@@ -446,6 +453,41 @@
     return d.innerHTML;
   }
 
+  // ---------- Pro modal ----------
+  const proModal = document.getElementById("pro-modal");
+  const proModalIcon = document.getElementById("pro-modal-icon");
+  const proModalTitle = document.getElementById("pro-modal-title");
+  const proModalText = document.getElementById("pro-modal-text");
+
+  function showProModal(feature) {
+    const configs = {
+      image: {
+        icon: "\uD83C\uDFA8",
+        title: "Картинки доступны по подписке",
+        text: "Попроси взрослого оформить подписку, чтобы отправлять и получать картинки от нейросети!",
+      },
+      voice: {
+        icon: "\uD83C\uDFA4",
+        title: "Голосовой ввод по подписке",
+        text: "С подпиской можно говорить голосом, а Киди переведёт речь в текст!",
+      },
+      character: {
+        icon: "\u2728",
+        title: "Этот персонаж по подписке",
+        text: "С подпиской откроются все 3 персонажа: Киди, Профессор Уху и Кот Баюн. У каждого свой характер!",
+      },
+    };
+    const cfg = configs[feature] || configs.character;
+    proModalIcon.textContent = cfg.icon;
+    proModalTitle.textContent = cfg.title;
+    proModalText.textContent = cfg.text;
+    proModal.classList.add("is-open");
+  }
+
+  document.getElementById("btn-pro-close").addEventListener("click", () => {
+    proModal.classList.remove("is-open");
+  });
+
   // ---------- Events ----------
   function setupEvents() {
     chatInput.addEventListener("input", updateSendBtn);
@@ -461,7 +503,14 @@
     // Adult gate for parent area
     setupAdultGate();
 
-    // File attachment
+    // File attachment — block for free users
+    const btnAttachLabel = document.getElementById("btn-attach");
+    if (!CFG.hasSubscription) {
+      btnAttachLabel.addEventListener("click", (e) => {
+        e.preventDefault();
+        showProModal("image");
+      });
+    }
     fileInput.addEventListener("change", () => {
       if (fileInput.files.length) {
         attachedFile = fileInput.files[0];
@@ -478,9 +527,7 @@
     // Voice (placeholder — opens overlay, cancel closes it)
     btnMic.addEventListener("click", () => {
       if (!CFG.hasSubscription) {
-        if (confirm("Голосовой ввод доступен по подписке. Оформить?")) {
-          window.location.href = "/chat/subscribe";
-        }
+        showProModal("voice");
         return;
       }
       voiceOverlay.classList.add("is-open");

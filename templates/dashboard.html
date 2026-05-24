@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Кабинет родителя — Kidion{% endblock %}
+{% block title %}Кабинет — Kidion{% endblock %}
 
 {% block head %}
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -346,6 +346,38 @@ a.kd-btn-ghost:hover { background: var(--surface-2); color: var(--text) !importa
   font-size: 14px; font-weight: 500; color: var(--text-2);
 }
 
+/* ===================== Chat banner ===================== */
+.kd-chat-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, oklch(0.96 0.035 268), oklch(0.94 0.04 295));
+  border: 1px solid oklch(0.88 0.05 268);
+  border-radius: var(--radius-lg);
+  transition: box-shadow .15s, transform .15s;
+  cursor: pointer;
+}
+.kd-chat-banner:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.kd-chat-banner-icon { font-size: 24px; flex: 0 0 auto; }
+.kd-chat-banner-text { flex: 1; min-width: 0; }
+.kd-chat-banner-title {
+  margin: 0 0 2px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--accent-ink);
+}
+.kd-chat-banner-body {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.4;
+}
+
 /* ===================== Referral block ===================== */
 .kd-referral {
   margin-top: 28px;
@@ -511,7 +543,7 @@ var USER_REF_CODE = '{{ user.ref_code }}';
   var asideEl = document.getElementById('kd-aside');
 
   // Aside is always the same
-  asideEl.innerHTML = renderBalanceCard() + renderReferral();
+  asideEl.innerHTML = renderBalanceCard() + renderChatBanner() + renderReferral();
 
   if (children.length === 0) {
     mainEl.innerHTML = renderEmptyMain();
@@ -650,6 +682,17 @@ function renderBalanceCard() {
     '<p class="kd-balance-card-note">\u2248 ' + lessonsApprox + ' сгенерированных уроков</p>' +
     '<div class="kd-balance-card-action"><a href="/buy" class="kd-btn kd-btn-ghost kd-btn-block">Пополнить</a></div>' +
   '</div>';
+}
+
+function renderChatBanner() {
+  return '<a href="https://chat.kidion.ru" class="kd-chat-banner" style="text-decoration:none;color:inherit">' +
+    '<div class="kd-chat-banner-icon">\u2728</div>' +
+    '<div class="kd-chat-banner-text">' +
+      '<h3 class="kd-chat-banner-title">Киди — нейросеть для детей</h3>' +
+      '<p class="kd-chat-banner-body">Безопасный AI-чат: ответит на вопросы, расскажет сказку, нарисует картинку</p>' +
+    '</div>' +
+    '<span style="color:var(--accent);font-size:18px">\u2192</span>' +
+  '</a>';
 }
 
 function renderReferral() {

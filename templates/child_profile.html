@@ -654,7 +654,7 @@
 
 {% block content %}
 <div class="child-profile-page">
-  <a href="/dashboard" class="cp-back"><span>&larr;</span> Назад к детям</a>
+  <a href="/dashboard" class="cp-back"><span>&larr;</span> Назад в кабинет</a>
 
   <div class="cp-layout">
     <!-- Sidebar -->
@@ -671,7 +671,8 @@
 
       {% if child.interests %}
       <div class="cp-sidebar__interests">
-        {% for interest in child.interests.split(',') if interest.strip() %}
+        {% set clean_interests = child.interests.replace('[', '').replace(']', '').replace('"', '').replace("'", '') %}
+        {% for interest in clean_interests.split(',') if interest.strip() %}
           <span class="cp-chip">{{ interest.strip() }}</span>
         {% endfor %}
       </div>
@@ -681,7 +682,7 @@
 
       <div class="cp-sidebar__stats">
         <div class="cp-stat">
-          <span class="cp-stat__label">Баланс</span>
+          <span class="cp-stat__label">Звёзды</span>
           <span class="cp-stat__value"><span class="cp-stat__icon">&#11088;</span>{{ child.stars or 0 }}</span>
         </div>
         <div class="cp-stat">
@@ -689,12 +690,16 @@
           <span class="cp-stat__value"><span class="cp-stat__icon">&#128293;</span>{{ child.current_streak }}</span>
         </div>
       </div>
+      <p style="font-size:11.5px; color:var(--cp-text-3); line-height:1.4; margin-top:8px; text-align:center;">
+        Звёздочки — личная награда ребёнка за уроки. Тратятся в магазине персонажа.
+      </p>
 
       <hr>
 
       <div class="cp-sidebar__links">
         <a href="/kid/login?child_id={{ child.id }}" class="cp-btn cp-btn--primary">Кабинет ребёнка &rarr;</a>
         <a href="/children/{{ child.id }}/history" class="cp-btn cp-btn--ghost">История уроков</a>
+        <a href="https://chat.kidion.ru" class="cp-btn cp-btn--ghost" style="border-color:oklch(0.88 0.05 268);color:oklch(0.34 0.16 268)">&#10024; Чат с Киди</a>
       </div>
     </aside>
 
@@ -735,9 +740,6 @@
         <div id="free-status" class="free-status-v2" style="display:none"></div>
         <div id="free-lessons-list"></div>
 
-        <div class="stars-note">
-          &#11088; Звездочки — это личная награда ребенка. Он тратит их на одежду для своего персонажа. Кристаллы ребенок не видит.
-        </div>
       </section>
 
       <!-- Universe -->
@@ -755,7 +757,7 @@
           {% if child.character_image_url %}
           <img src="{{ child.character_image_url }}" alt="Персонаж" class="universe-block__img">
           {% endif %}
-          <div class="universe-block__text">{{ child.universe_description }}</div>
+          <div class="universe-block__text">{{ child.universe_description | replace('\n\n', '</p><p style="margin-top:10px">') | replace('\n', '<br>') | safe }}</div>
         </div>
         {% else %}
         <div class="universe-empty">
