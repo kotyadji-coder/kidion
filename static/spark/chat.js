@@ -175,6 +175,10 @@
     const isArtist = key === "artist";
     if (isArtist) {
       chipsEl.classList.add("is-grid");
+      const hint = document.createElement("p");
+      hint.className = "sc-grid-hint";
+      hint.textContent = "Или прикрепи фото + выбери стиль";
+      chipsEl.appendChild(hint);
     } else {
       chipsEl.classList.remove("is-grid");
     }
@@ -186,7 +190,7 @@
         : `<span class="sc-chip-ico">${esc(s.ico)}</span><span>${esc(s.label)}</span>`;
       btn.addEventListener("click", () => {
         if (isArtist) {
-          chatInput.value = `Стиль: ${s.label}`;
+          chatInput.value = attachedFile ? `Сделай моё фото в стиле ${s.label}` : `Стиль: ${s.label}`;
           sendMessage();
         } else {
           chatInput.value = s.label;
@@ -520,6 +524,12 @@
         attachName.textContent = attachedFile.name;
         attachPreview.style.display = "";
         updateSendBtn();
+        // For artist: auto-fill style hint when photo attached
+        if (activeChar === "artist" && !chatInput.value.trim()) {
+          chatInput.value = "Сделай в стиле аниме";
+          chatInput.select();
+          updateSendBtn();
+        }
       }
     });
     btnRemoveAttach.addEventListener("click", clearAttachment);

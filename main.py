@@ -119,7 +119,7 @@ from referral import generate_ref_code, process_registration_referral
 import services.generation
 from services.universe import generate_universe, generate_character_image, generate_shop_items
 from services.kid_chat import SPARK as CHAT_SPARK, sanitize_message, generate_chat_response
-from services.image_generator import is_draw_request, generate_chat_image
+from services.image_generator import is_draw_request, generate_chat_image, describe_photo_for_styling
 from services.rate_limiter import check_rate_limit, check_rate_limit_by_key, get_client_ip
 from services.pii_scrubber import scrub_pii
 from services.crisis_detector import detect_crisis
@@ -3764,9 +3764,32 @@ async def kid_chat_send(request: Request):
         "скетч": "pencil sketch, hand drawn, hatching",
     }
     if character_key == "artist" and image_url:
-        # Photo styling not yet supported by image generation API
-        # Tell user to describe what they want instead
-        response_text = "Я пока не умею обрабатывать фото, но скоро научусь! А пока — опиши словами, что нарисовать, и выбери стиль. Я нарисую с нуля!"
+        # Two-step photo styling: describe photo → generate in style
+        style_en = "anime style"  # default
+        msg_lower = message_text.lower()
+        for ru, en in _ARTY_STYLES.items():
+            if ru in msg_lower:
+                style_en = en
+                break
+
+        # Read the uploaded photo
+        photo_path = image_url.lstrip("/")
+        photo_bytes = None
+        if os.path.exists(photo_path):
+            with open(photo_path, "rb") as f:
+                photo_bytes = f.read()
+
+        if photo_bytes:
+            # Step 1: Describe photo with Gemini
+            description = describe_photo_for_styling(photo_bytes)
+            if description:
+                # Step 2: Generate in style
+                draw_prompt_direct = f"{style_en}, {description}, child-safe, high quality"
+                response_text = f"DRAW: {draw_prompt_direct}\nРисую в стиле {msg_lower.split('стиле ')[-1] if 'стиле' in msg_lower else 'аниме'}!"
+            else:
+                response_text = "Не получилось разобрать фото. Попробуй другое или опиши словами, что нарисовать."
+        else:
+            response_text = "Не удалось загрузить фото. Попробуй ещё раз."
     else:
         # Step 3: Generate AI response (with scrubbed input)
         response_text = generate_chat_response(

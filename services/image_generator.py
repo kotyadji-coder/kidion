@@ -26,12 +26,51 @@ def is_draw_request(text: str) -> bool:
 def generate_chat_image(description: str) -> bytes | None:
     """Generate a child-safe image from a text description. Returns PNG bytes or None."""
     safe_prompt = (
-        f"Generate a cute, colorful, child-friendly cartoon illustration for a child aged 6-10. "
-        f"Style: bright colors, rounded shapes, friendly characters, no scary elements. "
-        f"Subject: {description}. "
+        f"Generate a cute, colorful, child-friendly illustration. "
+        f"Style and subject: {description}. "
         f"The image must be safe for children — no violence, no scary content, no text."
     )
     return generate_image(safe_prompt)
+
+
+def describe_photo_for_styling(image_bytes: bytes) -> str | None:
+    """Use Gemini to describe a photo in detail for re-generation in a different style."""
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        return None
+
+    try:
+        import base64
+        from google import genai
+
+        client = genai.Client(api_key=api_key)
+        b64 = base64.b64encode(image_bytes).decode()
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=[
+                {
+                    "parts": [
+                        {"text": (
+                            "Describe this photo in detail for an AI image generator. "
+                            "Focus on: the person's appearance (hair color, length, style, eye color, "
+                            "skin tone, facial features, expression), clothing, pose, and background. "
+                            "Be very specific and detailed. Output ONLY the description, no commentary. "
+                            "Keep it child-safe. Write in English. Max 150 words."
+                        )},
+                        {"inline_data": {"mime_type": "image/jpeg", "data": b64}},
+                    ]
+                }
+            ],
+        )
+
+        if response.text:
+            logger.info("Photo described for styling: %s", response.text[:100])
+            return response.text.strip()
+        return None
+    except Exception:
+        logger.exception("Photo description failed")
+        return None
 
 
 def generate_image(prompt: str) -> bytes | None:
