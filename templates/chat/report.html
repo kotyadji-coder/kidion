@@ -219,13 +219,22 @@
     </div>
     {% endif %}
 
-    <a href="https://kidion.ru/dashboard" class="rpt-kidion-banner" style="text-decoration:none;color:inherit">
-      <div class="rpt-kidion-banner-icon">&#128218;</div>
-      <div class="rpt-kidion-banner-text">
-        <p class="rpt-kidion-banner-title">Kidion — уроки</p>
-        <p class="rpt-kidion-banner-body">Школьная программа в формате приключения</p>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:28px">
+      <div class="rpt-kidion-banner" style="flex:1;min-width:200px;margin-top:0;cursor:pointer" id="pwa-report-banner">
+        <div class="rpt-kidion-banner-icon">&#128241;</div>
+        <div class="rpt-kidion-banner-text">
+          <p class="rpt-kidion-banner-title">Установить приложение</p>
+          <p class="rpt-kidion-banner-body" id="pwa-report-text">Киди можно добавить на экран телефона как приложение</p>
+        </div>
       </div>
-    </a>
+      <a href="https://kidion.ru/dashboard" class="rpt-kidion-banner" style="text-decoration:none;color:inherit;flex:1;min-width:200px;margin-top:0">
+        <div class="rpt-kidion-banner-icon">&#128218;</div>
+        <div class="rpt-kidion-banner-text">
+          <p class="rpt-kidion-banner-title">Kidion — уроки</p>
+          <p class="rpt-kidion-banner-body">Школьная программа в формате приключения</p>
+        </div>
+      </a>
+    </div>
   </div>
 </div>
 
@@ -253,6 +262,31 @@ async function generateReport() {
     btn.textContent = 'Создать отчёт';
   }
 }
+
+// PWA install from report page
+(function() {
+  var banner = document.getElementById('pwa-report-banner');
+  var text = document.getElementById('pwa-report-text');
+  var deferredPrompt = null;
+  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    deferredPrompt = e;
+  });
+
+  if (banner) {
+    banner.addEventListener('click', function() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+      } else if (isIOS) {
+        text.innerHTML = 'Нажмите <svg style="vertical-align:middle" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5v7M4 5.5l3-3 3 3M2.5 9v2.5h9V9" stroke="#007AFF" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg> внизу экрана Safari, затем «На экран Домой»';
+      } else {
+        text.textContent = 'Откройте chat.kidion.ru в Chrome, нажмите меню (три точки) → «Установить приложение»';
+      }
+    });
+  }
+})();
 
 // Add child form
 (function() {

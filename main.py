@@ -12,7 +12,7 @@ from typing import Optional
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Response
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, field_validator
@@ -2773,6 +2773,18 @@ def _is_chat_subdomain(request: Request) -> bool:
     """Check if request comes from chat.kidion.ru."""
     host = request.headers.get("host", "")
     return host.startswith("chat.")
+
+
+# PWA: serve manifest and service worker from root for chat subdomain
+@app.get("/manifest.json")
+async def pwa_manifest(request: Request):
+    return FileResponse("static/spark/manifest.json", media_type="application/manifest+json")
+
+
+@app.get("/sw.js")
+async def pwa_sw(request: Request):
+    return FileResponse("static/spark/sw.js", media_type="application/javascript",
+                        headers={"Service-Worker-Allowed": "/"})
 
 
 @app.get("/", response_class=HTMLResponse)
