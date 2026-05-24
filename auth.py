@@ -11,8 +11,8 @@ from itsdangerous import BadSignature, SignatureExpired, TimestampSigner
 # 30 days in seconds (parent sessions)
 _SESSION_MAX_AGE = 60 * 60 * 24 * 30
 
-# 30 minutes in seconds (child sessions — shorter for safety)
-_CHILD_SESSION_MAX_AGE = 60 * 30
+# 7 days in seconds (child sessions)
+_CHILD_SESSION_MAX_AGE = 60 * 60 * 24 * 7
 
 
 def hash_password(plain: str) -> str:
