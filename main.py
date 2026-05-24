@@ -3764,18 +3764,9 @@ async def kid_chat_send(request: Request):
         "скетч": "pencil sketch, hand drawn, hatching",
     }
     if character_key == "artist" and image_url:
-        # Detect style from message
-        style_en = "anime style"  # default
-        msg_lower = message_text.lower()
-        for ru, en in _ARTY_STYLES.items():
-            if ru in msg_lower:
-                style_en = en
-                break
-        # Build draw prompt directly — no AI dialogue needed
-        draw_prompt_direct = f"{style_en} version of the uploaded photo, child-safe, high quality"
-        response_text = "Рисую!"
-        # Inject DRAW: so the image generation block picks it up
-        response_text = f"DRAW: {draw_prompt_direct}\n{response_text}"
+        # Photo styling not yet supported by image generation API
+        # Tell user to describe what they want instead
+        response_text = "Я пока не умею обрабатывать фото, но скоро научусь! А пока — опиши словами, что нарисовать, и выбери стиль. Я нарисую с нуля!"
     else:
         # Step 3: Generate AI response (with scrubbed input)
         response_text = generate_chat_response(
