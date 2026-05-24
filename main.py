@@ -3741,6 +3741,7 @@ async def kid_chat_send(request: Request):
         context,
         child_name=child["name"],
         character_key=character_key,
+        grade=child.get("grade", 3),
     )
 
     # Step 4: Output moderation — check AI response for unsafe content
