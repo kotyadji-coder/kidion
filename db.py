@@ -1354,7 +1354,7 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
                 {"ico": "\U0001f9e0", "label": "Расскажи опыт"},
             ]),
             "accent_color": "owl",
-            "is_free": 0,
+            "is_free": 1,
             "sort_order": 1,
         },
         {
@@ -1372,7 +1372,7 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
                 {"ico": "\U0001f3ad", "label": "Сыграем роли"},
             ]),
             "accent_color": "captain",
-            "is_free": 0,
+            "is_free": 1,
             "sort_order": 2,
         },
         {
@@ -1394,7 +1394,7 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
                 {"ico": "\u270f\ufe0f", "label": "Скетч"},
             ]),
             "accent_color": "artist",
-            "is_free": 0,
+            "is_free": 1,
             "sort_order": 3,
         },
     ]
@@ -2028,6 +2028,28 @@ def use_chat_image(conn: sqlite3.Connection, user_id: int) -> bool:
         (sub["id"],),
     )
     conn.commit()
+    return True
+
+
+FREE_IMAGES_PER_MONTH = 3
+
+
+def get_free_images_used_this_month(conn: sqlite3.Connection, user_id: int) -> int:
+    """Count free images used this month."""
+    row = conn.execute(
+        "SELECT COUNT(*) FROM transactions WHERE user_id = ? AND reason = 'free_chat_image' "
+        "AND created_at >= date('now', 'start of month')",
+        (user_id,),
+    ).fetchone()
+    return row[0] if row else 0
+
+
+def use_free_chat_image(conn: sqlite3.Connection, user_id: int) -> bool:
+    """Try to use a free monthly image. Returns True if allowed."""
+    used = get_free_images_used_this_month(conn, user_id)
+    if used >= FREE_IMAGES_PER_MONTH:
+        return False
+    insert_transaction(conn, user_id, 0, "free_chat_image")
     return True
 
 

@@ -3783,7 +3783,22 @@ async def kid_chat_send(request: Request):
             wants_image = True
 
     if wants_image and not has_sub:
-        response_text += "\n\nКартинки доступны по подписке. Попроси взрослого оформить подписку!"
+        # Try free monthly images (3/month)
+        from db import use_free_chat_image
+        can_generate = use_free_chat_image(conn, parent_id)
+        if not can_generate:
+            response_text += "\n\nБесплатные картинки в этом месяце закончились. Попроси взрослого оформить подписку — будет 30 картинок каждый месяц!"
+        else:
+            image_description = draw_prompt or message_text
+            image_bytes = generate_chat_image(image_description)
+            if image_bytes:
+                import uuid
+                os.makedirs("content/chat_images", exist_ok=True)
+                fname = f"{uuid.uuid4().hex}.png"
+                fpath = f"content/chat_images/{fname}"
+                with open(fpath, "wb") as f:
+                    f.write(image_bytes)
+                response_image_url = f"/content/chat_images/{fname}"
     elif wants_image and has_sub:
         # Try subscription images first, then crystals
         can_generate = use_chat_image(conn, parent_id)
