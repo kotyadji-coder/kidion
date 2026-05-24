@@ -152,6 +152,14 @@
       div.addEventListener('click', () => authChild(c));
       list.appendChild(div);
     });
+    if (children.length < 3) {
+      const add = document.createElement('a');
+      add.href = 'https://kidion.ru/children/new';
+      add.className = 'child-pick';
+      add.style.cssText = 'border-style:dashed;color:var(--text-3);text-decoration:none';
+      add.innerHTML = '<div class="child-pick-av" style="background:var(--surface-2);font-size:18px">+</div><div><div class="child-pick-name" style="color:var(--text-3)">Добавить ребёнка</div></div>';
+      list.appendChild(add);
+    }
   }
 
   async function authChild(child) {
