@@ -172,17 +172,34 @@
     document.getElementById("empty-greet").textContent = c.greeting_ru;
     document.getElementById("empty-sub").textContent = c.greeting_sub_ru || "";
 
-    // Render suggestion chips
+    // Render suggestion chips (grid for artist, horizontal for others)
     const chipsEl = document.getElementById("empty-chips");
     chipsEl.innerHTML = "";
+    const isArtist = key === "artist";
+    if (isArtist) {
+      chipsEl.classList.add("is-grid");
+      const hint = document.createElement("p");
+      hint.className = "sc-grid-hint";
+      hint.innerHTML = "\uD83D\uDCCE Можно прикрепить фото — стиль применится к нему";
+      chipsEl.appendChild(hint);
+    } else {
+      chipsEl.classList.remove("is-grid");
+    }
     (c.suggestions || []).forEach((s) => {
       const btn = document.createElement("button");
-      btn.className = "sc-chip";
-      btn.innerHTML = `<span class="sc-chip-ico">${esc(s.ico)}</span><span>${esc(s.label)}</span>`;
+      btn.className = isArtist ? "sc-style-card" : "sc-chip";
+      btn.innerHTML = isArtist
+        ? `<span class="sc-style-ico">${esc(s.ico)}</span><span class="sc-style-label">${esc(s.label)}</span>`
+        : `<span class="sc-chip-ico">${esc(s.ico)}</span><span>${esc(s.label)}</span>`;
       btn.addEventListener("click", () => {
-        chatInput.value = s.label;
-        updateSendBtn();
-        chatInput.focus();
+        if (isArtist) {
+          chatInput.value = `Стиль: ${s.label}`;
+          sendMessage();
+        } else {
+          chatInput.value = s.label;
+          updateSendBtn();
+          chatInput.focus();
+        }
       });
       chipsEl.appendChild(btn);
     });
@@ -474,7 +491,7 @@
       character: {
         icon: "\u2728",
         title: "Этот персонаж по подписке",
-        text: "С подпиской откроются все 3 персонажа: Киди, Зуми и Лоро. У каждого свой характер!",
+        text: "С подпиской откроются все персонажи: Зуми (учитель), Лоро (рассказчик) и Арти (художник)!",
       },
     };
     const cfg = configs[feature] || configs.character;

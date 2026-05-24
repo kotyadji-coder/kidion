@@ -3767,10 +3767,24 @@ async def kid_chat_send(request: Request):
                   details=f"issues:{','.join(mod_issues)}")
 
     # Check if this is an image generation request
+    # Two triggers: 1) user asks to draw (is_draw_request) 2) Арти includes DRAW: in response
     response_image_url = None
-    if is_draw_request(message_text) and not has_sub:
-        response_text += "\n\nЯ умею рисовать, но картинки доступны по подписке. Попроси взрослого оформить подписку! ✨"
-    elif is_draw_request(message_text) and has_sub:
+    wants_image = is_draw_request(message_text)
+    draw_prompt = None
+
+    # Check if AI response contains DRAW: directive (from Арти)
+    if "DRAW:" in response_text:
+        import re as _re
+        draw_match = _re.search(r"DRAW:\s*(.+?)(?:\n|$)", response_text)
+        if draw_match:
+            draw_prompt = draw_match.group(1).strip()
+            # Remove DRAW: line from visible response
+            response_text = _re.sub(r"DRAW:\s*.+?(?:\n|$)", "", response_text).strip()
+            wants_image = True
+
+    if wants_image and not has_sub:
+        response_text += "\n\nКартинки доступны по подписке. Попроси взрослого оформить подписку!"
+    elif wants_image and has_sub:
         # Try subscription images first, then crystals
         can_generate = use_chat_image(conn, parent_id)
         if not can_generate:
@@ -3782,7 +3796,8 @@ async def kid_chat_send(request: Request):
 
         if can_generate:
             import uuid
-            image_bytes = generate_chat_image(message_text)
+            image_description = draw_prompt or message_text
+            image_bytes = generate_chat_image(image_description)
             if image_bytes:
                 os.makedirs("content/chat_images", exist_ok=True)
                 fname = f"{uuid.uuid4().hex}.png"
@@ -3790,9 +3805,8 @@ async def kid_chat_send(request: Request):
                 with open(fpath, "wb") as f:
                     f.write(image_bytes)
                 response_image_url = f"/content/chat_images/{fname}"
-                response_text += "\n\nВот что у меня получилось! 🎨"
         else:
-            response_text += "\n\nЯ бы нарисовал, но картинки закончились. Попроси взрослого пополнить кристаллы на kidion.ru 💎"
+            response_text += "\n\nКартинки закончились. Попроси взрослого пополнить кристаллы на kidion.ru"
 
     # Save assistant message
     add_kid_chat_message(conn, chat_id, "assistant", response_text, response_image_url)

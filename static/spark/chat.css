@@ -675,6 +675,38 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
 @media (min-width: 769px) {
   .sc-empty-chips { grid-template-columns: repeat(2, minmax(140px, 200px)); max-width: 460px; }
 }
+/* Artist style grid */
+.sc-empty-chips.is-grid {
+  grid-template-columns: repeat(4, 1fr);
+  max-width: 420px;
+  gap: 8px;
+}
+@media (max-width: 480px) {
+  .sc-empty-chips.is-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+}
+.sc-grid-hint {
+  grid-column: 1 / -1;
+  font-size: 12px; color: var(--text-3);
+  text-align: center; margin: 0 0 4px;
+  line-height: 1.4;
+}
+.sc-style-card {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 12px 6px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color .12s, transform .08s, box-shadow .12s;
+}
+.sc-style-card:hover {
+  border-color: var(--c-border);
+  box-shadow: 0 4px 14px -6px color-mix(in oklch, var(--c-accent) 35%, transparent);
+  transform: translateY(-2px);
+}
+.sc-style-ico { font-size: 24px; line-height: 1; }
+.sc-style-label { font-size: 11px; font-weight: 600; color: var(--text-2); }
+
 .sc-chip {
   display: flex; align-items: center; gap: 8px;
   padding: 12px 14px;

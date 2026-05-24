@@ -1375,6 +1375,28 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
             "is_free": 0,
             "sort_order": 2,
         },
+        {
+            "key": "artist",
+            "name_ru": "Арти",
+            "role_ru": "Художник",
+            "avatar_type": "png",
+            "system_prompt": "",
+            "greeting_ru": "Привет! Что нарисуем?",
+            "greeting_sub_ru": "Выбери стиль или просто опиши, что хочешь. Можешь прикрепить фото — я обработаю его в любом стиле.",
+            "suggestions_json": _json.dumps([
+                {"ico": "\U0001f38c", "label": "Аниме"},
+                {"ico": "\U0001f5bc\ufe0f", "label": "Стикер"},
+                {"ico": "\U0001f48c", "label": "Открытка"},
+                {"ico": "\u26cf\ufe0f", "label": "Пиксель"},
+                {"ico": "\U0001f3ac", "label": "Мультик"},
+                {"ico": "\u2728", "label": "Волшебное"},
+                {"ico": "\U0001f4a5", "label": "Комикс"},
+                {"ico": "\u270f\ufe0f", "label": "Скетч"},
+            ]),
+            "accent_color": "artist",
+            "is_free": 0,
+            "sort_order": 3,
+        },
     ]
 
     for c in chars:
