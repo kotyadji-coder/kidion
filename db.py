@@ -1304,12 +1304,12 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
         "WHERE key='spark' AND name_ru != 'Киди'"
     )
     conn.execute(
-        "UPDATE chat_characters SET name_ru='Профессор Уху', avatar_type='png' "
-        "WHERE key='owl' AND name_ru != 'Профессор Уху'"
+        "UPDATE chat_characters SET name_ru='Зуми', avatar_type='png' "
+        "WHERE key='owl'"
     )
     conn.execute(
-        "UPDATE chat_characters SET name_ru='Кот Баюн', avatar_type='png', "
-        "greeting_ru='Ого, новый слушатель!' WHERE key='captain' AND name_ru != 'Сказочник Лука'"
+        "UPDATE chat_characters SET name_ru='Лоро', avatar_type='png', "
+        "greeting_ru='Ого, новый слушатель!' WHERE key='captain'"
     )
     conn.execute("DELETE FROM chat_characters WHERE key='pixie'")
     conn.commit()
@@ -1341,7 +1341,7 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
         },
         {
             "key": "owl",
-            "name_ru": "Профессор Уху",
+            "name_ru": "Зуми",
             "role_ru": "Учитель",
             "avatar_type": "png",
             "system_prompt": "",
@@ -1359,7 +1359,7 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
         },
         {
             "key": "captain",
-            "name_ru": "Кот Баюн",
+            "name_ru": "Лоро",
             "role_ru": "Рассказчик",
             "avatar_type": "png",
             "system_prompt": "",

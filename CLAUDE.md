@@ -78,8 +78,8 @@ kidion/
 │   ├── landing.css            # Landing page CSS
 │   ├── chat.js                # Multi-character chat JS
 │   ├── spark-hero.png         # Киди character PNG
-│   ├── owl.png                # Профессор Уху character PNG
-│   ├── captain.png            # Кот Баюн character PNG
+│   ├── owl.png                # Зуми character PNG
+│   ├── captain.png            # Лоро character PNG
 │   ├── favicon.ico            # Favicon (from Киди image)
 │   └── apple-touch-icon.png   # Apple touch icon
 ├── static/kid/style.css       # Kid CSS (Nunito, pastels, mobile-first)
@@ -163,8 +163,8 @@ Multi-character AI chat for children. Templates in `templates/chat/`. Old `/spar
 | Character | Key | Role | Tier | Model |
 |-----------|-----|------|------|-------|
 | Киди | spark | Универсальный друг | free | gemini-2.5-flash |
-| Профессор Уху | owl | Учитель | pro | gemini-2.5-flash |
-| Кот Баюн | captain | Рассказчик | pro | gemini-2.5-flash |
+| Зуми | owl | Учитель | pro | gemini-2.5-flash |
+| Лоро | captain | Рассказчик | pro | gemini-2.5-flash |
 
 Each has a unique system prompt layered on shared safety rules (10 rules in `_SAFETY_BASE`). Per-character chat history (separate `kid_chats` row per child+character). All characters use PNG avatar images (`static/spark/`).
 
@@ -294,7 +294,7 @@ uvicorn main:app --host 127.0.0.1 --port 8003 --reload
 - [x] Киди Chat: AI image generation in chat (detect "нарисуй", call Vertex AI)
 - [x] Киди Chat: parent reports (weekly chat summaries)
 - [x] Киди Chat: independent registration flow (simplified, no universe)
-- [x] Киди Chat: rebrand Spark → Киди, remove Pixie, rename Owl → Уху, Captain → Кот Баюн
+- [x] Киди Chat: rebrand Spark → Киди, remove Pixie, rename Owl → Зуми, Captain → Лоро
 - [x] Connect print worksheet generation (worksheets generated alongside lessons)
 - [ ] Add curricula for grades 3-4 and more subjects (world)
 - [x] Pass universe_description into lesson generation prompts (so lessons are themed)

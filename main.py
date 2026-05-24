@@ -3751,7 +3751,9 @@ async def kid_chat_send(request: Request):
 
     # Check if this is an image generation request
     response_image_url = None
-    if is_draw_request(message_text) and has_sub:
+    if is_draw_request(message_text) and not has_sub:
+        response_text += "\n\nЯ умею рисовать, но картинки доступны по подписке. Попроси взрослого оформить подписку! ✨"
+    elif is_draw_request(message_text) and has_sub:
         # Try subscription images first, then crystals
         can_generate = use_chat_image(conn, parent_id)
         if not can_generate:
@@ -3772,6 +3774,8 @@ async def kid_chat_send(request: Request):
                     f.write(image_bytes)
                 response_image_url = f"/content/chat_images/{fname}"
                 response_text += "\n\nВот что у меня получилось! 🎨"
+        else:
+            response_text += "\n\nЯ бы нарисовал, но картинки закончились. Попроси взрослого пополнить кристаллы на kidion.ru 💎"
 
     # Save assistant message
     add_kid_chat_message(conn, chat_id, "assistant", response_text, response_image_url)
