@@ -1330,10 +1330,10 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
             "greeting_ru": "Привет! Я Киди!",
             "greeting_sub_ru": "Спроси меня о чём угодно — про космос, динозавров, домашку или просто поболтаем.",
             "suggestions_json": _json.dumps([
-                {"ico": "\u2728", "label": "Интересный факт"},
-                {"ico": "\U0001f4da", "label": "Помощь с уроками"},
-                {"ico": "\U0001f4d6", "label": "Придумай историю"},
+                {"ico": "\U0001f4ac", "label": "Поболтать"},
+                {"ico": "\U0001f4a1", "label": "Интересный факт"},
                 {"ico": "\U0001f914", "label": "А почему\u2026?"},
+                {"ico": "\U0001f3a8", "label": "Нарисуй!"},
             ]),
             "accent_color": "spark",
             "is_free": 1,
