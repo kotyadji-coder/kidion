@@ -285,9 +285,11 @@
 
   var deferredPrompt = null;
   var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  var isAndroidMobile = /Android.*Mobile/.test(navigator.userAgent);
+  var isMobile = isIOS || isAndroidMobile;
   var isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
 
-  if (isStandalone || localStorage.getItem('pwa_dismissed')) return;
+  if (!isMobile || isStandalone || localStorage.getItem('pwa_dismissed')) return;
 
   window.addEventListener('beforeinstallprompt', function(e) {
     e.preventDefault();
