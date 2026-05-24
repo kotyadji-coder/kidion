@@ -13,7 +13,7 @@
 <style>
   body { min-height: 100vh; display: flex; flex-direction: column; }
   .auth-page { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
-  .auth-card { width: 100%; max-width: 420px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 36px 28px; }
+  .auth-card { width: 100%; max-width: 440px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 36px 28px; }
   .auth-h { margin: 0 0 6px; font-size: 24px; font-weight: 600; letter-spacing: -0.025em; text-align: center; }
   .auth-sub { margin: 0 0 28px; font-size: 14px; color: var(--text-2); text-align: center; line-height: 1.5; }
   .auth-field { margin-bottom: 14px; }
@@ -24,12 +24,34 @@
   .auth-error { color: oklch(0.45 0.2 25); font-size: 14px; font-weight: 500; text-align: center; margin-top: 12px; padding: 10px 14px; background: oklch(0.97 0.02 25); border: 1px solid oklch(0.90 0.05 25); border-radius: 10px; display: none; }
   .auth-switch { text-align: center; margin-top: 18px; font-size: 13px; color: var(--text-3); }
   .auth-switch a { color: var(--spark-violet); text-decoration: none; font-weight: 500; }
-  .auth-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; font-size: 12px; color: var(--text-3); }
-  .auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
-  .auth-child-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
-  .auth-child-h { margin: 0 0 14px; font-size: 15px; font-weight: 600; }
-  .auth-row { display: flex; gap: 10px; }
-  .auth-row .auth-field { flex: 1; }
+
+  .auth-children { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .auth-children-h { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+  .auth-children-sub { margin: 0 0 14px; font-size: 12px; color: var(--text-3); }
+
+  .child-row { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 10px; }
+  .child-row .auth-field { flex: 1; margin-bottom: 0; }
+  .child-row .auth-field.grade { flex: 0 0 100px; }
+
+  .child-remove {
+    width: 36px; height: 44px; flex: 0 0 36px;
+    display: grid; place-items: center;
+    background: none; border: 1px solid var(--border); border-radius: 10px;
+    color: var(--text-3); cursor: pointer; font-size: 16px;
+    transition: background 0.12s, color 0.12s;
+  }
+  .child-remove:hover { background: oklch(0.97 0.02 25); color: oklch(0.55 0.2 25); }
+
+  .child-add {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: none; border: 1px dashed var(--border); border-radius: 10px;
+    padding: 10px 14px; font-size: 13px; font-weight: 500;
+    color: var(--text-3); cursor: pointer; font-family: inherit;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+    width: 100%; justify-content: center;
+    margin-bottom: 14px;
+  }
+  .child-add:hover { background: var(--surface-2); color: var(--text-2); border-color: var(--text-3); }
 </style>
 </head>
 <body>
@@ -63,27 +85,31 @@
         </div>
       </div>
 
-      <div class="auth-child-section">
-        <h3 class="auth-child-h">Профиль ребёнка</h3>
-        <div class="auth-row">
-          <div class="auth-field">
-            <label class="auth-label">Имя</label>
-            <input class="auth-input" type="text" name="child_name" required placeholder="Как зовут?">
-          </div>
-          <div class="auth-field" style="flex:0 0 100px">
-            <label class="auth-label">Класс</label>
-            <select class="auth-input" name="grade" style="appearance:auto">
-              <option value="1">1 класс</option>
-              <option value="2">2 класс</option>
-              <option value="3" selected>3 класс</option>
-              <option value="4">4 класс</option>
-              <option value="5">5 класс</option>
-              <option value="6">6 класс</option>
-              <option value="7">7 класс</option>
-              <option value="8">8 класс</option>
-            </select>
+      <div class="auth-children">
+        <h3 class="auth-children-h">Дети</h3>
+        <p class="auth-children-sub">Добавьте от 1 до 3 детей. Язык нейросети адаптируется под класс.</p>
+
+        <div id="children-list">
+          <div class="child-row" data-child="0">
+            <div class="auth-field">
+              <input class="auth-input" type="text" placeholder="Имя ребёнка" required>
+            </div>
+            <div class="auth-field grade">
+              <select class="auth-input" style="appearance:auto">
+                <option value="1">1 кл</option>
+                <option value="2">2 кл</option>
+                <option value="3" selected>3 кл</option>
+                <option value="4">4 кл</option>
+                <option value="5">5 кл</option>
+                <option value="6">6 кл</option>
+                <option value="7">7 кл</option>
+                <option value="8">8 кл</option>
+              </select>
+            </div>
           </div>
         </div>
+
+        <button type="button" class="child-add" id="btn-add-child">+ Ещё ребёнка</button>
       </div>
 
       <label style="font-size:12px; color:var(--text-2); display:flex; align-items:flex-start; gap:8px; margin-bottom:12px; line-height:1.45; cursor:pointer;">
@@ -98,8 +124,13 @@
 </div>
 
 <script>
-// Show/hide password
 (function() {
+  var childCount = 1;
+  var maxChildren = 3;
+  var listEl = document.getElementById('children-list');
+  var addBtn = document.getElementById('btn-add-child');
+
+  // Show/hide password
   var pw = document.getElementById('reg-pw');
   document.getElementById('reg-pw-toggle').addEventListener('click', function() {
     var show = pw.type === 'password';
@@ -108,81 +139,134 @@
       ? '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1.5 9s3-5.5 7.5-5.5S16.5 9 16.5 9s-3 5.5-7.5 5.5S1.5 9 1.5 9z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="9" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/><line x1="2" y1="16" x2="16" y2="2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'
       : '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1.5 9s3-5.5 7.5-5.5S16.5 9 16.5 9s-3 5.5-7.5 5.5S1.5 9 1.5 9z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="9" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>';
   });
+
+  // Add child row
+  addBtn.addEventListener('click', function() {
+    if (childCount >= maxChildren) return;
+    var row = document.createElement('div');
+    row.className = 'child-row';
+    row.dataset.child = childCount;
+    row.innerHTML =
+      '<div class="auth-field"><input class="auth-input" type="text" placeholder="Имя ребёнка" required></div>' +
+      '<div class="auth-field grade"><select class="auth-input" style="appearance:auto">' +
+      '<option value="1">1 кл</option><option value="2">2 кл</option><option value="3" selected>3 кл</option>' +
+      '<option value="4">4 кл</option><option value="5">5 кл</option><option value="6">6 кл</option>' +
+      '<option value="7">7 кл</option><option value="8">8 кл</option></select></div>' +
+      '<button type="button" class="child-remove" title="Убрать">&times;</button>';
+    row.querySelector('.child-remove').addEventListener('click', function() {
+      row.remove();
+      childCount--;
+      if (childCount < maxChildren) addBtn.style.display = '';
+    });
+    listEl.appendChild(row);
+    childCount++;
+    if (childCount >= maxChildren) addBtn.style.display = 'none';
+    row.querySelector('input').focus();
+  });
+
+  // Collect children data from DOM
+  function getChildren() {
+    var rows = listEl.querySelectorAll('.child-row');
+    var children = [];
+    rows.forEach(function(row) {
+      var name = row.querySelector('input[type="text"]').value.trim();
+      var grade = parseInt(row.querySelector('select').value);
+      if (name) children.push({ name: name, grade: grade });
+    });
+    return children;
+  }
+
+  // Submit
+  document.getElementById('register-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var errEl = document.getElementById('auth-error');
+    var btn = this.querySelector('button[type="submit"]');
+    errEl.style.display = 'none';
+
+    var email = this.querySelector('input[name="email"]').value.trim();
+    var password = this.querySelector('input[name="password"]').value;
+    var children = getChildren();
+
+    if (children.length === 0) {
+      errEl.textContent = 'Добавьте хотя бы одного ребёнка';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Создаём аккаунт...';
+
+    function showError(msg) {
+      errEl.textContent = msg;
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Начать бесплатно';
+    }
+
+    try {
+      // 1. Register parent
+      var regRes = await fetch('/auth/register', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'same-origin',
+        body: JSON.stringify({ email: email, password: password }),
+      });
+      var regData = await regRes.json();
+      if (!regRes.ok) {
+        var msg = regData.message || regData.detail || regData.error || '';
+        if (msg === 'email_taken') msg = 'Этот email уже зарегистрирован. Попробуйте войти.';
+        else if (msg === 'weak_password') msg = 'Пароль слишком короткий (минимум 8 символов).';
+        else if (msg === 'invalid_email') msg = 'Некорректный email.';
+        else if (!msg) msg = 'Ошибка регистрации';
+        return showError(msg);
+      }
+
+      // 2. Create all children
+      btn.textContent = 'Создаём профили детей...';
+      var createdChildren = [];
+      for (var i = 0; i < children.length; i++) {
+        var childRes = await fetch('/api/children', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          credentials: 'same-origin',
+          body: JSON.stringify({
+            name: children[i].name,
+            gender: 'boy',
+            birth_date: '2018-01-01',
+            grade: children[i].grade,
+            interests: [],
+            source: 'chat',
+          }),
+        });
+        if (childRes.ok) {
+          var childData = await childRes.json();
+          createdChildren.push(childData);
+        }
+      }
+
+      if (createdChildren.length === 0) {
+        return showError('Не удалось создать профиль ребёнка');
+      }
+
+      // 3. If one child — auth and go to chat. If multiple — go to login to pick.
+      if (createdChildren.length === 1) {
+        await fetch('/api/kid/auth', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          credentials: 'same-origin',
+          body: JSON.stringify({ child_id: createdChildren[0].id }),
+        });
+        btn.textContent = 'Готово! Переходим в чат...';
+        window.location.href = '/chat';
+      } else {
+        btn.textContent = 'Готово! Выберите ребёнка...';
+        window.location.href = '/chat/login';
+      }
+    } catch(e) {
+      showError('Ошибка сети. Попробуйте ещё раз.');
+    }
+  });
 })();
-document.getElementById('register-form').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  const errEl = document.getElementById('auth-error');
-  const btn = this.querySelector('button[type="submit"]');
-  errEl.style.display = 'none';
-  const fd = new FormData(this);
-
-  btn.disabled = true;
-  btn.textContent = 'Создаём аккаунт...';
-
-  function showError(msg) {
-    errEl.textContent = msg;
-    errEl.style.display = 'block';
-    btn.disabled = false;
-    btn.textContent = 'Начать бесплатно';
-  }
-
-  try {
-    // 1. Register parent (also sets session cookie)
-    const regRes = await fetch('/auth/register', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      credentials: 'same-origin',
-      body: JSON.stringify({
-        email: fd.get('email'),
-        password: fd.get('password'),
-      }),
-    });
-    const regData = await regRes.json();
-    if (!regRes.ok) {
-      var msg = regData.message || regData.detail || regData.error || '';
-      if (msg === 'email_taken') msg = 'Этот email уже зарегистрирован. Попробуйте войти.';
-      else if (msg === 'weak_password') msg = 'Пароль слишком короткий (минимум 8 символов).';
-      else if (msg === 'invalid_email') msg = 'Некорректный email.';
-      else if (!msg) msg = 'Ошибка регистрации';
-      return showError(msg);
-    }
-
-    // 2. Create child (simplified — no interests, no universe)
-    btn.textContent = 'Создаём профиль ребёнка...';
-    const childRes = await fetch('/api/children', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      credentials: 'same-origin',
-      body: JSON.stringify({
-        name: fd.get('child_name'),
-        gender: 'boy',
-        birth_date: '2018-01-01',
-        grade: parseInt(fd.get('grade')),
-        interests: [],
-        source: 'chat',
-      }),
-    });
-    if (!childRes.ok) {
-      const childData = await childRes.json();
-      return showError(childData.message || childData.detail || childData.error || 'Ошибка создания профиля');
-    }
-    const childData = await childRes.json();
-
-    // 3. Auth child (no PIN needed)
-    await fetch('/api/kid/auth', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      credentials: 'same-origin',
-      body: JSON.stringify({ child_id: childData.id }),
-    });
-
-    // 4. Go to chat
-    btn.textContent = 'Готово! Переходим в чат...';
-    window.location.href = '/chat';
-  } catch(e) {
-    showError('Ошибка сети. Попробуйте ещё раз.');
-  }
-});
 </script>
 </body>
 </html>
