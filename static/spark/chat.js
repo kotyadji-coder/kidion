@@ -39,10 +39,7 @@
   });
   setupEvents();
 
-  // Lock mic for free users
-  if (!CFG.hasSubscription) {
-    btnMic.classList.add("is-locked");
-  }
+  // Voice input available for everyone (Web Speech API is free)
 
   // ---------- API ----------
   async function api(url, method, body) {
@@ -193,7 +190,11 @@
         : `<span class="sc-chip-ico">${esc(s.ico)}</span><span>${esc(s.label)}</span>`;
       btn.addEventListener("click", () => {
         if (isArtist) {
-          chatInput.value = `Стиль: ${s.label}`;
+          if (attachedFile) {
+            chatInput.value = `Сделай моё фото в стиле ${s.label}`;
+          } else {
+            chatInput.value = `Стиль: ${s.label}`;
+          }
           sendMessage();
         } else {
           chatInput.value = s.label;
@@ -520,20 +521,19 @@
     // Adult gate for parent area
     setupAdultGate();
 
-    // File attachment — block for free users
-    const btnAttachLabel = document.getElementById("btn-attach");
-    if (!CFG.hasSubscription) {
-      btnAttachLabel.addEventListener("click", (e) => {
-        e.preventDefault();
-        showProModal("image");
-      });
-    }
+    // File attachment — allowed for everyone (free users get 3 images/month)
     fileInput.addEventListener("change", () => {
       if (fileInput.files.length) {
         attachedFile = fileInput.files[0];
         attachName.textContent = attachedFile.name;
         attachPreview.style.display = "";
         updateSendBtn();
+        // For artist: auto-fill hint when photo attached
+        if (activeChar === "artist" && !chatInput.value.trim()) {
+          chatInput.value = "Сделай в стиле аниме";
+          chatInput.select();
+          updateSendBtn();
+        }
       }
     });
     btnRemoveAttach.addEventListener("click", clearAttachment);
@@ -541,12 +541,8 @@
     // Mobile drawer (still accessible from desktop sidebar)
     document.getElementById("btn-close-drawer").addEventListener("click", closeDrawer);
 
-    // Voice (placeholder — opens overlay, cancel closes it)
+    // Voice input — available for everyone
     btnMic.addEventListener("click", () => {
-      if (!CFG.hasSubscription) {
-        showProModal("voice");
-        return;
-      }
       voiceOverlay.classList.add("is-open");
       startVoiceRecognition();
     });
