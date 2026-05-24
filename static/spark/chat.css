@@ -53,6 +53,13 @@
   --pix-border:  oklch(0.88 0.060 0);
   --pix-grad: linear-gradient(135deg, oklch(0.65 0.18 0) 0%, oklch(0.70 0.17 20) 100%);
 
+  /* Artist — teal-pink */
+  --art-accent:  oklch(0.60 0.15 180);
+  --art-ink:     oklch(0.40 0.13 180);
+  --art-soft:    oklch(0.965 0.028 180);
+  --art-border:  oklch(0.88 0.055 180);
+  --art-grad: linear-gradient(135deg, oklch(0.60 0.15 180) 0%, oklch(0.62 0.16 330) 100%);
+
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -71,6 +78,9 @@
 .sc[data-char="pixie"]   { --c-accent: var(--pix-accent);  --c-ink: var(--pix-ink);
                            --c-soft:   var(--pix-soft);    --c-border: var(--pix-border);
                            --c-grad:   var(--pix-grad); }
+.sc[data-char="artist"]  { --c-accent: var(--art-accent);  --c-ink: var(--art-ink);
+                           --c-soft:   var(--art-soft);    --c-border: var(--art-border);
+                           --c-grad:   var(--art-grad); }
 
 /* ============ Shell ============ */
 html, body { margin: 0; padding: 0; background: var(--bg); }
