@@ -108,6 +108,11 @@
     });
   }
 
+  function isCharExhausted(key) {
+    if (key === "artist") return freeImagesRemaining <= 0 && !CFG.hasSubscription;
+    return (dailyLimit - dailyCount) <= 0;
+  }
+
   function renderCharStrip() {
     charStrip.innerHTML = "";
     characters.forEach((c) => {
@@ -117,6 +122,11 @@
       const av = document.createElement("div");
       av.className = "sc-char-av";
       av.appendChild(getCharAvatar(c.key));
+      if (isCharExhausted(c.key)) {
+        const dot = document.createElement("span");
+        dot.className = "sc-char-dot-off";
+        av.appendChild(dot);
+      }
       const name = document.createElement("span");
       name.className = "sc-char-name";
       name.textContent = c.name_ru;
@@ -351,25 +361,7 @@
       time.textContent = d.getHours().toString().padStart(2, "0") + ":" + d.getMinutes().toString().padStart(2, "0");
       meta.appendChild(time);
 
-      if (!isUser && m.id) {
-        const reportBtn = document.createElement("button");
-        reportBtn.className = "sc-report-btn";
-        reportBtn.title = "Пожаловаться на ответ";
-        reportBtn.textContent = "\u26A0";
-        reportBtn.onclick = async function() {
-          if (reportBtn.disabled) return;
-          reportBtn.disabled = true;
-          reportBtn.textContent = "...";
-          try {
-            await api("/api/kid/chat/report", "POST", { message_id: m.id, reason: "inappropriate" });
-            reportBtn.textContent = "\u2713";
-            reportBtn.title = "Жалоба отправлена";
-          } catch(e) {
-            reportBtn.textContent = "\u26A0";
-            reportBtn.disabled = false;
-          }
-        };
-        meta.appendChild(reportBtn);
+      if (false) { // report button hidden from kids
       }
 
       stack.appendChild(meta);
@@ -526,6 +518,7 @@
       document.getElementById("quota-info").querySelector("strong").previousSibling.textContent = "Осталось ";
       document.getElementById("quota-info").querySelector("strong").nextSibling.textContent = " сообщений сегодня";
     }
+    renderCharStrip();
   }
 
   function updateSendBtn() {

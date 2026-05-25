@@ -371,10 +371,21 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
 .sc-char-av {
   width: 48px; height: 48px;
   border-radius: 50%;
-  overflow: hidden;
+  overflow: visible;
   background: var(--surface-2);
   border: 2.5px solid var(--border);
   transition: border-color .15s, box-shadow .15s;
+  position: relative;
+}
+.sc-char-av img, .sc-char-av svg { border-radius: 50%; }
+.sc-char-dot-off {
+  position: absolute;
+  bottom: 0; right: 0;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: oklch(0.55 0.22 25);
+  border: 2px solid var(--surface);
+  z-index: 2;
 }
 .sc-char-btn.is-active .sc-char-av {
   border-color: var(--c-accent);
