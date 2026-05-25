@@ -3824,7 +3824,7 @@ async def kid_chat_send(request: Request):
                 if free_used < 3:
                     can_generate = True
                 else:
-                    response_text = "Бесплатные картинки в этом месяце закончились. Попроси взрослого оформить подписку — будет 30 картинок каждый месяц!"
+                    response_text = "Волшебные краски закончились! Попроси взрослых добавить ещё"
                     is_arty_image = True
 
             if can_generate:
@@ -3903,7 +3903,7 @@ async def kid_chat_send(request: Request):
         from db import use_free_chat_image, get_free_images_used_this_month
         free_used = get_free_images_used_this_month(conn, parent_id)
         if free_used >= 3:
-            response_text += "\n\nБесплатные картинки в этом месяце закончились. Попроси взрослого оформить подписку — будет 30 картинок каждый месяц!"
+            response_text += "\n\nВолшебные краски закончились! Попроси взрослых добавить ещё"
         else:
             image_description = draw_prompt or message_text
             image_bytes = generate_chat_image(image_description)
@@ -3973,7 +3973,7 @@ async def kid_chat_send(request: Request):
 
 CHAT_SUB_PRICE_RUB = 500
 CHAT_SUB_IMAGES = 30
-CHAT_IMAGE_COST_CRYSTALS = 5
+CHAT_IMAGE_COST_CRYSTALS = 10
 
 
 @app.post("/api/chat/subscribe")

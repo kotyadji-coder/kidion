@@ -186,7 +186,7 @@
       counter.className = "sc-grid-hint sc-img-counter";
       counter.textContent = freeImg > 0
         ? `${freeImg} картинки бесплатно`
-        : `Бесплатные картинки закончились`;
+        : `Волшебные краски закончились`;
       chipsEl.appendChild(counter);
     } else {
       chipsEl.classList.remove("is-grid");

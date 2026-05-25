@@ -86,7 +86,7 @@
         <span class="sub-buy-price">500</span>
         <span class="sub-buy-unit">₽ / месяц</span>
       </div>
-      <p class="sub-buy-desc">Одна подписка на всех детей в аккаунте. Включены 30 картинок от AI. Дополнительные — 5💎 за штуку.</p>
+      <p class="sub-buy-desc">Одна подписка на всех детей в аккаунте. Включены 30 картинок от AI. Дополнительные — 10💎 за штуку.</p>
 
       <ul class="sub-features">
         <li class="sub-feat">
@@ -103,7 +103,7 @@
         </li>
         <li class="sub-feat">
           <span class="sub-feat-icon"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.8l2.2 2.2L9 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          <strong>30 картинок/мес</strong> от AI (доп. — 5💎)
+          <strong>30 картинок/мес</strong> от AI (доп. — 10💎)
         </li>
         <li class="sub-feat">
           <span class="sub-feat-icon"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.8l2.2 2.2L9 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
@@ -122,30 +122,32 @@
       {% endif %}
     </div>
 
-    {% if subscription and subscription.images_remaining is defined and subscription.images_remaining <= 0 %}
     <div class="sub-packages">
-      <h3 class="sub-packages-h">Картинки закончились? Купите кристаллы</h3>
-      <p style="text-align:center; font-size:13px; color:var(--text-2); margin: 0 0 14px;">1 картинка = 5💎. Кристаллы работают и на уроках в kidion.ru.</p>
+      <h3 class="sub-packages-h">Волшебные краски</h3>
+      <p style="text-align:center; font-size:14px; color:var(--text-2); margin: 0 0 14px;">Кристаллы для картинок. 1 картинка = 10💎. Не сгорают.</p>
       <div class="sub-packages-grid">
         <a class="sub-pkg" href="/buy">
-          <div class="sub-pkg-crystals">💎 60</div>
-          <div class="sub-pkg-price">60 ₽</div>
+          <div class="sub-pkg-crystals">💎 100</div>
+          <div class="sub-pkg-price">100 ₽</div>
+          <div style="font-size:11px; color:var(--text-3); margin-top:2px;">10 картинок</div>
         </a>
         <a class="sub-pkg" href="/buy">
           <div class="sub-pkg-crystals">💎 360</div>
           <div class="sub-pkg-price">320 ₽</div>
+          <div style="font-size:11px; color:var(--text-3); margin-top:2px;">36 картинок</div>
         </a>
         <a class="sub-pkg" href="/buy">
           <div class="sub-pkg-crystals">💎 600</div>
           <div class="sub-pkg-price">490 ₽</div>
+          <div style="font-size:11px; color:var(--text-3); margin-top:2px;">60 картинок</div>
         </a>
         <a class="sub-pkg" href="/buy">
           <div class="sub-pkg-crystals">💎 1000</div>
           <div class="sub-pkg-price">800 ₽</div>
+          <div style="font-size:11px; color:var(--text-3); margin-top:2px;">100 картинок</div>
         </a>
       </div>
     </div>
-    {% endif %}
   </div>
 </div>
 

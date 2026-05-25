@@ -29,6 +29,7 @@ from db import (
 from referral import process_payment_referral
 
 PACKAGES = {
+    "100_100": {"crystals": 100, "price_rub": 100},
     "60_60": {"crystals": 60, "price_rub": 60},
     "360_320": {"crystals": 360, "price_rub": 320},
     "600_490": {"crystals": 600, "price_rub": 490},
