@@ -693,8 +693,14 @@
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach(t => t.stop());
     } catch (err) {
-      voiceH.textContent = "Микрофон заблокирован системой";
-      voiceSub.textContent = "macOS: Системные настройки → Конфиденциальность → Микрофон → включи Chrome";
+      console.log("getUserMedia error:", err.name, err.message);
+      if (err.name === "NotAllowedError") {
+        voiceH.textContent = "Микрофон заблокирован";
+        voiceSub.textContent = "Полностью закрой Chrome (Cmd+Q) и открой снова. macOS требует перезапуск после включения разрешения.";
+      } else {
+        voiceH.textContent = "Ошибка микрофона";
+        voiceSub.textContent = err.name + ": " + err.message;
+      }
       setVoiceUI("error");
       return;
     }
