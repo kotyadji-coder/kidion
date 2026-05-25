@@ -522,13 +522,29 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
   background: var(--surface);
   border: 1px solid var(--border);
   border-bottom-left-radius: 6px;
+  position: relative;
 }
 .sc-bub-img img {
-  max-width: 220px;
-  max-height: 180px;
+  max-width: 300px;
+  max-height: 300px;
   border-radius: 14px;
   display: block;
 }
+.sc-img-open-btn {
+  position: absolute;
+  bottom: 10px; right: 10px;
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0.8;
+  transition: opacity .15s;
+}
+.sc-bub-img:hover .sc-img-open-btn { opacity: 1; }
 .sc-bub-cap {
   padding: 8px 14px 10px;
   font-size: 12.5px;
