@@ -181,18 +181,13 @@
     const isArtist = key === "artist";
     if (isArtist) {
       chipsEl.classList.add("is-grid");
-      // Show free images counter
       const freeImg = c.free_images_remaining != null ? c.free_images_remaining : 3;
       const counter = document.createElement("p");
       counter.className = "sc-grid-hint sc-img-counter";
-      counter.innerHTML = freeImg > 0
-        ? `\uD83C\uDFA8 ${freeImg} бесплатных картинок для пробы`
+      counter.textContent = freeImg > 0
+        ? `${freeImg} бесплатных картинки`
         : `Бесплатные картинки закончились`;
       chipsEl.appendChild(counter);
-      const hint = document.createElement("p");
-      hint.className = "sc-grid-hint";
-      hint.textContent = "Выбери стиль, а потом расскажи что нарисовать или прикрепи фото";
-      chipsEl.appendChild(hint);
     } else {
       chipsEl.classList.remove("is-grid");
     }

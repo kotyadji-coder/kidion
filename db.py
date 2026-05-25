@@ -1313,7 +1313,7 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
     )
     conn.execute("DELETE FROM chat_characters WHERE key='pixie'")
     conn.execute(
-        "UPDATE chat_characters SET greeting_sub_ru='Опиши что нарисовать или прикрепи фото для стилизации' "
+        "UPDATE chat_characters SET greeting_sub_ru='Выбери стиль и прикрепи фото или опиши картинку' "
         "WHERE key='artist'"
     )
     conn.commit()
@@ -1386,7 +1386,7 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
             "avatar_type": "png",
             "system_prompt": "",
             "greeting_ru": "Привет! Что нарисуем?",
-            "greeting_sub_ru": "Опиши что нарисовать или прикрепи фото для стилизации",
+            "greeting_sub_ru": "Выбери стиль и прикрепи фото или опиши картинку",
             "suggestions_json": _json.dumps([
                 {"ico": "\U0001f38c", "label": "Аниме"},
                 {"ico": "\U0001f5bc\ufe0f", "label": "Стикер"},
