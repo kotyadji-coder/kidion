@@ -134,16 +134,18 @@
 
       <!-- Voice overlay -->
       <div class="sc-voice" id="voice-overlay">
-        <div class="sc-voice-pulse">
+        <div class="sc-voice-pulse" id="voice-pulse">
           <svg width="32" height="32" viewBox="0 0 18 18" fill="none"><rect x="6.5" y="2.5" width="5" height="9" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M4 9c0 2.8 2.2 5 5 5s5-2.2 5-5M9 14v2.5M6.5 16.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
         </div>
         <div>
           <h3 class="sc-voice-h">Говори, я слушаю!</h3>
           <p class="sc-voice-sub">Я переведу твою речь в текст.</p>
         </div>
+        <p class="sc-voice-transcript" id="voice-transcript"></p>
         <div class="sc-voice-actions">
           <button class="sc-voice-cancel" id="btn-voice-cancel">Отмена</button>
           <button class="sc-voice-stop" id="btn-voice-stop">Готово</button>
+          <button class="sc-voice-stop" id="btn-voice-retry" style="display:none">Попробовать снова</button>
         </div>
       </div>
 

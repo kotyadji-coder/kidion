@@ -1034,6 +1034,16 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
   letter-spacing: -0.022em;
 }
 .sc-voice-sub { margin: 0; font-size: 13.5px; color: var(--text-2); }
+.sc-voice-transcript {
+  margin: 0; padding: 8px 16px;
+  font-size: 16px; font-weight: 500;
+  color: var(--text);
+  min-height: 24px;
+  max-width: 320px;
+  word-break: break-word;
+}
+.sc-voice-transcript:empty { display: none; }
+.sc-voice-pulse.is-error { animation: none; background: var(--border); }
 .sc-voice-actions { display: flex; gap: 10px; }
 .sc-voice-stop {
   height: 44px; padding: 0 22px;

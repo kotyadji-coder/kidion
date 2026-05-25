@@ -629,70 +629,169 @@
 
     // Voice input — available for everyone
     btnMic.addEventListener("click", () => {
-      document.querySelector(".sc-voice-h").textContent = "Говори, я слушаю!";
-      document.querySelector(".sc-voice-sub").textContent = "Я переведу твою речь в текст.";
-      voiceOverlay.classList.add("is-open");
-      startVoiceRecognition();
+      openVoiceOverlay();
     });
     document.getElementById("btn-voice-cancel").addEventListener("click", () => {
-      voiceOverlay.classList.remove("is-open");
-      stopVoiceRecognition();
+      closeVoiceOverlay();
     });
     document.getElementById("btn-voice-stop").addEventListener("click", () => {
-      voiceOverlay.classList.remove("is-open");
-      stopVoiceRecognition();
+      finishVoiceInput();
+    });
+    document.getElementById("btn-voice-retry").addEventListener("click", () => {
+      openVoiceOverlay();
     });
   }
 
   // ---------- Voice (Web Speech API) ----------
   let recognition = null;
+  let voiceText = "";         // accumulated final transcript
+  let voiceInterim = "";      // current interim text
+  let voiceStopping = false;  // user pressed cancel/done
 
-  function startVoiceRecognition() {
+  const voiceH = document.querySelector(".sc-voice-h");
+  const voiceSub = document.querySelector(".sc-voice-sub");
+  const voiceTranscript = document.getElementById("voice-transcript");
+  const voicePulse = document.getElementById("voice-pulse");
+  const btnVoiceStop = document.getElementById("btn-voice-stop");
+  const btnVoiceRetry = document.getElementById("btn-voice-retry");
+  const btnVoiceCancel = document.getElementById("btn-voice-cancel");
+
+  function setVoiceUI(state) {
+    // states: listening, error, nospeech
+    voicePulse.classList.toggle("is-error", state !== "listening");
+    btnVoiceStop.style.display = state === "listening" ? "" : "none";
+    btnVoiceRetry.style.display = state === "listening" ? "none" : "";
+    btnVoiceCancel.style.display = "";
+  }
+
+  function openVoiceOverlay() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      voiceOverlay.classList.remove("is-open");
-      alert("Голосовой ввод не поддерживается в этом браузере");
+      voiceH.textContent = "Браузер не поддерживает голосовой ввод";
+      voiceSub.textContent = "Попробуй Chrome или Safari.";
+      voiceTranscript.textContent = "";
+      voiceOverlay.classList.add("is-open");
+      setVoiceUI("error");
       return;
     }
 
-    let gotResult = false;
-    recognition = new SpeechRecognition();
-    recognition.lang = "ru-RU";
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.onresult = (event) => {
-      gotResult = true;
-      const text = event.results[0][0].transcript;
-      chatInput.value = text;
-      updateSendBtn();
-      voiceOverlay.classList.remove("is-open");
-    };
-    recognition.onerror = (e) => {
-      recognition = null;
-      if (e.error === "not-allowed") {
-        document.querySelector(".sc-voice-h").textContent = "Нет доступа к микрофону";
-        document.querySelector(".sc-voice-sub").textContent = "Обнови страницу (Cmd+R) и разреши микрофон когда браузер спросит";
-      } else {
-        voiceOverlay.classList.remove("is-open");
-      }
-    };
-    recognition.onend = () => {
-      if (!gotResult) {
-        voiceOverlay.classList.remove("is-open");
-      }
-      recognition = null;
-    };
-    try {
-      recognition.start();
-    } catch(e) {
-      voiceOverlay.classList.remove("is-open");
+    voiceText = "";
+    voiceInterim = "";
+    voiceStopping = false;
+    voiceH.textContent = "Говори, я слушаю!";
+    voiceSub.textContent = "Я переведу твою речь в текст.";
+    voiceTranscript.textContent = "";
+    voiceOverlay.classList.add("is-open");
+    setVoiceUI("listening");
+    startRecognition();
+  }
+
+  function closeVoiceOverlay() {
+    voiceStopping = true;
+    voiceOverlay.classList.remove("is-open");
+    if (recognition) {
+      try { recognition.abort(); } catch (_) {}
       recognition = null;
     }
   }
 
-  function stopVoiceRecognition() {
+  function finishVoiceInput() {
+    voiceStopping = true;
     if (recognition) {
-      recognition.stop();
+      try { recognition.stop(); } catch (_) {}
+    }
+    // Use whatever text we have (final + interim)
+    const text = (voiceText + " " + voiceInterim).trim();
+    if (text) {
+      chatInput.value = text;
+      updateSendBtn();
+    }
+    voiceOverlay.classList.remove("is-open");
+    recognition = null;
+  }
+
+  function startRecognition() {
+    if (recognition) {
+      try { recognition.abort(); } catch (_) {}
+      recognition = null;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = "ru-RU";
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event) => {
+      voiceText = "";
+      voiceInterim = "";
+      for (let i = 0; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          voiceText += event.results[i][0].transcript + " ";
+        } else {
+          voiceInterim += event.results[i][0].transcript;
+        }
+      }
+      voiceTranscript.textContent = (voiceText + voiceInterim).trim();
+    };
+
+    recognition.onerror = (e) => {
+      if (voiceStopping) return;
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+        voiceH.textContent = "Нет доступа к микрофону";
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        if (isIOS) {
+          voiceSub.textContent = "Настройки → Safari → Микрофон → Разрешить";
+        } else if (isSafari) {
+          voiceSub.textContent = "Safari → Настройки для этого сайта → Микрофон → Разрешить";
+        } else {
+          voiceSub.textContent = "Нажми на замок 🔒 в адресной строке → Разрешить микрофон → Обнови страницу";
+        }
+        setVoiceUI("error");
+        recognition = null;
+      } else if (e.error === "no-speech") {
+        // Don't close — let user retry or keep waiting
+        voiceH.textContent = "Не слышу... Попробуй ещё раз";
+        voiceSub.textContent = "Говори громче и ближе к микрофону.";
+        setVoiceUI("nospeech");
+        recognition = null;
+      } else if (e.error === "aborted") {
+        recognition = null;
+      } else {
+        // network, audio-capture, etc.
+        voiceH.textContent = "Что-то пошло не так";
+        voiceSub.textContent = "Проверь микрофон и попробуй снова.";
+        setVoiceUI("error");
+        recognition = null;
+      }
+    };
+
+    recognition.onend = () => {
+      if (voiceStopping) { recognition = null; return; }
+      // If we have text, auto-finish
+      const text = (voiceText + voiceInterim).trim();
+      if (text) {
+        chatInput.value = text;
+        updateSendBtn();
+        voiceOverlay.classList.remove("is-open");
+        recognition = null;
+        return;
+      }
+      // Otherwise: recognition ended with no text (silence timeout)
+      // Auto-restart up to a couple times, then show "no speech"
+      recognition = null;
+      voiceH.textContent = "Не слышу... Попробуй ещё раз";
+      voiceSub.textContent = "Нажми «Попробовать снова» и говори.";
+      setVoiceUI("nospeech");
+    };
+
+    try {
+      recognition.start();
+    } catch (e) {
+      voiceH.textContent = "Не удалось запустить микрофон";
+      voiceSub.textContent = "Попробуй обновить страницу.";
+      setVoiceUI("error");
       recognition = null;
     }
   }
