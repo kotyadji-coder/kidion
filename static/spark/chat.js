@@ -780,15 +780,11 @@
         recognition = null;
         return;
       }
-      // No text yet — auto-restart (Chrome kills recognition on silence)
+      // No text — show hint to retry (can't auto-restart without user gesture in Chrome)
       recognition = null;
-      if (voiceOverlay.classList.contains("is-open")) {
-        setTimeout(() => {
-          if (!voiceStopping && voiceOverlay.classList.contains("is-open")) {
-            startRecognition();
-          }
-        }, 100);
-      }
+      voiceH.textContent = "Не услышал. Попробуй ещё раз!";
+      voiceSub.textContent = "Нажми кнопку и говори чётко.";
+      setVoiceUI("nospeech");
     };
 
     try {
