@@ -778,12 +778,15 @@
         recognition = null;
         return;
       }
-      // Otherwise: recognition ended with no text (silence timeout)
-      // Auto-restart up to a couple times, then show "no speech"
+      // No text yet — auto-restart (Chrome kills recognition on silence)
       recognition = null;
-      voiceH.textContent = "Не слышу... Попробуй ещё раз";
-      voiceSub.textContent = "Нажми «Попробовать снова» и говори.";
-      setVoiceUI("nospeech");
+      if (voiceOverlay.classList.contains("is-open")) {
+        setTimeout(() => {
+          if (!voiceStopping && voiceOverlay.classList.contains("is-open")) {
+            startRecognition();
+          }
+        }, 100);
+      }
     };
 
     try {
