@@ -1312,6 +1312,10 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
         "greeting_ru='Ого, новый слушатель!' WHERE key='captain'"
     )
     conn.execute("DELETE FROM chat_characters WHERE key='pixie'")
+    conn.execute(
+        "UPDATE chat_characters SET greeting_sub_ru='Опиши что нарисовать или прикрепи фото для стилизации' "
+        "WHERE key='artist'"
+    )
     conn.commit()
 
     existing = conn.execute("SELECT COUNT(*) FROM chat_characters").fetchone()[0]
@@ -1382,7 +1386,7 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
             "avatar_type": "png",
             "system_prompt": "",
             "greeting_ru": "Привет! Что нарисуем?",
-            "greeting_sub_ru": "Выбери стиль или просто опиши, что хочешь. Можешь прикрепить фото — я обработаю его в любом стиле.",
+            "greeting_sub_ru": "Опиши что нарисовать или прикрепи фото для стилизации",
             "suggestions_json": _json.dumps([
                 {"ico": "\U0001f38c", "label": "Аниме"},
                 {"ico": "\U0001f5bc\ufe0f", "label": "Стикер"},
