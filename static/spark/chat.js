@@ -662,11 +662,18 @@
     };
     recognition.onerror = () => {
       voiceOverlay.classList.remove("is-open");
+      recognition = null;
     };
     recognition.onend = () => {
-      // auto-close if no result
+      voiceOverlay.classList.remove("is-open");
+      recognition = null;
     };
-    recognition.start();
+    try {
+      recognition.start();
+    } catch(e) {
+      voiceOverlay.classList.remove("is-open");
+      recognition = null;
+    }
   }
 
   function stopVoiceRecognition() {
