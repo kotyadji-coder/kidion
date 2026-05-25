@@ -98,7 +98,7 @@ def stylize_photo(image_bytes: bytes, style_en: str) -> bytes | None:
                 "model": "black-forest-labs/FLUX.1-kontext-pro",
                 "prompt": prompt,
                 "image_url": data_url,
-                "steps": 28,
+                "steps": 40,
                 "n": 1,
                 "response_format": "b64_json",
             },
