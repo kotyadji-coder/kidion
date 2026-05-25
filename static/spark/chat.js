@@ -667,7 +667,7 @@
     btnVoiceCancel.style.display = "";
   }
 
-  function openVoiceOverlay() {
+  async function openVoiceOverlay() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       voiceH.textContent = "Браузер не поддерживает голосовой ввод";
@@ -687,6 +687,18 @@
     voiceTranscript.textContent = "";
     voiceOverlay.classList.add("is-open");
     setVoiceUI("listening");
+
+    // Pre-check mic access at OS level (getUserMedia)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(t => t.stop());
+    } catch (err) {
+      voiceH.textContent = "Микрофон заблокирован системой";
+      voiceSub.textContent = "macOS: Системные настройки → Конфиденциальность → Микрофон → включи Chrome";
+      setVoiceUI("error");
+      return;
+    }
+
     startRecognition();
   }
 
