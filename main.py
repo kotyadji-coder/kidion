@@ -119,7 +119,7 @@ from referral import generate_ref_code, process_registration_referral
 import services.generation
 from services.universe import generate_universe, generate_character_image, generate_shop_items
 from services.kid_chat import SPARK as CHAT_SPARK, sanitize_message, generate_chat_response
-from services.image_generator import is_draw_request, generate_chat_image, describe_photo_for_styling
+from services.image_generator import is_draw_request, generate_chat_image, describe_photo_for_styling, stylize_photo
 from services.rate_limiter import check_rate_limit, check_rate_limit_by_key, get_client_ip
 from services.pii_scrubber import scrub_pii
 from services.crisis_detector import detect_crisis
@@ -3708,6 +3708,7 @@ async def kid_chat_send(request: Request):
     daily_count = count_daily_messages(conn, child["id"], today_str)
     daily_limit = 100 if has_sub else 10
     is_arty_image = False  # will be set to True for Arty photo styling
+    response_image_url = None  # may be set by style transfer before general image logic
 
     if character_key != "artist" and daily_count >= daily_limit:
         msg = "На сегодня сообщения закончились! Приходи завтра!" if not has_sub else "Лимит 100 сообщений в день достигнут. Приходи завтра!"
@@ -3795,12 +3796,14 @@ async def kid_chat_send(request: Request):
         "скетч": "pencil sketch, hand drawn, hatching",
     }
     if character_key == "artist" and image_url:
-        # Two-step photo styling: describe photo → generate in style
+        # Direct photo style transfer via Together AI FLUX
         style_en = "anime style"  # default
+        style_name_ru = "аниме"
         msg_lower = message_text.lower()
         for ru, en in _ARTY_STYLES.items():
             if ru in msg_lower:
                 style_en = en
+                style_name_ru = ru
                 break
 
         # Read the uploaded photo
@@ -3811,17 +3814,42 @@ async def kid_chat_send(request: Request):
                 photo_bytes = f.read()
 
         if photo_bytes:
-            # Step 1: Describe photo with Gemini
-            description = describe_photo_for_styling(photo_bytes)
-            if description:
-                # Step 2: Generate in style — clean description (single line)
-                clean_desc = " ".join(description.replace("\n", " ").split())
-                draw_prompt_direct = f"{style_en}, {clean_desc}, child-safe, high quality"
-                style_name = msg_lower.split("стиле ")[-1] if "стиле" in msg_lower else "аниме"
-                response_text = f"DRAW: {draw_prompt_direct}\nРисую в стиле {style_name}!"
-                is_arty_image = True
+            # Check image quota before calling API
+            can_generate = False
+            if has_sub:
+                can_generate = True  # deduct after success
             else:
-                response_text = "Не получилось разобрать фото. Попробуй другое или опиши словами, что нарисовать."
+                from db import use_free_chat_image, get_free_images_used_this_month
+                free_used = get_free_images_used_this_month(conn, parent_id)
+                if free_used < 3:
+                    can_generate = True
+                else:
+                    response_text = "Бесплатные картинки в этом месяце закончились. Попроси взрослого оформить подписку — будет 30 картинок каждый месяц!"
+                    is_arty_image = True
+
+            if can_generate:
+                styled_bytes = stylize_photo(photo_bytes, style_en)
+                if styled_bytes:
+                    import uuid
+                    os.makedirs("content/chat_images", exist_ok=True)
+                    fname = f"{uuid.uuid4().hex}.png"
+                    fpath = f"content/chat_images/{fname}"
+                    with open(fpath, "wb") as fw:
+                        fw.write(styled_bytes)
+                    response_image_url = f"/content/chat_images/{fname}"
+                    response_text = f"Вот твоё фото в стиле {style_name_ru}!"
+                    is_arty_image = True
+                    # Deduct after successful generation
+                    if has_sub:
+                        can_deduct = use_chat_image(conn, parent_id)
+                        if not can_deduct:
+                            ok = update_crystals(conn, parent_id, -CHAT_IMAGE_COST_CRYSTALS)
+                            if ok:
+                                insert_transaction(conn, parent_id, -CHAT_IMAGE_COST_CRYSTALS, "chat_image")
+                    else:
+                        use_free_chat_image(conn, parent_id)
+                else:
+                    response_text = "Не получилось стилизовать фото. Попробуй другое или опиши словами, что нарисовать."
         else:
             response_text = "Не удалось загрузить фото. Попробуй ещё раз."
     elif character_key == "artist":
@@ -3847,7 +3875,9 @@ async def kid_chat_send(request: Request):
 
     # Check if this is an image generation request
     # Two triggers: 1) user asks to draw (is_draw_request) 2) Арти includes DRAW: in response
-    response_image_url = None
+    # response_image_url may already be set by style transfer above
+    if not response_image_url:
+        response_image_url = None
     wants_image = is_draw_request(message_text)
     draw_prompt = None
 
@@ -3868,7 +3898,7 @@ async def kid_chat_send(request: Request):
             log_event(conn, "output_moderated", child_id=child["id"],
                       details=f"issues:{','.join(mod_issues)}")
 
-    if wants_image and not has_sub:
+    if wants_image and not has_sub and not response_image_url:
         # Check free monthly images (3/month) — deduct AFTER successful generation
         from db import use_free_chat_image, get_free_images_used_this_month
         free_used = get_free_images_used_this_month(conn, parent_id)
@@ -3890,7 +3920,7 @@ async def kid_chat_send(request: Request):
             else:
                 logger.error("Image generation failed for child %s", child["id"])
                 _notify_admin_error(f"Image generation failed for child {child['id']}, prompt: {image_description[:100]}")
-    elif wants_image and has_sub:
+    elif wants_image and has_sub and not response_image_url:
         # Try subscription images first, then crystals
         # Generate first, deduct after success
         import uuid

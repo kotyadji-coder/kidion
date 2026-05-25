@@ -65,6 +65,60 @@ def describe_photo_for_styling(image_bytes: bytes) -> str | None:
         return None
 
 
+def stylize_photo(image_bytes: bytes, style_en: str) -> bytes | None:
+    """Style-transfer a photo using Together AI FLUX.1-kontext-pro.
+
+    Takes original photo bytes and a style description, returns styled PNG bytes.
+    """
+    import base64
+    import httpx
+
+    api_key = os.environ.get("TOGETHER_API_KEY")
+    if not api_key:
+        logger.info("No TOGETHER_API_KEY — cannot stylize photo")
+        return None
+
+    b64_image = base64.b64encode(image_bytes).decode("utf-8")
+    data_url = f"data:image/jpeg;base64,{b64_image}"
+
+    prompt = (
+        f"Transform this photo into {style_en}. "
+        f"Keep the same person, pose, and composition. "
+        f"Make it child-friendly and colorful."
+    )
+
+    try:
+        resp = httpx.post(
+            "https://api.together.xyz/v1/images/generations",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": "black-forest-labs/FLUX.1-kontext-pro",
+                "prompt": prompt,
+                "image_url": data_url,
+                "steps": 28,
+                "n": 1,
+                "response_format": "b64_json",
+            },
+            timeout=120.0,
+        )
+        resp.raise_for_status()
+        result = resp.json()
+
+        if result.get("data") and result["data"][0].get("b64_json"):
+            image_b64 = result["data"][0]["b64_json"]
+            logger.info("Photo stylized via Together AI FLUX (%s)", style_en)
+            return base64.b64decode(image_b64)
+
+        logger.warning("Together AI returned no image data: %s", str(result)[:200])
+        return None
+    except Exception:
+        logger.exception("Photo stylization via Together AI failed")
+        return None
+
+
 def _init_vertex(project: str):
     """Initialize Vertex AI with credentials."""
     import vertexai
