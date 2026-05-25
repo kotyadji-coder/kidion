@@ -27,7 +27,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         # Restrict browser features
         response.headers["Permissions-Policy"] = (
-            "camera=(), microphone=(), geolocation=(), "
+            "camera=(), microphone=(self), geolocation=(), "
             "payment=(), usb=(), magnetometer=(), gyroscope=()"
         )
 
