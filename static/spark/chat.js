@@ -629,6 +629,8 @@
 
     // Voice input — available for everyone
     btnMic.addEventListener("click", () => {
+      document.querySelector(".sc-voice-h").textContent = "Говори, я слушаю!";
+      document.querySelector(".sc-voice-sub").textContent = "Я переведу твою речь в текст.";
       voiceOverlay.classList.add("is-open");
       startVoiceRecognition();
     });
@@ -658,8 +660,18 @@
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach(t => t.stop()); // release immediately
     } catch(e) {
-      voiceOverlay.classList.remove("is-open");
-      alert("Разреши доступ к микрофону в настройках браузера");
+      const isIOS = /iPhone|iPad/.test(navigator.userAgent);
+      const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+      let hint = "";
+      if (isIOS) {
+        hint = "iPhone: Настройки → Safari → Микрофон → Разрешить";
+      } else if (isSafari) {
+        hint = "Safari → меню Safari → Настройки сайта → Микрофон → Разрешить";
+      } else {
+        hint = "Нажми на замочек слева от адреса сайта → Микрофон → Разрешить";
+      }
+      document.querySelector(".sc-voice-h").textContent = "Нет доступа к микрофону";
+      document.querySelector(".sc-voice-sub").textContent = hint;
       return;
     }
 
