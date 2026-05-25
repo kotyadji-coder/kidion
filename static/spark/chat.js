@@ -11,6 +11,7 @@
   let sending = false;
   let attachedFile = null;
   let dailyCount = 0;
+  let selectedStyle = null; // remembers Arty style selection
 
   // DOM refs
   const root = document.getElementById("spark-chat");
@@ -196,7 +197,8 @@
             chatInput.value = `Сделай моё фото в стиле ${s.label}`;
             sendMessage();
           } else {
-            // No photo: show auto-response without spending tokens
+            // No photo: show auto-response without spending tokens, remember style
+            selectedStyle = s.label;
             emptyState.style.display = "none";
             messagesEl.style.display = "";
             if (!messagesEl.querySelector(".sc-day")) {
@@ -573,7 +575,8 @@
         updateSendBtn();
         // For artist: auto-fill style hint when photo attached
         if (activeChar === "artist" && !chatInput.value.trim()) {
-          chatInput.value = "Сделай в стиле аниме";
+          const style = selectedStyle || "аниме";
+          chatInput.value = `Сделай моё фото в стиле ${style}`;
           chatInput.select();
           updateSendBtn();
         }
