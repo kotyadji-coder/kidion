@@ -3954,6 +3954,7 @@ async def kid_chat_send(request: Request):
     new_daily_count = daily_count if is_arty_image else daily_count + 1
 
     # Get updated images info
+    from db import get_free_images_used_this_month
     sub_info = get_active_chat_subscription(conn, parent_id)
     images_remaining = sub_info.get("images_remaining", 0) if sub_info else 0
     free_images_used = get_free_images_used_this_month(conn, parent_id)
