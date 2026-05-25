@@ -129,9 +129,11 @@ from services.security import SecurityHeadersMiddleware, is_weak_pin
 
 
 def _notify_admin_error(message: str):
-    """Send error notification to admin via Telegram (fire-and-forget)."""
+    """Send error notification to admin via Telegram through relay VPS (fire-and-forget).
+    Telegram API is blocked from Russian VPS, so we relay through 72.56.126.111."""
     bot_token = os.environ.get("NOTIFY_BOT_TOKEN")
     chat_id = os.environ.get("NOTIFY_CHAT_ID")
+    relay_url = os.environ.get("NOTIFY_RELAY_URL")  # e.g. http://72.56.126.111:8099/notify
     if not bot_token or not chat_id:
         logging.error("ADMIN ALERT (no Telegram configured): %s", message)
         return
@@ -139,13 +141,19 @@ def _notify_admin_error(message: str):
     import httpx
     def _send():
         try:
-            httpx.post(
-                f"https://api.telegram.org/bot{bot_token}/sendMessage",
-                json={"chat_id": chat_id, "text": f"⚠️ Kidion Error:\n{message[:1000]}"},
-                timeout=10,
-            )
+            if relay_url:
+                httpx.post(relay_url, json={
+                    "bot_token": bot_token, "chat_id": chat_id,
+                    "text": f"⚠️ Kidion Error:\n{message[:1000]}",
+                }, timeout=15)
+            else:
+                httpx.post(
+                    f"https://api.telegram.org/bot{bot_token}/sendMessage",
+                    json={"chat_id": chat_id, "text": f"⚠️ Kidion Error:\n{message[:1000]}"},
+                    timeout=10,
+                )
         except Exception:
-            logging.error("Failed to send Telegram notification")
+            logging.error("Failed to send Telegram notification: %s", message[:200])
     threading.Thread(target=_send, daemon=True).start()
 
 
