@@ -742,7 +742,8 @@
     recognition.onerror = (e) => {
       if (voiceStopping) return;
       voiceHadError = true;
-      if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+      console.log("Speech error:", e.error, e.message);
+      if (e.error === "not-allowed") {
         voiceH.textContent = "Нет доступа к микрофону";
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
@@ -755,6 +756,11 @@
         }
         setVoiceUI("error");
         recognition = null;
+      } else if (e.error === "service-not-allowed") {
+        voiceH.textContent = "Голосовой сервис недоступен";
+        voiceSub.textContent = "Google Speech заблокирован в твоей сети. Попробуй VPN.";
+        setVoiceUI("error");
+        recognition = null;
       } else if (e.error === "no-speech") {
         // Will auto-restart in onend
         voiceHadError = false; // allow restart
@@ -763,8 +769,8 @@
         recognition = null;
       } else {
         // network, audio-capture, etc.
-        voiceH.textContent = "Что-то пошло не так";
-        voiceSub.textContent = "Проверь микрофон и попробуй снова.";
+        voiceH.textContent = "Ошибка: " + e.error;
+        voiceSub.textContent = (e.message || "Проверь микрофон и попробуй снова.");
         setVoiceUI("error");
         recognition = null;
       }
