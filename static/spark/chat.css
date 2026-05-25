@@ -1043,6 +1043,11 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
   word-break: break-word;
 }
 .sc-voice-transcript:empty { display: none; }
+.sc-voice-pulse.is-active { animation: sc-pulse-active 0.8s ease-in-out infinite; }
+@keyframes sc-pulse-active {
+  0%,100% { transform: scale(1); }
+  50%     { transform: scale(1.1); }
+}
 .sc-voice-pulse.is-error { animation: none; background: var(--border); }
 .sc-voice-actions { display: flex; gap: 10px; }
 .sc-voice-stop {

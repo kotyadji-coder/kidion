@@ -752,6 +752,15 @@
     recognition.continuous = true;
     recognition.interimResults = true;
 
+    recognition.onstart = () => {
+      voiceH.textContent = "Слушаю...";
+      voiceSub.textContent = "Говори — текст появится ниже.";
+    };
+
+    recognition.onaudiostart = () => {
+      voicePulse.classList.add("is-active");
+    };
+
     recognition.onresult = (event) => {
       voiceText = "";
       voiceInterim = "";
@@ -762,7 +771,12 @@
           voiceInterim += event.results[i][0].transcript;
         }
       }
-      voiceTranscript.textContent = (voiceText + voiceInterim).trim();
+      const transcript = (voiceText + voiceInterim).trim();
+      voiceTranscript.textContent = transcript;
+      if (transcript) {
+        voiceH.textContent = "Записываю!";
+        voiceSub.textContent = "Нажми «Готово» когда закончишь.";
+      }
     };
 
     recognition.onerror = (e) => {
