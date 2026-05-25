@@ -139,8 +139,8 @@ def verify_prodamus_signature(data: dict, signature: str) -> bool:
     """
     secret = _get_secret()
     if not secret:
-        logging.warning("PRODAMUS_SECRET_KEY not set, skipping signature check")
-        return True
+        logging.error("PRODAMUS_SECRET_KEY not set — rejecting webhook")
+        return False
 
     if not signature:
         logging.warning("No webhook signature provided (Sign header missing)")
