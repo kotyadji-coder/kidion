@@ -11,7 +11,7 @@
 
 ## What This Is
 
-**kidion.ru** — a personalized educational platform for children ages 6–10. Parents create child profiles with interests, AI generates a personalized universe and character, then creates interactive lessons set in that universe. Children access lessons through a kid-friendly interface, earn stars, and spend them on character customization. **chat.kidion.ru** — AI chat for children with 3 characters.
+**kidion.ru** — a personalized educational platform for children ages 6–10. Parents create child profiles with interests, AI generates a personalized universe and character, then creates interactive lessons set in that universe. Children access lessons through a kid-friendly interface, earn stars, and spend them on character customization. **chat.kidion.ru** — AI chat for children with 4 characters (including Arty the artist with photo style transfer).
 
 ### Core Flow
 Parent creates child (name, grade, interests) → AI generates universe + character + shop → parent generates lessons → child completes them → earns stars → customizes character in star shop.
@@ -21,7 +21,7 @@ Parent creates child (name, grade, interests) → AI generates universe + charac
 - **Backend:** FastAPI + uvicorn + SQLite (sqlite3, no ORM)
 - **Frontend:** Jinja2 templates + vanilla JS (no React/Vue)
 - **Auth:** bcrypt (passwords) + itsdangerous (signed cookies `kid_session` for parents, `kid_session_child` for kids)
-- **AI Generation:** Google AI Studio (primary, API key) + Vertex AI (fallback). See AI Models section below.
+- **AI Generation:** Google AI Studio (primary, API key) + Vertex AI (fallback). Together AI (FLUX photo style transfer). See AI Models section below.
 - **Payments:** Prodamus (edtale.payform.ru, HMAC-SHA256 webhook via Sign header, demo mode active)
 - **Tests:** pytest + pytest-asyncio + httpx (306 tests)
 
@@ -40,11 +40,11 @@ kidion/
 │   ├── ai_client.py           # AI Studio wrapper (StudioModel), fallback to Vertex AI
 │   ├── gemini_client.py       # Lesson generation (AI Studio first, Vertex fallback, stub if neither)
 │   ├── prompts.py             # Russian prompts for Methodologist + Tutor-Gamer
-│   ├── image_generator.py     # Gemini 2.5 Flash lesson image generation (Vertex AI only)
+│   ├── image_generator.py     # Image generation (Vertex AI Imagen) + photo style transfer (Together AI FLUX)
 │   ├── content_generator.py   # Saves lesson HTML/PNG/JSON to content/
 │   ├── curricula.py           # Load/search curriculum JSON files
 │   ├── universe.py            # Universe/character/shop generation (Gemini)
-│   ├── kid_chat.py            # Киди AI chat: 3 characters, per-character safety prompts
+│   ├── kid_chat.py            # Киди AI chat: 4 characters (incl. Arty artist), per-character safety prompts
 │   └── worksheet/             # Printable worksheet generation (from metodist)
 │       ├── models.py           # Pydantic models: 24 task types + 3 activities
 │       ├── prompts.py          # Prompts for worksheet/activity generation
@@ -159,22 +159,27 @@ All generation functions return predefined defaults when neither `GEMINI_API_KEY
 
 Multi-character AI chat for children. Templates in `templates/chat/`. Old `/spark/*` URLs redirect 301 → `/chat/*`.
 
-### 3 Characters
+### 4 Characters
 | Character | Key | Role | Tier | Model |
 |-----------|-----|------|------|-------|
 | Киди | spark | Универсальный друг | free | gemini-2.5-flash |
-| Зуми | owl | Учитель | pro | gemini-2.5-flash |
-| Лоро | captain | Рассказчик | pro | gemini-2.5-flash |
+| Зуми | owl | Учитель | free | gemini-2.5-flash |
+| Лоро | captain | Рассказчик | free | gemini-2.5-flash |
+| Арти | artist | Художник | free | Together AI FLUX (photo) / Vertex AI Imagen (text) |
 
 Each has a unique system prompt layered on shared safety rules (10 rules in `_SAFETY_BASE`). Per-character chat history (separate `kid_chats` row per child+character). All characters use PNG avatar images (`static/spark/`).
 
+**Арти special logic:** Photo + style → `stylize_photo()` via Together AI FLUX.1-kontext-pro (direct style transfer). Text "нарисуй X" → AI generates DRAW: prompt → Imagen generates image. No photo, no draw request → auto-response (no AI tokens). Red dot on avatar when quota exhausted.
+
 ### Subscription & Limits
-- **Free:** 10 messages/day, only Киди, no voice/images
-- **Pro (500 ₽/month real money):** 100 msg/day, all 3 characters, voice input, 30 AI images/month included, parent reports
-- **Extra images:** 5💎 per image (from crystal balance)
+- **Free:** 10 messages/day, all characters, 3 images/month
+- **Pro (500 ₽/month real money):** 100 msg/day, all 4 characters, voice input, 30 AI images/month included, parent reports
+- **Extra images:** 10💎 per image (from crystal balance)
+- **Crystal pack "Волшебные краски":** 100💎 = 100₽ (10 images, don't expire)
 - Subscription is per parent account (all children share it)
-- Subscription page: `/chat/subscribe` and `/buy` (parent auth)
+- Subscription page: `/chat/subscribe` (subscription + crystal packs) and `/buy` (parent auth)
 - Payment via Prodamus (500 ₽/month, same as crystal packages)
+- When images/messages exhausted: red dot on character avatar, "Волшебные краски закончились" message
 
 ### Chat API
 - `GET /api/kid/chat?character=spark` — get chat + messages + limits
@@ -184,16 +189,16 @@ Each has a unique system prompt layered on shared safety rules (10 rules in `_SA
 - `POST /api/chat/subscribe` — buy subscription (500 rub/month)
 
 ### Voice Input
-Web Speech API (browser-side, free). Opens overlay, speech → text → editable before send. Pro only.
+Web Speech API (browser-side, free). Opens overlay, speech → text → editable before send. **BROKEN** — needs fix (see TODO). Report button hidden from kids.
 
 ## Key Business Logic
 
 - **Crystals:** 60 on registration (120 with referral). Prices: 1 lesson=20, 1 topic (5 lessons)=100, 1 month (20 lessons)=400. Skip test=FREE. **First 1 lesson per subject=FREE** (auto-generated on first enrollment).
 - **Stars:** +1 per correct task (5 tasks = 5 max per lesson).
-- **Packages:** 60/60 rub, 360/320 rub, 600/490 rub, 1000/800 rub
+- **Packages:** 100/100 rub (10 images), 60/60 rub, 360/320 rub, 600/490 rub, 1000/800 rub
 - **Adaptive difficulty** (1-3): auto-adjusts based on last 2 lesson results
 - **Auto-scoring:** iframe postMessage → auto-submit result. Stub mode → 5/5.
-- **Chat subscription:** 500 ₽/month via Prodamus, 100 msg/day (10 free), 30 images/month, extra images 5💎 each. 3 characters. Per-parent (covers all children).
+- **Chat subscription:** 500 ₽/month via Prodamus, 100 msg/day (10 free), 30 images/month, extra images 10💎 each. 4 characters. Per-parent (covers all children).
 - **Payment polling:** `/buy` page polls `/api/payment/status-by-order` after Prodamus redirect, shows animated success banner when crystals credited.
 
 ## API Endpoints
@@ -253,6 +258,7 @@ Web Speech API (browser-side, free). Opens overlay, speech → text → editable
 - `GOOGLE_CLOUD_PROJECT` set → uses Vertex AI (vertexai SDK)
 - Neither → returns stubs (for local dev/tests)
 - Image generation (PNG) always requires Vertex AI
+- Photo style transfer requires Together AI (`TOGETHER_API_KEY`)
 
 ### Models by Function
 
@@ -262,6 +268,8 @@ Web Speech API (browser-side, free). Opens overlay, speech → text → editable
 | `gemini-3.1-pro-preview` | Lesson Step 2: Tutor-Gamer (JSON lesson + tasks), Universe + character generation | gemini_client.py, universe.py |
 | `gemini-2.5-flash-lite` | Lesson Step 3: Visual layout, image prompts | gemini_client.py |
 | `gemini-2.5-flash` | Kid chat (Киди), shop items, character/lesson images (Vertex only) | kid_chat.py, universe.py, image_generator.py |
+| `FLUX.1-kontext-pro` | Arty photo style transfer (Together AI, $0.04/image, 40 steps) | image_generator.py |
+| `imagen-3.0-generate-002` | Text-to-image generation (Vertex AI) | image_generator.py |
 
 ### Architecture
 - `services/ai_client.py` — `StudioModel` class wraps google-genai to mimic Vertex AI `GenerativeModel` interface
@@ -291,7 +299,7 @@ uvicorn main:app --host 127.0.0.1 --port 8003 --reload
 - [x] DNS: A-record kidion.ru -> 72.56.126.111
 - [x] Prodamus: payment integration for crystals + chat subscription (edtale.payform.ru, HMAC via Sign header)
 - [x] Киди Chat: subdomain chat.kidion.ru (nginx + DNS + cookie domain=.kidion.ru)
-- [x] Киди Chat: AI image generation in chat (detect "нарисуй", call Vertex AI)
+- [x] Киди Chat: AI image generation in chat (detect "нарисуй", call Vertex AI) + photo style transfer (Together AI FLUX)
 - [x] Киди Chat: parent reports (weekly chat summaries)
 - [x] Киди Chat: independent registration flow (simplified, no universe)
 - [x] Киди Chat: rebrand Spark → Киди, remove Pixie, rename Owl → Зуми, Captain → Лоро
@@ -304,6 +312,12 @@ uvicorn main:app --host 127.0.0.1 --port 8003 --reload
 - [x] Password reset: "Забыли пароль?" link on all login pages (flow was already implemented)
 - [x] Login error messages: "Неверный пароль" / "Пользователь не найден" + show password toggle
 - [ ] Cloud backup for DB (Cloudflare R2) — when real users appear
+- [ ] Fix voice input (Web Speech API broken on Chrome Mac + Safari iOS — overlay doesn't work)
+- [x] Arty: photo style transfer via Together AI FLUX.1-kontext-pro
+- [x] Crystal pack "Волшебные краски" (100💎/100₽), image cost 10💎
+- [x] Red dot on character avatar when quota exhausted
+- [x] Chat image open/download button overlay
+- [x] Report button hidden from kids
 
 ## Eval System (Quality Monitoring)
 
