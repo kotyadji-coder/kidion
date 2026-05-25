@@ -647,31 +647,11 @@
   // ---------- Voice (Web Speech API) ----------
   let recognition = null;
 
-  async function startVoiceRecognition() {
+  function startVoiceRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       voiceOverlay.classList.remove("is-open");
       alert("Голосовой ввод не поддерживается в этом браузере");
-      return;
-    }
-
-    // Request microphone permission explicitly (triggers browser prompt)
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach(t => t.stop()); // release immediately
-    } catch(e) {
-      const isIOS = /iPhone|iPad/.test(navigator.userAgent);
-      const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-      let hint = "";
-      if (isIOS) {
-        hint = "iPhone: Настройки → Safari → Микрофон → Разрешить";
-      } else if (isSafari) {
-        hint = "Safari → меню Safari → Настройки сайта → Микрофон → Разрешить";
-      } else {
-        hint = "Нажми на замочек слева от адреса сайта → Микрофон → Разрешить";
-      }
-      document.querySelector(".sc-voice-h").textContent = "Нет доступа к микрофону";
-      document.querySelector(".sc-voice-sub").textContent = hint;
       return;
     }
 
@@ -688,10 +668,12 @@
       voiceOverlay.classList.remove("is-open");
     };
     recognition.onerror = (e) => {
-      voiceOverlay.classList.remove("is-open");
       recognition = null;
       if (e.error === "not-allowed") {
-        alert("Разреши доступ к микрофону в настройках браузера");
+        document.querySelector(".sc-voice-h").textContent = "Нет доступа к микрофону";
+        document.querySelector(".sc-voice-sub").textContent = "Обнови страницу (Cmd+R) и разреши микрофон когда браузер спросит";
+      } else {
+        voiceOverlay.classList.remove("is-open");
       }
     };
     recognition.onend = () => {
