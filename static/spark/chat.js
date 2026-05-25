@@ -51,7 +51,9 @@
       opts.body = JSON.stringify(body);
     }
     const res = await fetch(url, opts);
-    return { status: res.status, data: await res.json() };
+    let data;
+    try { data = await res.json(); } catch { data = { error: "invalid_response" }; }
+    return { status: res.status, data };
   }
 
   // ---------- Characters ----------
@@ -429,6 +431,7 @@
       scrollToBottom();
     } catch (e) {
       typingRow.style.display = "none";
+      console.error("sendMessage error:", e);
       appendMessage({ role: "assistant", content: "Ой, что-то пошло не так. Попробуй ещё раз!", created_at: new Date().toISOString() }, true);
       scrollToBottom();
     }
