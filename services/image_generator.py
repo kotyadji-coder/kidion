@@ -34,43 +34,72 @@ def generate_chat_image(description: str) -> bytes | None:
 
 
 def describe_photo_for_styling(image_bytes: bytes) -> str | None:
-    """Use Gemini to describe a photo in detail for re-generation in a different style."""
+    """Use Gemini to describe a photo in detail for re-generation in a different style.
+    Tries AI Studio first (API key), then Vertex AI."""
+    prompt_text = (
+        "Describe this photo in detail for an AI image generator. "
+        "Focus on: the person's appearance (hair color, length, style, eye color, "
+        "skin tone, facial features, expression), clothing, pose, and background. "
+        "Be very specific and detailed. Output ONLY the description, no commentary. "
+        "Keep it child-safe. Write in English. Max 150 words."
+    )
+
     api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
+    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+
+    if not api_key and not project:
+        logger.info("No GEMINI_API_KEY or GOOGLE_CLOUD_PROJECT — stub mode, no photo describe")
         return None
 
-    try:
-        import base64
-        from google import genai
+    # Try AI Studio first
+    if api_key:
+        try:
+            import base64
+            from google import genai
 
-        client = genai.Client(api_key=api_key)
-        b64 = base64.b64encode(image_bytes).decode()
+            client = genai.Client(api_key=api_key)
+            b64 = base64.b64encode(image_bytes).decode()
 
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[
-                {
-                    "parts": [
-                        {"text": (
-                            "Describe this photo in detail for an AI image generator. "
-                            "Focus on: the person's appearance (hair color, length, style, eye color, "
-                            "skin tone, facial features, expression), clothing, pose, and background. "
-                            "Be very specific and detailed. Output ONLY the description, no commentary. "
-                            "Keep it child-safe. Write in English. Max 150 words."
-                        )},
-                        {"inline_data": {"mime_type": "image/jpeg", "data": b64}},
-                    ]
-                }
-            ],
-        )
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=[{"parts": [
+                    {"text": prompt_text},
+                    {"inline_data": {"mime_type": "image/jpeg", "data": b64}},
+                ]}],
+            )
 
-        if response.text:
-            logger.info("Photo described for styling: %s", response.text[:100])
-            return response.text.strip()
-        return None
-    except Exception:
-        logger.exception("Photo description failed")
-        return None
+            if response.text:
+                logger.info("Photo described via AI Studio: %s", response.text[:100])
+                return response.text.strip()
+        except Exception:
+            logger.exception("AI Studio photo description failed, trying Vertex")
+
+    # Fallback to Vertex AI
+    if project:
+        try:
+            import base64
+            import vertexai
+            from vertexai.generative_models import GenerativeModel, Part, Image
+
+            credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+            if credentials_path:
+                from google.oauth2 import service_account
+                credentials = service_account.Credentials.from_service_account_file(credentials_path)
+                vertexai.init(project=project, location="us-central1", credentials=credentials)
+            else:
+                vertexai.init(project=project, location="us-central1")
+
+            model = GenerativeModel("gemini-2.5-flash")
+            image_part = Part.from_data(image_bytes, mime_type="image/jpeg")
+            response = model.generate_content([prompt_text, image_part])
+
+            if response.text:
+                logger.info("Photo described via Vertex AI: %s", response.text[:100])
+                return response.text.strip()
+        except Exception:
+            logger.exception("Vertex AI photo description failed")
+
+    return None
 
 
 def generate_image(prompt: str) -> bytes | None:

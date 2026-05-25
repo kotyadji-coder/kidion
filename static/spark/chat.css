@@ -1025,3 +1025,53 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
   border: 1px solid var(--border);
   font-size: 14px; font-weight: 500;
 }
+
+/* ============ Confirm modal ============ */
+.sc-confirm-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  animation: sc-fade-in .15s ease;
+}
+@keyframes sc-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.sc-confirm-card {
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 28px 24px 20px;
+  max-width: 320px; width: 100%;
+  text-align: center;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.12);
+}
+.sc-confirm-title {
+  margin: 0 0 6px;
+  font-size: 18px; font-weight: 600;
+  color: var(--text);
+}
+.sc-confirm-sub {
+  margin: 0 0 20px;
+  font-size: 14px; color: var(--text-3);
+  line-height: 1.4;
+}
+.sc-confirm-actions {
+  display: flex; gap: 10px;
+}
+.sc-confirm-btn {
+  flex: 1; height: 44px;
+  border-radius: 12px;
+  font-size: 15px; font-weight: 600;
+  border: none; cursor: pointer;
+  font-family: var(--font);
+  transition: background .12s;
+}
+.sc-confirm-cancel {
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+.sc-confirm-cancel:hover { background: var(--surface-3); }
+.sc-confirm-ok {
+  background: var(--c-grad, var(--spark-grad));
+  color: white;
+}
+.sc-confirm-ok:hover { opacity: 0.9; }

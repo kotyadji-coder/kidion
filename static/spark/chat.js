@@ -177,7 +177,7 @@
       chipsEl.classList.add("is-grid");
       const hint = document.createElement("p");
       hint.className = "sc-grid-hint";
-      hint.textContent = "Или прикрепи фото + выбери стиль";
+      hint.textContent = "Выбери стиль, а потом расскажи что нарисовать или прикрепи фото";
       chipsEl.appendChild(hint);
     } else {
       chipsEl.classList.remove("is-grid");
@@ -190,8 +190,24 @@
         : `<span class="sc-chip-ico">${esc(s.ico)}</span><span>${esc(s.label)}</span>`;
       btn.addEventListener("click", () => {
         if (isArtist) {
-          chatInput.value = attachedFile ? `Сделай моё фото в стиле ${s.label}` : `Стиль: ${s.label}`;
-          sendMessage();
+          if (attachedFile) {
+            chatInput.value = `Сделай моё фото в стиле ${s.label}`;
+            sendMessage();
+          } else {
+            // No photo: show auto-response without spending tokens
+            emptyState.style.display = "none";
+            messagesEl.style.display = "";
+            if (!messagesEl.querySelector(".sc-day")) {
+              const day = document.createElement("div");
+              day.className = "sc-day";
+              day.textContent = "Сегодня";
+              messagesEl.appendChild(day);
+            }
+            appendMessage({ role: "user", content: `Стиль: ${s.label}`, created_at: new Date().toISOString() }, false);
+            appendMessage({ role: "assistant", content: `Стиль ${s.label} — отличный выбор! Расскажи, что нарисовать, или прикрепи фото.`, created_at: new Date().toISOString() }, true);
+            scrollToBottom();
+          }
+          return;
         } else {
           chatInput.value = s.label;
           updateSendBtn();
@@ -420,9 +436,37 @@
   }
 
   async function clearChat() {
-    if (!confirm("Начать новый разговор?")) return;
-    await api(`/api/kid/chat/clear?character=${activeChar}`, "POST");
-    loadChat();
+    showConfirmModal("Начать новый разговор?", "Вся история чата будет удалена.", async () => {
+      await api(`/api/kid/chat/clear?character=${activeChar}`, "POST");
+      loadChat();
+    });
+  }
+
+  function showConfirmModal(title, subtitle, onConfirm) {
+    const existing = document.getElementById("confirm-modal");
+    if (existing) existing.remove();
+
+    const overlay = document.createElement("div");
+    overlay.id = "confirm-modal";
+    overlay.className = "sc-confirm-overlay";
+    overlay.innerHTML =
+      '<div class="sc-confirm-card">' +
+        '<h3 class="sc-confirm-title">' + esc(title) + '</h3>' +
+        '<p class="sc-confirm-sub">' + esc(subtitle) + '</p>' +
+        '<div class="sc-confirm-actions">' +
+          '<button class="sc-confirm-btn sc-confirm-cancel">Отмена</button>' +
+          '<button class="sc-confirm-btn sc-confirm-ok">Да, начать</button>' +
+        '</div>' +
+      '</div>';
+
+    overlay.querySelector(".sc-confirm-cancel").addEventListener("click", () => overlay.remove());
+    overlay.querySelector(".sc-confirm-ok").addEventListener("click", () => {
+      overlay.remove();
+      onConfirm();
+    });
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+
+    document.body.appendChild(overlay);
   }
 
   // ---------- UI helpers ----------
