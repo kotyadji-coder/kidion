@@ -185,7 +185,7 @@
       const counter = document.createElement("p");
       counter.className = "sc-grid-hint sc-img-counter";
       counter.textContent = freeImg > 0
-        ? `${freeImg} бесплатных картинки`
+        ? `${freeImg} картинки бесплатно`
         : `Бесплатные картинки закончились`;
       chipsEl.appendChild(counter);
     } else {
