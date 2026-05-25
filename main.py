@@ -128,6 +128,27 @@ from services.audit import init_audit_table, log_event, cleanup_old_audit_logs
 from services.security import SecurityHeadersMiddleware, is_weak_pin
 
 
+def _notify_admin_error(message: str):
+    """Send error notification to admin via Telegram (fire-and-forget)."""
+    bot_token = os.environ.get("NOTIFY_BOT_TOKEN")
+    chat_id = os.environ.get("NOTIFY_CHAT_ID")
+    if not bot_token or not chat_id:
+        logging.error("ADMIN ALERT (no Telegram configured): %s", message)
+        return
+    import threading
+    import httpx
+    def _send():
+        try:
+            httpx.post(
+                f"https://api.telegram.org/bot{bot_token}/sendMessage",
+                json={"chat_id": chat_id, "text": f"⚠️ Kidion Error:\n{message[:1000]}"},
+                timeout=10,
+            )
+        except Exception:
+            logging.error("Failed to send Telegram notification")
+    threading.Thread(target=_send, daemon=True).start()
+
+
 def _sanitize_interests(interests: list[str]) -> list[str]:
     """Sanitize interests input to prevent prompt injection and remove harmful content."""
     sanitized = []
@@ -3823,10 +3844,10 @@ async def kid_chat_send(request: Request):
                   details=f"issues:{','.join(mod_issues)}")
 
     if wants_image and not has_sub:
-        # Try free monthly images (3/month)
-        from db import use_free_chat_image
-        can_generate = use_free_chat_image(conn, parent_id)
-        if not can_generate:
+        # Check free monthly images (3/month) — deduct AFTER successful generation
+        from db import use_free_chat_image, get_free_images_used_this_month
+        free_used = get_free_images_used_this_month(conn, parent_id)
+        if free_used >= 3:
             response_text += "\n\nБесплатные картинки в этом месяце закончились. Попроси взрослого оформить подписку — будет 30 картинок каждый месяц!"
         else:
             image_description = draw_prompt or message_text
@@ -3839,21 +3860,25 @@ async def kid_chat_send(request: Request):
                 with open(fpath, "wb") as f:
                     f.write(image_bytes)
                 response_image_url = f"/content/chat_images/{fname}"
+                # Deduct only after success
+                use_free_chat_image(conn, parent_id)
+            else:
+                logger.error("Image generation failed for child %s", child["id"])
+                _notify_admin_error(f"Image generation failed for child {child['id']}, prompt: {image_description[:100]}")
     elif wants_image and has_sub:
         # Try subscription images first, then crystals
-        can_generate = use_chat_image(conn, parent_id)
-        if not can_generate:
-            # Try deducting crystals
-            ok = update_crystals(conn, parent_id, -CHAT_IMAGE_COST_CRYSTALS)
-            if ok:
-                insert_transaction(conn, parent_id, -CHAT_IMAGE_COST_CRYSTALS, "chat_image")
-                can_generate = True
-
-        if can_generate:
-            import uuid
-            image_description = draw_prompt or message_text
-            image_bytes = generate_chat_image(image_description)
-            if image_bytes:
+        # Generate first, deduct after success
+        import uuid
+        image_description = draw_prompt or message_text
+        image_bytes = generate_chat_image(image_description)
+        if image_bytes:
+            can_deduct = use_chat_image(conn, parent_id)
+            if not can_deduct:
+                ok = update_crystals(conn, parent_id, -CHAT_IMAGE_COST_CRYSTALS)
+                if ok:
+                    insert_transaction(conn, parent_id, -CHAT_IMAGE_COST_CRYSTALS, "chat_image")
+                    can_deduct = True
+            if can_deduct:
                 os.makedirs("content/chat_images", exist_ok=True)
                 fname = f"{uuid.uuid4().hex}.png"
                 fpath = f"content/chat_images/{fname}"
@@ -3861,7 +3886,8 @@ async def kid_chat_send(request: Request):
                     f.write(image_bytes)
                 response_image_url = f"/content/chat_images/{fname}"
         else:
-            response_text += "\n\nКартинки закончились. Попроси взрослого пополнить кристаллы на kidion.ru"
+            logger.error("Image generation failed (sub) for child %s", child["id"])
+            _notify_admin_error(f"Image generation failed (sub) for child {child['id']}, prompt: {image_description[:100]}")
 
     # Save assistant message
     add_kid_chat_message(conn, chat_id, "assistant", response_text, response_image_url)
