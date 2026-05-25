@@ -94,10 +94,10 @@ def get_report():
 
     # --- Lessons ---
     lessons_today = conn.execute(
-        "SELECT COUNT(*) FROM lesson_results WHERE date(created_at) = ?", (today,)
+        "SELECT COUNT(*) FROM lesson_results WHERE date(completed_at) = ?", (today,)
     ).fetchone()[0]
     lessons_yesterday = conn.execute(
-        "SELECT COUNT(*) FROM lesson_results WHERE date(created_at) = ?", (yesterday,)
+        "SELECT COUNT(*) FROM lesson_results WHERE date(completed_at) = ?", (yesterday,)
     ).fetchone()[0]
 
     # --- Images generated ---
