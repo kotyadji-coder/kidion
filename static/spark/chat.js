@@ -643,29 +643,47 @@
   // ---------- Voice (Web Speech API) ----------
   let recognition = null;
 
-  function startVoiceRecognition() {
+  async function startVoiceRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       voiceOverlay.classList.remove("is-open");
-      alert("Голосовой ввод не поддерживается в вашем браузере.");
+      alert("Голосовой ввод не поддерживается в этом браузере");
       return;
     }
+
+    // Request microphone permission explicitly (triggers browser prompt)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(t => t.stop()); // release immediately
+    } catch(e) {
+      voiceOverlay.classList.remove("is-open");
+      alert("Разреши доступ к микрофону в настройках браузера");
+      return;
+    }
+
+    let gotResult = false;
     recognition = new SpeechRecognition();
     recognition.lang = "ru-RU";
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.onresult = (event) => {
+      gotResult = true;
       const text = event.results[0][0].transcript;
       chatInput.value = text;
       updateSendBtn();
       voiceOverlay.classList.remove("is-open");
     };
-    recognition.onerror = () => {
+    recognition.onerror = (e) => {
       voiceOverlay.classList.remove("is-open");
       recognition = null;
+      if (e.error === "not-allowed") {
+        alert("Разреши доступ к микрофону в настройках браузера");
+      }
     };
     recognition.onend = () => {
-      voiceOverlay.classList.remove("is-open");
+      if (!gotResult) {
+        voiceOverlay.classList.remove("is-open");
+      }
       recognition = null;
     };
     try {
