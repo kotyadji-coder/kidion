@@ -605,6 +605,14 @@
     btnSend.addEventListener("click", sendMessage);
     btnNewChat.addEventListener("click", clearChat);
 
+    // Limit overlay close
+    const btnLimitClose = document.getElementById("btn-limit-close");
+    if (btnLimitClose) {
+      btnLimitClose.addEventListener("click", () => {
+        document.getElementById("limit-overlay").classList.remove("is-open");
+      });
+    }
+
     // Adult gate for parent area
     setupAdultGate();
 
