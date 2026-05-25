@@ -1075,3 +1075,35 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
   color: white;
 }
 .sc-confirm-ok:hover { opacity: 0.9; }
+
+/* ============ Image viewer ============ */
+.sc-img-viewer {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.85);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 16px; padding: 20px;
+  animation: sc-fade-in .15s ease;
+}
+.sc-img-viewer img {
+  max-width: 90vw; max-height: 75vh;
+  border-radius: 12px;
+  object-fit: contain;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.sc-img-viewer-actions {
+  display: flex; gap: 10px;
+}
+.sc-img-viewer-btn {
+  height: 40px; padding: 0 20px;
+  border-radius: 20px;
+  font-size: 14px; font-weight: 600;
+  border: none; cursor: pointer;
+  font-family: var(--font);
+  color: white; background: rgba(255,255,255,0.15);
+  text-decoration: none;
+  display: flex; align-items: center;
+}
+.sc-img-viewer-btn:hover { background: rgba(255,255,255,0.25); }
+.sc-bub-img img { cursor: pointer; }
+.sc-bub-img img:hover { opacity: 0.9; }

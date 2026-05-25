@@ -3702,13 +3702,14 @@ async def kid_chat_send(request: Request):
     chat = get_or_create_character_chat(conn, child["id"], character_key)
     chat_id = chat["id"]
 
-    # Check daily limit
+    # Check daily limit (Arty image requests skip message limit)
     from datetime import date
     today_str = date.today().isoformat()
     daily_count = count_daily_messages(conn, child["id"], today_str)
     daily_limit = 100 if has_sub else 10
+    is_arty_image = False  # will be set to True for Arty photo styling
 
-    if daily_count >= daily_limit:
+    if character_key != "artist" and daily_count >= daily_limit:
         msg = "На сегодня сообщения закончились! Приходи завтра!" if not has_sub else "Лимит 100 сообщений в день достигнут. Приходи завтра!"
         if not has_sub:
             msg += " Попроси родителей подключить подписку для безлимита."
@@ -3813,9 +3814,12 @@ async def kid_chat_send(request: Request):
             # Step 1: Describe photo with Gemini
             description = describe_photo_for_styling(photo_bytes)
             if description:
-                # Step 2: Generate in style
-                draw_prompt_direct = f"{style_en}, {description}, child-safe, high quality"
-                response_text = f"DRAW: {draw_prompt_direct}\nРисую в стиле {msg_lower.split('стиле ')[-1] if 'стиле' in msg_lower else 'аниме'}!"
+                # Step 2: Generate in style — clean description (single line)
+                clean_desc = " ".join(description.replace("\n", " ").split())
+                draw_prompt_direct = f"{style_en}, {clean_desc}, child-safe, high quality"
+                style_name = msg_lower.split("стиле ")[-1] if "стиле" in msg_lower else "аниме"
+                response_text = f"DRAW: {draw_prompt_direct}\nРисую в стиле {style_name}!"
+                is_arty_image = True
             else:
                 response_text = "Не получилось разобрать фото. Попробуй другое или опиши словами, что нарисовать."
         else:
@@ -3845,11 +3849,12 @@ async def kid_chat_send(request: Request):
             response_text = _re.sub(r"DRAW:\s*.+?(?:\n|$)", "", response_text).strip()
             wants_image = True
 
-    # Step 4: Output moderation — check AI response for unsafe content (after DRAW: removed)
-    response_text, was_moderated, mod_issues = moderate_output(response_text)
-    if was_moderated:
-        log_event(conn, "output_moderated", child_id=child["id"],
-                  details=f"issues:{','.join(mod_issues)}")
+    # Step 4: Output moderation — skip for Arty photo flow (text is our template, not AI)
+    if not is_arty_image:
+        response_text, was_moderated, mod_issues = moderate_output(response_text)
+        if was_moderated:
+            log_event(conn, "output_moderated", child_id=child["id"],
+                      details=f"issues:{','.join(mod_issues)}")
 
     if wants_image and not has_sub:
         # Check free monthly images (3/month) — deduct AFTER successful generation
@@ -3901,11 +3906,14 @@ async def kid_chat_send(request: Request):
     add_kid_chat_message(conn, chat_id, "assistant", response_text, response_image_url)
     update_kid_chat_timestamp(conn, chat_id)
 
-    new_daily_count = daily_count + 1
+    # Arty image requests don't count toward daily message limit
+    new_daily_count = daily_count if is_arty_image else daily_count + 1
 
-    # Get updated images_remaining
+    # Get updated images info
     sub_info = get_active_chat_subscription(conn, parent_id)
     images_remaining = sub_info.get("images_remaining", 0) if sub_info else 0
+    free_images_used = get_free_images_used_this_month(conn, parent_id)
+    free_images_remaining = max(0, 3 - free_images_used)
 
     return JSONResponse({
         "response": response_text,
@@ -3913,6 +3921,7 @@ async def kid_chat_send(request: Request):
         "daily_count": new_daily_count,
         "daily_limit": daily_limit,
         "images_remaining": images_remaining,
+        "free_images_remaining": free_images_remaining,
     })
 
 

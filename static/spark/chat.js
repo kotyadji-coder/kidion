@@ -12,6 +12,7 @@
   let attachedFile = null;
   let dailyCount = 0;
   let selectedStyle = null; // remembers Arty style selection
+  let freeImagesRemaining = 3;
 
   // DOM refs
   const root = document.getElementById("spark-chat");
@@ -62,6 +63,10 @@
     try {
       const { data } = await api("/api/kid/characters", "GET");
       characters = data.characters || [];
+      const artist = characters.find(c => c.key === "artist");
+      if (artist && artist.free_images_remaining != null) {
+        freeImagesRemaining = artist.free_images_remaining;
+      }
       renderSidebar();
       renderCharStrip();
       renderDrawer();
@@ -259,6 +264,7 @@
     } else {
       composer.style.display = "";
       if (reload) loadChat();
+      updateQuota();
     }
   }
 
@@ -315,13 +321,14 @@
     const stack = document.createElement("div");
     stack.className = "sc-stack";
 
-    // Handle image messages
+    // Handle image messages (clickable to view full-size)
     if (m.image_url) {
       const imgBub = document.createElement("div");
       imgBub.className = "sc-bub sc-bub-img";
       const img = document.createElement("img");
       img.src = m.image_url;
       img.alt = "Картинка";
+      img.addEventListener("click", () => showImageViewer(m.image_url));
       imgBub.appendChild(img);
       stack.appendChild(imgBub);
     }
@@ -428,6 +435,9 @@
         appendMessage({ role: "assistant", content: result.data.message || "Этот персонаж доступен по подписке.", created_at: new Date().toISOString() }, true);
       } else if (result.data.response) {
         dailyCount = result.data.daily_count || dailyCount + 1;
+        if (result.data.free_images_remaining != null) {
+          freeImagesRemaining = result.data.free_images_remaining;
+        }
         updateQuota();
         appendMessage({
           role: "assistant",
@@ -444,6 +454,23 @@
       scrollToBottom();
     }
     sending = false;
+  }
+
+  function showImageViewer(url) {
+    const existing = document.getElementById("img-viewer");
+    if (existing) existing.remove();
+    const overlay = document.createElement("div");
+    overlay.id = "img-viewer";
+    overlay.className = "sc-img-viewer";
+    overlay.innerHTML =
+      '<img src="' + url + '" alt="Картинка">' +
+      '<div class="sc-img-viewer-actions">' +
+        '<a href="' + url + '" download class="sc-img-viewer-btn">Скачать</a>' +
+        '<button class="sc-img-viewer-btn sc-img-viewer-close">Закрыть</button>' +
+      '</div>';
+    overlay.querySelector(".sc-img-viewer-close").addEventListener("click", () => overlay.remove());
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
   }
 
   async function clearChat() {
@@ -482,11 +509,22 @@
 
   // ---------- UI helpers ----------
   function updateQuota() {
-    const remaining = Math.max(0, dailyLimit - dailyCount);
-    document.getElementById("quota-count").textContent = `${remaining} из ${dailyLimit}`;
-    const pct = dailyLimit > 0 ? Math.round((remaining / dailyLimit) * 100) : 0;
-    document.getElementById("quota-bar-fill").style.width = pct + "%";
-    document.getElementById("nav-msg-count").textContent = remaining;
+    if (activeChar === "artist") {
+      document.getElementById("quota-count").textContent = `${freeImagesRemaining} картинок`;
+      const pct = Math.round((freeImagesRemaining / 3) * 100);
+      document.getElementById("quota-bar-fill").style.width = pct + "%";
+      document.getElementById("nav-msg-count").textContent = freeImagesRemaining;
+      document.getElementById("quota-info").querySelector("strong").previousSibling.textContent = "Осталось ";
+      document.getElementById("quota-info").querySelector("strong").nextSibling.textContent = " бесплатных";
+    } else {
+      const remaining = Math.max(0, dailyLimit - dailyCount);
+      document.getElementById("quota-count").textContent = `${remaining} из ${dailyLimit}`;
+      const pct = dailyLimit > 0 ? Math.round((remaining / dailyLimit) * 100) : 0;
+      document.getElementById("quota-bar-fill").style.width = pct + "%";
+      document.getElementById("nav-msg-count").textContent = remaining;
+      document.getElementById("quota-info").querySelector("strong").previousSibling.textContent = "Осталось ";
+      document.getElementById("quota-info").querySelector("strong").nextSibling.textContent = " сообщений сегодня";
+    }
   }
 
   function updateSendBtn() {
