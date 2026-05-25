@@ -649,6 +649,7 @@
   let voiceText = "";         // accumulated final transcript
   let voiceInterim = "";      // current interim text
   let voiceStopping = false;  // user pressed cancel/done
+  let voiceHadError = false;  // onerror fired before onend
 
   const voiceH = document.querySelector(".sc-voice-h");
   const voiceSub = document.querySelector(".sc-voice-sub");
@@ -680,6 +681,7 @@
     voiceText = "";
     voiceInterim = "";
     voiceStopping = false;
+    voiceHadError = false;
     voiceH.textContent = "Говори, я слушаю!";
     voiceSub.textContent = "Я переведу твою речь в текст.";
     voiceTranscript.textContent = "";
@@ -739,6 +741,7 @@
 
     recognition.onerror = (e) => {
       if (voiceStopping) return;
+      voiceHadError = true;
       if (e.error === "not-allowed" || e.error === "service-not-allowed") {
         voiceH.textContent = "Нет доступа к микрофону";
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -753,10 +756,8 @@
         setVoiceUI("error");
         recognition = null;
       } else if (e.error === "no-speech") {
-        // Don't close — let user retry or keep waiting
-        voiceH.textContent = "Не слышу... Попробуй ещё раз";
-        voiceSub.textContent = "Говори громче и ближе к микрофону.";
-        setVoiceUI("nospeech");
+        // Will auto-restart in onend
+        voiceHadError = false; // allow restart
         recognition = null;
       } else if (e.error === "aborted") {
         recognition = null;
@@ -780,11 +781,13 @@
         recognition = null;
         return;
       }
-      // No text — show hint to retry (can't auto-restart without user gesture in Chrome)
       recognition = null;
-      voiceH.textContent = "Не услышал. Попробуй ещё раз!";
-      voiceSub.textContent = "Нажми кнопку и говори чётко.";
-      setVoiceUI("nospeech");
+      // If onerror already showed a message (not-allowed, network), don't override
+      if (voiceHadError) return;
+      // No text, no error — silence timeout. Auto-restart (permission already granted).
+      if (voiceOverlay.classList.contains("is-open")) {
+        startRecognition();
+      }
     };
 
     try {
