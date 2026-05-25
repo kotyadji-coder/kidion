@@ -96,9 +96,6 @@
             <span class="sc-side-name">${esc(c.name_ru)}</span>
           </div>
           <span class="sc-side-msg">${esc(c.role_ru)}</span>
-          <div class="sc-side-meta">
-            <span class="sc-side-tag ${c.is_free ? "is-free" : "is-pro"}">${c.is_free ? "Бесплатно" : "Подписка"}</span>
-          </div>
         </div>`;
       li.querySelector(".sc-side-av").appendChild(getCharAvatar(c.key));
       li.addEventListener("click", () => switchCharacter(c.key, true));
@@ -136,8 +133,8 @@
       li.innerHTML = `
         <div class="sc-drawer-av"></div>
         <div class="sc-drawer-info">
-          <h3 class="sc-drawer-name">${esc(c.name_ru)}${c.locked ? " 🔒" : ""}</h3>
-          <p class="sc-drawer-role">${esc(c.role_ru)}${c.locked ? " · по подписке" : ""}</p>
+          <h3 class="sc-drawer-name">${esc(c.name_ru)}</h3>
+          <p class="sc-drawer-role">${esc(c.role_ru)}</p>
           <p class="sc-drawer-quote">«${esc(c.greeting_ru)}»</p>
         </div>
         <div class="sc-drawer-check">
@@ -170,7 +167,8 @@
     emptyAv.innerHTML = "";
     emptyAv.appendChild(getCharAvatar(key));
     document.getElementById("empty-greet").textContent = c.greeting_ru;
-    document.getElementById("empty-sub").textContent = c.greeting_sub_ru || "";
+    const subText = c.greeting_sub_ru || "";
+    document.getElementById("empty-sub").textContent = subText;
 
     // Render suggestion chips (grid for artist, horizontal for others)
     const chipsEl = document.getElementById("empty-chips");
@@ -178,6 +176,14 @@
     const isArtist = key === "artist";
     if (isArtist) {
       chipsEl.classList.add("is-grid");
+      // Show free images counter
+      const freeImg = c.free_images_remaining != null ? c.free_images_remaining : 3;
+      const counter = document.createElement("p");
+      counter.className = "sc-grid-hint sc-img-counter";
+      counter.innerHTML = freeImg > 0
+        ? `\uD83C\uDFA8 ${freeImg} бесплатных картинок для пробы`
+        : `Бесплатные картинки закончились`;
+      chipsEl.appendChild(counter);
       const hint = document.createElement("p");
       hint.className = "sc-grid-hint";
       hint.textContent = "Выбери стиль, а потом расскажи что нарисовать или прикрепи фото";

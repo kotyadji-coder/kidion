@@ -3615,9 +3615,14 @@ async def kid_characters_list(request: Request):
     parent_id = child["parent_id"]
     has_sub = get_active_chat_subscription(conn, parent_id) is not None
 
+    # Check free images remaining for Arty info
+    from db import get_free_images_used_this_month
+    free_images_used = get_free_images_used_this_month(conn, parent_id)
+    free_images_remaining = max(0, 3 - free_images_used)
+
     result = []
     for c in characters:
-        result.append({
+        char_data = {
             "key": c["key"],
             "name_ru": c["name_ru"],
             "role_ru": c["role_ru"],
@@ -3626,9 +3631,12 @@ async def kid_characters_list(request: Request):
             "greeting_sub_ru": c["greeting_sub_ru"],
             "suggestions": json.loads(c["suggestions_json"]) if c["suggestions_json"] else [],
             "accent_color": c["accent_color"],
-            "is_free": bool(c["is_free"]),
-            "locked": not bool(c["is_free"]) and not has_sub,
-        })
+            "is_free": True,
+            "locked": False,
+        }
+        if c["key"] == "artist":
+            char_data["free_images_remaining"] = free_images_remaining
+        result.append(char_data)
 
     return JSONResponse({"characters": result, "has_subscription": has_sub})
 
@@ -3658,16 +3666,9 @@ async def kid_chat_send(request: Request):
     # Determine character from query param
     character_key = request.query_params.get("character", "spark")
 
-    # Check if pro character requires subscription
+    # All characters are now free
     parent_id = child["parent_id"]
     has_sub = get_active_chat_subscription(conn, parent_id) is not None
-    if character_key != "spark" and not has_sub:
-        char_info = get_chat_character(conn, character_key)
-        if char_info and not char_info["is_free"]:
-            return JSONResponse(
-                {"error": "subscription_required", "message": "Этот персонаж доступен по подписке."},
-                status_code=403,
-            )
 
     chat = get_or_create_character_chat(conn, child["id"], character_key)
     chat_id = chat["id"]
@@ -3799,19 +3800,13 @@ async def kid_chat_send(request: Request):
             grade=child.get("grade", 3),
         )
 
-    # Step 4: Output moderation — check AI response for unsafe content
-    response_text, was_moderated, mod_issues = moderate_output(response_text)
-    if was_moderated:
-        log_event(conn, "output_moderated", child_id=child["id"],
-                  details=f"issues:{','.join(mod_issues)}")
-
     # Check if this is an image generation request
     # Two triggers: 1) user asks to draw (is_draw_request) 2) Арти includes DRAW: in response
     response_image_url = None
     wants_image = is_draw_request(message_text)
     draw_prompt = None
 
-    # Check if AI response contains DRAW: directive (from Арти)
+    # Extract DRAW: directive BEFORE moderation (English prompts trigger false positives)
     if "DRAW:" in response_text:
         import re as _re
         draw_match = _re.search(r"DRAW:\s*(.+?)(?:\n|$)", response_text)
@@ -3820,6 +3815,12 @@ async def kid_chat_send(request: Request):
             # Remove DRAW: line from visible response
             response_text = _re.sub(r"DRAW:\s*.+?(?:\n|$)", "", response_text).strip()
             wants_image = True
+
+    # Step 4: Output moderation — check AI response for unsafe content (after DRAW: removed)
+    response_text, was_moderated, mod_issues = moderate_output(response_text)
+    if was_moderated:
+        log_event(conn, "output_moderated", child_id=child["id"],
+                  details=f"issues:{','.join(mod_issues)}")
 
     if wants_image and not has_sub:
         # Try free monthly images (3/month)
