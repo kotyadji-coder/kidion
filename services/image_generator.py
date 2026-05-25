@@ -34,8 +34,12 @@ def generate_chat_image(description: str) -> bytes | None:
 
 
 def describe_photo_for_styling(image_bytes: bytes) -> str | None:
-    """Use Gemini to describe a photo in detail for re-generation in a different style.
-    Tries AI Studio first (API key), then Vertex AI."""
+    """Use Gemini via Vertex AI to describe a photo for re-generation in a different style."""
+    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    if not project:
+        logger.info("No GOOGLE_CLOUD_PROJECT — stub mode, no photo describe")
+        return None
+
     prompt_text = (
         "Describe this photo in detail for an AI image generator. "
         "Focus on: the person's appearance (hair color, length, style, eye color, "
@@ -44,119 +48,60 @@ def describe_photo_for_styling(image_bytes: bytes) -> str | None:
         "Keep it child-safe. Write in English. Max 150 words."
     )
 
-    api_key = os.environ.get("GEMINI_API_KEY")
-    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    try:
+        _init_vertex(project)
+        from vertexai.generative_models import GenerativeModel, Part
 
-    if not api_key and not project:
-        logger.info("No GEMINI_API_KEY or GOOGLE_CLOUD_PROJECT — stub mode, no photo describe")
+        model = GenerativeModel("gemini-2.5-flash")
+        image_part = Part.from_data(image_bytes, mime_type="image/jpeg")
+        response = model.generate_content([prompt_text, image_part])
+
+        if response.text:
+            logger.info("Photo described via Vertex AI: %s", response.text[:100])
+            return response.text.strip()
+        return None
+    except Exception:
+        logger.exception("Photo description failed")
         return None
 
-    # Try AI Studio first
-    if api_key:
-        try:
-            import base64
-            from google import genai
 
-            client = genai.Client(api_key=api_key)
-            b64 = base64.b64encode(image_bytes).decode()
-
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=[{"parts": [
-                    {"text": prompt_text},
-                    {"inline_data": {"mime_type": "image/jpeg", "data": b64}},
-                ]}],
-            )
-
-            if response.text:
-                logger.info("Photo described via AI Studio: %s", response.text[:100])
-                return response.text.strip()
-        except Exception:
-            logger.exception("AI Studio photo description failed, trying Vertex")
-
-    # Fallback to Vertex AI
-    if project:
-        try:
-            import base64
-            import vertexai
-            from vertexai.generative_models import GenerativeModel, Part, Image
-
-            credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-            if credentials_path:
-                from google.oauth2 import service_account
-                credentials = service_account.Credentials.from_service_account_file(credentials_path)
-                vertexai.init(project=project, location="us-central1", credentials=credentials)
-            else:
-                vertexai.init(project=project, location="us-central1")
-
-            model = GenerativeModel("gemini-2.5-flash")
-            image_part = Part.from_data(image_bytes, mime_type="image/jpeg")
-            response = model.generate_content([prompt_text, image_part])
-
-            if response.text:
-                logger.info("Photo described via Vertex AI: %s", response.text[:100])
-                return response.text.strip()
-        except Exception:
-            logger.exception("Vertex AI photo description failed")
-
-    return None
+def _init_vertex(project: str):
+    """Initialize Vertex AI with credentials."""
+    import vertexai
+    credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    if credentials_path:
+        from google.oauth2 import service_account
+        credentials = service_account.Credentials.from_service_account_file(credentials_path)
+        vertexai.init(project=project, location="us-central1", credentials=credentials)
+    else:
+        vertexai.init(project=project, location="us-central1")
 
 
 def generate_image(prompt: str) -> bytes | None:
-    """Generate image. Tries AI Studio first (API key), then Vertex AI, then returns None."""
-    api_key = os.environ.get("GEMINI_API_KEY")
+    """Generate image using Vertex AI Imagen 3."""
     project = os.environ.get("GOOGLE_CLOUD_PROJECT")
-
-    if not api_key and not project:
-        logger.info("No GEMINI_API_KEY or GOOGLE_CLOUD_PROJECT — stub mode, no image")
+    if not project:
+        logger.info("No GOOGLE_CLOUD_PROJECT — stub mode, no image")
         return None
 
     try:
-        # Try AI Studio first (supports image generation with newer SDK)
-        if api_key:
-            try:
-                from google import genai
-                client = genai.Client(api_key=api_key)
-                response = client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=prompt,
-                    config=genai.types.GenerateContentConfig(
-                        response_mime_type="image/png",
-                    ),
-                )
-                if response.candidates:
-                    for part in response.candidates[0].content.parts:
-                        if part.inline_data and part.inline_data.data:
-                            logger.info("Image generated via AI Studio")
-                            return part.inline_data.data
-            except Exception as e:
-                logger.warning("AI Studio image generation failed, trying Vertex: %s", e)
+        _init_vertex(project)
+        from vertexai.preview.vision_models import ImageGenerationModel
 
-        # Fallback to Vertex AI
-        if project:
-            import vertexai
-            from vertexai.generative_models import GenerativeModel
+        model = ImageGenerationModel.from_pretrained("imagen-3.0-generate-002")
+        response = model.generate_images(
+            prompt=prompt,
+            number_of_images=1,
+            aspect_ratio="1:1",
+            safety_filter_level="block_most",
+            person_generation="allow_adult",
+        )
 
-            credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-            if credentials_path:
-                from google.oauth2 import service_account
-                credentials = service_account.Credentials.from_service_account_file(credentials_path)
-                vertexai.init(project=project, location="us-central1", credentials=credentials)
-            else:
-                vertexai.init(project=project, location="us-central1")
+        if response.images:
+            logger.info("Image generated via Vertex AI Imagen")
+            return response.images[0]._image_bytes
 
-            model = GenerativeModel("gemini-2.5-flash")
-            response = model.generate_content(
-                prompt,
-                generation_config={"response_mime_type": "image/png"},
-            )
-
-            if response.candidates and response.candidates[0].content.parts:
-                for part in response.candidates[0].content.parts:
-                    if hasattr(part, "inline_data") and part.inline_data:
-                        logger.info("Image generated via Vertex AI")
-                        return part.inline_data.data
-
+        logger.warning("Imagen returned no images for prompt: %s", prompt[:100])
         return None
     except Exception:
         logger.exception("Image generation failed")
