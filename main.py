@@ -3824,6 +3824,18 @@ async def kid_chat_send(request: Request):
                 response_text = "Не получилось разобрать фото. Попробуй другое или опиши словами, что нарисовать."
         else:
             response_text = "Не удалось загрузить фото. Попробуй ещё раз."
+    elif character_key == "artist":
+        # Arty without photo: only accept draw requests, otherwise auto-respond
+        if is_draw_request(message_text):
+            # Child described what to draw → send to AI to get DRAW: prompt
+            response_text = generate_chat_response(
+                context, child_name=child["name"],
+                character_key=character_key, grade=child.get("grade", 3),
+            )
+        else:
+            # Just chatting → auto-respond without AI tokens
+            response_text = "Я умею рисовать! Расскажи что нарисовать или прикрепи фото 🎨"
+            is_arty_image = True  # don't count toward daily messages
     else:
         # Step 3: Generate AI response (with scrubbed input)
         response_text = generate_chat_response(
