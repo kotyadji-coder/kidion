@@ -280,6 +280,7 @@
       dailyCount = data.daily_count || 0;
       updateQuota();
       renderMessages(data.messages || []);
+      scrollToBottom();
     } catch (e) {
       console.error("Failed to load chat:", e);
     }
@@ -530,7 +531,8 @@
     requestAnimationFrame(() => {
       messagesEl.scrollTop = messagesEl.scrollHeight;
       // Repeat after images may have loaded
-      setTimeout(() => { messagesEl.scrollTop = messagesEl.scrollHeight; }, 150);
+      setTimeout(() => { messagesEl.scrollTop = messagesEl.scrollHeight; }, 200);
+      setTimeout(() => { messagesEl.scrollTop = messagesEl.scrollHeight; }, 600);
     });
   }
 
