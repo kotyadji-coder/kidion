@@ -204,6 +204,7 @@ def generate_chat_response(
     child_name: str = "",
     character_key: str = "spark",
     grade: int = 3,
+    gender: str = "",
 ) -> str:
     """
     Generate a chat response using Gemini.
@@ -211,13 +212,19 @@ def generate_chat_response(
     messages: list of {"role": "user"|"assistant", "content": "..."}
     character_key: which character is responding (spark/owl/captain)
     grade: child's school grade (1-8) for language adaptation
+    gender: 'boy' or 'girl' for correct pronouns
     Returns the assistant's response text.
     """
     char_prompt = _CHARACTER_PROMPTS.get(character_key, _CHARACTER_PROMPTS["spark"])
     grade_instr = _get_grade_instruction(grade)
     system_prompt = f"{char_prompt}\n\n{_SAFETY_BASE}\n\nВОЗРАСТ РЕБЁНКА:\n{grade_instr}"
     if child_name:
-        system_prompt += f"\nИмя ребёнка: {child_name}. Можешь иногда обращаться по имени."
+        gender_note = ""
+        if gender == "boy":
+            gender_note = " Это мальчик — используй мужской род при обращении (он, молодец, сделал)."
+        elif gender == "girl":
+            gender_note = " Это девочка — используй женский род при обращении (она, молодец, сделала)."
+        system_prompt += f"\nИмя ребёнка: {child_name}.{gender_note} Можешь иногда обращаться по имени."
 
     from services.ai_client import get_model
 

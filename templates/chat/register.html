@@ -31,7 +31,8 @@
 
   .child-row { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 10px; }
   .child-row .auth-field { flex: 1; margin-bottom: 0; }
-  .child-row .auth-field.grade { flex: 0 0 100px; }
+  .child-row .auth-field.gender { flex: 0 0 110px; }
+  .child-row .auth-field.grade { flex: 0 0 80px; }
 
   .child-remove {
     width: 36px; height: 44px; flex: 0 0 36px;
@@ -94,6 +95,12 @@
             <div class="auth-field">
               <input class="auth-input" type="text" placeholder="Имя ребёнка" required>
             </div>
+            <div class="auth-field gender">
+              <select class="auth-input" style="appearance:auto">
+                <option value="boy">Мальчик</option>
+                <option value="girl">Девочка</option>
+              </select>
+            </div>
             <div class="auth-field grade">
               <select class="auth-input" style="appearance:auto">
                 <option value="1">1 кл</option>
@@ -148,6 +155,8 @@
     row.dataset.child = childCount;
     row.innerHTML =
       '<div class="auth-field"><input class="auth-input" type="text" placeholder="Имя ребёнка" required></div>' +
+      '<div class="auth-field gender"><select class="auth-input" style="appearance:auto">' +
+      '<option value="boy">Мальчик</option><option value="girl">Девочка</option></select></div>' +
       '<div class="auth-field grade"><select class="auth-input" style="appearance:auto">' +
       '<option value="1">1 кл</option><option value="2">2 кл</option><option value="3" selected>3 кл</option>' +
       '<option value="4">4 кл</option><option value="5">5 кл</option><option value="6">6 кл</option>' +
@@ -170,8 +179,11 @@
     var children = [];
     rows.forEach(function(row) {
       var name = row.querySelector('input[type="text"]').value.trim();
-      var grade = parseInt(row.querySelector('select').value);
-      if (name) children.push({ name: name, grade: grade });
+      var genderSel = row.querySelector('.gender select');
+      var gender = genderSel ? genderSel.value : 'boy';
+      var gradeSel = row.querySelector('.grade select');
+      var grade = parseInt(gradeSel ? gradeSel.value : '3');
+      if (name) children.push({ name: name, gender: gender, grade: grade });
     });
     return children;
   }
@@ -231,7 +243,7 @@
           credentials: 'same-origin',
           body: JSON.stringify({
             name: children[i].name,
-            gender: 'boy',
+            gender: children[i].gender,
             birth_date: '2018-01-01',
             grade: children[i].grade,
             interests: [],

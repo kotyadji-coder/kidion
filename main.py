@@ -3859,6 +3859,7 @@ async def kid_chat_send(request: Request):
             response_text = generate_chat_response(
                 context, child_name=child["name"],
                 character_key=character_key, grade=child.get("grade", 3),
+                gender=child.get("gender", ""),
             )
         else:
             # Just chatting → auto-respond without AI tokens
@@ -3871,6 +3872,7 @@ async def kid_chat_send(request: Request):
             child_name=child["name"],
             character_key=character_key,
             grade=child.get("grade", 3),
+            gender=child.get("gender", ""),
         )
 
     # Check if this is an image generation request
