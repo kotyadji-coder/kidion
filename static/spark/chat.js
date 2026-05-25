@@ -529,6 +529,8 @@
   function scrollToBottom() {
     requestAnimationFrame(() => {
       messagesEl.scrollTop = messagesEl.scrollHeight;
+      // Repeat after images may have loaded
+      setTimeout(() => { messagesEl.scrollTop = messagesEl.scrollHeight; }, 150);
     });
   }
 
