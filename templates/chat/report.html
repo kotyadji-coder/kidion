@@ -177,6 +177,25 @@
       </div>
     </div>
 
+    <!-- Child settings -->
+    <div class="rpt-section">
+      <h2 class="rpt-section-h">Настройки ребёнка</h2>
+      <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+        <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 16px; display:flex; align-items:center; gap:10px;">
+          <span style="font-size:13px; color:var(--text-3);">Пол:</span>
+          <select id="child-gender" style="font-family:var(--font); font-size:14px; padding:4px 8px; border:1px solid var(--border); border-radius:8px; background:var(--surface); appearance:auto;">
+            <option value="boy" {{ 'selected' if child.gender == 'boy' else '' }}>Мальчик</option>
+            <option value="girl" {{ 'selected' if child.gender == 'girl' else '' }}>Девочка</option>
+          </select>
+          <span id="gender-saved" style="font-size:12px; color:oklch(0.45 0.15 158); display:none;">Сохранено</span>
+        </div>
+        <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 16px; display:flex; align-items:center; gap:10px;">
+          <span style="font-size:13px; color:var(--text-3);">Класс:</span>
+          <span style="font-size:14px; font-weight:600;">{{ child.grade }}</span>
+        </div>
+      </div>
+    </div>
+
     {% if reports %}
     <div class="rpt-section">
       <h2 class="rpt-section-h">Еженедельная аналитика</h2>
@@ -239,6 +258,23 @@
 </div>
 
 <script>
+// Gender save
+document.getElementById('child-gender').addEventListener('change', async function() {
+  var saved = document.getElementById('gender-saved');
+  try {
+    var res = await fetch('/api/children/{{ child.id }}', {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'same-origin',
+      body: JSON.stringify({ gender: this.value }),
+    });
+    if (res.ok) {
+      saved.style.display = '';
+      setTimeout(function() { saved.style.display = 'none'; }, 2000);
+    }
+  } catch(e) {}
+});
+
 async function generateReport() {
   const btn = document.getElementById('btn-gen-report');
   btn.disabled = true;

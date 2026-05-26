@@ -53,8 +53,25 @@
       loadChat();
     }
     showFirstVisitMessage();
+    showSafetyBanner();
   });
   setupEvents();
+
+  function showSafetyBanner() {
+    if (localStorage.getItem("kidion_safety_read")) return;
+    const mob = document.getElementById("safety-banner");
+    const desk = document.getElementById("safety-banner-desktop");
+    if (mob) mob.style.display = "";
+    if (desk) desk.style.display = "";
+    const btnDismiss = document.getElementById("btn-dismiss-safety");
+    if (btnDismiss) {
+      btnDismiss.addEventListener("click", () => {
+        if (mob) mob.style.display = "none";
+        if (desk) desk.style.display = "none";
+        localStorage.setItem("kidion_safety_read", "1");
+      });
+    }
+  }
 
   // Voice input available for everyone (Web Speech API is free)
 
@@ -1003,21 +1020,28 @@
     const gateAnswer = document.getElementById("gate-answer");
     const gateError = document.getElementById("gate-error");
     const btnParent = document.getElementById("btn-parent-gate");
+    const btnPro = document.getElementById("btn-pro-gate");
     let correctAnswer = 0;
+    let gateTarget = "";
 
-    function generateProblem() {
+    function openGate(targetUrl) {
+      gateTarget = targetUrl;
       const a = 10 + Math.floor(Math.random() * 40);
       const b = 10 + Math.floor(Math.random() * 40);
       correctAnswer = a + b;
       gateQuestion.textContent = `${a} + ${b} = ?`;
       gateAnswer.value = "";
       gateError.style.display = "none";
-    }
-
-    btnParent.addEventListener("click", () => {
-      generateProblem();
       gateOverlay.classList.add("is-open");
       setTimeout(() => gateAnswer.focus(), 100);
+    }
+
+    btnParent.addEventListener("click", () => openGate(`/chat/report/${CFG.childId}`));
+    if (btnPro) btnPro.addEventListener("click", () => openGate("/chat/subscribe"));
+
+    // Also gate the subscribe links in sidebar/chatlist
+    document.querySelectorAll('.sc-sub-card-btn').forEach((el) => {
+      el.addEventListener("click", (e) => { e.preventDefault(); openGate("/chat/subscribe"); });
     });
 
     document.getElementById("btn-gate-check").addEventListener("click", checkGate);
@@ -1031,7 +1055,7 @@
     function checkGate() {
       if (parseInt(gateAnswer.value, 10) === correctAnswer) {
         gateOverlay.classList.remove("is-open");
-        window.location.href = `/chat/report/${CFG.childId}`;
+        window.location.href = gateTarget;
       } else {
         gateError.style.display = "";
         gateAnswer.value = "";

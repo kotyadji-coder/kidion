@@ -509,6 +509,26 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
 }
 .sc-sub-card-btn:hover { background: var(--spark-violet-softer); }
 
+/* Safety banner */
+.sc-safety-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 18px 8px;
+  padding: 12px 14px;
+  background: oklch(0.97 0.03 240);
+  border: 1px solid oklch(0.88 0.06 240);
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: oklch(0.35 0.08 240);
+}
+.sc-safety-banner a { color: var(--spark-violet); font-weight: 600; }
+.sc-safety-banner-close {
+  background: none; border: 0; font-size: 18px; cursor: pointer;
+  color: oklch(0.55 0.05 240); padding: 0; line-height: 1; flex: 0 0 auto;
+}
+
 /* Back button (mobile only) */
 .sc-head-back {
   display: none;

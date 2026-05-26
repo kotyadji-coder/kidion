@@ -30,10 +30,10 @@
         <strong id="nav-msg-count">5</strong> сообщений сегодня
       </span>
       {% if not has_subscription %}
-      <a href="/chat/subscribe" class="sc-nav-pro" style="text-decoration:none">
+      <button class="sc-nav-pro" id="btn-pro-gate">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5l1.4 4.1L12.5 7l-4.1 1.4L7 12.5 5.6 8.4 1.5 7l4.1-1.4L7 1.5z" fill="currentColor"/></svg>
         Pro
-      </a>
+      </button>
       {% endif %}
       <button class="sc-nav-avatar" id="btn-parent-gate" title="Для родителей">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 14c0-2.5 2-4.5 4.5-4.5s4.5 2 4.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -46,6 +46,12 @@
     <aside class="sc-side" id="sidebar">
       <div class="sc-side-head">
         <p class="sc-side-title">Персонажи</p>
+      </div>
+      <div class="sc-safety-banner sc-safety-desktop" id="safety-banner-desktop" style="display:none; margin:12px 12px 0;">
+        <div class="sc-safety-banner-text">
+          <a href="/chat/safety">Руководство по безопасности для родителей</a>
+        </div>
+        <button class="sc-safety-banner-close" onclick="this.parentElement.style.display='none'; localStorage.setItem('kidion_safety_read','1')">&times;</button>
       </div>
       <ul class="sc-side-list" id="side-list">
         <!-- Populated by JS -->
@@ -92,6 +98,13 @@
       <div class="sc-chatlist" id="chat-list">
         <div class="sc-chatlist-head">
           <h2 class="sc-chatlist-title">Чаты</h2>
+        </div>
+        <!-- First-visit safety banner (dismissed via JS/localStorage) -->
+        <div class="sc-safety-banner" id="safety-banner" style="display:none">
+          <div class="sc-safety-banner-text">
+            <strong>Для родителей:</strong> прочитайте <a href="/chat/safety">руководство по безопасности</a> — как устроена защита и почему важно быть рядом.
+          </div>
+          <button class="sc-safety-banner-close" id="btn-dismiss-safety" aria-label="Закрыть">&times;</button>
         </div>
         <ul class="sc-chatlist-items" id="chatlist-items">
           <!-- Populated by JS -->

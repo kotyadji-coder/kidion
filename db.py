@@ -252,7 +252,8 @@ def _init_schema(conn: sqlite3.Connection) -> None:
             role            TEXT NOT NULL CHECK(role IN ('user', 'assistant')),
             content         TEXT NOT NULL,
             image_url       TEXT,
-            created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+            created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+            hidden_at       TEXT
         );
 
         CREATE INDEX IF NOT EXISTS idx_kid_chat_messages_chat ON kid_chat_messages(chat_id);
@@ -429,6 +430,12 @@ def _migrate(conn: sqlite3.Connection) -> None:
         conn.commit()
     if "consent_version" not in user_cols:
         conn.execute("ALTER TABLE users ADD COLUMN consent_version TEXT")
+        conn.commit()
+
+    # Add hidden_at column to kid_chat_messages for soft delete
+    msg_cols = [row[1] for row in conn.execute("PRAGMA table_info(kid_chat_messages)").fetchall()]
+    if "hidden_at" not in msg_cols:
+        conn.execute("ALTER TABLE kid_chat_messages ADD COLUMN hidden_at TEXT")
         conn.commit()
 
 
@@ -1915,8 +1922,11 @@ def delete_kid_chat(conn: sqlite3.Connection, chat_id: int) -> bool:
 
 
 def clear_kid_chat_messages(conn: sqlite3.Connection, chat_id: int) -> None:
-    """Delete all messages in a chat (used for 'new conversation')."""
-    conn.execute("DELETE FROM kid_chat_messages WHERE chat_id = ?", (chat_id,))
+    """Soft-delete all messages in a chat (mark as hidden, keep for reports)."""
+    conn.execute(
+        "UPDATE kid_chat_messages SET hidden_at = ? WHERE chat_id = ? AND hidden_at IS NULL",
+        (_now(), chat_id),
+    )
     conn.commit()
 
 
@@ -1962,7 +1972,7 @@ def get_kid_chat_messages(
 ) -> list[dict]:
     """Get last N messages for a chat, ordered chronologically."""
     rows = conn.execute(
-        "SELECT * FROM kid_chat_messages WHERE chat_id = ? "
+        "SELECT * FROM kid_chat_messages WHERE chat_id = ? AND hidden_at IS NULL "
         "ORDER BY created_at DESC, id DESC LIMIT ?",
         (chat_id, limit),
     ).fetchall()
