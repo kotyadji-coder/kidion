@@ -263,25 +263,7 @@
     <p class="sub-error" id="pkg-error"></p>
   </div>
 
-  <!-- Referral block -->
-  <div class="sub-crystals" style="margin-top: 28px;">
-    <div class="sub-crystals-head">
-      <div class="sub-crystals-icon">🎁</div>
-      <h3>Пригласите друзей</h3>
-    </div>
-    <p class="sub-crystals-sub">Поделитесь ссылкой — каждый получит по 60 кристаллов. Когда друг оплатит — вы получите ещё 120.</p>
-    <div style="display:flex; gap:8px; margin-bottom:14px;">
-      <input class="pf-input" id="ref-link-input" value="{{ ref_link }}" readonly style="height:42px; flex:1; min-width:0; font-size:14px; padding:0 12px; border:1px solid var(--border); border-radius:10px; background:var(--surface-2); color:var(--text); font-family:inherit;">
-      <button class="sub-pkg" id="copy-ref" style="flex:0 0 auto; padding:10px 16px; font-size:13px; font-weight:600; cursor:pointer;">Скопировать</button>
-    </div>
-    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-      {% if user and user.is_blogger %}
-      <a href="/blogger" style="font-size:14px; font-weight:500; color:var(--spark-violet); text-decoration:none;">Кабинет блогера &rarr;</a>
-      {% else %}
-      <a href="/friends" style="font-size:14px; font-weight:500; color:var(--spark-violet); text-decoration:none;">Мои друзья &rarr;</a>
-      {% endif %}
-    </div>
-  </div>
+
 </div>
 
 <script>
@@ -307,17 +289,6 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.disabled = false;
         btn.textContent = 'Оформить за 500 ₽/мес';
       }
-    });
-  }
-
-  // Copy referral link
-  var copyRef = document.getElementById('copy-ref');
-  if (copyRef) {
-    copyRef.addEventListener('click', function() {
-      navigator.clipboard.writeText(document.getElementById('ref-link-input').value).then(function() {
-        copyRef.textContent = 'Скопировано!';
-        setTimeout(function() { copyRef.textContent = 'Скопировать'; }, 2000);
-      });
     });
   }
 

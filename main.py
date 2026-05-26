@@ -3562,19 +3562,13 @@ async def spark_subscribe_page(request: Request):
     subscription = get_active_chat_subscription(conn, user["id"])
     payment_status = request.query_params.get("status", "")
 
-    ref_code = user.get("promo_code") or user["ref_code"]
-    host = "chat.kidion.ru" if _is_chat_subdomain(request) else "kidion.ru"
-    ref_link = f"https://{host}/register?ref={ref_code}"
-
     return templates.TemplateResponse(
         request,
         "chat/subscribe.html",
         {
-            "user": user,
             "crystals": user["crystals"],
             "subscription": dict(subscription) if subscription else None,
             "payment_status": payment_status,
-            "ref_link": ref_link,
         },
     )
 
@@ -3625,6 +3619,11 @@ async def spark_report_page(child_id: int, request: Request):
             "has_subscription": has_sub,
             "subscription": dict(subscription) if subscription else None,
             "reports": reports,
+            "user": user,
+            "ref_link": "https://{}/register?ref={}".format(
+                "chat.kidion.ru" if _is_chat_subdomain(request) else "kidion.ru",
+                user.get("promo_code") or user["ref_code"],
+            ),
         },
     )
 

@@ -295,12 +295,43 @@
           <p class="rpt-kidion-banner-body">Как устроена защита и руководство для родителей</p>
         </div>
       </a>
+
+      <!-- Referral block -->
+      <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+          <span style="font-size:20px;">🎁</span>
+          <p style="margin:0; font-size:14px; font-weight:600;">Пригласите друзей</p>
+        </div>
+        <p style="margin:0 0 12px; font-size:12px; color:var(--text-2); line-height:1.5;">Поделитесь ссылкой — каждый получит по 60 кристаллов.</p>
+        <div style="display:flex; gap:6px;">
+          <input id="ref-link-input" value="{{ ref_link }}" readonly style="flex:1; min-width:0; height:36px; padding:0 10px; border:1px solid var(--border); border-radius:8px; font-size:12px; font-family:inherit; background:var(--surface-2); color:var(--text); outline:none;">
+          <button id="copy-ref-btn" style="height:36px; padding:0 12px; border:1px solid var(--border); border-radius:8px; background:var(--surface-2); font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; color:var(--text-2); white-space:nowrap;">Скопировать</button>
+        </div>
+        <div style="margin-top:10px;">
+          {% if user and user.is_blogger %}
+          <a href="/blogger" style="font-size:13px; font-weight:500; color:var(--spark-violet); text-decoration:none;">Кабинет блогера &rarr;</a>
+          {% else %}
+          <a href="/friends" style="font-size:13px; font-weight:500; color:var(--spark-violet); text-decoration:none;">Мои друзья &rarr;</a>
+          {% endif %}
+        </div>
+      </div>
     </div><!-- /rpt-right -->
     </div><!-- /rpt-grid -->
   </div>
 </div>
 
 <script>
+// Copy referral link
+var _copyRefBtn = document.getElementById('copy-ref-btn');
+if (_copyRefBtn) {
+  _copyRefBtn.addEventListener('click', function() {
+    navigator.clipboard.writeText(document.getElementById('ref-link-input').value).then(function() {
+      _copyRefBtn.textContent = 'Скопировано!';
+      setTimeout(function() { _copyRefBtn.textContent = 'Скопировать'; }, 2000);
+    });
+  });
+}
+
 // Settings toggle
 document.getElementById('btn-toggle-settings').addEventListener('click', function() {
   var body = document.getElementById('settings-body');
