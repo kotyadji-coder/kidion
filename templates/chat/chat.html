@@ -69,15 +69,11 @@
         <div class="sc-head-av" id="head-avatar">
           <span class="sc-head-dot" id="head-dot"></span>
         </div>
-        <div class="sc-head-info">
+        <div class="sc-head-info" id="head-info" style="cursor:pointer">
           <div class="sc-head-name" id="head-name">Киди</div>
           <div class="sc-head-role" id="head-role">Собеседник</div>
         </div>
-        <div class="sc-head-actions">
-          <button class="sc-head-action" id="btn-clear-chat" aria-label="Очистить чат" title="Очистить чат">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 5h8M6 5V4a1 1 0 011-1h2a1 1 0 011 1v1M5 5v7.5a1 1 0 001 1h4a1 1 0 001-1V5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-        </div>
+        <div class="sc-head-actions"></div>
       </header>
 
       <!-- Character list (mobile, Telegram-style) -->
@@ -215,6 +211,22 @@
         </div>
         <div class="sc-voice-actions" style="margin-top:8px">
           <button class="sc-voice-cancel" id="btn-pro-close">Назад</button>
+        </div>
+      </div>
+
+      <!-- Character profile sheet -->
+      <div class="sc-profile-sheet" id="profile-sheet">
+        <div class="sc-profile-card">
+          <div class="sc-profile-av" id="profile-avatar"></div>
+          <h3 class="sc-profile-name" id="profile-name">Киди</h3>
+          <p class="sc-profile-role" id="profile-role">Собеседник</p>
+          <div class="sc-profile-actions">
+            <button class="sc-profile-action" id="btn-profile-clear">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4.5 5.5h9M7 5.5V4.5a1 1 0 011-1h2a1 1 0 011 1v1M5.5 5.5v8.5a1 1 0 001 1h5a1 1 0 001-1v-8.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Очистить историю</span>
+            </button>
+          </div>
+          <button class="sc-voice-cancel" id="btn-profile-close">Закрыть</button>
         </div>
       </div>
 

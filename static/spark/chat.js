@@ -507,7 +507,14 @@
     chatInput.value = "";
     updateSendBtn();
 
-    // Show user message immediately
+    // Show user message immediately (with photo preview if attached)
+    const sentFile = attachedFile;
+    let photoPreviewUrl = null;
+    if (sentFile) {
+      photoPreviewUrl = URL.createObjectURL(sentFile);
+      clearAttachment();
+    }
+
     emptyState.style.display = "none";
     messagesEl.style.display = "";
     if (!messagesEl.querySelector(".sc-day")) {
@@ -516,7 +523,7 @@
       day.textContent = "Сегодня";
       messagesEl.appendChild(day);
     }
-    appendMessage({ role: "user", content: text, created_at: new Date().toISOString() }, false);
+    appendMessage({ role: "user", content: text, image_url: photoPreviewUrl, created_at: new Date().toISOString() }, false);
     scrollToBottom();
 
     // Show typing
@@ -525,12 +532,11 @@
 
     try {
       let result;
-      if (attachedFile) {
+      if (sentFile) {
         const fd = new FormData();
         fd.append("message", text);
-        fd.append("image", attachedFile);
+        fd.append("image", sentFile);
         result = await api(`/api/kid/chat/send?character=${activeChar}`, "POST", fd);
-        clearAttachment();
       } else {
         result = await api(`/api/kid/chat/send?character=${activeChar}`, "POST", { message: text });
       }
@@ -655,6 +661,21 @@
     updateSendBtn();
   }
 
+  function openProfileSheet() {
+    const c = characters.find((ch) => ch.key === activeChar) || characters[0];
+    const sheet = document.getElementById("profile-sheet");
+    const av = document.getElementById("profile-avatar");
+    av.innerHTML = "";
+    av.appendChild(getCharAvatar(activeChar));
+    document.getElementById("profile-name").textContent = c.name_ru;
+    document.getElementById("profile-role").textContent = c.role_ru;
+    sheet.classList.add("is-open");
+  }
+
+  function closeProfileSheet() {
+    document.getElementById("profile-sheet").classList.remove("is-open");
+  }
+
   function closeDrawer() {
     drawer.classList.remove("is-open");
   }
@@ -722,8 +743,17 @@
       renderChatList(); // refresh online/offline state
     });
 
-    // Clear chat button
-    document.getElementById("btn-clear-chat").addEventListener("click", clearChat);
+    // Tap on header name/avatar → open profile sheet (Telegram-style)
+    document.getElementById("head-avatar").addEventListener("click", openProfileSheet);
+    document.getElementById("head-info").addEventListener("click", openProfileSheet);
+    document.getElementById("btn-profile-close").addEventListener("click", closeProfileSheet);
+    document.getElementById("btn-profile-clear").addEventListener("click", () => {
+      closeProfileSheet();
+      clearChat();
+    });
+    document.getElementById("profile-sheet").addEventListener("click", (e) => {
+      if (e.target === e.currentTarget) closeProfileSheet();
+    });
 
     // Limit overlay close
     const btnLimitClose = document.getElementById("btn-limit-close");
