@@ -1328,7 +1328,7 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
         {
             "key": "spark",
             "name_ru": "Киди",
-            "role_ru": "Универсальный друг",
+            "role_ru": "Помощник",
             "avatar_type": "png",
             "system_prompt": "",  # filled from kid_chat.py
             "greeting_ru": "Привет! Я Киди!",
