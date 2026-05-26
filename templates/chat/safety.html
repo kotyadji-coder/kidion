@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Безопасность и руководство — Киди</title>
+<meta name="description" content="Как устроена безопасность в Киди, какие меры мы предприняли и почему важно участие родителей.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="/static/spark/favicon.ico">
+<link rel="apple-touch-icon" href="/static/spark/apple-touch-icon.png">
+<link rel="stylesheet" href="/static/spark/chat.css">
+<style>
+  body { margin: 0; min-height: 100vh; background: var(--bg); font-family: var(--font); color: var(--text); }
+  *, *::before, *::after { box-sizing: border-box; }
+
+  .sf-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .sf-header-back {
+    background: none; border: 0; padding: 4px; cursor: pointer;
+    color: var(--spark-violet); display: flex; align-items: center; flex: 0 0 28px;
+  }
+  .sf-header-title { flex: 1; text-align: center; font-size: 17px; font-weight: 600; margin: 0; }
+  .sf-header-spacer { width: 28px; flex: 0 0 28px; }
+
+  .sf-page { padding: 32px 20px 60px; max-width: 720px; margin: 0 auto; }
+
+  .sf-hero { text-align: center; margin-bottom: 40px; }
+  .sf-hero-icon { font-size: 48px; margin-bottom: 12px; }
+  .sf-hero h1 { margin: 0 0 10px; font-size: 28px; font-weight: 700; letter-spacing: -0.03em; }
+  @media (min-width: 769px) { .sf-hero h1 { font-size: 34px; } }
+  .sf-hero p { margin: 0; font-size: 16px; color: var(--text-2); line-height: 1.6; max-width: 520px; margin: 0 auto; }
+
+  .sf-section { margin-bottom: 36px; }
+  .sf-section h2 {
+    margin: 0 0 16px; font-size: 21px; font-weight: 700; letter-spacing: -0.02em;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sf-section h2 span { font-size: 24px; }
+
+  .sf-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .sf-card h3 { margin: 0 0 6px; font-size: 16px; font-weight: 600; }
+  .sf-card p { margin: 0; font-size: 14px; color: var(--text-2); line-height: 1.6; }
+
+  .sf-steps { counter-reset: step; }
+  .sf-step {
+    display: flex; gap: 16px; margin-bottom: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px 20px;
+  }
+  .sf-step-num {
+    counter-increment: step;
+    flex: 0 0 36px;
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--spark-violet-soft);
+    color: var(--spark-violet-ink);
+    display: grid; place-items: center;
+    font-size: 15px; font-weight: 700;
+  }
+  .sf-step-num::before { content: counter(step); }
+  .sf-step-text h3 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+  .sf-step-text p { margin: 0; font-size: 14px; color: var(--text-2); line-height: 1.5; }
+
+  .sf-callout {
+    background: oklch(0.97 0.04 50);
+    border: 1.5px solid oklch(0.88 0.08 50);
+    border-radius: 16px;
+    padding: 22px;
+    margin-top: 8px;
+  }
+  .sf-callout h3 { margin: 0 0 8px; font-size: 17px; font-weight: 700; color: oklch(0.35 0.12 50); }
+  .sf-callout p { margin: 0 0 8px; font-size: 14px; color: oklch(0.40 0.08 50); line-height: 1.6; }
+  .sf-callout p:last-child { margin-bottom: 0; }
+  .sf-callout ul { margin: 8px 0 0; padding-left: 20px; font-size: 14px; color: oklch(0.40 0.08 50); line-height: 1.7; }
+
+  .sf-cta {
+    text-align: center;
+    margin-top: 40px;
+    padding: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+  }
+  .sf-cta h3 { margin: 0 0 8px; font-size: 18px; font-weight: 700; }
+  .sf-cta p { margin: 0 0 16px; font-size: 14px; color: var(--text-2); line-height: 1.5; }
+  .sf-cta a {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 24px;
+    background: var(--spark-grad); color: white; border-radius: 12px;
+    font-size: 15px; font-weight: 600; text-decoration: none;
+    font-family: var(--font);
+  }
+</style>
+</head>
+<body>
+
+<div class="sf-header">
+  <a href="/" class="sf-header-back">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15l-5-5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </a>
+  <h1 class="sf-header-title">Безопасность</h1>
+  <div class="sf-header-spacer"></div>
+</div>
+
+<div class="sf-page">
+
+  <div class="sf-hero">
+    <div class="sf-hero-icon">🛡️</div>
+    <h1>Как мы&nbsp;защищаем детей</h1>
+    <p>Киди&nbsp;— не&nbsp;просто «детский ChatGPT». Это нейросеть с&nbsp;собственными правилами безопасности, созданная специально для детей от&nbsp;6&nbsp;до&nbsp;14&nbsp;лет.</p>
+  </div>
+
+  <!-- How to use -->
+  <div class="sf-section">
+    <h2><span>📱</span> Как пользоваться</h2>
+    <div class="sf-steps">
+      <div class="sf-step">
+        <div class="sf-step-num"></div>
+        <div class="sf-step-text">
+          <h3>Зарегистрируйте аккаунт</h3>
+          <p>Введите email и&nbsp;пароль. Добавьте профиль ребёнка&nbsp;— имя, класс и&nbsp;пол. Можно до&nbsp;3&nbsp;детей на&nbsp;одном аккаунте.</p>
+        </div>
+      </div>
+      <div class="sf-step">
+        <div class="sf-step-num"></div>
+        <div class="sf-step-text">
+          <h3>Ребёнок выбирает собеседника</h3>
+          <p>4&nbsp;персонажа: Киди (собеседник), Зуми (учитель), Лоро (рассказчик) и&nbsp;Арти (художник). У&nbsp;каждого свой характер и&nbsp;стиль общения.</p>
+        </div>
+      </div>
+      <div class="sf-step">
+        <div class="sf-step-num"></div>
+        <div class="sf-step-text">
+          <h3>Общение и&nbsp;творчество</h3>
+          <p>Ребёнок пишет текстом или голосом, Арти рисует картинки по&nbsp;описанию. Каждый день&nbsp;— 10&nbsp;бесплатных сообщений.</p>
+        </div>
+      </div>
+      <div class="sf-step">
+        <div class="sf-step-num"></div>
+        <div class="sf-step-text">
+          <h3>Родитель получает отчёт</h3>
+          <p>Раз в&nbsp;неделю&nbsp;— о&nbsp;чём общался ребёнок, какие темы интересны, на&nbsp;что стоит обратить внимание.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- What we did for safety -->
+  <div class="sf-section">
+    <h2><span>🔒</span> Что мы&nbsp;сделали для безопасности</h2>
+
+    <div class="sf-card">
+      <h3>10 правил, которые нельзя нарушить</h3>
+      <p>Каждый персонаж подчиняется жёстким правилам: никакого насилия, оружия, политики, религиозных споров, сексуальных тем, страшных историй. Правила зашиты в&nbsp;системный промпт и&nbsp;не&nbsp;могут быть отключены ребёнком.</p>
+    </div>
+
+    <div class="sf-card">
+      <h3>Многослойная модерация</h3>
+      <p>Каждое сообщение ребёнка проходит через фильтр персональных данных (адреса, телефоны, фамилии удаляются), детектор кризисных ситуаций и&nbsp;проверку на&nbsp;запрещённые темы. Ответ нейросети тоже модерируется перед показом.</p>
+    </div>
+
+    <div class="sf-card">
+      <h3>Не&nbsp;собираем личные данные</h3>
+      <p>Киди никогда не&nbsp;спросит адрес, телефон, школу или фамилию. Если ребёнок их&nbsp;напишет&nbsp;— нейросеть мягко переведёт тему и&nbsp;данные будут удалены из&nbsp;контекста.</p>
+    </div>
+
+    <div class="sf-card">
+      <h3>Адаптация под возраст</h3>
+      <p>Язык подстраивается под класс ребёнка: для первоклассника&nbsp;— простые короткие предложения, для подростка&nbsp;— на&nbsp;равных, без снисхождения. Сложность тем тоже фильтруется по&nbsp;возрасту.</p>
+    </div>
+
+    <div class="sf-card">
+      <h3>Домашка без списывания</h3>
+      <p>Зуми и&nbsp;Киди никогда не&nbsp;дадут готовый ответ на&nbsp;домашнее задание. Они объяснят тему, покажут похожий пример и&nbsp;помогут ребёнку решить задачу самостоятельно.</p>
+    </div>
+
+    <div class="sf-card">
+      <h3>Безопасные картинки</h3>
+      <p>Арти рисует через фильтрованные AI-модели. Генерация проходит модерацию: если результат не&nbsp;прошёл проверку&nbsp;— ребёнок получит сообщение «Не получилось, попробуй описать иначе».</p>
+    </div>
+
+    <div class="sf-card">
+      <h3>Лимиты и&nbsp;контроль</h3>
+      <p>10&nbsp;сообщений в&nbsp;день бесплатно, 3&nbsp;картинки в&nbsp;месяц. Подписка увеличивает лимиты, но&nbsp;не&nbsp;снимает фильтры. Родитель управляет аккаунтом и&nbsp;может удалить профиль ребёнка в&nbsp;любой момент.</p>
+    </div>
+  </div>
+
+  <!-- Why parent should be involved -->
+  <div class="sf-section">
+    <h2><span>👨‍👩‍👧</span> Почему важно быть рядом</h2>
+
+    <div class="sf-callout">
+      <h3>Ни одна технология не&nbsp;заменит родителя</h3>
+      <p>Мы&nbsp;сделали максимум для безопасности, но&nbsp;нейросеть&nbsp;— это инструмент, а&nbsp;не&nbsp;няня. Вот почему ваше участие важно:</p>
+      <ul>
+        <li><strong>AI может ошибаться.</strong> Нейросеть иногда даёт неточные ответы, особенно в&nbsp;сложных или неоднозначных темах. Ребёнку важно знать, что не&nbsp;всё, что говорит Киди&nbsp;— истина.</li>
+        <li><strong>Контекст важнее фильтров.</strong> Фильтры блокируют очевидные нарушения, но&nbsp;не&nbsp;могут понять эмоциональное состояние ребёнка так, как это сделает родитель.</li>
+        <li><strong>Формирование привычек.</strong> Первый опыт общения с&nbsp;AI задаёт паттерн. Покажите ребёнку, как задавать хорошие вопросы, проверять информацию, не&nbsp;доверять всему слепо.</li>
+        <li><strong>Здоровые границы.</strong> Даже безопасный чат&nbsp;— это экранное время. Договоритесь о&nbsp;правилах: сколько минут в&nbsp;день, в&nbsp;какое время, что делать потом.</li>
+      </ul>
+    </div>
+
+    <div class="sf-card" style="margin-top: 12px;">
+      <h3>Что рекомендуем</h3>
+      <p>Познакомьтесь с&nbsp;Киди сами&nbsp;— напишите несколько сообщений, посмотрите как отвечает. Объясните ребёнку, что это нейросеть, а&nbsp;не&nbsp;человек. Читайте еженедельные отчёты. И&nbsp;просто будьте рядом, особенно в&nbsp;первые дни.</p>
+    </div>
+  </div>
+
+  <div class="sf-cta">
+    <h3>Попробуйте сами</h3>
+    <p>10&nbsp;сообщений в&nbsp;день бесплатно, без привязки карты.</p>
+    <a href="/chat/register">
+      Начать бесплатно
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </div>
+
+</div>
+</body>
+</html>

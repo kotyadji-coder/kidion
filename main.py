@@ -3540,6 +3540,12 @@ async def spark_redirect(path: str = ""):
     return RedirectResponse(url=f"/chat/{path}", status_code=301)
 
 
+@app.get("/chat/safety", response_class=HTMLResponse)
+async def spark_safety_page(request: Request):
+    """Safety and usage guide page — public."""
+    return templates.TemplateResponse(request, "chat/safety.html", {})
+
+
 @app.get("/chat/subscribe", response_class=HTMLResponse)
 async def spark_subscribe_page(request: Request):
     """Spark Chat subscription purchase page (parent auth required)."""
