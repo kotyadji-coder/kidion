@@ -124,14 +124,26 @@
 </style>
 </head>
 <body>
-<div class="sp">
-  <nav class="sp-nav">
-    <a class="sp-brand" href="/chat">
-      <span class="sp-brand-mark">K</span>
+<div class="sc">
+  <nav class="sc-nav">
+    <a class="sc-nav-brand" href="/chat">
+      <span class="sc-nav-mark">K</span>
       <span>Киди</span>
     </a>
-    <div class="sp-nav-cta">
-      <a class="sp-btn sp-btn-ghost" href="/chat">Назад в чат</a>
+    <div class="sc-nav-right">
+      {% if not has_subscription %}
+      <a href="/chat/subscribe" class="sc-nav-pro" style="text-decoration:none;">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5l1.4 4.1L12.5 7l-4.1 1.4L7 12.5 5.6 8.4 1.5 7l4.1-1.4L7 1.5z" fill="currentColor"/></svg>
+        Pro
+      </a>
+      {% endif %}
+      <a href="/chat" class="sc-nav-quota" style="text-decoration:none; color:var(--text-2);">
+        <span class="sc-nav-quota-dot"></span>
+        Чат
+      </a>
+      <a href="/chat/report/{{ first_child_id }}" class="sc-nav-avatar" title="Кабинет родителя" style="text-decoration:none; display:grid; place-items:center;">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 14c0-2.5 2-4.5 4.5-4.5s4.5 2 4.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </a>
     </div>
   </nav>
 
@@ -268,6 +280,6 @@ document.getElementById('wd-form').addEventListener('submit', async function(e) 
   }
 });
 </script>
-</div><!-- /sp -->
+</div><!-- /sc -->
 </body>
 </html>

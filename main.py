@@ -3561,6 +3561,8 @@ async def spark_subscribe_page(request: Request):
 
     subscription = get_active_chat_subscription(conn, user["id"])
     payment_status = request.query_params.get("status", "")
+    children = get_children_by_parent(conn, user["id"])
+    first_child_id = children[0]["id"] if children else 0
 
     return templates.TemplateResponse(
         request,
@@ -3569,6 +3571,8 @@ async def spark_subscribe_page(request: Request):
             "crystals": user["crystals"],
             "subscription": dict(subscription) if subscription else None,
             "payment_status": payment_status,
+            "has_subscription": subscription is not None,
+            "first_child_id": first_child_id,
         },
     )
 
@@ -4597,8 +4601,13 @@ async def friends_page(request: Request):
     host = "chat.kidion.ru" if _is_chat_subdomain(request) else "kidion.ru"
     ref_link = f"https://{host}/register?ref={ref_code}"
 
+    has_sub = get_active_chat_subscription(conn, user["id"]) is not None
+    children = get_children_by_parent(conn, user["id"])
+    first_child_id = children[0]["id"] if children else 0
+
     return templates.TemplateResponse(request, "chat/friends.html", {
         "user": user, "stats": stats, "ref_link": ref_link,
+        "has_subscription": has_sub, "first_child_id": first_child_id,
     })
 
 
@@ -4618,8 +4627,13 @@ async def blogger_page(request: Request):
     host = "chat.kidion.ru" if _is_chat_subdomain(request) else "kidion.ru"
     ref_link = f"https://{host}/register?ref={ref_code}"
 
+    has_sub = get_active_chat_subscription(conn, user["id"]) is not None
+    children = get_children_by_parent(conn, user["id"])
+    first_child_id = children[0]["id"] if children else 0
+
     return templates.TemplateResponse(request, "chat/blogger.html", {
         "user": user, "stats": stats, "withdrawals": withdrawals, "ref_link": ref_link,
+        "has_subscription": has_sub, "first_child_id": first_child_id,
     })
 
 
