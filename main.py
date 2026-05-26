@@ -4554,6 +4554,14 @@ def _is_admin(user: dict) -> bool:
     return user and user.get("email", "") in ADMIN_EMAILS
 
 
+@app.get("/chat/course", response_class=HTMLResponse)
+async def course_page(request: Request):
+    """Mini-course: What is AI? — public page for kids."""
+    if templates is None:
+        return HTMLResponse("<h1>Course</h1>")
+    return templates.TemplateResponse(request, "chat/course.html", {})
+
+
 @app.get("/partners", response_class=HTMLResponse)
 async def partners_page(request: Request):
     if templates is None:
