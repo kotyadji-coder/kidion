@@ -85,6 +85,25 @@
         <ul class="sc-chatlist-items" id="chatlist-items">
           <!-- Populated by JS -->
         </ul>
+        <div class="sc-chatlist-footer">
+          {% if has_subscription %}
+          <div class="sc-sub-card is-active">
+            <div class="sc-sub-card-dot"></div>
+            <div class="sc-sub-card-info">
+              <span class="sc-sub-card-label">Киди Pro</span>
+              <span class="sc-sub-card-detail">{{ subscription_expires }} · {{ images_remaining }} картинок</span>
+            </div>
+          </div>
+          {% else %}
+          <div class="sc-sub-card">
+            <div class="sc-sub-card-info">
+              <span class="sc-sub-card-label">Бесплатный тариф</span>
+              <span class="sc-sub-card-detail">10 сообщений/день · 3 картинки/мес</span>
+            </div>
+            <a href="/chat/subscribe" class="sc-sub-card-btn">Подробнее</a>
+          </div>
+          {% endif %}
+        </div>
       </div>
 
       <!-- Character strip (mobile) — hidden, replaced by chatlist -->

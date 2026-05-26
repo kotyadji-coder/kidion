@@ -2917,11 +2917,23 @@ async def page_chat(request: Request):
         if templates is None:
             return HTMLResponse("<h1>Киди</h1>")
         parent_id = child["parent_id"]
-        has_sub = get_active_chat_subscription(conn, parent_id) is not None
+        sub_info = get_active_chat_subscription(conn, parent_id)
+        has_sub = sub_info is not None
+        sub_expires = ""
+        images_remaining = 0
+        if sub_info:
+            sub_expires = "до " + sub_info.get("expires_at", "")[:10]
+            images_remaining = sub_info.get("images_remaining", 0)
         characters = get_chat_characters(conn)
         return templates.TemplateResponse(
             request, "chat/chat.html",
-            {"child": child, "has_subscription": has_sub, "characters": characters},
+            {
+                "child": child,
+                "has_subscription": has_sub,
+                "subscription_expires": sub_expires,
+                "images_remaining": images_remaining,
+                "characters": characters,
+            },
         )
 
     # kidion.ru → Parent chat (parent auth)
