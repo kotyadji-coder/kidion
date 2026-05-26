@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Киди">
-<link rel="stylesheet" href="/static/spark/chat.css?v=20260525c">
+<link rel="stylesheet" href="/static/spark/chat.css?v=20260526a">
 </head>
 <body>
 <div class="sc" id="spark-chat" data-char="spark">
@@ -210,10 +210,10 @@
         <h3 class="sc-voice-h">На сегодня сообщения закончились!</h3>
         {% if not has_subscription %}
         <p class="sc-voice-sub" style="max-width:300px; text-align:center; line-height:1.5;">
-          С подпиской — 100 сообщений в день, все персонажи и AI-картинки
+          С подпиской — 100 сообщений в день,<br>все персонажи и AI-картинки
         </p>
         <div class="sc-voice-actions" style="flex-direction:column; align-items:center; gap:10px; width:100%; max-width:280px;">
-          <a class="sc-voice-stop" href="/chat/subscribe" style="text-decoration:none; display:block; width:100%; text-align:center;">Подключить подписку</a>
+          <a class="sc-voice-stop" href="/chat/subscribe" style="text-decoration:none; display:flex; align-items:center; justify-content:center; width:100%; text-align:center;">Подключить подписку</a>
           <button class="sc-voice-cancel" id="btn-limit-close">Вернуться</button>
         </div>
         {% else %}
@@ -309,7 +309,7 @@
     paidLimit: 100,
   };
 </script>
-<script src="/static/spark/chat.js?v=20260525c"></script>
+<script src="/static/spark/chat.js?v=20260526a"></script>
 <style>
 .pwa-overlay {
   position: fixed; inset: 0; z-index: 1000;

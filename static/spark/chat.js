@@ -665,9 +665,15 @@
   function scrollToBottom() {
     requestAnimationFrame(() => {
       messagesEl.scrollTop = messagesEl.scrollHeight;
-      // Repeat after images may have loaded
+      // Repeat after layout settles
       setTimeout(() => { messagesEl.scrollTop = messagesEl.scrollHeight; }, 200);
       setTimeout(() => { messagesEl.scrollTop = messagesEl.scrollHeight; }, 600);
+      // Also scroll after any pending images finish loading
+      messagesEl.querySelectorAll("img").forEach((img) => {
+        if (!img.complete) {
+          img.addEventListener("load", () => { messagesEl.scrollTop = messagesEl.scrollHeight; }, { once: true });
+        }
+      });
     });
   }
 
@@ -857,28 +863,11 @@
     voiceInterim = "";
     voiceStopping = false;
     voiceHadError = false;
-    voiceH.textContent = "Говори, я слушаю!";
-    voiceSub.textContent = "Я переведу твою речь в текст.";
+    voiceH.textContent = "Подготовка...";
+    voiceSub.textContent = "Подключаю микрофон.";
     voiceTranscript.textContent = "";
     voiceOverlay.classList.add("is-open");
     setVoiceUI("listening");
-
-    // Pre-check mic access at OS level (getUserMedia)
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach(t => t.stop());
-    } catch (err) {
-      console.log("getUserMedia error:", err.name, err.message);
-      if (err.name === "NotAllowedError") {
-        voiceH.textContent = "Микрофон заблокирован";
-        voiceSub.textContent = "Полностью закрой Chrome (Cmd+Q) и открой снова. macOS требует перезапуск после включения разрешения.";
-      } else {
-        voiceH.textContent = "Ошибка микрофона";
-        voiceSub.textContent = err.name + ": " + err.message;
-      }
-      setVoiceUI("error");
-      return;
-    }
 
     startRecognition();
   }
@@ -920,12 +909,14 @@
     recognition.interimResults = true;
 
     recognition.onstart = () => {
-      voiceH.textContent = "Слушаю...";
-      voiceSub.textContent = "Говори — текст появится ниже.";
+      voiceH.textContent = "Подготовка...";
+      voiceSub.textContent = "Подключаю микрофон.";
     };
 
     recognition.onaudiostart = () => {
       voicePulse.classList.add("is-active");
+      voiceH.textContent = "Говори, я слушаю!";
+      voiceSub.textContent = "Говори — текст появится ниже.";
     };
 
     recognition.onresult = (event) => {
