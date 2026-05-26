@@ -29,11 +29,11 @@ Parent creates child (name, grade, interests) → AI generates universe + charac
 
 ```
 kidion/
-├── main.py                    # FastAPI app, all routes (~3000 lines)
-├── db.py                      # SQLite: 17 tables, all CRUD functions
+├── main.py                    # FastAPI app, all routes (~4800 lines)
+├── db.py                      # SQLite: 22 tables, all CRUD functions
 ├── auth.py                    # bcrypt, session tokens (parent + child)
 ├── payments.py                # Prodamus integration, crystal packages
-├── referral.py                # Referral codes, bonuses
+├── referral.py                # Referral codes, promo codes, bonuses (find_referrer supports both)
 ├── callbacks.py               # HMAC validation for legacy bot callbacks
 ├── services/
 │   ├── generation.py          # Generation Adapter: build_question() + generate_lesson_content()
@@ -71,8 +71,11 @@ kidion/
 │   ├── landing.html           # Киди Chat landing page (/)
 │   ├── login.html             # Киди Chat login (parent email → pick child, no PIN)
 │   ├── register.html          # Киди Chat registration (simplified)
-│   ├── subscribe.html         # Subscription purchase page (/chat/subscribe)
-│   └── report.html            # Weekly parent report page
+│   ├── subscribe.html         # Subscription purchase page (/chat/subscribe) + referral block
+│   ├── report.html            # Weekly parent report page
+│   ├── partners.html          # Blogger partner program landing + application form
+│   ├── friends.html           # Referral stats page for regular users
+│   └── blogger.html           # Blogger dashboard (balance, promo code, withdrawal)
 ├── static/spark/
 │   ├── chat.css               # Chat CSS (oklch, per-character tints)
 │   ├── landing.css            # Landing page CSS
@@ -85,16 +88,17 @@ kidion/
 ├── static/kid/style.css       # Kid CSS (Nunito, pastels, mobile-first)
 ├── static/kid/img/spark.png   # Киди avatar image (legacy kid interface)
 ├── static/kid/chat.js         # Chat page JS (legacy single-Киди)
+├── templates/admin.html        # Admin mini-CRM (blogger apps, withdrawals, stats)
 ├── content/                   # Generated lesson HTML/PNG + characters/ (gitignored)
 ├── content/characters/        # Generated character PNGs: {child_id}.png
 └── tests/                     # 306 tests across 16 test files
 ```
 
-## Database Schema (20 tables)
+## Database Schema (22 tables)
 
 | Table | Purpose | Key Fields |
 |-------|---------|------------|
-| `users` | Parent accounts | email, password_hash, crystals, ref_code |
+| `users` | Parent accounts | email, password_hash, crystals, ref_code, **promo_code**, **is_blogger**, **blogger_balance_rub** |
 | `children` | Child profiles | parent_id, name, gender, grade, universe, pin_hash, difficulty_level, **stars**, **interests** (JSON), **universe_description**, **character_prompt**, **character_image_url**, **character_name**, **character_onboarded** |
 | `lessons` | All lessons | child_id, mode, topic_title, subject, status, worksheet_url |
 | `lesson_results` | Completion results | lesson_id, child_id, correct_answers, stars (1-3) |
@@ -115,6 +119,8 @@ kidion/
 | `kid_chat_messages` | Chat messages | chat_id, role (user/assistant), content, image_url |
 | `chat_subscriptions` | Chat subscription (parent) | user_id, started_at, expires_at, images_remaining, amount_rub |
 | `chat_characters` | Seeded chat characters (3) | key, name_ru, role_ru, system_prompt, greeting_ru, is_free |
+| `blogger_applications` | Partner program applications | name, email, telegram, social_url, subscribers, status |
+| `withdrawal_requests` | Blogger payout requests | user_id, amount_rub, payment_details, status, admin_note |
 
 ## Personalized Universe & Character System
 
@@ -200,6 +206,8 @@ Web Speech API (browser-side, free). Opens overlay, speech → text → editable
 - **Auto-scoring:** iframe postMessage → auto-submit result. Stub mode → 5/5.
 - **Chat subscription:** 500 ₽/month via Prodamus, 100 msg/day (10 free), 30 images/month, extra images 10💎 each. 4 characters. Per-parent (covers all children).
 - **Payment polling:** `/buy` page polls `/api/payment/status-by-order` after Prodamus redirect, shows animated success banner when crystals credited.
+- **Referral system:** shared between kidion.ru and chat.kidion.ru (same DB). Regular users get `ref_code` (auto `U-XXXX`), bloggers get custom `promo_code` (e.g. `MASHA`). Both work in `?ref=` param. Registration bonus: 60💎 (120💎 with referral). Referrer gets 120💎 on first payment (bloggers get 10% in rub instead).
+- **Admin CRM:** `/admin`, access via `ADMIN_EMAILS` env var (comma-separated). Manages blogger applications and withdrawal requests with Telegram notifications.
 
 ## API Endpoints
 
@@ -226,6 +234,13 @@ Web Speech API (browser-side, free). Opens overlay, speech → text → editable
 - `POST /api/chat/subscribe` — buy chat subscription (500 rub/month)
 - `GET /api/chat/subscription` — check subscription status + images_remaining
 
+### Referral & Partners
+- `POST /api/partners/apply` — submit blogger application (→ Telegram notification)
+- `POST /api/blogger/withdraw` — request payout (min 500 rub, → Telegram notification)
+- `POST /api/admin/applications/{id}/approve` — approve blogger + assign promo code (admin)
+- `POST /api/admin/applications/{id}/reject` — reject application (admin)
+- `POST /api/admin/withdrawals/{id}` — process withdrawal: paid/rejected (admin)
+
 ## Pages
 
 ### Kid
@@ -242,10 +257,16 @@ Web Speech API (browser-side, free). Opens overlay, speech → text → editable
 - `/` — landing page on chat.kidion.ru (public, no auth)
 - `/chat` — multi-character chat (child auth)
 - `/chat/login` — login page (parent email → pick child, no PIN)
-- `/chat/register` — simplified registration (parent + child, no universe)
-- `/chat/subscribe` — subscription purchase (parent auth)
+- `/chat/register` — simplified registration (accepts `?ref=` for referrals/promo codes)
+- `/chat/subscribe` — subscription + crystal packs + referral block (parent auth)
 - `/chat/report/{child_id}` — weekly parent report
 - Old `/spark/*` URLs redirect 301 → `/chat/*`
+
+### Referral & Partners
+- `/partners` — public landing: partner program description + blogger application form
+- `/friends` — referral stats for regular users (invited, paid, crystals earned)
+- `/blogger` — blogger dashboard (balance, promo code, withdrawal requests)
+- `/admin` — mini-CRM (blogger applications, withdrawal requests, stats). Access: `ADMIN_EMAILS` env var
 
 ### Parent
 - `/dashboard`, `/children/new`, `/children/{id}`, `/children/{id}/subject/{subject}`, `/children/{id}/history`
