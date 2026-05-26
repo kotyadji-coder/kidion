@@ -12,15 +12,18 @@
 <link rel="stylesheet" href="/static/spark/landing.css">
 <style>
   body { min-height: 100vh; display: flex; flex-direction: column; }
-  .rpt-page { flex: 1; padding: 32px 20px 60px; max-width: 800px; margin: 0 auto; width: 100%; }
+  .rpt-page { flex: 1; padding: 32px 20px 60px; max-width: 1100px; margin: 0 auto; width: 100%; }
+  .rpt-grid { display: flex; flex-direction: column; gap: 0; }
+  @media (min-width: 769px) {
+    .rpt-grid { display: grid; grid-template-columns: 320px 1fr; gap: 28px; align-items: start; }
+  }
 
   .rpt-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
   .rpt-h { margin: 0 0 4px; font-size: 24px; font-weight: 600; letter-spacing: -0.025em; }
   @media (min-width: 769px) { .rpt-h { font-size: 30px; } }
   .rpt-sub { margin: 0; font-size: 14px; color: var(--text-2); }
 
-  .rpt-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 28px; }
-  @media (max-width: 600px) { .rpt-stats { grid-template-columns: 1fr; } }
+  .rpt-stats { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 28px; }
   .rpt-stat { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
   .rpt-stat-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); margin: 0 0 6px; }
   .rpt-stat-value { font-size: 24px; font-weight: 600; margin: 0; letter-spacing: -0.02em; }
@@ -91,13 +94,16 @@
   .rpt-add-form input { flex: 1; min-width: 120px; }
   .rpt-add-form select { width: 90px; appearance: auto; }
 
+  .rpt-banners {
+    display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px;
+  }
   .rpt-kidion-banner {
+    flex: 1; min-width: 200px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 18px 20px;
     display: flex; align-items: center; gap: 14px;
-    margin-top: 28px;
   }
   .rpt-kidion-banner-icon { font-size: 28px; flex: 0 0 auto; }
   .rpt-kidion-banner-text { flex: 1; }
@@ -163,6 +169,10 @@
     </div>
     {% endif %}
 
+    <div class="rpt-grid">
+    <!-- Left column: stats, settings, banners -->
+    <div class="rpt-left">
+
     <div class="rpt-stats">
       <div class="rpt-stat">
         <p class="rpt-stat-label">Сообщений всего</p>
@@ -200,6 +210,11 @@
         </div>
       </div>
     </div>
+
+    </div><!-- /rpt-left -->
+
+    <!-- Right column: reports -->
+    <div class="rpt-right">
 
     {% if reports %}
     <div class="rpt-section">
@@ -243,22 +258,25 @@
     </div>
     {% endif %}
 
-    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:28px">
-      <div class="rpt-kidion-banner" style="flex:1;min-width:200px;margin-top:0;cursor:pointer" id="pwa-report-banner">
+    </div><!-- /rpt-right -->
+    </div><!-- /rpt-grid -->
+
+    <div class="rpt-banners">
+      <div class="rpt-kidion-banner" style="cursor:pointer" id="pwa-report-banner">
         <div class="rpt-kidion-banner-icon">&#128241;</div>
         <div class="rpt-kidion-banner-text">
           <p class="rpt-kidion-banner-title">Установить приложение</p>
           <p class="rpt-kidion-banner-body" id="pwa-report-text">Киди можно добавить на экран телефона как приложение</p>
         </div>
       </div>
-      <a href="https://kidion.ru/dashboard" class="rpt-kidion-banner" style="text-decoration:none;color:inherit;flex:1;min-width:200px;margin-top:0">
+      <a href="https://kidion.ru/dashboard" class="rpt-kidion-banner" style="text-decoration:none;color:inherit;">
         <div class="rpt-kidion-banner-icon">&#128218;</div>
         <div class="rpt-kidion-banner-text">
           <p class="rpt-kidion-banner-title">Kidion — уроки</p>
           <p class="rpt-kidion-banner-body">Школьная программа в формате приключения</p>
         </div>
       </a>
-      <a href="/chat/safety" class="rpt-kidion-banner" style="text-decoration:none;color:inherit;flex:1;min-width:200px;margin-top:0">
+      <a href="/chat/safety" class="rpt-kidion-banner" style="text-decoration:none;color:inherit;">
         <div class="rpt-kidion-banner-icon">&#128737;</div>
         <div class="rpt-kidion-banner-text">
           <p class="rpt-kidion-banner-title">Безопасность</p>
