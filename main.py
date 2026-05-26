@@ -3805,8 +3805,9 @@ async def kid_chat_send(request: Request):
         content = m["content"]
         if m["role"] == "user":
             content, _ = scrub_pii(content, child_name=child_name)
-        # Remove [УДАЛЕНО] tokens from context so AI doesn't mimic them
-        content = content.replace("[УДАЛЕНО]", "...")
+        # Skip messages with redaction tokens — don't let AI see/mimic them
+        if "[УДАЛЕНО]" in content:
+            continue
         context.append({"role": m["role"], "content": content})
 
     # Arty shortcut: photo + style mentioned → skip AI dialogue, generate directly
