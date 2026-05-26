@@ -63,6 +63,9 @@
     <main class="sc-main" id="chat-main">
       <!-- Chat header -->
       <header class="sc-head" id="chat-head">
+        <button class="sc-head-back" id="btn-back" aria-label="Назад">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15l-5-5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
         <div class="sc-head-av" id="head-avatar"></div>
         <div class="sc-head-info">
           <h2 class="sc-head-name">
@@ -78,9 +81,18 @@
         </div>
       </header>
 
-      <!-- Character strip (mobile) -->
-      <div class="sc-chars" id="char-strip">
-        <!-- Populated by JS -->
+      <!-- Character list (mobile, Telegram-style) -->
+      <div class="sc-chatlist" id="chat-list">
+        <div class="sc-chatlist-head">
+          <h2 class="sc-chatlist-title">Чаты</h2>
+        </div>
+        <ul class="sc-chatlist-items" id="chatlist-items">
+          <!-- Populated by JS -->
+        </ul>
+      </div>
+
+      <!-- Character strip (mobile) — hidden, replaced by chatlist -->
+      <div class="sc-chars" id="char-strip" style="display:none!important">
       </div>
 
       <!-- Empty state (shown when no messages) -->
@@ -106,10 +118,6 @@
 
       <!-- Composer -->
       <div class="sc-comp" id="composer">
-        <p class="sc-quota" id="quota-info">
-          Осталось <strong id="quota-count">5 из 5</strong> сообщений сегодня
-          <span class="sc-quota-bar"><i id="quota-bar-fill" style="width:100%"></i></span>
-        </p>
         <div class="sc-attach" id="attach-preview" style="display:none">
           <span>🖼️</span>
           <span class="sc-attach-name" id="attach-name"></span>

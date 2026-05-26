@@ -33,11 +33,27 @@
   const drawerList = document.getElementById("drawer-list");
   const drawer = document.getElementById("char-drawer");
   const voiceOverlay = document.getElementById("voice-overlay");
+  const chatList = document.getElementById("chat-list");
+  const chatListItems = document.getElementById("chatlist-items");
+  const btnBack = document.getElementById("btn-back");
+
+  // Mobile view state: "list" or "chat"
+  const isMobile = () => window.innerWidth <= 768;
+
+  function showView(view) {
+    root.dataset.view = view;
+  }
 
   // Init
   loadCharacters().then(() => {
-    switchCharacter("spark", false);
-    loadChat();
+    if (isMobile()) {
+      showView("list");
+    } else {
+      showView("chat");
+      switchCharacter("spark", false);
+      loadChat();
+    }
+    showFirstVisitMessage();
   });
   setupEvents();
 
@@ -70,6 +86,7 @@
       renderSidebar();
       renderCharStrip();
       renderDrawer();
+      renderChatList();
     } catch (e) {
       console.error("Failed to load characters:", e);
       // Fallback
@@ -162,6 +179,64 @@
       });
       drawerList.appendChild(li);
     });
+  }
+
+  function renderChatList() {
+    chatListItems.innerHTML = "";
+    const exhausted = isLimitExhausted();
+    characters.forEach((c) => {
+      const li = document.createElement("li");
+      const offline = exhausted && c.key !== "artist";
+      li.className = "sc-chatlist-row" + (offline ? " is-offline" : "");
+      li.innerHTML = `
+        <div class="sc-chatlist-av">
+          <span class="sc-chatlist-dot ${offline ? "is-offline" : "is-online"}"></span>
+        </div>
+        <div class="sc-chatlist-info">
+          <p class="sc-chatlist-name">${esc(c.name_ru)}</p>
+          <p class="sc-chatlist-role">${offline ? "Сообщения на сегодня закончились" : esc(c.role_ru)}</p>
+        </div>`;
+      li.querySelector(".sc-chatlist-av").prepend(getCharAvatar(c.key));
+      li.addEventListener("click", () => {
+        if (offline) {
+          document.getElementById("limit-overlay").classList.add("is-open");
+          return;
+        }
+        switchCharacter(c.key, true);
+        showView("chat");
+      });
+      chatListItems.appendChild(li);
+    });
+  }
+
+  function isLimitExhausted() {
+    return (dailyLimit - dailyCount) <= 0;
+  }
+
+  function showFirstVisitMessage() {
+    const key = "kidion_chat_visited";
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, "1");
+    // Show a one-time system message about daily quota after first chat loads
+    const origLoadChat = loadChat;
+    const onceHandler = async function() {
+      await origLoadChat.call(this);
+      const sysMsg = document.createElement("div");
+      sysMsg.className = "sc-system-msg";
+      sysMsg.textContent = CFG.hasSubscription
+        ? `У тебя ${dailyLimit} сообщений в день. Хорошего общения!`
+        : `У тебя ${dailyLimit} бесплатных сообщений в день. Приятного общения!`;
+      if (messagesEl.firstChild) {
+        messagesEl.insertBefore(sysMsg, messagesEl.firstChild);
+      } else {
+        messagesEl.appendChild(sysMsg);
+      }
+    };
+    // Override loadChat just once
+    loadChat = async function() {
+      loadChat = origLoadChat; // restore
+      return onceHandler();
+    };
   }
 
   function switchCharacter(key, reload) {
@@ -424,6 +499,8 @@
       typingRow.style.display = "none";
 
       if (result.status === 429) {
+        dailyCount = dailyLimit; // mark as exhausted
+        updateQuota();
         document.getElementById("limit-overlay").classList.add("is-open");
       } else if (result.status === 403) {
         appendMessage({ role: "assistant", content: result.data.message || "Этот персонаж доступен по подписке.", created_at: new Date().toISOString() }, true);
@@ -503,23 +580,26 @@
 
   // ---------- UI helpers ----------
   function updateQuota() {
-    if (activeChar === "artist") {
-      document.getElementById("quota-count").textContent = `${freeImagesRemaining} картинок`;
-      const pct = Math.round((freeImagesRemaining / 3) * 100);
-      document.getElementById("quota-bar-fill").style.width = pct + "%";
-      document.getElementById("nav-msg-count").textContent = freeImagesRemaining;
-      document.getElementById("quota-info").querySelector("strong").previousSibling.textContent = "Осталось ";
-      document.getElementById("quota-info").querySelector("strong").nextSibling.textContent = " бесплатных";
-    } else {
-      const remaining = Math.max(0, dailyLimit - dailyCount);
-      document.getElementById("quota-count").textContent = `${remaining} из ${dailyLimit}`;
-      const pct = dailyLimit > 0 ? Math.round((remaining / dailyLimit) * 100) : 0;
-      document.getElementById("quota-bar-fill").style.width = pct + "%";
-      document.getElementById("nav-msg-count").textContent = remaining;
-      document.getElementById("quota-info").querySelector("strong").previousSibling.textContent = "Осталось ";
-      document.getElementById("quota-info").querySelector("strong").nextSibling.textContent = " сообщений сегодня";
+    const remaining = Math.max(0, dailyLimit - dailyCount);
+    const navCount = document.getElementById("nav-msg-count");
+    if (navCount) navCount.textContent = remaining;
+
+    // Update chat header status
+    const headStatus = document.getElementById("head-status");
+    if (headStatus) {
+      if (activeChar === "artist") {
+        headStatus.textContent = "онлайн";
+      } else if (remaining <= 0) {
+        headStatus.textContent = "оффлайн";
+        headStatus.classList.add("is-offline");
+      } else {
+        headStatus.textContent = "онлайн";
+        headStatus.classList.remove("is-offline");
+      }
     }
-    renderCharStrip();
+
+    // Re-render chat list to update online/offline status
+    if (isMobile()) renderChatList();
   }
 
   function updateSendBtn() {
@@ -604,6 +684,12 @@
     });
     btnSend.addEventListener("click", sendMessage);
     btnNewChat.addEventListener("click", clearChat);
+
+    // Back button (mobile) → return to character list
+    btnBack.addEventListener("click", () => {
+      showView("list");
+      renderChatList(); // refresh online/offline state
+    });
 
     // Limit overlay close
     const btnLimitClose = document.getElementById("btn-limit-close");

@@ -349,18 +349,112 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
 @media (min-width: 769px) {
   .sc-head { padding: 14px 22px; }
 }
-/* ============ Character strip (mobile) ============ */
-.sc-chars {
+/* ============ Character list (mobile, Telegram-style) ============ */
+.sc-chatlist {
   display: none;
-  padding: 10px 16px;
-  gap: 16px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  flex: 0 0 auto;
-  justify-content: center;
+  flex-direction: column;
+  flex: 1;
+  overflow: auto;
+  background: var(--bg);
 }
 @media (max-width: 768px) {
-  .sc-chars { display: flex; }
+  .sc-chatlist { display: flex; }
+  .sc[data-view="chat"] .sc-chatlist { display: none; }
+  .sc[data-view="list"] .sc-head,
+  .sc[data-view="list"] .sc-empty,
+  .sc[data-view="list"] .sc-msgs,
+  .sc[data-view="list"] .sc-comp,
+  .sc[data-view="list"] #typing-row { display: none !important; }
+}
+.sc-chatlist-head {
+  padding: 16px 18px 8px;
+}
+.sc-chatlist-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+.sc-chatlist-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.sc-chatlist-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .1s;
+}
+.sc-chatlist-row:hover { background: var(--surface-2); }
+.sc-chatlist-row:active { background: var(--surface-3); }
+.sc-chatlist-av {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  flex: 0 0 52px;
+  position: relative;
+}
+.sc-chatlist-av img, .sc-chatlist-av svg { width: 100%; height: 100%; border-radius: 50%; }
+.sc-chatlist-av img { object-fit: cover; object-position: center 18%; transform: scale(1.08); }
+.sc-chatlist-dot {
+  position: absolute;
+  bottom: 1px; right: 1px;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  border: 2.5px solid var(--surface);
+  z-index: 2;
+}
+.sc-chatlist-dot.is-online { background: oklch(0.62 0.19 150); }
+.sc-chatlist-dot.is-offline { background: oklch(0.72 0.01 260); }
+.sc-chatlist-info {
+  flex: 1;
+  min-width: 0;
+}
+.sc-chatlist-name {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.sc-chatlist-role {
+  font-size: 13px;
+  color: var(--text-3);
+  margin: 2px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sc-chatlist-row.is-offline .sc-chatlist-name { color: var(--text-3); }
+.sc-chatlist-row.is-offline .sc-chatlist-role { color: var(--text-4); }
+.sc-chatlist-badge {
+  font-size: 11px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+/* Back button (mobile only) */
+.sc-head-back {
+  display: none;
+  background: none;
+  border: 0;
+  padding: 4px;
+  color: var(--c-accent);
+  flex: 0 0 auto;
+  margin-left: -4px;
+}
+@media (max-width: 768px) {
+  .sc-head-back { display: flex; }
+}
+
+/* ============ Character strip (legacy, hidden) ============ */
+.sc-chars {
+  display: none !important;
 }
 .sc-char-btn {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
@@ -476,6 +570,20 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
   margin: 6px 0 14px;
   letter-spacing: 0.02em;
 }
+.sc-system-msg {
+  align-self: center;
+  font-size: 12px;
+  color: var(--text-3);
+  background: var(--c-soft);
+  border: 1px solid var(--c-border);
+  padding: 6px 14px;
+  border-radius: 12px;
+  margin: 4px 0 10px;
+  text-align: center;
+  max-width: 320px;
+}
+.sc-head-status.is-offline { color: var(--text-4); }
+.sc-head-status.is-offline::before { background: oklch(0.72 0.01 260); }
 
 /* Bubble row */
 .sc-row {
