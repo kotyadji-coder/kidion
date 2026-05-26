@@ -20,7 +20,6 @@
   const emptyState = document.getElementById("empty-state");
   const chatInput = document.getElementById("chat-input");
   const btnSend = document.getElementById("btn-send");
-  const btnNewChat = document.getElementById("btn-new-chat");
   const btnMic = document.getElementById("btn-mic");
   const fileInput = document.getElementById("file-input");
   const attachPreview = document.getElementById("attach-preview");
@@ -683,7 +682,6 @@
       }
     });
     btnSend.addEventListener("click", sendMessage);
-    btnNewChat.addEventListener("click", clearChat);
 
     // Back button (mobile) → return to character list
     btnBack.addEventListener("click", () => {
