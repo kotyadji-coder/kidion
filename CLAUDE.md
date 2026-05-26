@@ -295,29 +295,11 @@ uvicorn main:app --host 127.0.0.1 --port 8003 --reload
 
 ## TODO
 
-- [x] Deploy to VPS (systemd + nginx + certbot SSL)
-- [x] DNS: A-record kidion.ru -> 72.56.126.111
-- [x] Prodamus: payment integration for crystals + chat subscription (edtale.payform.ru, HMAC via Sign header)
-- [x] Киди Chat: subdomain chat.kidion.ru (nginx + DNS + cookie domain=.kidion.ru)
-- [x] Киди Chat: AI image generation in chat (detect "нарисуй", call Vertex AI) + photo style transfer (Together AI FLUX)
-- [x] Киди Chat: parent reports (weekly chat summaries)
-- [x] Киди Chat: independent registration flow (simplified, no universe)
-- [x] Киди Chat: rebrand Spark → Киди, remove Pixie, rename Owl → Зуми, Captain → Лоро
-- [x] Connect print worksheet generation (worksheets generated alongside lessons)
 - [ ] Add curricula for grades 3-4 and more subjects (world)
-- [x] Pass universe_description into lesson generation prompts (so lessons are themed)
 - [ ] Update registry.json with kidion entry
-- [x] Favicon (from Киди character image)
 - [ ] 404 page, rate limiting on auth
-- [x] Password reset: "Забыли пароль?" link on all login pages (flow was already implemented)
-- [x] Login error messages: "Неверный пароль" / "Пользователь не найден" + show password toggle
 - [ ] Cloud backup for DB (Cloudflare R2) — when real users appear
 - [ ] Fix voice input (Web Speech API broken on Chrome Mac + Safari iOS — overlay doesn't work)
-- [x] Arty: photo style transfer via Together AI FLUX.1-kontext-pro
-- [x] Crystal pack "Волшебные краски" (100💎/100₽), image cost 10💎
-- [x] Red dot on character avatar when quota exhausted
-- [x] Chat image open/download button overlay
-- [x] Report button hidden from kids
 
 ## Eval System (Quality Monitoring)
 
