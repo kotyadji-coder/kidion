@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Кабинет блогера — Киди</title>
+<link rel="icon" href="/static/spark/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/spark/chat.css">
+<style>
+  body { margin: 0; min-height: 100vh; background: var(--bg); font-family: var(--font); color: var(--text); }
+  *, *::before, *::after { box-sizing: border-box; }
+
+  .bl-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .bl-header-back {
+    background: none; border: 0; padding: 4px; cursor: pointer;
+    color: var(--spark-violet); display: flex; align-items: center;
+  }
+  .bl-header-title { flex: 1; text-align: center; font-size: 17px; font-weight: 600; margin: 0; }
+  .bl-header-spacer { width: 28px; }
+  @media (min-width: 769px) { .bl-header { display: none; } }
+
+  .bl-back-desktop {
+    display: none; padding: 20px 20px 0; max-width: 640px; margin: 0 auto;
+  }
+  .bl-back-desktop a {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 14px; font-weight: 500; color: var(--spark-violet); text-decoration: none;
+  }
+  @media (min-width: 769px) { .bl-back-desktop { display: block; } }
+
+  .bl-page { padding: 28px 18px 48px; max-width: 640px; margin: 0 auto; }
+
+  /* Balance card */
+  .bl-balance {
+    background: var(--surface); border: 2px solid var(--spark-violet-border); border-radius: 20px;
+    padding: 28px 24px; position: relative; overflow: hidden; margin-bottom: 24px;
+  }
+  .bl-balance::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: var(--spark-grad);
+  }
+  .bl-balance-label { font-size: 13px; color: var(--text-3); margin: 0 0 4px; }
+  .bl-balance-num {
+    font-size: 44px; font-weight: 700; letter-spacing: -0.03em; margin: 0;
+    background: var(--spark-grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .bl-balance-unit { font-size: 18px; color: var(--text-3); font-weight: 500; margin-left: 4px; }
+
+  /* Stats row */
+  .bl-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+  .bl-stat {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 18px 14px; text-align: center;
+  }
+  .bl-stat-num { font-size: 28px; font-weight: 700; }
+  .bl-stat-label { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+  /* Promo section */
+  .bl-promo {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 22px 20px; margin-bottom: 24px;
+  }
+  .bl-promo h2 { margin: 0 0 6px; font-size: 17px; font-weight: 600; }
+  .bl-promo p { margin: 0 0 14px; font-size: 13px; color: var(--text-2); line-height: 1.5; }
+  .bl-promo-code {
+    display: inline-block; padding: 8px 20px; border-radius: 10px;
+    background: var(--spark-violet-soft); color: var(--spark-violet-ink);
+    font-size: 20px; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 12px;
+  }
+  .bl-link-row { display: flex; gap: 8px; }
+  .bl-link-input {
+    flex: 1; height: 42px; padding: 0 12px;
+    border: 1px solid var(--border); border-radius: 10px;
+    font-size: 14px; font-family: inherit; background: var(--surface-2); color: var(--text);
+    outline: none; min-width: 0;
+  }
+  .bl-link-copy {
+    height: 42px; padding: 0 16px; border: 1px solid var(--border); border-radius: 10px;
+    background: var(--surface-2); font-size: 13px; font-weight: 600; font-family: inherit;
+    cursor: pointer; color: var(--text-2); white-space: nowrap;
+  }
+
+  /* Withdrawal section */
+  .bl-withdraw {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 22px 20px; margin-bottom: 24px;
+  }
+  .bl-withdraw h2 { margin: 0 0 6px; font-size: 17px; font-weight: 600; }
+  .bl-withdraw p { margin: 0 0 14px; font-size: 13px; color: var(--text-2); line-height: 1.5; }
+  .bl-wd-field { margin-bottom: 12px; }
+  .bl-wd-label { display: block; font-size: 13px; font-weight: 500; color: var(--text-2); margin-bottom: 4px; }
+  .bl-wd-input {
+    width: 100%; height: 42px; padding: 0 12px;
+    border: 1px solid var(--border); border-radius: 10px;
+    font-size: 16px; font-family: inherit; background: var(--surface-2); color: var(--text); outline: none;
+  }
+  .bl-wd-textarea {
+    width: 100%; height: 60px; padding: 10px 12px; resize: vertical;
+    border: 1px solid var(--border); border-radius: 10px;
+    font-size: 16px; font-family: inherit; background: var(--surface-2); color: var(--text); outline: none;
+  }
+  .bl-wd-submit {
+    width: 100%; padding: 12px; margin-top: 4px;
+    background: var(--spark-grad); color: white; border: 0; border-radius: 12px;
+    font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer;
+  }
+  .bl-wd-submit:disabled { opacity: 0.6; cursor: default; }
+  .bl-wd-msg { font-size: 13px; text-align: center; margin-top: 8px; display: none; }
+  .bl-wd-msg.ok { color: oklch(0.45 0.15 158); display: block; }
+  .bl-wd-msg.err { color: oklch(0.55 0.2 25); display: block; }
+
+  /* Withdrawal history */
+  .bl-wd-history { margin-top: 16px; }
+  .bl-wd-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px; background: var(--bg); border-radius: 10px; margin-bottom: 6px;
+  }
+  .bl-wd-item-sum { font-size: 15px; font-weight: 600; }
+  .bl-wd-item-date { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+  .bl-wd-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; }
+  .bl-wd-badge.pending { background: oklch(0.96 0.04 80); color: oklch(0.50 0.10 80); }
+  .bl-wd-badge.paid { background: oklch(0.96 0.04 158); color: oklch(0.40 0.12 158); }
+  .bl-wd-badge.rejected { background: oklch(0.96 0.04 25); color: oklch(0.50 0.15 25); }
+
+  /* Friends list */
+  .bl-friends { margin-top: 24px; }
+  .bl-friends h2 { margin: 0 0 12px; font-size: 17px; font-weight: 600; }
+  .bl-friend {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; margin-bottom: 6px;
+  }
+  .bl-friend-email { font-size: 14px; font-weight: 500; }
+  .bl-friend-date { font-size: 12px; color: var(--text-3); }
+  .bl-friend-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; }
+  .bl-friend-badge.paid { background: oklch(0.96 0.04 158); color: oklch(0.40 0.12 158); }
+  .bl-friend-badge.free { background: oklch(0.96 0.02 80); color: oklch(0.50 0.10 80); }
+</style>
+</head>
+<body>
+
+<div class="bl-header">
+  <button class="bl-header-back" onclick="history.back()">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15l-5-5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  <h1 class="bl-header-title">Кабинет блогера</h1>
+  <div class="bl-header-spacer"></div>
+</div>
+
+<div class="bl-back-desktop">
+  <a href="/chat/subscribe">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12l-4-4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Назад
+  </a>
+</div>
+
+<div class="bl-page">
+  <div class="bl-balance">
+    <p class="bl-balance-label">Ваш баланс</p>
+    <p class="bl-balance-num">{{ "%.2f"|format(user.blogger_balance_rub) }}<span class="bl-balance-unit"> &#8381;</span></p>
+  </div>
+
+  <div class="bl-stats">
+    <div class="bl-stat">
+      <div class="bl-stat-num">{{ stats.total }}</div>
+      <div class="bl-stat-label">Приглашено</div>
+    </div>
+    <div class="bl-stat">
+      <div class="bl-stat-num">{{ stats.paid }}</div>
+      <div class="bl-stat-label">Оплатили</div>
+    </div>
+    <div class="bl-stat">
+      <div class="bl-stat-num">{{ "%.0f"|format(user.blogger_balance_rub) }}</div>
+      <div class="bl-stat-label">Заработано &#8381;</div>
+    </div>
+  </div>
+
+  <div class="bl-promo">
+    <h2>Ваш промо-код</h2>
+    <p>Делитесь промо-кодом или ссылкой с подписчиками.</p>
+    <div class="bl-promo-code">{{ user.promo_code or user.ref_code }}</div>
+    <div class="bl-link-row">
+      <input class="bl-link-input" id="ref-link" value="{{ ref_link }}" readonly>
+      <button class="bl-link-copy" id="copy-btn">Скопировать</button>
+    </div>
+  </div>
+
+  <div class="bl-withdraw">
+    <h2>Вывод средств</h2>
+    <p>Минимальная сумма вывода — 500 руб. Укажите реквизиты для перевода.</p>
+    <form id="wd-form">
+      <div class="bl-wd-field">
+        <label class="bl-wd-label">Сумма (&#8381;)</label>
+        <input class="bl-wd-input" type="number" name="amount" min="500" step="0.01" max="{{ user.blogger_balance_rub }}" required placeholder="500">
+      </div>
+      <div class="bl-wd-field">
+        <label class="bl-wd-label">Реквизиты (карта, кошелёк, счёт)</label>
+        <textarea class="bl-wd-textarea" name="payment_details" required placeholder="Номер карты или банковские реквизиты"></textarea>
+      </div>
+      <button class="bl-wd-submit" type="submit" {% if user.blogger_balance_rub < 500 %}disabled title="Минимум 500 руб"{% endif %}>Запросить вывод</button>
+      <p class="bl-wd-msg" id="wd-msg"></p>
+    </form>
+
+    {% if withdrawals %}
+    <div class="bl-wd-history">
+      {% for w in withdrawals %}
+      <div class="bl-wd-item">
+        <div>
+          <div class="bl-wd-item-sum">{{ "%.0f"|format(w.amount_rub) }} &#8381;</div>
+          <div class="bl-wd-item-date">{{ w.created_at[:10] }}</div>
+        </div>
+        {% if w.status == 'paid' %}
+        <span class="bl-wd-badge paid">Выплачено</span>
+        {% elif w.status == 'rejected' %}
+        <span class="bl-wd-badge rejected">Отклонено</span>
+        {% else %}
+        <span class="bl-wd-badge pending">В обработке</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="bl-friends">
+    <h2>Приглашённые пользователи</h2>
+    {% for f in stats.friends %}
+    <div class="bl-friend">
+      <div>
+        <div class="bl-friend-email">{{ f.email[:3] }}***{{ f.email[f.email.index('@'):] }}</div>
+        <div class="bl-friend-date">{{ f.user_created_at[:10] }}</div>
+      </div>
+      {% if f.paid_count > 0 %}
+      <span class="bl-friend-badge paid">Оплатил</span>
+      {% else %}
+      <span class="bl-friend-badge free">Бесплатный</span>
+      {% endif %}
+    </div>
+    {% endfor %}
+    {% if not stats.friends %}
+    <div style="text-align:center; padding:24px; color:var(--text-3); font-size:14px;">Пока нет приглашённых</div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+document.getElementById('copy-btn').addEventListener('click', function() {
+  navigator.clipboard.writeText(document.getElementById('ref-link').value).then(function() {
+    document.getElementById('copy-btn').textContent = 'Скопировано!';
+    setTimeout(function() { document.getElementById('copy-btn').textContent = 'Скопировать'; }, 2000);
+  });
+});
+
+document.getElementById('wd-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  var btn = this.querySelector('button[type="submit"]');
+  var msgEl = document.getElementById('wd-msg');
+  msgEl.className = 'bl-wd-msg';
+  btn.disabled = true;
+
+  var fd = new FormData(this);
+  try {
+    var res = await fetch('/api/blogger/withdraw', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        amount: parseFloat(fd.get('amount')),
+        payment_details: fd.get('payment_details'),
+      }),
+    });
+    var data = await res.json();
+    if (res.ok) {
+      msgEl.textContent = 'Запрос отправлен! Мы свяжемся с вами.';
+      msgEl.className = 'bl-wd-msg ok';
+      this.reset();
+      setTimeout(function() { location.reload(); }, 1500);
+    } else {
+      msgEl.textContent = data.error || 'Ошибка';
+      msgEl.className = 'bl-wd-msg err';
+      btn.disabled = false;
+    }
+  } catch(e) {
+    msgEl.textContent = 'Ошибка сети';
+    msgEl.className = 'bl-wd-msg err';
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

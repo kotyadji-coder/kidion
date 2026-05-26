@@ -217,11 +217,14 @@
 
     try {
       // 1. Register parent
+      var payload = { email: email, password: password };
+      var refCode = new URLSearchParams(window.location.search).get('ref') || '{{ ref_code|default("", true) }}';
+      if (refCode) payload.ref_code = refCode;
       var regRes = await fetch('/auth/register', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         credentials: 'same-origin',
-        body: JSON.stringify({ email: email, password: password }),
+        body: JSON.stringify(payload),
       });
       var regData = await regRes.json();
       if (!regRes.ok) {

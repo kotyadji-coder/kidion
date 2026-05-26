@@ -317,12 +317,36 @@ def _init_schema(conn: sqlite3.Connection) -> None:
             UNIQUE(subject, grade, topic)
         );
 
+        CREATE TABLE IF NOT EXISTS blogger_applications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            telegram TEXT NOT NULL DEFAULT '',
+            social_url TEXT NOT NULL DEFAULT '',
+            subscribers TEXT NOT NULL DEFAULT '',
+            message TEXT NOT NULL DEFAULT '',
+            status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'approved', 'rejected')),
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS withdrawal_requests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL REFERENCES users(id),
+            amount_rub REAL NOT NULL,
+            payment_details TEXT NOT NULL DEFAULT '',
+            status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'approved', 'paid', 'rejected')),
+            admin_note TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            processed_at TEXT
+        );
+
         CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
         CREATE INDEX IF NOT EXISTS idx_users_ref_code ON users(ref_code);
         CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id);
         CREATE INDEX IF NOT EXISTS idx_payments_yk_id ON payments(yookassa_payment_id);
         CREATE INDEX IF NOT EXISTS idx_generations_user ON generations(user_id);
         CREATE INDEX IF NOT EXISTS idx_referrals_referred ON referrals(referred_id);
+        CREATE INDEX IF NOT EXISTS idx_withdrawal_user ON withdrawal_requests(user_id);
     """)
     conn.commit()
 
@@ -383,6 +407,13 @@ def _init_schema(conn: sqlite3.Connection) -> None:
     except sqlite3.OperationalError:
         pass
 
+    # Add promo_code to users (migration-safe)
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN promo_code TEXT")
+        conn.commit()
+    except sqlite3.OperationalError:
+        pass
+
     # Add images_remaining and payment_id to chat_subscriptions (migration-safe)
     for col, defn in [
         ("images_remaining", "INTEGER NOT NULL DEFAULT 0"),
@@ -437,6 +468,17 @@ def _migrate(conn: sqlite3.Connection) -> None:
     if "hidden_at" not in msg_cols:
         conn.execute("ALTER TABLE kid_chat_messages ADD COLUMN hidden_at TEXT")
         conn.commit()
+
+    # Add promo_code column to users (for bloggers with custom codes like "MASHA")
+    user_cols2 = [row[1] for row in conn.execute("PRAGMA table_info(users)").fetchall()]
+    if "promo_code" not in user_cols2:
+        conn.execute("ALTER TABLE users ADD COLUMN promo_code TEXT")
+        conn.commit()
+        try:
+            conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_promo_code ON users(promo_code) WHERE promo_code IS NOT NULL")
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass
 
 
 # ---------------------------------------------------------------------------
@@ -2142,3 +2184,138 @@ def save_topic_image(conn: sqlite3.Connection, subject: str, grade: int, topic: 
         (subject, grade, topic, image_filename, _now()),
     )
     conn.commit()
+
+
+# ---------------------------------------------------------------------------
+# Referral stats
+# ---------------------------------------------------------------------------
+
+def get_user_by_promo_code(conn: sqlite3.Connection, promo_code: str) -> dict | None:
+    row = conn.execute(
+        "SELECT * FROM users WHERE promo_code = ?", (promo_code,)
+    ).fetchone()
+    return dict(row) if row else None
+
+
+def get_referral_stats(conn: sqlite3.Connection, user_id: int) -> dict:
+    """Return referral stats for a user: total invited, paid, crystals earned."""
+    rows = conn.execute(
+        """SELECT r.*, u.email, u.created_at AS user_created_at,
+                  (SELECT COUNT(*) FROM payments p WHERE p.user_id = r.referred_id AND p.status = 'succeeded') AS paid_count
+           FROM referrals r
+           JOIN users u ON u.id = r.referred_id
+           WHERE r.referrer_id = ?
+           ORDER BY r.created_at DESC""",
+        (user_id,),
+    ).fetchall()
+    friends = [dict(r) for r in rows]
+    total = len(friends)
+    paid = sum(1 for f in friends if f["paid_count"] > 0)
+    # Crystals earned from referrals
+    row = conn.execute(
+        "SELECT COALESCE(SUM(delta), 0) FROM transactions WHERE user_id = ? AND reason = 'referral_bonus'",
+        (user_id,),
+    ).fetchone()
+    crystals_earned = row[0] if row else 0
+    return {"friends": friends, "total": total, "paid": paid, "crystals_earned": crystals_earned}
+
+
+# ---------------------------------------------------------------------------
+# Blogger applications
+# ---------------------------------------------------------------------------
+
+def create_blogger_application(
+    conn: sqlite3.Connection,
+    name: str,
+    email: str,
+    telegram: str,
+    social_url: str,
+    subscribers: str,
+    message: str,
+) -> int:
+    cursor = conn.execute(
+        "INSERT INTO blogger_applications (name, email, telegram, social_url, subscribers, message, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (name, email, telegram, social_url, subscribers, message, _now()),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def get_blogger_applications(conn: sqlite3.Connection, status: str | None = None) -> list[dict]:
+    if status:
+        rows = conn.execute(
+            "SELECT * FROM blogger_applications WHERE status = ? ORDER BY created_at DESC",
+            (status,),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT * FROM blogger_applications ORDER BY created_at DESC"
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def update_blogger_application_status(conn: sqlite3.Connection, app_id: int, status: str) -> bool:
+    cursor = conn.execute(
+        "UPDATE blogger_applications SET status = ? WHERE id = ?", (status, app_id)
+    )
+    conn.commit()
+    return cursor.rowcount == 1
+
+
+def set_user_blogger(conn: sqlite3.Connection, user_id: int, promo_code: str) -> None:
+    conn.execute(
+        "UPDATE users SET is_blogger = 1, promo_code = ? WHERE id = ?",
+        (promo_code, user_id),
+    )
+    conn.commit()
+
+
+# ---------------------------------------------------------------------------
+# Withdrawal requests
+# ---------------------------------------------------------------------------
+
+def create_withdrawal_request(
+    conn: sqlite3.Connection,
+    user_id: int,
+    amount_rub: float,
+    payment_details: str,
+) -> int:
+    cursor = conn.execute(
+        "INSERT INTO withdrawal_requests (user_id, amount_rub, payment_details, created_at) "
+        "VALUES (?, ?, ?, ?)",
+        (user_id, amount_rub, payment_details, _now()),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def get_withdrawal_requests(conn: sqlite3.Connection, status: str | None = None, user_id: int | None = None) -> list[dict]:
+    query = "SELECT w.*, u.email FROM withdrawal_requests w JOIN users u ON u.id = w.user_id WHERE 1=1"
+    params = []
+    if status:
+        query += " AND w.status = ?"
+        params.append(status)
+    if user_id:
+        query += " AND w.user_id = ?"
+        params.append(user_id)
+    query += " ORDER BY w.created_at DESC"
+    rows = conn.execute(query, params).fetchall()
+    return [dict(r) for r in rows]
+
+
+def update_withdrawal_status(conn: sqlite3.Connection, req_id: int, status: str, admin_note: str = "") -> bool:
+    cursor = conn.execute(
+        "UPDATE withdrawal_requests SET status = ?, admin_note = ?, processed_at = ? WHERE id = ?",
+        (status, admin_note, _now(), req_id),
+    )
+    if status == "paid":
+        # Deduct from blogger balance
+        req = conn.execute("SELECT * FROM withdrawal_requests WHERE id = ?", (req_id,)).fetchone()
+        if req:
+            conn.execute(
+                "UPDATE users SET blogger_balance_rub = MAX(0, blogger_balance_rub - ?) WHERE id = ?",
+                (req["amount_rub"], req["user_id"]),
+            )
+    conn.commit()
+    return cursor.rowcount == 1

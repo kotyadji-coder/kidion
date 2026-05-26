@@ -10,6 +10,7 @@ from db import (
     create_referral,
     get_referral_by_referred,
     get_user_by_ref_code,
+    get_user_by_promo_code,
     insert_transaction,
     update_blogger_balance,
     update_crystals,
@@ -26,16 +27,26 @@ def generate_ref_code(prefix: str = "U") -> str:
     return f"{prefix}-{suffix}"
 
 
+def find_referrer(conn: sqlite3.Connection, code: str):
+    """Find referrer by ref_code or promo_code. Returns user dict or None."""
+    if not code:
+        return None
+    referrer = get_user_by_ref_code(conn, code)
+    if referrer is None:
+        referrer = get_user_by_promo_code(conn, code)
+    return referrer
+
+
 def process_registration_referral(
     conn: sqlite3.Connection,
     referred_user_id: int,
     ref_code: str,
 ) -> bool:
     """
-    Find the referrer by ref_code, create a referrals record.
+    Find the referrer by ref_code or promo_code, create a referrals record.
     Returns True if referrer was found and record created, False otherwise.
     """
-    referrer = get_user_by_ref_code(conn, ref_code)
+    referrer = find_referrer(conn, ref_code)
     if referrer is None:
         return False
     create_referral(conn, referrer["id"], referred_user_id)

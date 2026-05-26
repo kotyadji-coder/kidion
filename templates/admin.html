@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Админ CRM — Киди</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Geist', -apple-system, sans-serif; background: #f5f5f7; color: #1a1a1a; min-height: 100vh; }
+
+  .adm-top { background: #fff; border-bottom: 1px solid #e5e5e5; padding: 16px 24px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; }
+  .adm-top h1 { font-size: 18px; font-weight: 700; }
+  .adm-top-email { font-size: 13px; color: #888; margin-left: auto; }
+
+  .adm-tabs { display: flex; gap: 4px; background: #fff; border-bottom: 1px solid #e5e5e5; padding: 0 24px; }
+  .adm-tab { padding: 12px 18px; font-size: 14px; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; color: #666; background: none; border-top: 0; border-left: 0; border-right: 0; font-family: inherit; }
+  .adm-tab.active { color: #7c3aed; border-bottom-color: #7c3aed; }
+  .adm-tab:hover { color: #333; }
+
+  .adm-content { max-width: 900px; margin: 0 auto; padding: 24px; }
+
+  .adm-section { display: none; }
+  .adm-section.active { display: block; }
+
+  /* Cards */
+  .adm-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 14px; padding: 20px; margin-bottom: 12px; }
+  .adm-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .adm-card-title { font-size: 16px; font-weight: 600; }
+  .adm-card-date { font-size: 12px; color: #999; }
+  .adm-card-row { display: flex; gap: 8px; flex-wrap: wrap; font-size: 13px; color: #555; margin-bottom: 4px; }
+  .adm-card-label { font-weight: 600; color: #333; min-width: 80px; }
+  .adm-card-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+  .adm-badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
+  .adm-badge.pending { background: #fef3c7; color: #92400e; }
+  .adm-badge.approved { background: #d1fae5; color: #065f46; }
+  .adm-badge.rejected { background: #fee2e2; color: #991b1b; }
+  .adm-badge.paid { background: #d1fae5; color: #065f46; }
+
+  .adm-btn { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid #ddd; background: #fff; font-family: inherit; transition: background .12s; }
+  .adm-btn:hover { background: #f5f5f5; }
+  .adm-btn.green { background: #d1fae5; border-color: #a7f3d0; color: #065f46; }
+  .adm-btn.green:hover { background: #a7f3d0; }
+  .adm-btn.red { background: #fee2e2; border-color: #fecaca; color: #991b1b; }
+  .adm-btn.red:hover { background: #fecaca; }
+  .adm-btn.blue { background: #dbeafe; border-color: #bfdbfe; color: #1e40af; }
+  .adm-btn.blue:hover { background: #bfdbfe; }
+
+  .adm-empty { text-align: center; padding: 40px; color: #999; font-size: 14px; }
+
+  /* Stats */
+  .adm-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .adm-stat { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 18px; text-align: center; }
+  .adm-stat-num { font-size: 32px; font-weight: 700; }
+  .adm-stat-label { font-size: 12px; color: #888; margin-top: 2px; }
+
+  /* Promo code input */
+  .adm-promo-row { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+  .adm-promo-input { height: 34px; padding: 0 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; width: 140px; text-transform: uppercase; }
+  .adm-promo-email { height: 34px; padding: 0 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; width: 200px; }
+</style>
+</head>
+<body>
+
+<div class="adm-top">
+  <h1>Киди CRM</h1>
+  <span class="adm-top-email">{{ user.email }}</span>
+</div>
+
+<div class="adm-tabs">
+  <button class="adm-tab active" data-tab="apps">Заявки блогеров ({{ applications|selectattr('status','equalto','pending')|list|length }})</button>
+  <button class="adm-tab" data-tab="withdrawals">Выводы ({{ withdrawals|selectattr('status','equalto','pending')|list|length }})</button>
+  <button class="adm-tab" data-tab="stats">Статистика</button>
+</div>
+
+<div class="adm-content">
+  <!-- Blogger Applications -->
+  <div class="adm-section active" id="sec-apps">
+    {% if applications %}
+      {% for app in applications %}
+      <div class="adm-card" id="app-{{ app.id }}">
+        <div class="adm-card-head">
+          <div>
+            <div class="adm-card-title">{{ app.name }}</div>
+            <div class="adm-card-date">{{ app.created_at[:16] }}</div>
+          </div>
+          <span class="adm-badge {{ app.status }}">{{ app.status }}</span>
+        </div>
+        <div class="adm-card-row"><span class="adm-card-label">Email:</span> {{ app.email }}</div>
+        <div class="adm-card-row"><span class="adm-card-label">Telegram:</span> {{ app.telegram }}</div>
+        <div class="adm-card-row"><span class="adm-card-label">Канал:</span> <a href="{{ app.social_url }}" target="_blank">{{ app.social_url }}</a></div>
+        <div class="adm-card-row"><span class="adm-card-label">Подписчики:</span> {{ app.subscribers }}</div>
+        {% if app.message %}
+        <div class="adm-card-row"><span class="adm-card-label">Сообщение:</span> {{ app.message }}</div>
+        {% endif %}
+        {% if app.status == 'pending' %}
+        <div class="adm-card-actions">
+          <div class="adm-promo-row">
+            <input class="adm-promo-email" placeholder="Email пользователя" id="app-email-{{ app.id }}" value="{{ app.email }}">
+            <input class="adm-promo-input" placeholder="ПРОМОКОД" id="app-promo-{{ app.id }}">
+            <button class="adm-btn green" onclick="approveApp({{ app.id }})">Одобрить</button>
+            <button class="adm-btn red" onclick="rejectApp({{ app.id }})">Отклонить</button>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="adm-empty">Нет заявок</div>
+    {% endif %}
+  </div>
+
+  <!-- Withdrawal Requests -->
+  <div class="adm-section" id="sec-withdrawals">
+    {% if withdrawals %}
+      {% for w in withdrawals %}
+      <div class="adm-card" id="wd-{{ w.id }}">
+        <div class="adm-card-head">
+          <div>
+            <div class="adm-card-title">{{ "%.2f"|format(w.amount_rub) }} rub — {{ w.email }}</div>
+            <div class="adm-card-date">{{ w.created_at[:16] }}</div>
+          </div>
+          <span class="adm-badge {{ w.status }}">{{ w.status }}</span>
+        </div>
+        <div class="adm-card-row"><span class="adm-card-label">Реквизиты:</span> {{ w.payment_details }}</div>
+        {% if w.admin_note %}
+        <div class="adm-card-row"><span class="adm-card-label">Заметка:</span> {{ w.admin_note }}</div>
+        {% endif %}
+        {% if w.status == 'pending' %}
+        <div class="adm-card-actions">
+          <button class="adm-btn green" onclick="processWd({{ w.id }}, 'paid')">Выплачено</button>
+          <button class="adm-btn red" onclick="processWd({{ w.id }}, 'rejected')">Отклонить</button>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="adm-empty">Нет запросов на вывод</div>
+    {% endif %}
+  </div>
+
+  <!-- Stats -->
+  <div class="adm-section" id="sec-stats">
+    <div class="adm-stats">
+      <div class="adm-stat">
+        <div class="adm-stat-num">{{ total_users }}</div>
+        <div class="adm-stat-label">Пользователей</div>
+      </div>
+      <div class="adm-stat">
+        <div class="adm-stat-num">{{ total_bloggers }}</div>
+        <div class="adm-stat-label">Блогеров</div>
+      </div>
+      <div class="adm-stat">
+        <div class="adm-stat-num">{{ total_referrals }}</div>
+        <div class="adm-stat-label">Рефералов</div>
+      </div>
+      <div class="adm-stat">
+        <div class="adm-stat-num">{{ "%.0f"|format(total_blogger_balance) }}</div>
+        <div class="adm-stat-label">Баланс блогеров (rub)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Tabs
+document.querySelectorAll('.adm-tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.adm-tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.adm-section').forEach(function(s) { s.classList.remove('active'); });
+    tab.classList.add('active');
+    document.getElementById('sec-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+async function approveApp(id) {
+  var email = document.getElementById('app-email-' + id).value.trim();
+  var promo = document.getElementById('app-promo-' + id).value.trim().toUpperCase();
+  if (!promo) { alert('Введите промо-код'); return; }
+  if (!email) { alert('Введите email пользователя'); return; }
+  var res = await fetch('/api/admin/applications/' + id + '/approve', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    credentials: 'same-origin',
+    body: JSON.stringify({ promo_code: promo, email: email }),
+  });
+  var data = await res.json();
+  if (res.ok) { location.reload(); }
+  else { alert(data.error || 'Ошибка'); }
+}
+
+async function rejectApp(id) {
+  var res = await fetch('/api/admin/applications/' + id + '/reject', {
+    method: 'POST', credentials: 'same-origin',
+  });
+  if (res.ok) { location.reload(); }
+  else { alert('Ошибка'); }
+}
+
+async function processWd(id, status) {
+  var note = status === 'rejected' ? prompt('Причина отклонения (необязательно):', '') : '';
+  var res = await fetch('/api/admin/withdrawals/' + id, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    credentials: 'same-origin',
+    body: JSON.stringify({ status: status, admin_note: note || '' }),
+  });
+  if (res.ok) { location.reload(); }
+  else { alert('Ошибка'); }
+}
+</script>
+</body>
+</html>

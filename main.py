@@ -115,7 +115,7 @@ from db import (
     get_kid_chats_by_child,
 )
 from payments import PACKAGES, create_prodamus_payment, create_prodamus_subscription_payment, handle_webhook
-from referral import generate_ref_code, process_registration_referral
+from referral import generate_ref_code, find_referrer, process_registration_referral
 import services.generation
 from services.universe import generate_universe, generate_character_image, generate_shop_items
 from services.kid_chat import SPARK as CHAT_SPARK, sanitize_message, generate_chat_response
@@ -450,9 +450,9 @@ async def register(request: Request):
     if get_user_by_email(conn, email):
         return JSONResponse({"error": "email_taken"}, status_code=400)
 
-    # Determine crystals and referral
+    # Determine crystals and referral (supports both ref_code and promo_code)
     referred_by = None
-    referrer = get_user_by_ref_code(conn, ref_code_input) if ref_code_input else None
+    referrer = find_referrer(conn, ref_code_input) if ref_code_input else None
     crystals = 120 if referrer else 60
     if referrer:
         referred_by = referrer["id"]
@@ -3512,11 +3512,11 @@ async def kid_chat_page(request: Request):
 
 
 @app.get("/chat/register", response_class=HTMLResponse)
-async def spark_register_page(request: Request):
+async def spark_register_page(request: Request, ref: str = ""):
     """Spark Chat registration (simplified, for chat-only users)."""
     if templates is None:
         return HTMLResponse("<h1>Register</h1>")
-    return templates.TemplateResponse(request, "chat/register.html", {})
+    return templates.TemplateResponse(request, "chat/register.html", {"ref_code": ref})
 
 
 @app.get("/chat/login", response_class=HTMLResponse)
@@ -3562,13 +3562,19 @@ async def spark_subscribe_page(request: Request):
     subscription = get_active_chat_subscription(conn, user["id"])
     payment_status = request.query_params.get("status", "")
 
+    ref_code = user.get("promo_code") or user["ref_code"]
+    host = "chat.kidion.ru" if _is_chat_subdomain(request) else "kidion.ru"
+    ref_link = f"https://{host}/register?ref={ref_code}"
+
     return templates.TemplateResponse(
         request,
         "chat/subscribe.html",
         {
+            "user": user,
             "crystals": user["crystals"],
             "subscription": dict(subscription) if subscription else None,
             "payment_status": payment_status,
+            "ref_link": ref_link,
         },
     )
 
@@ -4532,6 +4538,217 @@ async def evals_dashboard(request: Request, run_id: int | None = None):
             "run_id": run_id,
         },
     )
+
+
+# ---------------------------------------------------------------------------
+# Referral, Partners, Blogger, Admin CRM
+# ---------------------------------------------------------------------------
+
+ADMIN_EMAILS = [e.strip() for e in os.environ.get("ADMIN_EMAILS", "neskdog@yandex.ru").split(",") if e.strip()]
+
+
+def _is_admin(user: dict) -> bool:
+    return user and user.get("email", "") in ADMIN_EMAILS
+
+
+@app.get("/partners", response_class=HTMLResponse)
+async def partners_page(request: Request):
+    if templates is None:
+        return HTMLResponse("<h1>Partners</h1>")
+    return templates.TemplateResponse(request, "chat/partners.html", {})
+
+
+@app.post("/api/partners/apply")
+async def partners_apply(request: Request):
+    body = await request.json()
+    name = body.get("name", "").strip()
+    email = body.get("email", "").strip()
+    telegram = body.get("telegram", "").strip()
+    social_url = body.get("social_url", "").strip()
+    subscribers = body.get("subscribers", "").strip()
+    message = body.get("message", "").strip()
+
+    if not name or not email or not telegram or not social_url:
+        return JSONResponse({"error": "Заполните все обязательные поля"}, status_code=400)
+
+    conn = get_db_connection()
+    from db import create_blogger_application
+    app_id = create_blogger_application(conn, name, email, telegram, social_url, subscribers, message)
+
+    # Notify admin via Telegram
+    _notify_admin_error(
+        f"📝 Новая заявка блогера #{app_id}\n"
+        f"Имя: {name}\nEmail: {email}\nTelegram: {telegram}\n"
+        f"Канал: {social_url}\nПодписчики: {subscribers}"
+    )
+
+    return JSONResponse({"ok": True, "id": app_id})
+
+
+@app.get("/friends", response_class=HTMLResponse)
+async def friends_page(request: Request):
+    conn = get_db_connection()
+    user = get_current_user(request, conn)
+    if not user:
+        return RedirectResponse(url="/chat/login", status_code=302)
+
+    from db import get_referral_stats
+    stats = get_referral_stats(conn, user["id"])
+    ref_code = user.get("promo_code") or user["ref_code"]
+    host = "chat.kidion.ru" if _is_chat_subdomain(request) else "kidion.ru"
+    ref_link = f"https://{host}/register?ref={ref_code}"
+
+    return templates.TemplateResponse(request, "chat/friends.html", {
+        "user": user, "stats": stats, "ref_link": ref_link,
+    })
+
+
+@app.get("/blogger", response_class=HTMLResponse)
+async def blogger_page(request: Request):
+    conn = get_db_connection()
+    user = get_current_user(request, conn)
+    if not user:
+        return RedirectResponse(url="/chat/login", status_code=302)
+    if not user.get("is_blogger"):
+        return RedirectResponse(url="/friends", status_code=302)
+
+    from db import get_referral_stats, get_withdrawal_requests
+    stats = get_referral_stats(conn, user["id"])
+    withdrawals = get_withdrawal_requests(conn, user_id=user["id"])
+    ref_code = user.get("promo_code") or user["ref_code"]
+    host = "chat.kidion.ru" if _is_chat_subdomain(request) else "kidion.ru"
+    ref_link = f"https://{host}/register?ref={ref_code}"
+
+    return templates.TemplateResponse(request, "chat/blogger.html", {
+        "user": user, "stats": stats, "withdrawals": withdrawals, "ref_link": ref_link,
+    })
+
+
+@app.post("/api/blogger/withdraw")
+async def blogger_withdraw(request: Request):
+    conn = get_db_connection()
+    user = get_current_user(request, conn)
+    if not user:
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    if not user.get("is_blogger"):
+        return JSONResponse({"error": "Not a blogger"}, status_code=403)
+
+    body = await request.json()
+    amount = float(body.get("amount", 0))
+    payment_details = body.get("payment_details", "").strip()
+
+    if amount < 500:
+        return JSONResponse({"error": "Минимальная сумма вывода — 500 руб"}, status_code=400)
+    if amount > user.get("blogger_balance_rub", 0):
+        return JSONResponse({"error": "Недостаточно средств"}, status_code=400)
+    if not payment_details:
+        return JSONResponse({"error": "Укажите реквизиты"}, status_code=400)
+
+    from db import create_withdrawal_request
+    req_id = create_withdrawal_request(conn, user["id"], amount, payment_details)
+
+    _notify_admin_error(
+        f"💸 Запрос на вывод #{req_id}\n"
+        f"Блогер: {user['email']}\n"
+        f"Сумма: {amount:.2f} руб\n"
+        f"Реквизиты: {payment_details[:200]}"
+    )
+
+    return JSONResponse({"ok": True, "id": req_id})
+
+
+# --- Admin CRM ---
+
+@app.get("/admin", response_class=HTMLResponse)
+async def admin_page(request: Request):
+    conn = get_db_connection()
+    user = get_current_user(request, conn)
+    if not user or not _is_admin(user):
+        return RedirectResponse(url="/login", status_code=302)
+
+    from db import get_blogger_applications, get_withdrawal_requests
+    applications = get_blogger_applications(conn)
+    withdrawals = get_withdrawal_requests(conn)
+
+    # Stats
+    total_users = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+    total_bloggers = conn.execute("SELECT COUNT(*) FROM users WHERE is_blogger = 1").fetchone()[0]
+    total_referrals = conn.execute("SELECT COUNT(*) FROM referrals").fetchone()[0]
+    total_blogger_balance = conn.execute("SELECT COALESCE(SUM(blogger_balance_rub), 0) FROM users WHERE is_blogger = 1").fetchone()[0]
+
+    return templates.TemplateResponse(request, "admin.html", {
+        "user": user,
+        "applications": applications,
+        "withdrawals": withdrawals,
+        "total_users": total_users,
+        "total_bloggers": total_bloggers,
+        "total_referrals": total_referrals,
+        "total_blogger_balance": total_blogger_balance,
+    })
+
+
+@app.post("/api/admin/applications/{app_id}/approve")
+async def admin_approve_app(app_id: int, request: Request):
+    conn = get_db_connection()
+    user = get_current_user(request, conn)
+    if not user or not _is_admin(user):
+        return JSONResponse({"error": "Forbidden"}, status_code=403)
+
+    body = await request.json()
+    promo_code = body.get("promo_code", "").strip().upper()
+    blogger_email = body.get("email", "").strip().lower()
+
+    if not promo_code:
+        return JSONResponse({"error": "Промо-код обязателен"}, status_code=400)
+    if not blogger_email:
+        return JSONResponse({"error": "Email обязателен"}, status_code=400)
+
+    # Check promo code uniqueness
+    from db import get_user_by_promo_code, update_blogger_application_status, set_user_blogger
+    if get_user_by_promo_code(conn, promo_code):
+        return JSONResponse({"error": "Промо-код уже занят"}, status_code=400)
+
+    # Find blogger user by email
+    blogger_user = get_user_by_email(conn, blogger_email)
+    if not blogger_user:
+        return JSONResponse({"error": f"Пользователь {blogger_email} не найден"}, status_code=400)
+
+    # Set blogger status + promo code
+    set_user_blogger(conn, blogger_user["id"], promo_code)
+    update_blogger_application_status(conn, app_id, "approved")
+
+    return JSONResponse({"ok": True})
+
+
+@app.post("/api/admin/applications/{app_id}/reject")
+async def admin_reject_app(app_id: int, request: Request):
+    conn = get_db_connection()
+    user = get_current_user(request, conn)
+    if not user or not _is_admin(user):
+        return JSONResponse({"error": "Forbidden"}, status_code=403)
+
+    from db import update_blogger_application_status
+    update_blogger_application_status(conn, app_id, "rejected")
+    return JSONResponse({"ok": True})
+
+
+@app.post("/api/admin/withdrawals/{req_id}")
+async def admin_process_withdrawal(req_id: int, request: Request):
+    conn = get_db_connection()
+    user = get_current_user(request, conn)
+    if not user or not _is_admin(user):
+        return JSONResponse({"error": "Forbidden"}, status_code=403)
+
+    body = await request.json()
+    status = body.get("status", "")
+    admin_note = body.get("admin_note", "")
+
+    if status not in ("paid", "rejected"):
+        return JSONResponse({"error": "Invalid status"}, status_code=400)
+
+    from db import update_withdrawal_status
+    update_withdrawal_status(conn, req_id, status, admin_note)
+    return JSONResponse({"ok": True})
 
 
 _eval_running = {"active": False, "message": ""}

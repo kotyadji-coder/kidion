@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Друзья — Киди</title>
+<link rel="icon" href="/static/spark/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/spark/chat.css">
+<style>
+  body { margin: 0; min-height: 100vh; background: var(--bg); font-family: var(--font); color: var(--text); }
+  *, *::before, *::after { box-sizing: border-box; }
+
+  .fr-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .fr-header-back {
+    background: none; border: 0; padding: 4px; cursor: pointer;
+    color: var(--spark-violet); display: flex; align-items: center;
+  }
+  .fr-header-title { flex: 1; text-align: center; font-size: 17px; font-weight: 600; margin: 0; }
+  .fr-header-spacer { width: 28px; }
+  @media (min-width: 769px) { .fr-header { display: none; } }
+
+  .fr-back-desktop {
+    display: none; padding: 20px 20px 0; max-width: 640px; margin: 0 auto;
+  }
+  .fr-back-desktop a {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 14px; font-weight: 500; color: var(--spark-violet); text-decoration: none;
+  }
+  @media (min-width: 769px) { .fr-back-desktop { display: block; } }
+
+  .fr-page { padding: 28px 18px 48px; max-width: 640px; margin: 0 auto; }
+
+  /* Stats row */
+  .fr-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+  .fr-stat {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 18px 14px; text-align: center;
+  }
+  .fr-stat-num { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+  .fr-stat-label { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+  /* Share section */
+  .fr-share {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 22px 20px; margin-bottom: 24px;
+  }
+  .fr-share h2 { margin: 0 0 6px; font-size: 17px; font-weight: 600; }
+  .fr-share p { margin: 0 0 14px; font-size: 13px; color: var(--text-2); line-height: 1.5; }
+  .fr-link-row { display: flex; gap: 8px; }
+  .fr-link-input {
+    flex: 1; height: 42px; padding: 0 12px;
+    border: 1px solid var(--border); border-radius: 10px;
+    font-size: 14px; font-family: inherit; background: var(--surface-2); color: var(--text);
+    outline: none; min-width: 0;
+  }
+  .fr-link-copy {
+    height: 42px; padding: 0 16px; border: 1px solid var(--border); border-radius: 10px;
+    background: var(--surface-2); font-size: 13px; font-weight: 600; font-family: inherit;
+    cursor: pointer; color: var(--text-2); white-space: nowrap;
+    transition: background .12s;
+  }
+  .fr-link-copy:hover { background: var(--bg); }
+
+  /* Friends list */
+  .fr-list-title { font-size: 15px; font-weight: 600; margin: 0 0 12px; }
+  .fr-empty { font-size: 14px; color: var(--text-3); text-align: center; padding: 32px 0; }
+  .fr-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; margin-bottom: 8px;
+  }
+  .fr-item-email { font-size: 14px; font-weight: 500; }
+  .fr-item-date { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+  .fr-item-badge {
+    font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+  }
+  .fr-item-badge.paid { background: oklch(0.96 0.04 158); color: oklch(0.40 0.12 158); }
+  .fr-item-badge.free { background: oklch(0.96 0.02 80); color: oklch(0.50 0.10 80); }
+</style>
+</head>
+<body>
+
+<div class="fr-header">
+  <button class="fr-header-back" onclick="history.back()">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15l-5-5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  <h1 class="fr-header-title">Друзья</h1>
+  <div class="fr-header-spacer"></div>
+</div>
+
+<div class="fr-back-desktop">
+  <a href="/chat/subscribe">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12l-4-4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Назад
+  </a>
+</div>
+
+<div class="fr-page">
+  <div class="fr-stats">
+    <div class="fr-stat">
+      <div class="fr-stat-num">{{ stats.total }}</div>
+      <div class="fr-stat-label">Друзей</div>
+    </div>
+    <div class="fr-stat">
+      <div class="fr-stat-num">{{ stats.paid }}</div>
+      <div class="fr-stat-label">Оплатили</div>
+    </div>
+    <div class="fr-stat">
+      <div class="fr-stat-num">{{ stats.crystals_earned }}</div>
+      <div class="fr-stat-label">Кристаллов</div>
+    </div>
+  </div>
+
+  <div class="fr-share">
+    <h2>Пригласите друзей</h2>
+    <p>Поделитесь ссылкой — каждый получит по 60 кристаллов при регистрации. А когда друг оплатит — вы получите ещё 120.</p>
+    <div class="fr-link-row">
+      <input class="fr-link-input" id="ref-link" value="{{ ref_link }}" readonly>
+      <button class="fr-link-copy" id="copy-btn">Скопировать</button>
+    </div>
+  </div>
+
+  <h3 class="fr-list-title">Приглашённые друзья</h3>
+  {% if stats.friends %}
+    {% for f in stats.friends %}
+    <div class="fr-item">
+      <div>
+        <div class="fr-item-email">{{ f.email[:3] }}***{{ f.email[f.email.index('@'):] }}</div>
+        <div class="fr-item-date">{{ f.user_created_at[:10] }}</div>
+      </div>
+      {% if f.paid_count > 0 %}
+      <span class="fr-item-badge paid">Оплатил</span>
+      {% else %}
+      <span class="fr-item-badge free">Бесплатный</span>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="fr-empty">Пока нет приглашённых друзей</div>
+  {% endif %}
+</div>
+
+<script>
+document.getElementById('copy-btn').addEventListener('click', function() {
+  var input = document.getElementById('ref-link');
+  navigator.clipboard.writeText(input.value).then(function() {
+    document.getElementById('copy-btn').textContent = 'Скопировано!';
+    setTimeout(function() { document.getElementById('copy-btn').textContent = 'Скопировать'; }, 2000);
+  });
+});
+</script>
+</body>
+</html>
