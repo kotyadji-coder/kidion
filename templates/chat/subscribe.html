@@ -10,143 +10,224 @@
 <link rel="icon" href="/static/spark/favicon.ico">
 <link rel="apple-touch-icon" href="/static/spark/apple-touch-icon.png">
 <link rel="stylesheet" href="/static/spark/chat.css">
-<link rel="stylesheet" href="/static/spark/landing.css">
 <style>
-  body { min-height: 100vh; display: flex; flex-direction: column; }
-  .sub-page { flex: 1; padding: 40px 20px 60px; max-width: 840px; margin: 0 auto; width: 100%; }
-  .sub-back { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-2); text-decoration: none; margin-bottom: 24px; }
-  .sub-back:hover { color: var(--text); }
-  .sub-head { text-align: center; margin-bottom: 36px; }
-  .sub-h1 { margin: 0 0 8px; font-size: 28px; font-weight: 600; letter-spacing: -0.028em; }
-  @media (min-width: 769px) { .sub-h1 { font-size: 36px; } }
-  .sub-h1-sub { margin: 0; font-size: 15px; color: var(--text-2); line-height: 1.5; }
-  .sub-balance { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; font-size: 14px; font-weight: 600; margin-top: 16px; }
-  .sub-balance-icon { font-size: 16px; }
+  body { margin: 0; min-height: 100vh; background: var(--bg); font-family: var(--font); color: var(--text); }
+  *, *::before, *::after { box-sizing: border-box; }
 
-  /* Status card */
-  .sub-status { background: var(--spark-violet-soft); border: 1px solid var(--spark-violet-border); border-radius: 16px; padding: 20px; margin-bottom: 28px; text-align: center; }
-  .sub-status-label { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--spark-violet-ink); margin: 0 0 4px; }
-  .sub-status-value { font-size: 18px; font-weight: 600; color: var(--text); margin: 0; }
-  .sub-status-expires { font-size: 13px; color: var(--text-2); margin: 4px 0 0; }
+  /* Mobile header (Telegram-style) */
+  .sub-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .sub-header-back {
+    background: none; border: 0; padding: 4px; cursor: pointer;
+    color: var(--spark-violet); display: flex; align-items: center; flex: 0 0 28px;
+  }
+  .sub-header-title { flex: 1; text-align: center; font-size: 17px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  .sub-header-spacer { width: 28px; flex: 0 0 28px; }
+  @media (min-width: 769px) { .sub-header { display: none; } }
 
-  /* Buy section */
-  .sub-buy { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; }
-  .sub-buy-price { font-size: 48px; font-weight: 600; letter-spacing: -0.03em; background: var(--spark-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .sub-buy-unit { font-size: 16px; color: var(--text-3); font-weight: 500; }
-  .sub-buy-desc { font-size: 14px; color: var(--text-2); line-height: 1.5; max-width: 400px; }
+  /* Desktop back link */
+  .sub-back-desktop {
+    display: none; padding: 20px 20px 0; max-width: 720px; margin: 0 auto;
+  }
+  .sub-back-desktop a {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 14px; font-weight: 500; color: var(--spark-violet); text-decoration: none;
+  }
+  .sub-back-desktop a:hover { text-decoration: underline; }
+  @media (min-width: 769px) { .sub-back-desktop { display: block; } }
 
-  .sub-features { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; max-width: 400px; width: 100%; }
-  .sub-feat { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text); padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
-  .sub-feat-icon { flex: 0 0 20px; width: 20px; height: 20px; border-radius: 50%; background: var(--spark-violet-soft); color: var(--spark-violet-ink); display: grid; place-items: center; }
+  /* Page content */
+  .sub-page { padding: 28px 18px 48px; max-width: 720px; margin: 0 auto; }
+  @media (min-width: 769px) { .sub-page { padding: 32px 20px 60px; } }
 
-  .sub-buy-btn { margin-top: 8px; }
-  .sub-error { color: oklch(0.55 0.2 25); font-size: 13px; margin-top: 8px; display: none; }
-  .sub-success { color: oklch(0.45 0.15 158); font-size: 14px; font-weight: 600; display: none; }
+  /* Subscription card */
+  .sub-card {
+    background: var(--surface);
+    border: 2px solid var(--spark-violet-border);
+    border-radius: 20px;
+    padding: 28px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .sub-card::before {
+    content: "";
+    position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: var(--spark-grad);
+  }
+  .sub-card-badge {
+    display: inline-block;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    color: white; background: var(--spark-grad);
+    padding: 4px 12px; border-radius: 999px;
+    margin-bottom: 16px;
+  }
+  .sub-card h2 {
+    margin: 0 0 6px; font-size: 24px; font-weight: 700; letter-spacing: -0.02em;
+  }
+  @media (min-width: 769px) { .sub-card h2 { font-size: 28px; } }
+  .sub-card-sub { margin: 0 0 20px; font-size: 14px; color: var(--text-2); line-height: 1.5; }
+
+  .sub-price { display: flex; align-items: baseline; gap: 6px; margin-bottom: 24px; }
+  .sub-price-num {
+    font-size: 48px; font-weight: 700; letter-spacing: -0.03em;
+    background: var(--spark-grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sub-price-unit { font-size: 18px; color: var(--text-3); font-weight: 500; }
+
+  .sub-feats { list-style: none; padding: 0; margin: 0 0 24px; display: flex; flex-direction: column; gap: 12px; }
+  .sub-feat {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 15px; color: var(--text); line-height: 1.4;
+  }
+  .sub-feat-icon {
+    width: 32px; height: 32px; border-radius: 10px; flex: 0 0 32px;
+    display: grid; place-items: center;
+    background: var(--spark-violet-soft); color: var(--spark-violet-ink);
+    font-size: 16px;
+  }
+
+  .sub-cta {
+    display: block; width: 100%; padding: 16px;
+    background: var(--spark-grad); color: white; border: 0; border-radius: 14px;
+    font-size: 17px; font-weight: 600; font-family: var(--font);
+    cursor: pointer; text-align: center; text-decoration: none;
+    transition: opacity .12s;
+  }
+  .sub-cta:hover { opacity: 0.92; }
+  .sub-cta:disabled { opacity: 0.6; cursor: default; }
+  .sub-error { color: oklch(0.55 0.2 25); font-size: 13px; margin-top: 10px; text-align: center; display: none; }
+  .sub-success { color: oklch(0.45 0.15 158); font-size: 15px; font-weight: 600; text-align: center; display: none; margin-top: 8px; }
+
+  /* Active subscription status */
+  .sub-active {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px; border-radius: 14px;
+    background: oklch(0.96 0.04 158); border: 1px solid oklch(0.88 0.08 158);
+    margin-top: 4px;
+  }
+  .sub-active-dot { width: 10px; height: 10px; border-radius: 50%; background: oklch(0.55 0.19 150); flex: 0 0 10px; }
+  .sub-active-text { font-size: 15px; font-weight: 600; color: oklch(0.35 0.12 158); }
+  .sub-active-expires { font-size: 13px; color: oklch(0.50 0.08 158); margin-top: 2px; }
 
   /* Crystal packages */
-  .sub-packages { margin-top: 32px; text-align: center; }
-  .sub-packages-h { font-size: 16px; font-weight: 600; margin: 0 0 14px; }
-  .sub-packages-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-width: 400px; margin: 0 auto; }
-  @media (min-width: 769px) { .sub-packages-grid { grid-template-columns: repeat(4, 1fr); max-width: 600px; } }
-  .sub-pkg { padding: 14px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; text-align: center; cursor: pointer; transition: border-color .12s, transform .08s; text-decoration: none; color: var(--text); display: block; }
-  .sub-pkg:hover { border-color: var(--spark-violet-border); transform: translateY(-1px); }
-  .sub-pkg-crystals { font-size: 20px; font-weight: 600; }
-  .sub-pkg-price { font-size: 13px; color: var(--text-2); margin-top: 2px; }
+  .sub-crystals { margin-top: 32px; }
+  .sub-crystals h3 {
+    margin: 0 0 6px; font-size: 20px; font-weight: 700; letter-spacing: -0.02em;
+  }
+  .sub-crystals-sub { margin: 0 0 16px; font-size: 14px; color: var(--text-2); line-height: 1.5; }
+  .sub-pkg-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+  }
+  @media (min-width: 769px) { .sub-pkg-grid { grid-template-columns: repeat(4, 1fr); } }
+  .sub-pkg {
+    padding: 16px 12px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px;
+    text-align: center; cursor: pointer; text-decoration: none; color: var(--text);
+    transition: border-color .12s, transform .08s; display: block;
+  }
+  .sub-pkg:hover { border-color: var(--spark-violet-border); transform: translateY(-2px); }
+  .sub-pkg-amount { font-size: 22px; font-weight: 700; }
+  .sub-pkg-price { font-size: 14px; color: var(--text-2); margin-top: 4px; font-weight: 500; }
+  .sub-pkg-images { font-size: 12px; color: var(--text-3); margin-top: 4px; }
 </style>
 </head>
 <body>
-<div class="sp">
-  <!-- Nav -->
-  <nav class="sp-nav">
-    <a class="sp-brand" href="/">
-      <span class="sp-brand-mark">K</span>
-      <span>Киди</span>
-    </a>
-    <div class="sp-nav-cta">
-      <a class="sp-btn sp-btn-ghost" href="/chat">Назад в чат</a>
-    </div>
-  </nav>
 
-  <div class="sub-page">
-    <div class="sub-head">
-      <h1 class="sub-h1">Подписка Киди</h1>
-      <p class="sub-h1-sub">Все персонажи, голосовые сообщения, 30 картинок от AI и еженедельный отчёт</p>
-    </div>
+<!-- Mobile header -->
+<div class="sub-header">
+  <button class="sub-header-back" onclick="history.back()">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15l-5-5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  <h1 class="sub-header-title">Подписка</h1>
+  <div class="sub-header-spacer"></div>
+</div>
+
+<!-- Desktop back link -->
+<div class="sub-back-desktop">
+  <a href="/chat">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12l-4-4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Вернуться в чат
+  </a>
+</div>
+
+<div class="sub-page">
+  <!-- Subscription card -->
+  <div class="sub-card">
+    <span class="sub-card-badge">Киди Pro</span>
+    <h2>Подписка Киди</h2>
+    <p class="sub-card-sub">Одна подписка на всех детей в аккаунте. Больше общения, картинки от AI и отчёт для родителей.</p>
 
     {% if subscription %}
-    <div class="sub-status">
-      <p class="sub-status-label">Подписка активна</p>
-      <p class="sub-status-value">Киди Pro</p>
-      <p class="sub-status-expires">Действует до {{ subscription.expires_at[:10] }} &middot; Картинок осталось: {{ subscription.images_remaining }}</p>
-    </div>
-    {% endif %}
-
-    <div class="sub-buy">
+    <div class="sub-active">
+      <span class="sub-active-dot"></span>
       <div>
-        <span class="sub-buy-price">500</span>
-        <span class="sub-buy-unit">₽ / месяц</span>
+        <div class="sub-active-text">Подписка активна</div>
+        <div class="sub-active-expires">до {{ subscription.expires_at[:10] }} &middot; картинок: {{ subscription.images_remaining }}</div>
       </div>
-      <p class="sub-buy-desc">Одна подписка на всех детей в аккаунте. Включены 30 картинок от AI. Дополнительные — 10💎 за штуку.</p>
-
-      <ul class="sub-features">
-        <li class="sub-feat">
-          <span class="sub-feat-icon"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.8l2.2 2.2L9 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          <strong>100 сообщений в день</strong> любому персонажу
-        </li>
-        <li class="sub-feat">
-          <span class="sub-feat-icon"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.8l2.2 2.2L9 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          Все <strong>3 персонажа</strong>
-        </li>
-        <li class="sub-feat">
-          <span class="sub-feat-icon"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.8l2.2 2.2L9 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          Голосовые сообщения
-        </li>
-        <li class="sub-feat">
-          <span class="sub-feat-icon"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.8l2.2 2.2L9 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          <strong>30 картинок/мес</strong> от AI (доп. — 10💎)
-        </li>
-        <li class="sub-feat">
-          <span class="sub-feat-icon"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.8l2.2 2.2L9 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          Еженедельный отчёт для родителей
-        </li>
-      </ul>
-
-      {% if payment_status == "success" and not subscription %}
-      <p class="sub-success" style="display:block">Оплата получена! Подписка активируется в течение минуты. Обновите страницу.</p>
-      {% elif not subscription %}
-      <button class="sp-btn sp-btn-primary sp-btn-lg sub-buy-btn" id="btn-subscribe">
-          Оформить за 500 ₽/мес
-      </button>
-      <p class="sub-error" id="sub-error"></p>
-      <p class="sub-success" id="sub-success"></p>
-      {% endif %}
+    </div>
+    {% else %}
+    <div class="sub-price">
+      <span class="sub-price-num">500</span>
+      <span class="sub-price-unit">&#8381; / месяц</span>
     </div>
 
-    <div class="sub-packages">
-      <h3 class="sub-packages-h">Волшебные краски</h3>
-      <p style="text-align:center; font-size:14px; color:var(--text-2); margin: 0 0 14px;">Кристаллы для картинок. 1 картинка = 10💎. Не сгорают.</p>
-      <div class="sub-packages-grid">
-        <a class="sub-pkg" href="/buy">
-          <div class="sub-pkg-crystals">💎 100</div>
-          <div class="sub-pkg-price">100 ₽</div>
-          <div style="font-size:11px; color:var(--text-3); margin-top:2px;">10 картинок</div>
-        </a>
-        <a class="sub-pkg" href="/buy">
-          <div class="sub-pkg-crystals">💎 360</div>
-          <div class="sub-pkg-price">320 ₽</div>
-          <div style="font-size:11px; color:var(--text-3); margin-top:2px;">36 картинок</div>
-        </a>
-        <a class="sub-pkg" href="/buy">
-          <div class="sub-pkg-crystals">💎 600</div>
-          <div class="sub-pkg-price">490 ₽</div>
-          <div style="font-size:11px; color:var(--text-3); margin-top:2px;">60 картинок</div>
-        </a>
-        <a class="sub-pkg" href="/buy">
-          <div class="sub-pkg-crystals">💎 1000</div>
-          <div class="sub-pkg-price">800 ₽</div>
-          <div style="font-size:11px; color:var(--text-3); margin-top:2px;">100 картинок</div>
-        </a>
-      </div>
+    <ul class="sub-feats">
+      <li class="sub-feat">
+        <span class="sub-feat-icon">💬</span>
+        <span><strong>100 сообщений в день</strong> вместо 10</span>
+      </li>
+      <li class="sub-feat">
+        <span class="sub-feat-icon">👥</span>
+        <span>Все <strong>4 персонажа</strong> без ограничений</span>
+      </li>
+      <li class="sub-feat">
+        <span class="sub-feat-icon">🎨</span>
+        <span><strong>30 картинок/мес</strong> от AI (доп. за кристаллы)</span>
+      </li>
+      <li class="sub-feat">
+        <span class="sub-feat-icon">📋</span>
+        <span>Еженедельный <strong>отчёт для родителей</strong></span>
+      </li>
+    </ul>
+
+    {% if payment_status == "success" %}
+    <p class="sub-success" style="display:block">Оплата получена! Подписка активируется в течение минуты.</p>
+    {% else %}
+    <button class="sub-cta" id="btn-subscribe">Оформить за 500 &#8381;/мес</button>
+    <p class="sub-error" id="sub-error"></p>
+    {% endif %}
+    {% endif %}
+  </div>
+
+  <!-- Crystal packages -->
+  <div class="sub-crystals">
+    <h3>Волшебные краски</h3>
+    <p class="sub-crystals-sub">Кристаллы для картинок от Арти. 1 картинка = 10💎. Не сгорают.</p>
+    <div class="sub-pkg-grid">
+      <a class="sub-pkg" href="/buy">
+        <div class="sub-pkg-amount">💎 100</div>
+        <div class="sub-pkg-price">100 &#8381;</div>
+        <div class="sub-pkg-images">10 картинок</div>
+      </a>
+      <a class="sub-pkg" href="/buy">
+        <div class="sub-pkg-amount">💎 360</div>
+        <div class="sub-pkg-price">320 &#8381;</div>
+        <div class="sub-pkg-images">36 картинок</div>
+      </a>
+      <a class="sub-pkg" href="/buy">
+        <div class="sub-pkg-amount">💎 600</div>
+        <div class="sub-pkg-price">490 &#8381;</div>
+        <div class="sub-pkg-images">60 картинок</div>
+      </a>
+      <a class="sub-pkg" href="/buy">
+        <div class="sub-pkg-amount">💎 1000</div>
+        <div class="sub-pkg-price">800 &#8381;</div>
+        <div class="sub-pkg-images">100 картинок</div>
+      </a>
     </div>
   </div>
 </div>
