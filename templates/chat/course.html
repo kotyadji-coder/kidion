@@ -54,7 +54,6 @@
   .cr-card h2 {
     margin: 0 0 14px; font-size: 22px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.25;
   }
-  @media (min-width: 480px) { .cr-card h2 { font-size: 26px; } }
   .cr-card p {
     margin: 0; font-size: 16px; line-height: 1.65; color: var(--text-2); max-width: 380px;
   }
@@ -65,7 +64,29 @@
     font-size: 14px; font-weight: 600;
   }
 
+  /* Desktop: bigger card, larger text */
+  @media (min-width: 769px) {
+    .cr-card {
+      max-width: 640px;
+      padding: 56px 48px 48px;
+      border-radius: 28px;
+    }
+    .cr-card-illust { font-size: 96px; margin-bottom: 28px; }
+    .cr-card-num { font-size: 12px; margin-bottom: 10px; }
+    .cr-card h2 { font-size: 32px; margin-bottom: 18px; }
+    .cr-card p { font-size: 18px; max-width: 480px; }
+    .cr-card-highlight { font-size: 16px; padding: 10px 22px; }
+    .cr-controls { max-width: 640px; }
+    .cr-btn { width: 56px; height: 56px; }
+    .cr-dot { width: 10px; height: 10px; }
+  }
+
   /* Example box */
+  @media (min-width: 769px) {
+    .cr-example { max-width: 440px; }
+    .cr-example-bad, .cr-example-good { font-size: 16px; padding: 14px 20px; }
+    .cr-cta { font-size: 18px; padding: 16px 36px; }
+  }
   .cr-example {
     margin-top: 18px; width: 100%; max-width: 360px;
     border-radius: 14px; overflow: hidden;
