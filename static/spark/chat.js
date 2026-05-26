@@ -89,7 +89,7 @@
     } catch (e) {
       console.error("Failed to load characters:", e);
       // Fallback
-      characters = [{ key: "spark", name_ru: "Киди", role_ru: "Помощник", is_free: true, locked: false, greeting_ru: "Привет! Я Киди!", greeting_sub_ru: "", suggestions: [], accent_color: "spark" }];
+      characters = [{ key: "spark", name_ru: "Киди", role_ru: "Собеседник", is_free: true, locked: false, greeting_ru: "Привет! Я Киди!", greeting_sub_ru: "", suggestions: [], accent_color: "spark" }];
     }
   }
 
@@ -247,15 +247,17 @@
     // Immediately clear previous chat to avoid stale content flash
     messagesEl.innerHTML = "";
     messagesEl.style.display = "none";
-    emptyState.style.display = "";
+    emptyState.style.display = "none";
     typingRow.style.display = "none";
 
     // Update header
     document.getElementById("head-name").textContent = c.name_ru;
     document.getElementById("head-role").textContent = c.role_ru;
     const headAv = document.getElementById("head-avatar");
+    const headDot = document.getElementById("head-dot");
     headAv.innerHTML = "";
     headAv.appendChild(getCharAvatar(key));
+    headAv.appendChild(headDot);
 
     // Update empty state
     const emptyAv = document.getElementById("empty-avatar");
@@ -589,18 +591,11 @@
     const navCount = document.getElementById("nav-msg-count");
     if (navCount) navCount.textContent = remaining;
 
-    // Update chat header status
-    const headStatus = document.getElementById("head-status");
-    if (headStatus) {
-      if (activeChar === "artist") {
-        headStatus.textContent = "онлайн";
-      } else if (remaining <= 0) {
-        headStatus.textContent = "оффлайн";
-        headStatus.classList.add("is-offline");
-      } else {
-        headStatus.textContent = "онлайн";
-        headStatus.classList.remove("is-offline");
-      }
+    // Update header dot (online/offline)
+    const headDot = document.getElementById("head-dot");
+    if (headDot) {
+      const offline = activeChar !== "artist" && remaining <= 0;
+      headDot.classList.toggle("is-offline", offline);
     }
 
     // Re-render chat list to update online/offline status
