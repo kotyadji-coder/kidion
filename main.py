@@ -758,8 +758,13 @@ async def payment_create(request: Request):
     if package_id not in PACKAGES:
         return JSONResponse({"error": "unknown_package"}, status_code=400)
 
-    base_url = os.environ.get("APP_BASE_URL", "http://localhost:8000")
-    return_url = f"{base_url}/buy?status=success"
+    # Allow client to pass return_url (for chat subdomain)
+    client_return = body.get("return_url", "")
+    if client_return and client_return.startswith(("https://kidion.ru", "https://chat.kidion.ru")):
+        return_url = client_return
+    else:
+        base_url = os.environ.get("APP_BASE_URL", "http://localhost:8000")
+        return_url = f"{base_url}/buy?status=success"
 
     try:
         result = create_prodamus_payment(

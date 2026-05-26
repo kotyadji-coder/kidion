@@ -235,56 +235,89 @@
     </div>
     <p class="sub-crystals-sub">Кристаллы для картинок от Арти. Одна картинка&nbsp;= 10&nbsp;кристаллов. Купленные кристаллы не сгорают.</p>
     <div class="sub-pkg-grid">
-      <a class="sub-pkg" href="/buy">
+      <button class="sub-pkg" data-pkg="100_100">
         <div class="sub-pkg-amount">💎&nbsp;100</div>
         <div class="sub-pkg-price">100&nbsp;&#8381;</div>
         <div class="sub-pkg-images">10&nbsp;картинок</div>
-      </a>
-      <a class="sub-pkg" href="/buy">
+      </button>
+      <button class="sub-pkg" data-pkg="360_320">
         <div class="sub-pkg-amount">💎&nbsp;360</div>
         <div class="sub-pkg-price">320&nbsp;&#8381;</div>
         <div class="sub-pkg-old">360&nbsp;&#8381;</div>
         <div class="sub-pkg-images">36&nbsp;картинок</div>
-      </a>
-      <a class="sub-pkg" href="/buy">
+      </button>
+      <button class="sub-pkg" data-pkg="600_490">
         <div class="sub-pkg-amount">💎&nbsp;600</div>
         <div class="sub-pkg-price">490&nbsp;&#8381;</div>
         <div class="sub-pkg-old">600&nbsp;&#8381;</div>
         <div class="sub-pkg-images">60&nbsp;картинок</div>
-      </a>
-      <a class="sub-pkg" href="/buy">
+      </button>
+      <button class="sub-pkg" data-pkg="1000_800">
         <div class="sub-pkg-amount">💎&nbsp;1000</div>
         <div class="sub-pkg-price">800&nbsp;&#8381;</div>
         <div class="sub-pkg-old">1000&nbsp;&#8381;</div>
         <div class="sub-pkg-images">100&nbsp;картинок</div>
         <div class="sub-pkg-hint">Выгоднее всего</div>
-      </a>
+      </button>
     </div>
+    <p class="sub-error" id="pkg-error"></p>
   </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  const btn = document.getElementById('btn-subscribe');
-  if (!btn) return;
-  btn.addEventListener('click', async function() {
-    btn.disabled = true;
-    btn.textContent = 'Переходим к оплате...';
-    try {
-      const res = await fetch('/api/chat/subscribe', { method: 'POST', credentials: 'same-origin' });
-      const data = await res.json();
-      if (res.ok && data.confirmation_url) {
-        window.location.href = data.confirmation_url;
-      } else {
-        document.getElementById('sub-error').style.display = 'block';
-        document.getElementById('sub-error').textContent = data.message || data.error || 'Ошибка';
+  // Subscribe button
+  var btn = document.getElementById('btn-subscribe');
+  if (btn) {
+    btn.addEventListener('click', async function() {
+      btn.disabled = true;
+      btn.textContent = 'Переходим к оплате...';
+      try {
+        var res = await fetch('/api/chat/subscribe', { method: 'POST', credentials: 'same-origin' });
+        var data = await res.json();
+        if (res.ok && data.confirmation_url) {
+          window.location.href = data.confirmation_url;
+        } else {
+          document.getElementById('sub-error').style.display = 'block';
+          document.getElementById('sub-error').textContent = data.message || data.error || 'Ошибка';
+          btn.disabled = false;
+          btn.textContent = 'Попробовать ещё раз';
+        }
+      } catch(e) {
         btn.disabled = false;
-        btn.textContent = 'Попробовать ещё раз';
+        btn.textContent = 'Оформить за 500 ₽/мес';
       }
-    } catch(e) {
-      btn.disabled = false;
-      btn.textContent = 'Оформить за 500 ₽/мес';
-    }
+    });
+  }
+
+  // Crystal package buttons
+  document.querySelectorAll('.sub-pkg[data-pkg]').forEach(function(el) {
+    el.addEventListener('click', async function() {
+      var pkg = el.dataset.pkg;
+      el.style.opacity = '0.6';
+      el.disabled = true;
+      try {
+        var res = await fetch('/api/payment/create', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          credentials: 'same-origin',
+          body: JSON.stringify({ package_id: pkg, return_url: window.location.href }),
+        });
+        var data = await res.json();
+        if (res.ok && data.confirmation_url) {
+          window.location.href = data.confirmation_url;
+        } else {
+          var errEl = document.getElementById('pkg-error');
+          errEl.style.display = 'block';
+          errEl.textContent = data.message || data.error || 'Ошибка оплаты';
+          el.style.opacity = '';
+          el.disabled = false;
+        }
+      } catch(e) {
+        el.style.opacity = '';
+        el.disabled = false;
+      }
+    });
   });
 });
 </script>
