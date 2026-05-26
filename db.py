@@ -407,6 +407,13 @@ def _init_schema(conn: sqlite3.Connection) -> None:
     except sqlite3.OperationalError:
         pass
 
+    # Add course_completed to children (migration-safe)
+    try:
+        conn.execute("ALTER TABLE children ADD COLUMN course_completed INTEGER NOT NULL DEFAULT 0")
+        conn.commit()
+    except sqlite3.OperationalError:
+        pass
+
     # Add promo_code to users (migration-safe)
     try:
         conn.execute("ALTER TABLE users ADD COLUMN promo_code TEXT")
@@ -1784,6 +1791,11 @@ def update_child_character_image(conn: sqlite3.Connection, child_id: int, image_
         "UPDATE children SET character_image_url=?, updated_at=? WHERE id=?",
         (image_url, _now(), child_id),
     )
+    conn.commit()
+
+
+def mark_course_completed(conn: sqlite3.Connection, child_id: int) -> None:
+    conn.execute("UPDATE children SET course_completed = 1 WHERE id = ?", (child_id,))
     conn.commit()
 
 

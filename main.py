@@ -2919,6 +2919,9 @@ async def page_chat(request: Request):
         child = get_current_child(request, conn)
         if not child:
             return RedirectResponse(url="/chat/login", status_code=302)
+        # First visit: redirect to AI course
+        if not child.get("course_completed"):
+            return RedirectResponse(url="/chat/course", status_code=302)
         if templates is None:
             return HTMLResponse("<h1>Киди</h1>")
         parent_id = child["parent_id"]
@@ -4560,6 +4563,18 @@ async def course_page(request: Request):
     if templates is None:
         return HTMLResponse("<h1>Course</h1>")
     return templates.TemplateResponse(request, "chat/course.html", {})
+
+
+@app.post("/api/kid/course/complete")
+async def course_complete(request: Request):
+    """Mark AI course as completed for current child."""
+    conn = get_db_connection()
+    child = get_current_child(request, conn)
+    if not child:
+        return JSONResponse({"ok": True})  # no-op if not authed
+    from db import mark_course_completed
+    mark_course_completed(conn, child["id"])
+    return JSONResponse({"ok": True})
 
 
 @app.get("/partners", response_class=HTMLResponse)
