@@ -376,12 +376,14 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
   .sc:not([data-view]) .sc-empty,
   .sc:not([data-view]) .sc-msgs,
   .sc:not([data-view]) .sc-comp,
+  .sc:not([data-view]) .sc-styles,
   .sc:not([data-view]) #typing-row { display: none !important; }
   .sc[data-view="chat"] .sc-chatlist { display: none; }
   .sc[data-view="list"] .sc-head,
   .sc[data-view="list"] .sc-empty,
   .sc[data-view="list"] .sc-msgs,
   .sc[data-view="list"] .sc-comp,
+  .sc[data-view="list"] .sc-styles,
   .sc[data-view="list"] #typing-row { display: none !important; }
 }
 .sc-chatlist-head {
