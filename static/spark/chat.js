@@ -212,6 +212,28 @@
     return (dailyLimit - dailyCount) <= 0;
   }
 
+  function renderStyleStrip(suggestions) {
+    const strip = document.getElementById("style-strip");
+    strip.innerHTML = "";
+    suggestions.forEach((s) => {
+      const btn = document.createElement("button");
+      btn.className = "sc-style-pill";
+      btn.innerHTML = `<span class="sc-style-pill-ico">${esc(s.ico)}</span>${esc(s.label)}`;
+      btn.addEventListener("click", () => {
+        if (attachedFile) {
+          chatInput.value = `Сделай моё фото в стиле ${s.label}`;
+          sendMessage();
+        } else {
+          selectedStyle = s.label;
+          chatInput.value = `Стиль: ${s.label}`;
+          chatInput.focus();
+          updateSendBtn();
+        }
+      });
+      strip.appendChild(btn);
+    });
+  }
+
   function showFirstVisitMessage() {
     const key = "kidion_chat_visited";
     if (localStorage.getItem(key)) return;
@@ -337,6 +359,15 @@
       el.classList.toggle("is-active", el.dataset.char === key);
     });
 
+    // Arty style strip — show only for artist
+    const styleStrip = document.getElementById("style-strip");
+    if (key === "artist" && c.suggestions && c.suggestions.length) {
+      renderStyleStrip(c.suggestions);
+      styleStrip.style.display = "";
+    } else {
+      styleStrip.style.display = "none";
+    }
+
     // Handle locked character: show greeting but hide composer
     const c_locked = c.locked;
     const composer = document.getElementById("composer");
@@ -348,6 +379,7 @@
         c.greeting_sub_ru || c.role_ru + "<br><br>" +
         '<a href="/chat/subscribe" style="color:var(--spark-violet);font-weight:600;text-decoration:underline">Оформите подписку</a>, чтобы общаться с ' + esc(c.name_ru);
       composer.style.display = "none";
+      styleStrip.style.display = "none";
     } else {
       composer.style.display = "";
       if (reload) loadChat();
@@ -689,6 +721,9 @@
       showView("list");
       renderChatList(); // refresh online/offline state
     });
+
+    // Clear chat button
+    document.getElementById("btn-clear-chat").addEventListener("click", clearChat);
 
     // Limit overlay close
     const btnLimitClose = document.getElementById("btn-limit-close");

@@ -357,7 +357,7 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
   .sc-head-info { text-align: center; flex: 1; }
   .sc-head-av { order: 3; flex: 0 0 40px; }
   .sc-head-back { flex: 0 0 28px; }
-  .sc-head-actions { display: none; }
+  .sc-head-actions { flex: 0 0 auto; }
   .sc-head-name { font-size: 16px; text-align: center; }
   .sc-head-role { font-size: 12px; text-align: center; }
 }
@@ -940,6 +940,41 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
   flex: 0 0 28px;
   font-size: 14px;
 }
+
+/* ============ Arty style strip ============ */
+.sc-styles {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  scrollbar-width: none;
+}
+.sc-styles::-webkit-scrollbar { display: none; }
+.sc-style-pill {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font);
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color .12s, background .12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.sc-style-pill:hover { border-color: var(--art-border); background: var(--art-soft); }
+.sc-style-pill:active { transform: scale(0.97); }
+.sc-style-pill-ico { font-size: 15px; }
 
 /* ============ Composer ============ */
 .sc-comp {
