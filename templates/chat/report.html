@@ -95,6 +95,16 @@
   .rpt-add-form input { flex: 1; min-width: 120px; }
   .rpt-add-form select { width: 90px; appearance: auto; }
 
+  .rpt-settings-toggle {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: none; border: 1px solid var(--border); border-radius: 10px;
+    padding: 8px 14px; font-size: 14px; font-weight: 500; font-family: var(--font);
+    color: var(--text-2); cursor: pointer; transition: background .1s, color .1s;
+  }
+  .rpt-settings-toggle:hover { background: var(--surface-2); color: var(--text); }
+  .rpt-settings-toggle.is-open .rpt-settings-arrow { transform: rotate(90deg); }
+  .rpt-settings-arrow { transition: transform .15s; }
+
   .rpt-right {
     display: flex; flex-direction: column; gap: 12px;
   }
@@ -128,6 +138,10 @@
   </nav>
 
   <div class="rpt-page">
+    <div class="rpt-grid">
+    <!-- Left column: main content -->
+    <div class="rpt-left">
+
     <!-- Child switcher -->
     <div class="rpt-children">
       {% for c in children %}
@@ -162,10 +176,6 @@
       {% endif %}
     </div>
 
-    <div class="rpt-grid">
-    <!-- Left column: main content -->
-    <div class="rpt-left">
-
     <div class="rpt-stats">
       <div class="rpt-stat">
         <p class="rpt-stat-label">Сообщений всего</p>
@@ -180,26 +190,31 @@
       </div>
     </div>
 
-    <!-- Child settings -->
+    <!-- Child settings (collapsible) -->
     <div class="rpt-section">
-      <h2 class="rpt-section-h">Настройки ребёнка</h2>
-      <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-        <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 16px; display:flex; align-items:center; gap:10px;">
-          <span style="font-size:13px; color:var(--text-3);">Пол:</span>
-          <select id="child-gender" style="font-family:var(--font); font-size:14px; padding:4px 8px; border:1px solid var(--border); border-radius:8px; background:var(--surface); appearance:auto;">
-            <option value="boy" {{ 'selected' if child.gender == 'boy' else '' }}>Мальчик</option>
-            <option value="girl" {{ 'selected' if child.gender == 'girl' else '' }}>Девочка</option>
-          </select>
-          <span id="gender-saved" style="font-size:12px; color:oklch(0.45 0.15 158); display:none;">Сохранено</span>
-        </div>
-        <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 16px; display:flex; align-items:center; gap:10px;">
-          <span style="font-size:13px; color:var(--text-3);">Класс:</span>
-          <select id="child-grade" style="font-family:var(--font); font-size:14px; padding:4px 8px; border:1px solid var(--border); border-radius:8px; background:var(--surface); appearance:auto;">
-            {% for g in range(1, 9) %}
-            <option value="{{ g }}" {{ 'selected' if child.grade == g else '' }}>{{ g }}</option>
-            {% endfor %}
-          </select>
-          <span id="grade-saved" style="font-size:12px; color:oklch(0.45 0.15 158); display:none;">Сохранено</span>
+      <button class="rpt-settings-toggle" id="btn-toggle-settings">
+        <svg class="rpt-settings-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4.5 3l3 3-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Настройки ребёнка
+      </button>
+      <div class="rpt-settings-body" id="settings-body" style="display:none;">
+        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:12px;">
+          <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 16px; display:flex; align-items:center; gap:10px;">
+            <span style="font-size:13px; color:var(--text-3);">Пол:</span>
+            <select id="child-gender" style="font-family:var(--font); font-size:14px; padding:4px 8px; border:1px solid var(--border); border-radius:8px; background:var(--surface); appearance:auto;">
+              <option value="boy" {{ 'selected' if child.gender == 'boy' else '' }}>Мальчик</option>
+              <option value="girl" {{ 'selected' if child.gender == 'girl' else '' }}>Девочка</option>
+            </select>
+            <span id="gender-saved" style="font-size:12px; color:oklch(0.45 0.15 158); display:none;">Сохранено</span>
+          </div>
+          <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 16px; display:flex; align-items:center; gap:10px;">
+            <span style="font-size:13px; color:var(--text-3);">Класс:</span>
+            <select id="child-grade" style="font-family:var(--font); font-size:14px; padding:4px 8px; border:1px solid var(--border); border-radius:8px; background:var(--surface); appearance:auto;">
+              {% for g in range(1, 9) %}
+              <option value="{{ g }}" {{ 'selected' if child.grade == g else '' }}>{{ g }}</option>
+              {% endfor %}
+            </select>
+            <span id="grade-saved" style="font-size:12px; color:oklch(0.45 0.15 158); display:none;">Сохранено</span>
+          </div>
         </div>
       </div>
     </div>
@@ -287,6 +302,14 @@
 </div>
 
 <script>
+// Settings toggle
+document.getElementById('btn-toggle-settings').addEventListener('click', function() {
+  var body = document.getElementById('settings-body');
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : '';
+  this.classList.toggle('is-open', !open);
+});
+
 // Gender save
 document.getElementById('child-gender').addEventListener('change', async function() {
   var saved = document.getElementById('gender-saved');
