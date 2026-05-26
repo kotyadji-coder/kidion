@@ -10,36 +10,10 @@
 <link rel="icon" href="/static/spark/favicon.ico">
 <link rel="apple-touch-icon" href="/static/spark/apple-touch-icon.png">
 <link rel="stylesheet" href="/static/spark/chat.css">
+<link rel="stylesheet" href="/static/spark/landing.css">
 <style>
   body { margin: 0; min-height: 100vh; background: var(--bg); font-family: var(--font); color: var(--text); }
   *, *::before, *::after { box-sizing: border-box; }
-
-  /* Mobile header (Telegram-style) */
-  .sub-header {
-    display: flex; align-items: center; gap: 10px;
-    padding: 12px 16px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    position: sticky; top: 0; z-index: 10;
-  }
-  .sub-header-back {
-    background: none; border: 0; padding: 4px; cursor: pointer;
-    color: var(--spark-violet); display: flex; align-items: center; flex: 0 0 28px;
-  }
-  .sub-header-title { flex: 1; text-align: center; font-size: 17px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
-  .sub-header-spacer { width: 28px; flex: 0 0 28px; }
-  @media (min-width: 769px) { .sub-header { display: none; } }
-
-  /* Desktop back link */
-  .sub-back-desktop {
-    display: none; padding: 20px 20px 0; max-width: 720px; margin: 0 auto;
-  }
-  .sub-back-desktop a {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 14px; font-weight: 500; color: var(--spark-violet); text-decoration: none;
-  }
-  .sub-back-desktop a:hover { text-decoration: underline; }
-  @media (min-width: 769px) { .sub-back-desktop { display: block; } }
 
   /* Page content */
   .sub-page { padding: 28px 18px 48px; max-width: 720px; margin: 0 auto; }
@@ -160,23 +134,16 @@
 </style>
 </head>
 <body>
-
-<!-- Mobile header -->
-<div class="sub-header">
-  <button class="sub-header-back" onclick="history.back()">
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15l-5-5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  </button>
-  <h1 class="sub-header-title">Подписка</h1>
-  <div class="sub-header-spacer"></div>
-</div>
-
-<!-- Desktop back link -->
-<div class="sub-back-desktop">
-  <a href="/chat">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12l-4-4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    Вернуться в чат
-  </a>
-</div>
+<div class="sp">
+  <nav class="sp-nav">
+    <a class="sp-brand" href="/chat">
+      <span class="sp-brand-mark">K</span>
+      <span>Киди</span>
+    </a>
+    <div class="sp-nav-cta">
+      <a class="sp-btn sp-btn-ghost" href="/chat">Назад в чат</a>
+    </div>
+  </nav>
 
 <div class="sub-page">
   <!-- Subscription card -->
@@ -323,5 +290,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
+</div><!-- /sp -->
 </body>
 </html>
