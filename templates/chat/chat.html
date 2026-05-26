@@ -49,7 +49,7 @@
       </div>
       <div class="sc-safety-banner sc-safety-desktop" id="safety-banner-desktop" style="display:none; margin:12px 12px 0;">
         <div class="sc-safety-banner-text">
-          <a href="/chat/safety">Руководство по безопасности для родителей</a>
+          <strong>Для родителей:</strong> прочитайте <a href="/chat/safety">руководство по безопасности</a> — как устроена защита и почему важно быть рядом.
         </div>
         <button class="sc-safety-banner-close" onclick="this.parentElement.style.display='none'; localStorage.setItem('kidion_safety_read','1')">&times;</button>
       </div>
@@ -66,12 +66,13 @@
           </div>
         </div>
         {% else %}
-        <div class="sc-sub-card" style="width:100%">
+        <div class="sc-sub-card" style="width:100%; flex-direction:column; align-items:stretch; gap:8px;">
           <div class="sc-sub-card-info">
             <span class="sc-sub-card-label">Бесплатный тариф</span>
-            <span class="sc-sub-card-detail">10 сообщ/день · 3 картинки/мес</span>
+            <span class="sc-sub-card-detail">10 сообщений в день</span>
+            <span class="sc-sub-card-detail">3 картинки в месяц</span>
           </div>
-          <a href="/chat/subscribe" class="sc-sub-card-btn">Pro</a>
+          <a href="/chat/subscribe" class="sc-sub-card-btn" style="text-align:center;">Подробнее о подписке</a>
         </div>
         {% endif %}
       </div>
