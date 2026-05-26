@@ -62,6 +62,11 @@ def moderate_output(text: str) -> tuple[str, bool, list[str]]:
 
     issues: list[str] = []
 
+    # 0. Remove AI-mimicked redaction tokens (AI copies [УДАЛЕНО] from context)
+    if "[УДАЛЕНО]" in text:
+        text = text.replace("[УДАЛЕНО]", "...")
+        issues.append("ai_mimicked_redaction")
+
     # 1. Check for URLs (should never appear in child chat)
     if _URL_PATTERN.search(text):
         text = _URL_PATTERN.sub("[ссылка удалена]", text)
