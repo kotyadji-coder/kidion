@@ -114,25 +114,49 @@
   .sub-active-text { font-size: 15px; font-weight: 600; color: oklch(0.35 0.12 158); }
   .sub-active-expires { font-size: 13px; color: oklch(0.50 0.08 158); margin-top: 2px; }
 
-  /* Crystal packages */
-  .sub-crystals { margin-top: 32px; }
-  .sub-crystals h3 {
-    margin: 0 0 6px; font-size: 20px; font-weight: 700; letter-spacing: -0.02em;
+  /* Crystal packages card */
+  .sub-crystals {
+    margin-top: 28px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 24px 22px;
   }
-  .sub-crystals-sub { margin: 0 0 16px; font-size: 14px; color: var(--text-2); line-height: 1.5; }
+  .sub-crystals-head {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 6px;
+  }
+  .sub-crystals-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: linear-gradient(135deg, oklch(0.92 0.06 330), oklch(0.95 0.05 50));
+    display: grid; place-items: center;
+    font-size: 20px; flex: 0 0 40px;
+  }
+  .sub-crystals h3 {
+    margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -0.02em;
+  }
+  .sub-crystals-sub {
+    margin: 0 0 18px; font-size: 14px; color: var(--text-2); line-height: 1.5;
+  }
   .sub-pkg-grid {
     display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
   }
   @media (min-width: 769px) { .sub-pkg-grid { grid-template-columns: repeat(4, 1fr); } }
   .sub-pkg {
-    padding: 16px 12px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px;
+    padding: 18px 12px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 14px;
     text-align: center; cursor: pointer; text-decoration: none; color: var(--text);
-    transition: border-color .12s, transform .08s; display: block;
+    transition: border-color .15s, transform .1s, box-shadow .15s; display: block;
   }
-  .sub-pkg:hover { border-color: var(--spark-violet-border); transform: translateY(-2px); }
-  .sub-pkg-amount { font-size: 22px; font-weight: 700; }
-  .sub-pkg-price { font-size: 14px; color: var(--text-2); margin-top: 4px; font-weight: 500; }
-  .sub-pkg-images { font-size: 12px; color: var(--text-3); margin-top: 4px; }
+  .sub-pkg:hover { border-color: oklch(0.82 0.08 330); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+  .sub-pkg-amount { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+  .sub-pkg-price { font-size: 15px; color: var(--text-2); margin-top: 4px; font-weight: 600; }
+  .sub-pkg-old { font-size: 12px; color: var(--text-4); text-decoration: line-through; }
+  .sub-pkg-images { font-size: 12px; color: var(--text-3); margin-top: 6px; }
+  .sub-pkg-hint {
+    display: inline-block; margin-top: 8px; font-size: 11px; font-weight: 600;
+    color: oklch(0.45 0.15 158); background: oklch(0.96 0.04 158);
+    padding: 2px 8px; border-radius: 999px;
+  }
 </style>
 </head>
 <body>
@@ -159,7 +183,7 @@
   <div class="sub-card">
     <span class="sub-card-badge">Киди Pro</span>
     <h2>Подписка Киди</h2>
-    <p class="sub-card-sub">Одна подписка на всех детей в аккаунте. Больше общения, картинки от AI и отчёт для родителей.</p>
+    <p class="sub-card-sub">Одна подписка на&nbsp;всех детей в&nbsp;аккаунте. Больше общения, картинки от&nbsp;AI и&nbsp;отчёт для родителей.</p>
 
     {% if subscription %}
     <div class="sub-active">
@@ -205,28 +229,35 @@
 
   <!-- Crystal packages -->
   <div class="sub-crystals">
-    <h3>Волшебные краски</h3>
-    <p class="sub-crystals-sub">Кристаллы для картинок от Арти. 1 картинка = 10💎. Не сгорают.</p>
+    <div class="sub-crystals-head">
+      <div class="sub-crystals-icon">🎨</div>
+      <h3>Волшебные краски</h3>
+    </div>
+    <p class="sub-crystals-sub">Кристаллы для картинок от Арти. Одна картинка&nbsp;= 10&nbsp;кристаллов. Купленные кристаллы не сгорают.</p>
     <div class="sub-pkg-grid">
       <a class="sub-pkg" href="/buy">
-        <div class="sub-pkg-amount">💎 100</div>
-        <div class="sub-pkg-price">100 &#8381;</div>
-        <div class="sub-pkg-images">10 картинок</div>
+        <div class="sub-pkg-amount">💎&nbsp;100</div>
+        <div class="sub-pkg-price">100&nbsp;&#8381;</div>
+        <div class="sub-pkg-images">10&nbsp;картинок</div>
       </a>
       <a class="sub-pkg" href="/buy">
-        <div class="sub-pkg-amount">💎 360</div>
-        <div class="sub-pkg-price">320 &#8381;</div>
-        <div class="sub-pkg-images">36 картинок</div>
+        <div class="sub-pkg-amount">💎&nbsp;360</div>
+        <div class="sub-pkg-price">320&nbsp;&#8381;</div>
+        <div class="sub-pkg-old">360&nbsp;&#8381;</div>
+        <div class="sub-pkg-images">36&nbsp;картинок</div>
       </a>
       <a class="sub-pkg" href="/buy">
-        <div class="sub-pkg-amount">💎 600</div>
-        <div class="sub-pkg-price">490 &#8381;</div>
-        <div class="sub-pkg-images">60 картинок</div>
+        <div class="sub-pkg-amount">💎&nbsp;600</div>
+        <div class="sub-pkg-price">490&nbsp;&#8381;</div>
+        <div class="sub-pkg-old">600&nbsp;&#8381;</div>
+        <div class="sub-pkg-images">60&nbsp;картинок</div>
       </a>
       <a class="sub-pkg" href="/buy">
-        <div class="sub-pkg-amount">💎 1000</div>
-        <div class="sub-pkg-price">800 &#8381;</div>
-        <div class="sub-pkg-images">100 картинок</div>
+        <div class="sub-pkg-amount">💎&nbsp;1000</div>
+        <div class="sub-pkg-price">800&nbsp;&#8381;</div>
+        <div class="sub-pkg-old">1000&nbsp;&#8381;</div>
+        <div class="sub-pkg-images">100&nbsp;картинок</div>
+        <div class="sub-pkg-hint">Выгоднее всего</div>
       </a>
     </div>
   </div>
