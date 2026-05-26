@@ -16,6 +16,14 @@
 
   .cr-wrap { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
 
+  .cr-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex: 0 0 auto;
+  }
+
   /* Cards area */
   .cr-stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px 20px 0; position: relative; overflow: hidden; }
 
@@ -112,20 +120,16 @@
 </head>
 <body>
 <div class="cr-wrap">
-  <div class="sc">
-    <nav class="sc-nav">
-      <a class="sc-nav-brand" href="/chat">
-        <span class="sc-nav-mark">K</span>
-        <span>Киди</span>
-      </a>
-      <div class="sc-nav-right">
-        <a href="/chat" class="sc-nav-quota" style="text-decoration:none; color:var(--text-2);">
-          <span class="sc-nav-quota-dot"></span>
-          Чат
-        </a>
-      </div>
-    </nav>
-  </div>
+  <nav class="cr-nav">
+    <a class="sc-nav-brand" href="/chat" style="display:flex;align-items:center;gap:10px;font-weight:600;font-size:17px;letter-spacing:-0.022em;text-decoration:none;color:var(--text);">
+      <span class="sc-nav-mark" style="width:32px;height:32px;border-radius:10px;background:var(--spark-grad);display:grid;place-items:center;color:white;font-weight:800;font-size:15px;box-shadow:inset 0 -3px 8px rgba(0,0,0,0.15),0 1px 2px rgba(70,40,110,0.20);">K</span>
+      <span>Киди</span>
+    </a>
+    <a href="/chat" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-2);padding:5px 10px 5px 8px;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;">
+      <span style="width:6px;height:6px;border-radius:50%;background:var(--spark-violet);"></span>
+      Чат
+    </a>
+  </nav>
 
   <div class="cr-stage" id="stage">
 
