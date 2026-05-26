@@ -29,6 +29,23 @@
   .sf-header-title { flex: 1; text-align: center; font-size: 17px; font-weight: 600; margin: 0; }
   .sf-header-spacer { width: 28px; flex: 0 0 28px; }
 
+  /* Desktop nav */
+  .sf-desktop-nav {
+    display: none; align-items: center; justify-content: space-between;
+    padding: 14px 40px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .sf-desktop-nav a.sf-brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 17px; text-decoration: none; color: var(--text); }
+  .sf-desktop-nav .sf-brand-mark { width: 32px; height: 32px; border-radius: 10px; background: var(--spark-grad); display: grid; place-items: center; color: white; font-weight: 700; font-size: 16px; }
+  .sf-desktop-nav .sf-nav-links { display: flex; gap: 8px; }
+  .sf-desktop-nav .sf-nav-link {
+    padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 500;
+    color: var(--text-2); text-decoration: none; transition: background .1s;
+  }
+  .sf-desktop-nav .sf-nav-link:hover { background: var(--surface-2); color: var(--text); }
+  @media (min-width: 769px) { .sf-desktop-nav { display: flex; } .sf-header { display: none; } }
+
   .sf-page { padding: 32px 20px 60px; max-width: 720px; margin: 0 auto; }
 
   .sf-hero { text-align: center; margin-bottom: 40px; }
@@ -108,6 +125,18 @@
 </style>
 </head>
 <body>
+
+<nav class="sf-desktop-nav">
+  <a class="sf-brand" href="/">
+    <span class="sf-brand-mark">K</span>
+    <span>Киди</span>
+  </a>
+  <div class="sf-nav-links">
+    <a class="sf-nav-link" href="/">Главная</a>
+    <a class="sf-nav-link" href="/chat">Чат</a>
+    <a class="sf-nav-link" href="/chat/subscribe">Подписка</a>
+  </div>
+</nav>
 
 <div class="sf-header">
   <a href="/" class="sf-header-back">
@@ -218,6 +247,35 @@
     <div class="sf-card" style="margin-top: 12px;">
       <h3>Что рекомендуем</h3>
       <p>Познакомьтесь с&nbsp;Киди сами&nbsp;— напишите несколько сообщений, посмотрите как отвечает. Объясните ребёнку, что это нейросеть, а&nbsp;не&nbsp;человек. Читайте еженедельные отчёты. И&nbsp;просто будьте рядом, особенно в&nbsp;первые дни.</p>
+    </div>
+  </div>
+
+  <!-- Subscription -->
+  <div class="sf-section">
+    <h2><span>⭐</span> Что даёт подписка</h2>
+
+    <div class="sf-card">
+      <h3>Бесплатно (навсегда)</h3>
+      <p>10&nbsp;сообщений в&nbsp;день, все 4&nbsp;персонажа, 3&nbsp;картинки в&nbsp;месяц, голосовой ввод. Без карты, без срока.</p>
+    </div>
+
+    <div class="sf-card" style="border-color: var(--spark-violet-border); background: var(--spark-violet-softer);">
+      <h3>Подписка Киди — 500&nbsp;&#8381;/мес</h3>
+      <p>100&nbsp;сообщений в&nbsp;день, 30&nbsp;картинок от&nbsp;AI в&nbsp;месяц, еженедельный отчёт для родителей. Одна подписка на&nbsp;всех детей в&nbsp;аккаунте. <a href="/chat/subscribe" style="color: var(--spark-violet); font-weight: 600;">Оформить подписку&nbsp;&rarr;</a></p>
+    </div>
+  </div>
+
+  <!-- Links -->
+  <div class="sf-section">
+    <h2><span>🔗</span> Полезные ссылки</h2>
+    <div class="sf-card">
+      <p style="display:flex; flex-direction:column; gap:10px;">
+        <a href="/" style="color: var(--spark-violet); font-weight: 500;">Главная страница Киди</a>
+        <a href="/chat" style="color: var(--spark-violet); font-weight: 500;">Перейти в&nbsp;чат</a>
+        <a href="/chat/subscribe" style="color: var(--spark-violet); font-weight: 500;">Подписка и&nbsp;кристаллы</a>
+        <a href="/privacy" style="color: var(--spark-violet); font-weight: 500;">Политика конфиденциальности</a>
+        <a href="/terms" style="color: var(--spark-violet); font-weight: 500;">Условия использования</a>
+      </p>
     </div>
   </div>
 

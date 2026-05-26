@@ -51,11 +51,23 @@
         <!-- Populated by JS -->
       </ul>
       <div class="sc-side-foot">
-        <div class="sc-side-foot-av">{{ child.name[0] if child.name else 'K' }}</div>
-        <div>
-          <div class="sc-side-foot-name">{{ child.name }}</div>
-          <div class="sc-side-foot-sub">Kidion</div>
+        {% if has_subscription %}
+        <div class="sc-sub-card is-active" style="width:100%">
+          <div class="sc-sub-card-dot"></div>
+          <div class="sc-sub-card-info">
+            <span class="sc-sub-card-label">Киди Pro</span>
+            <span class="sc-sub-card-detail">{{ subscription_expires }} · {{ images_remaining }} картинок</span>
+          </div>
         </div>
+        {% else %}
+        <div class="sc-sub-card" style="width:100%">
+          <div class="sc-sub-card-info">
+            <span class="sc-sub-card-label">Бесплатный тариф</span>
+            <span class="sc-sub-card-detail">10 сообщ/день · 3 картинки/мес</span>
+          </div>
+          <a href="/chat/subscribe" class="sc-sub-card-btn">Pro</a>
+        </div>
+        {% endif %}
       </div>
     </aside>
 

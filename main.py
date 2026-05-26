@@ -3847,7 +3847,7 @@ async def kid_chat_send(request: Request):
                 if free_used < 3:
                     can_generate = True
                 else:
-                    response_text = "Волшебные краски закончились! Попроси взрослых добавить ещё"
+                    response_text = "Волшебные краски закончились! Попроси взрослых нажать на значок 👤 вверху и купить ещё на странице подписки"
                     is_arty_image = True
 
             if can_generate:
@@ -3928,7 +3928,7 @@ async def kid_chat_send(request: Request):
         from db import use_free_chat_image, get_free_images_used_this_month
         free_used = get_free_images_used_this_month(conn, parent_id)
         if free_used >= 3:
-            response_text += "\n\nВолшебные краски закончились! Попроси взрослых добавить ещё"
+            response_text += "\n\nВолшебные краски закончились! Попроси взрослых нажать на значок 👤 вверху и купить ещё на странице подписки"
         else:
             image_description = draw_prompt or message_text
             image_bytes = generate_chat_image(image_description)
