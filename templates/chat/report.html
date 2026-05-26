@@ -265,8 +265,7 @@
     <!-- Right column: banners -->
     <div class="rpt-right">
       {% if not has_subscription %}
-      <div class="rpt-sub-banner" style="margin-bottom:12px;">
-        <div class="rpt-sub-banner-icon">&#10024;</div>
+      <div class="rpt-sub-banner" style="margin-bottom:0;">
         <div class="rpt-sub-banner-text">
           <p class="rpt-sub-banner-title">Откройте все возможности</p>
           <p class="rpt-sub-banner-body">100 сообщений/день, все персонажи, AI-картинки и&nbsp;еженедельная аналитика.</p>
@@ -274,13 +273,24 @@
         <a href="/chat/subscribe" class="sp-btn sp-btn-primary" style="width:100%;text-align:center;margin-top:8px;">Подписка — 500 ₽/мес</a>
       </div>
       {% endif %}
-      <div class="rpt-kidion-banner" style="cursor:pointer" id="pwa-report-banner">
-        <div class="rpt-kidion-banner-icon">&#128241;</div>
-        <div class="rpt-kidion-banner-text">
-          <p class="rpt-kidion-banner-title">Установить приложение</p>
-          <p class="rpt-kidion-banner-body" id="pwa-report-text">Киди можно добавить на экран телефона как приложение</p>
+
+      <!-- Referral block -->
+      <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px;">
+        <p style="margin:0 0 6px; font-size:14px; font-weight:600;">Пригласите друзей</p>
+        <p style="margin:0 0 12px; font-size:12px; color:var(--text-2); line-height:1.5;">Поделитесь ссылкой — каждый получит по 60 кристаллов.</p>
+        <div style="display:flex; gap:6px;">
+          <input id="ref-link-input" value="{{ ref_link }}" readonly style="flex:1; min-width:0; height:36px; padding:0 10px; border:1px solid var(--border); border-radius:8px; font-size:12px; font-family:inherit; background:var(--surface-2); color:var(--text); outline:none;">
+          <button id="copy-ref-btn" style="height:36px; padding:0 12px; border:1px solid var(--border); border-radius:8px; background:var(--surface-2); font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; color:var(--text-2); white-space:nowrap;">Скопировать</button>
+        </div>
+        <div style="margin-top:10px;">
+          {% if user and user.is_blogger %}
+          <a href="/blogger" style="font-size:13px; font-weight:500; color:var(--spark-violet); text-decoration:none;">Кабинет блогера &rarr;</a>
+          {% else %}
+          <a href="/friends" style="font-size:13px; font-weight:500; color:var(--spark-violet); text-decoration:none;">Мои друзья &rarr;</a>
+          {% endif %}
         </div>
       </div>
+
       <a href="https://kidion.ru/dashboard" class="rpt-kidion-banner" style="text-decoration:none;color:inherit;">
         <div class="rpt-kidion-banner-icon">&#128218;</div>
         <div class="rpt-kidion-banner-text">
@@ -295,24 +305,11 @@
           <p class="rpt-kidion-banner-body">Как устроена защита и руководство для родителей</p>
         </div>
       </a>
-
-      <!-- Referral block -->
-      <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px;">
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-          <span style="font-size:20px;">🎁</span>
-          <p style="margin:0; font-size:14px; font-weight:600;">Пригласите друзей</p>
-        </div>
-        <p style="margin:0 0 12px; font-size:12px; color:var(--text-2); line-height:1.5;">Поделитесь ссылкой — каждый получит по 60 кристаллов.</p>
-        <div style="display:flex; gap:6px;">
-          <input id="ref-link-input" value="{{ ref_link }}" readonly style="flex:1; min-width:0; height:36px; padding:0 10px; border:1px solid var(--border); border-radius:8px; font-size:12px; font-family:inherit; background:var(--surface-2); color:var(--text); outline:none;">
-          <button id="copy-ref-btn" style="height:36px; padding:0 12px; border:1px solid var(--border); border-radius:8px; background:var(--surface-2); font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; color:var(--text-2); white-space:nowrap;">Скопировать</button>
-        </div>
-        <div style="margin-top:10px;">
-          {% if user and user.is_blogger %}
-          <a href="/blogger" style="font-size:13px; font-weight:500; color:var(--spark-violet); text-decoration:none;">Кабинет блогера &rarr;</a>
-          {% else %}
-          <a href="/friends" style="font-size:13px; font-weight:500; color:var(--spark-violet); text-decoration:none;">Мои друзья &rarr;</a>
-          {% endif %}
+      <div class="rpt-kidion-banner" style="cursor:pointer" id="pwa-report-banner">
+        <div class="rpt-kidion-banner-icon">&#128241;</div>
+        <div class="rpt-kidion-banner-text">
+          <p class="rpt-kidion-banner-title">Установить приложение</p>
+          <p class="rpt-kidion-banner-body" id="pwa-report-text">Киди можно добавить на экран телефона как приложение</p>
         </div>
       </div>
     </div><!-- /rpt-right -->
