@@ -71,8 +71,9 @@ kidion/
 │   ├── landing.html           # Киди Chat landing page (/)
 │   ├── login.html             # Киди Chat login (parent email → pick child, no PIN)
 │   ├── register.html          # Киди Chat registration (simplified)
-│   ├── subscribe.html         # Subscription purchase page (/chat/subscribe) + referral block
-│   ├── report.html            # Weekly parent report page
+│   ├── subscribe.html         # Subscription purchase page (/chat/subscribe)
+│   ├── report.html            # Parent report + referral block in right column
+│   ├── course.html            # Mini-course "What is AI?" — 10 swipeable cards for kids
 │   ├── partners.html          # Blogger partner program landing + application form
 │   ├── friends.html           # Referral stats page for regular users
 │   └── blogger.html           # Blogger dashboard (balance, promo code, withdrawal)
@@ -83,6 +84,8 @@ kidion/
 │   ├── spark-hero.png         # Киди character PNG
 │   ├── owl.png                # Зуми character PNG
 │   ├── captain.png            # Лоро character PNG
+│   ├── course-girl.png         # Course hero: girl (left side, desktop)
+│   ├── course-boy.png          # Course hero: boy (right side, desktop, flipped)
 │   ├── favicon.ico            # Favicon (from Киди image)
 │   └── apple-touch-icon.png   # Apple touch icon
 ├── static/kid/style.css       # Kid CSS (Nunito, pastels, mobile-first)
@@ -99,7 +102,7 @@ kidion/
 | Table | Purpose | Key Fields |
 |-------|---------|------------|
 | `users` | Parent accounts | email, password_hash, crystals, ref_code, **promo_code**, **is_blogger**, **blogger_balance_rub** |
-| `children` | Child profiles | parent_id, name, gender, grade, universe, pin_hash, difficulty_level, **stars**, **interests** (JSON), **universe_description**, **character_prompt**, **character_image_url**, **character_name**, **character_onboarded** |
+| `children` | Child profiles | parent_id, name, gender, grade, universe, pin_hash, difficulty_level, **stars**, **interests**, **character_name**, **character_onboarded**, **course_completed** |
 | `lessons` | All lessons | child_id, mode, topic_title, subject, status, worksheet_url |
 | `lesson_results` | Completion results | lesson_id, child_id, correct_answers, stars (1-3) |
 | `curriculum_topics` | Seeded topics (12 per subject/grade) | subject, grade, theme_order, title_ru, icon |
@@ -208,6 +211,7 @@ Web Speech API (browser-side, free). Opens overlay, speech → text → editable
 - **Payment polling:** `/buy` page polls `/api/payment/status-by-order` after Prodamus redirect, shows animated success banner when crystals credited.
 - **Referral system:** shared between kidion.ru and chat.kidion.ru (same DB). Regular users get `ref_code` (auto `U-XXXX`), bloggers get custom `promo_code` (e.g. `MASHA`). Both work in `?ref=` param. Registration bonus: 60💎 (120💎 with referral). Referrer gets 120💎 on first payment (bloggers get 10% in rub instead).
 - **Admin CRM:** `/admin`, access via `ADMIN_EMAILS` env var (comma-separated). Manages blogger applications and withdrawal requests with Telegram notifications.
+- **Chat nav pattern:** All parent/child pages (subscribe, friends, blogger, report) use `sc-nav` from chat.css: logo + Pro button + "Чат" link + parent avatar icon.
 
 ## API Endpoints
 
@@ -225,6 +229,7 @@ Web Speech API (browser-side, free). Opens overlay, speech → text → editable
 - Actions: `POST /api/kid/lessons/{curriculum_lesson_id}/start`
 - **Character & Shop:** `GET /api/kid/character`, `POST /api/kid/character/name`, `POST /api/kid/shop/buy/{item_id}`, `POST /api/kid/shop/equip/{item_id}`
 - **Chat:** `GET /api/kid/chat?character=X`, `POST /api/kid/chat/send?character=X`, `POST /api/kid/chat/clear?character=X`, `GET /api/kid/characters`
+- **Course:** `POST /api/kid/course/complete` — marks AI course as done for child
 
 ### Payments & Lessons (parent auth)
 - `POST /api/lessons/generate`, `POST /api/lessons/generate-topic`, `GET /api/lessons/{id}/poll`, `POST /api/lessons/{id}/result`
@@ -254,12 +259,13 @@ Web Speech API (browser-side, free). Opens overlay, speech → text → editable
 - `/kid/result/{id}` — confetti + stars animation + shop button
 
 ### Киди Chat
-- `/` — landing page on chat.kidion.ru (public, no auth)
-- `/chat` — multi-character chat (child auth)
+- `/` — landing page on chat.kidion.ru (public, no auth, partners link in footer)
+- `/chat` — multi-character chat (child auth). First visit redirects to `/chat/course`
+- `/chat/course` — mini-course "What is AI?" (10 swipeable cards, public). Tracks `course_completed` per child
 - `/chat/login` — login page (parent email → pick child, no PIN)
 - `/chat/register` — simplified registration (accepts `?ref=` for referrals/promo codes)
-- `/chat/subscribe` — subscription + crystal packs + referral block (parent auth)
-- `/chat/report/{child_id}` — weekly parent report
+- `/chat/subscribe` — subscription + crystal packs (parent auth)
+- `/chat/report/{child_id}` — parent report + referral block + friends link in right column
 - Old `/spark/*` URLs redirect 301 → `/chat/*`
 
 ### Referral & Partners
@@ -321,6 +327,7 @@ uvicorn main:app --host 127.0.0.1 --port 8003 --reload
 - [ ] 404 page, rate limiting on auth
 - [ ] Cloud backup for DB (Cloudflare R2) — when real users appear
 - [ ] Fix voice input (Web Speech API broken on Chrome Mac + Safari iOS — overlay doesn't work)
+- [ ] Subscription pricing for multiple children — current: 100 msg/day shared. Options: auto-price by child count (500/800/1000), or raise shared limit. Decide before real users.
 
 ## Eval System (Quality Monitoring)
 
