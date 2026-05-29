@@ -21,7 +21,7 @@ Parent creates child (name, grade, interests) → AI generates universe + charac
 - **Backend:** FastAPI + uvicorn + SQLite (sqlite3, no ORM)
 - **Frontend:** Jinja2 templates + vanilla JS (no React/Vue)
 - **Auth:** bcrypt (passwords) + itsdangerous (signed cookies `kid_session` for parents, `kid_session_child` for kids)
-- **AI Generation:** Google AI Studio (primary, API key) + Vertex AI (fallback). Together AI (FLUX photo style transfer). See AI Models section below.
+- **AI Generation:** Google AI Studio (primary, API key) + Vertex AI (fallback). Gemini 2.5 Flash Image (primary image gen) + Imagen 3 / Together AI FLUX (fallbacks). See AI Models section below.
 - **Payments:** Prodamus (edtale.payform.ru, HMAC-SHA256 webhook via Sign header, demo mode active)
 - **Tests:** pytest + pytest-asyncio + httpx (306 tests)
 
@@ -40,7 +40,7 @@ kidion/
 │   ├── ai_client.py           # AI Studio wrapper (StudioModel), fallback to Vertex AI
 │   ├── gemini_client.py       # Lesson generation (AI Studio first, Vertex fallback, stub if neither)
 │   ├── prompts.py             # Russian prompts for Methodologist + Tutor-Gamer
-│   ├── image_generator.py     # Image generation (Vertex AI Imagen) + photo style transfer (Together AI FLUX)
+│   ├── image_generator.py     # Image generation (Gemini Flash Image → Imagen fallback) + style transfer (Gemini Flash Image → FLUX fallback)
 │   ├── content_generator.py   # Saves lesson HTML/PNG/JSON to content/
 │   ├── curricula.py           # Load/search curriculum JSON files
 │   ├── universe.py            # Universe/character/shop generation (Gemini)
@@ -174,11 +174,11 @@ Multi-character AI chat for children. Templates in `templates/chat/`. Old `/spar
 | Киди | spark | Универсальный друг | free | gemini-2.5-flash |
 | Зуми | owl | Учитель | free | gemini-2.5-flash |
 | Лоро | captain | Рассказчик | free | gemini-2.5-flash |
-| Арти | artist | Художник | free | Together AI FLUX (photo) / Vertex AI Imagen (text) |
+| Арти | artist | Художник | free | Gemini 2.5 Flash Image (photo + text) → FLUX/Imagen fallback |
 
 Each has a unique system prompt layered on shared safety rules (10 rules in `_SAFETY_BASE`). Per-character chat history (separate `kid_chats` row per child+character). All characters use PNG avatar images (`static/spark/`).
 
-**Арти special logic:** Photo + style → `stylize_photo()` via Together AI FLUX.1-kontext-pro (direct style transfer). Text "нарисуй X" → AI generates DRAW: prompt → Imagen generates image. No photo, no draw request → auto-response (no AI tokens). Red dot on avatar when quota exhausted.
+**Арти special logic:** Photo + style → `stylize_photo()` via Gemini 2.5 Flash Image (fallback: FLUX.1-kontext-pro). Text "нарисуй X" → AI generates DRAW: prompt → Gemini Flash Image generates image (fallback: Imagen). No photo, no draw request → auto-response (no AI tokens). Red dot on avatar when quota exhausted. Hint strip above composer: "Стиль → опиши или прикрепи фото".
 
 ### Subscription & Limits
 - **Free:** 10 messages/day, all characters, 3 images/month
@@ -285,7 +285,8 @@ Web Speech API (browser-side, free). Opens overlay, speech → text → editable
 - `GOOGLE_CLOUD_PROJECT` set → uses Vertex AI (vertexai SDK)
 - Neither → returns stubs (for local dev/tests)
 - Image generation (PNG) always requires Vertex AI
-- Photo style transfer requires Together AI (`TOGETHER_API_KEY`)
+- Image generation (text-to-image + style transfer): Gemini 2.5 Flash Image primary, Imagen 3 / FLUX fallbacks
+- FLUX fallback requires Together AI (`TOGETHER_API_KEY`)
 
 ### Models by Function
 
@@ -295,8 +296,9 @@ Web Speech API (browser-side, free). Opens overlay, speech → text → editable
 | `gemini-3.1-pro-preview` | Lesson Step 2: Tutor-Gamer (JSON lesson + tasks), Universe + character generation | gemini_client.py, universe.py |
 | `gemini-2.5-flash-lite` | Lesson Step 3: Visual layout, image prompts | gemini_client.py |
 | `gemini-2.5-flash` | Kid chat (Киди), shop items, character/lesson images (Vertex only) | kid_chat.py, universe.py, image_generator.py |
-| `FLUX.1-kontext-pro` | Arty photo style transfer (Together AI, $0.04/image, 40 steps) | image_generator.py |
-| `imagen-3.0-generate-002` | Text-to-image generation (Vertex AI) | image_generator.py |
+| `gemini-2.5-flash-image-preview` | Arty: text-to-image + photo style transfer (Vertex AI, $0.039/image) | image_generator.py |
+| `FLUX.1-kontext-pro` | Arty photo style transfer fallback (Together AI, $0.04/image, 40 steps) | image_generator.py |
+| `imagen-3.0-generate-002` | Text-to-image fallback (Vertex AI) | image_generator.py |
 
 ### Architecture
 - `services/ai_client.py` — `StudioModel` class wraps google-genai to mimic Vertex AI `GenerativeModel` interface
