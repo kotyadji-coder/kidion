@@ -49,7 +49,7 @@
       <span>Киди</span>
     </a>
     <div class="sp-nav-cta">
-      <a class="sp-btn sp-btn-primary" href="/chat/register">Регистрация</a>
+      {% if not is_authenticated %}<a class="sp-btn sp-btn-primary" href="/chat/register">Регистрация</a>{% endif %}
     </div>
   </nav>
 

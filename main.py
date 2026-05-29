@@ -3527,7 +3527,9 @@ async def spark_login_page(request: Request):
     """Spark Chat login → pick child → PIN → chat."""
     if templates is None:
         return HTMLResponse("<h1>Login</h1>")
-    return templates.TemplateResponse(request, "chat/login.html", {})
+    conn = get_db_connection()
+    user = get_current_user(request, conn)
+    return templates.TemplateResponse(request, "chat/login.html", {"is_authenticated": user is not None})
 
 
 @app.get("/spark", response_class=HTMLResponse)
@@ -3607,6 +3609,13 @@ async def spark_report_page(child_id: int, request: Request):
             "messages": msgs,
         })
 
+    # Count active days (distinct dates with messages)
+    active_days = conn.execute(
+        "SELECT COUNT(DISTINCT date(m.created_at)) FROM kid_chat_messages m "
+        "JOIN kid_chats c ON c.id = m.chat_id WHERE c.child_id = ? AND m.role = 'user'",
+        (child_id,),
+    ).fetchone()[0]
+
     # Get weekly AI reports
     reports = get_chat_reports(conn, child_id, limit=10)
     for r in reports:
@@ -3623,6 +3632,7 @@ async def spark_report_page(child_id: int, request: Request):
             "children": all_children,
             "chats": chats,
             "total_messages": total_messages,
+            "active_days": active_days,
             "has_subscription": has_sub,
             "subscription": dict(subscription) if subscription else None,
             "reports": reports,
@@ -3929,6 +3939,8 @@ async def kid_chat_send(request: Request):
             draw_prompt = draw_match.group(1).strip()
             # Remove DRAW: line from visible response
             response_text = _re.sub(r"DRAW:\s*.+?(?:\n|$)", "", response_text).strip()
+            if not response_text:
+                response_text = "Рисую!"
             wants_image = True
 
     # Step 4: Output moderation — skip for Arty photo flow (text is our template, not AI)
@@ -3960,6 +3972,7 @@ async def kid_chat_send(request: Request):
             else:
                 logger.error("Image generation failed for child %s", child["id"])
                 _notify_admin_error(f"Image generation failed for child {child['id']}, prompt: {image_description[:100]}")
+                response_text = "Не получилось нарисовать это. Попробуй описать по-другому или выбери другую тему! 🎨"
     elif wants_image and has_sub and not response_image_url:
         # Try subscription images first, then crystals
         # Generate first, deduct after success
@@ -3983,6 +3996,7 @@ async def kid_chat_send(request: Request):
         else:
             logger.error("Image generation failed (sub) for child %s", child["id"])
             _notify_admin_error(f"Image generation failed (sub) for child {child['id']}, prompt: {image_description[:100]}")
+            response_text = "Не получилось нарисовать это. Попробуй описать по-другому или выбери другую тему! 🎨"
 
     # Save assistant message
     add_kid_chat_message(conn, chat_id, "assistant", response_text, response_image_url)

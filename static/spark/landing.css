@@ -10,6 +10,7 @@
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   letter-spacing: -0.005em;
+  overflow-x: hidden;
 }
 .sp * { box-sizing: border-box; }
 .sp button { font-family: inherit; cursor: pointer; }
@@ -73,19 +74,11 @@
 .sp-nav-link:hover { background: var(--surface-2); color: var(--text); }
 
 .sp-nav-cta { display: flex; align-items: center; gap: 8px; }
-.sp-nav-login { display: none; }
-@media (min-width: 769px) { .sp-nav-login { display: inline-flex; } }
+.sp-nav-login.sp-btn { display: none; }
+@media (min-width: 769px) { .sp-nav-login.sp-btn { display: inline-flex; } }
 .sp-nav-burger {
-  display: inline-flex;
-  width: 36px; height: 36px;
-  border-radius: 9px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  align-items: center; justify-content: center;
-  padding: 0;
+  display: none;
 }
-@media (min-width: 769px) { .sp-nav-burger { display: none; } }
 
 /* ============ Buttons ============ */
 .sp-btn {

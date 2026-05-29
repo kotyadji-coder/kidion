@@ -95,6 +95,10 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
   letter-spacing: -0.005em;
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+html.chat-page .sc {
   height: 100vh;
   height: 100dvh;
   max-height: 100vh;
@@ -568,7 +572,7 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
   bottom: 0; right: 0;
   width: 10px; height: 10px;
   border-radius: 50%;
-  background: oklch(0.55 0.22 25);
+  background: oklch(0.55 0.25 18);
   border: 2px solid var(--surface);
   z-index: 2;
 }
@@ -995,9 +999,15 @@ html.chat-page, html.chat-page body { height: 100vh; height: 100dvh; overflow: h
   transition: border-color .12s, background .12s;
   -webkit-tap-highlight-color: transparent;
 }
-.sc-style-pill:hover { border-color: var(--art-border); background: var(--art-soft); }
+.sc-style-pill:hover { border-color: var(--c-border, var(--art-border)); background: var(--c-soft, var(--art-soft)); }
 .sc-style-pill:active { transform: scale(0.97); }
 .sc-style-pill-ico { font-size: 15px; }
+.sc-style-hint {
+  flex: 0 0 auto;
+  display: inline-flex; align-items: center;
+  font-size: 11px; font-weight: 500; color: var(--text-3);
+  white-space: nowrap; padding: 0 4px;
+}
 
 /* ============ Composer ============ */
 .sc-comp {

@@ -202,7 +202,7 @@
     const exhausted = isLimitExhausted();
     characters.forEach((c) => {
       const li = document.createElement("li");
-      const offline = exhausted && c.key !== "artist";
+      const offline = c.key === "artist" ? isCharExhausted("artist") : exhausted;
       li.className = "sc-chatlist-row" + (offline ? " is-offline" : "");
       li.innerHTML = `
         <div class="sc-chatlist-av">
@@ -210,7 +210,7 @@
         </div>
         <div class="sc-chatlist-info">
           <p class="sc-chatlist-name">${esc(c.name_ru)}</p>
-          <p class="sc-chatlist-role">${offline ? "Сообщения на сегодня закончились" : esc(c.role_ru)}</p>
+          <p class="sc-chatlist-role">${offline ? (c.key === "artist" ? "Картинки закончились" : "Сообщения на сегодня закончились") : esc(c.role_ru)}</p>
         </div>`;
       li.querySelector(".sc-chatlist-av").prepend(getCharAvatar(c.key));
       li.addEventListener("click", () => {
@@ -229,20 +229,32 @@
     return (dailyLimit - dailyCount) <= 0;
   }
 
-  function renderStyleStrip(suggestions) {
+  function renderStyleStrip(suggestions, charKey) {
     const strip = document.getElementById("style-strip");
     strip.innerHTML = "";
+    if (charKey === "artist") {
+      const hint = document.createElement("span");
+      hint.className = "sc-style-hint";
+      hint.textContent = "Стиль → опиши или прикрепи фото";
+      strip.appendChild(hint);
+    }
     suggestions.forEach((s) => {
       const btn = document.createElement("button");
       btn.className = "sc-style-pill";
       btn.innerHTML = `<span class="sc-style-pill-ico">${esc(s.ico)}</span>${esc(s.label)}`;
       btn.addEventListener("click", () => {
-        if (attachedFile) {
-          chatInput.value = `Сделай моё фото в стиле ${s.label}`;
-          sendMessage();
+        if (charKey === "artist") {
+          if (attachedFile) {
+            chatInput.value = `Сделай моё фото в стиле ${s.label}`;
+            sendMessage();
+          } else {
+            selectedStyle = s.label;
+            chatInput.value = `Стиль: ${s.label}`;
+            chatInput.focus();
+            updateSendBtn();
+          }
         } else {
-          selectedStyle = s.label;
-          chatInput.value = `Стиль: ${s.label}`;
+          chatInput.value = s.label;
           chatInput.focus();
           updateSendBtn();
         }
@@ -376,10 +388,10 @@
       el.classList.toggle("is-active", el.dataset.char === key);
     });
 
-    // Arty style strip — show only for artist
+    // Style strip — show for artist and owl
     const styleStrip = document.getElementById("style-strip");
-    if (key === "artist" && c.suggestions && c.suggestions.length) {
-      renderStyleStrip(c.suggestions);
+    if ((key === "artist" || key === "owl") && c.suggestions && c.suggestions.length) {
+      renderStyleStrip(c.suggestions, key);
       styleStrip.style.display = "";
     } else {
       styleStrip.style.display = "none";
@@ -651,6 +663,14 @@
     if (headDot) {
       const offline = activeChar !== "artist" && remaining <= 0;
       headDot.classList.toggle("is-offline", offline);
+    }
+
+    // Update image counter for artist
+    const imgCounter = document.querySelector(".sc-img-counter");
+    if (imgCounter) {
+      imgCounter.textContent = freeImagesRemaining > 0
+        ? `${freeImagesRemaining} картинки бесплатно`
+        : `Волшебные краски закончились`;
     }
 
     // Re-render chat list to update online/offline status

@@ -193,6 +193,10 @@
         <p class="rpt-stat-value">{{ total_messages }}</p>
       </div>
       <div class="rpt-stat">
+        <p class="rpt-stat-label">Дней активности</p>
+        <p class="rpt-stat-value">{{ active_days }}</p>
+      </div>
+      <div class="rpt-stat">
         <p class="rpt-stat-label">Подписка</p>
         <p class="rpt-stat-value">{{ "Активна" if has_subscription else "Нет" }}</p>
         {% if has_subscription and subscription %}

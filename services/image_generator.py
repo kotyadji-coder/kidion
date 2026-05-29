@@ -66,7 +66,19 @@ def describe_photo_for_styling(image_bytes: bytes) -> str | None:
 
 
 def stylize_photo(image_bytes: bytes, style_en: str) -> bytes | None:
-    """Style-transfer a photo using Together AI FLUX.1-kontext-pro.
+    """Style-transfer a photo: try Gemini 2.5 Flash Image first, fallback to FLUX."""
+    # Try Gemini first
+    result = _stylize_photo_gemini(image_bytes, style_en)
+    if result:
+        return result
+
+    # Fallback to Together AI FLUX
+    logger.info("Gemini stylization failed, falling back to FLUX")
+    return _stylize_photo_flux(image_bytes, style_en)
+
+
+def _stylize_photo_flux(image_bytes: bytes, style_en: str) -> bytes | None:
+    """Style-transfer a photo using Together AI FLUX.1-kontext-pro (fallback).
 
     Takes original photo bytes and a style description, returns styled PNG bytes.
     """
@@ -75,7 +87,7 @@ def stylize_photo(image_bytes: bytes, style_en: str) -> bytes | None:
 
     api_key = os.environ.get("TOGETHER_API_KEY")
     if not api_key:
-        logger.info("No TOGETHER_API_KEY — cannot stylize photo")
+        logger.info("No TOGETHER_API_KEY — cannot stylize photo via FLUX")
         return None
 
     b64_image = base64.b64encode(image_bytes).decode("utf-8")
@@ -131,13 +143,87 @@ def _init_vertex(project: str):
         vertexai.init(project=project, location="us-central1")
 
 
+def _extract_image_bytes(response) -> bytes | None:
+    """Extract image bytes from Gemini response."""
+    try:
+        for part in response.candidates[0].content.parts:
+            if hasattr(part, "inline_data") and part.inline_data and part.inline_data.mime_type.startswith("image/"):
+                return part.inline_data.data
+    except (IndexError, AttributeError):
+        pass
+    return None
+
+
+def _generate_image_gemini(prompt: str) -> bytes | None:
+    """Generate image using Gemini 2.5 Flash Image via Vertex AI."""
+    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    if not project:
+        return None
+    try:
+        _init_vertex(project)
+        from vertexai.generative_models import GenerativeModel
+
+        model = GenerativeModel("gemini-2.5-flash-image-preview")
+        response = model.generate_content(
+            prompt,
+            generation_config={"response_modalities": ["IMAGE", "TEXT"]},
+        )
+        image_bytes = _extract_image_bytes(response)
+        if image_bytes:
+            logger.info("Image generated via Gemini 2.5 Flash Image")
+            return image_bytes
+        logger.warning("Gemini Flash Image returned no image for: %s", prompt[:100])
+        return None
+    except Exception:
+        logger.exception("Gemini Flash Image generation failed")
+        return None
+
+
+def _stylize_photo_gemini(image_bytes: bytes, style_en: str) -> bytes | None:
+    """Style-transfer a photo using Gemini 2.5 Flash Image via Vertex AI."""
+    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    if not project:
+        return None
+    try:
+        _init_vertex(project)
+        from vertexai.generative_models import GenerativeModel, Part
+
+        model = GenerativeModel("gemini-2.5-flash-image-preview")
+        image_part = Part.from_data(image_bytes, mime_type="image/jpeg")
+        prompt = (
+            f"Transform this photo into {style_en}. "
+            f"Keep the same person, pose, and composition. "
+            f"Make it child-friendly and colorful."
+        )
+        response = model.generate_content(
+            [prompt, image_part],
+            generation_config={"response_modalities": ["IMAGE", "TEXT"]},
+        )
+        result = _extract_image_bytes(response)
+        if result:
+            logger.info("Photo stylized via Gemini Flash Image (%s)", style_en)
+            return result
+        logger.warning("Gemini Flash Image returned no styled image")
+        return None
+    except Exception:
+        logger.exception("Gemini Flash Image stylization failed")
+        return None
+
+
 def generate_image(prompt: str) -> bytes | None:
-    """Generate image using Vertex AI Imagen 3."""
+    """Generate image: try Gemini 2.5 Flash Image first, fallback to Imagen 3."""
     project = os.environ.get("GOOGLE_CLOUD_PROJECT")
     if not project:
         logger.info("No GOOGLE_CLOUD_PROJECT — stub mode, no image")
         return None
 
+    # Try Gemini 2.5 Flash Image first
+    result = _generate_image_gemini(prompt)
+    if result:
+        return result
+
+    # Fallback to Imagen 3
+    logger.info("Gemini Flash Image failed, falling back to Imagen 3")
     try:
         _init_vertex(project)
         from vertexai.preview.vision_models import ImageGenerationModel
@@ -152,11 +238,11 @@ def generate_image(prompt: str) -> bytes | None:
         )
 
         if response.images:
-            logger.info("Image generated via Vertex AI Imagen")
+            logger.info("Image generated via Vertex AI Imagen (fallback)")
             return response.images[0]._image_bytes
 
         logger.warning("Imagen returned no images for prompt: %s", prompt[:100])
         return None
     except Exception:
-        logger.exception("Image generation failed")
+        logger.exception("Image generation failed (Imagen fallback)")
         return None
