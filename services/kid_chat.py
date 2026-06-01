@@ -231,7 +231,7 @@ def generate_chat_response(
 
     from services.ai_client import get_model, is_safety_blocked
 
-    model = get_model("gemini-2.5-flash", system_instruction=system_prompt)
+    model = get_model("gemini-2.5-flash", system_instruction=system_prompt, feature="chat")
     if model is None:
         return _stub_response(messages[-1]["content"] if messages else "")
 
@@ -254,6 +254,8 @@ def generate_chat_response(
 
     except Exception as e:
         logger.error("Chat generation error: %s", e)
+        from services.notify import notify_error
+        notify_error(f"Chat generation failed: {e}")
         return "Что-то пошло не так. Попробуй ещё раз через минуту."
 
 

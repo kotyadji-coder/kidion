@@ -78,20 +78,17 @@ def get_client(location: str = "global"):
 
 # ── Public API ──
 
-def get_model(model_name: str, system_instruction=None):
+def get_model(model_name: str, system_instruction=None, feature: str = ""):
     """
     Returns a ModelWrapper, or None if not configured (stub mode).
 
-    Usage:
-        model = get_model("gemini-3.5-flash")
-        if model is None:
-            return stub_response()
-        response = model.generate_content(prompt)
+    Args:
+        feature: tag for LLM Dashboard (e.g. "chat", "lessons", "universe").
     """
     client = get_client("global")
     if client is None:
         return None
-    return ModelWrapper(client, model_name, system_instruction)
+    return ModelWrapper(client, model_name, system_instruction, feature=feature)
 
 
 def is_safety_blocked(response) -> bool:
@@ -107,7 +104,7 @@ def is_safety_blocked(response) -> bool:
 
 # ── LLM Dashboard reporting ──
 
-def _send_to_dashboard(model: str, response):
+def _send_to_dashboard(model: str, response, feature: str = ""):
     """Fire-and-forget token usage reporting."""
     try:
         usage = getattr(response, "usage_metadata", None)
@@ -115,21 +112,24 @@ def _send_to_dashboard(model: str, response):
         output_tokens = getattr(usage, "candidates_token_count", 0) or 0
         if not (input_tokens or output_tokens):
             return
-        httpx.post(LLM_DASHBOARD_URL, json={
+        payload = {
             "project": "kidion",
             "model": model,
             "input_tokens": input_tokens,
             "output_tokens": output_tokens,
-        }, timeout=5)
+        }
+        if feature:
+            payload["feature"] = feature
+        httpx.post(LLM_DASHBOARD_URL, json=payload, timeout=5)
     except Exception:
         logger.debug("Failed to send usage to LLM dashboard", exc_info=True)
 
 
-def report_usage(model_name: str, response):
+def report_usage(model_name: str, response, feature: str = ""):
     """Report token usage to LLM Dashboard in background thread."""
     threading.Thread(
         target=_send_to_dashboard,
-        args=(model_name, response),
+        args=(model_name, response, feature),
         daemon=True,
     ).start()
 
@@ -139,10 +139,11 @@ def report_usage(model_name: str, response):
 class ModelWrapper:
     """Wraps google-genai client to provide generate_content() and start_chat()."""
 
-    def __init__(self, client, model_name: str, system_instruction=None):
+    def __init__(self, client, model_name: str, system_instruction=None, feature: str = ""):
         self._client = client
         self._model_name = model_name
         self._system_instruction = system_instruction
+        self._feature = feature
 
     def _build_config(self, generation_config=None):
         from google.genai import types
@@ -168,7 +169,7 @@ class ModelWrapper:
             contents=contents,
             config=config,
         )
-        report_usage(self._model_name, response)
+        report_usage(self._model_name, response, self._feature)
         return response
 
     def start_chat(self, history=None):
@@ -187,17 +188,18 @@ class ModelWrapper:
             config=config,
             history=history,
         )
-        return _ChatWrapper(chat, self._model_name)
+        return _ChatWrapper(chat, self._model_name, self._feature)
 
 
 class _ChatWrapper:
     """Wraps google-genai chat session with usage reporting."""
 
-    def __init__(self, chat, model_name: str):
+    def __init__(self, chat, model_name: str, feature: str = ""):
         self._chat = chat
         self._model_name = model_name
+        self._feature = feature
 
     def send_message(self, message):
         response = self._chat.send_message(message)
-        report_usage(self._model_name, response)
+        report_usage(self._model_name, response, self._feature)
         return response

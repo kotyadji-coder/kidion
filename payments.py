@@ -215,6 +215,8 @@ def handle_webhook(conn: sqlite3.Connection, event_body: dict, sign_header: str 
     # Verify signature (from Sign header, per Prodamus docs)
     if not verify_prodamus_signature(event_body, sign_header):
         logging.warning("Invalid Prodamus webhook signature")
+        from services.notify import notify_error
+        notify_error(f"Invalid Prodamus webhook signature! order={event_body.get('order_num', '?')}")
         return
 
     # Prodamus uses 'order_num' for our order_id, 'order_id' is their internal ID

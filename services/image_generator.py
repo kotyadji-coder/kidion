@@ -65,12 +65,17 @@ def describe_photo_for_styling(image_bytes: bytes) -> str | None:
             ),
         )
 
+        from services.ai_client import report_usage
+        report_usage("gemini-3.5-flash", response, feature="chat-images")
+
         if response.text:
             logger.info("Photo described via GenAI: %s", response.text[:100])
             return response.text.strip()
         return None
-    except Exception:
+    except Exception as e:
         logger.exception("Photo description failed")
+        from services.notify import notify_error
+        notify_error(f"Photo description failed: {e}")
         return None
 
 
@@ -136,8 +141,10 @@ def _stylize_photo_flux(image_bytes: bytes, style_en: str) -> bytes | None:
 
         logger.warning("Together AI returned no image data: %s", str(result)[:200])
         return None
-    except Exception:
+    except Exception as e:
         logger.exception("Photo stylization via Together AI failed")
+        from services.notify import notify_error
+        notify_error(f"FLUX stylization failed: {e}")
         return None
 
 
@@ -171,14 +178,19 @@ def _generate_image_gemini(prompt: str) -> bytes | None:
                 response_modalities=["IMAGE", "TEXT"],
             ),
         )
+        from services.ai_client import report_usage
+        report_usage("gemini-2.5-flash-image-preview", response, feature="chat-images")
+
         image_bytes = _extract_image_bytes(response)
         if image_bytes:
             logger.info("Image generated via Gemini 2.5 Flash Image")
             return image_bytes
         logger.warning("Gemini Flash Image returned no image for: %s", prompt[:100])
         return None
-    except Exception:
+    except Exception as e:
         logger.exception("Gemini Flash Image generation failed")
+        from services.notify import notify_error
+        notify_error(f"Gemini image generation failed: {e}")
         return None
 
 
@@ -205,14 +217,19 @@ def _stylize_photo_gemini(image_bytes: bytes, style_en: str) -> bytes | None:
                 response_modalities=["IMAGE", "TEXT"],
             ),
         )
+        from services.ai_client import report_usage
+        report_usage("gemini-2.5-flash-image-preview", response, feature="chat-images")
+
         result = _extract_image_bytes(response)
         if result:
             logger.info("Photo stylized via Gemini Flash Image (%s)", style_en)
             return result
         logger.warning("Gemini Flash Image returned no styled image")
         return None
-    except Exception:
+    except Exception as e:
         logger.exception("Gemini Flash Image stylization failed")
+        from services.notify import notify_error
+        notify_error(f"Gemini stylization failed: {e}")
         return None
 
 
@@ -260,6 +277,8 @@ def generate_image(prompt: str) -> bytes | None:
 
         logger.warning("Imagen returned no images for prompt: %s", prompt[:100])
         return None
-    except Exception:
+    except Exception as e:
         logger.exception("Image generation failed (Imagen fallback)")
+        from services.notify import notify_error
+        notify_error(f"Imagen fallback failed: {e}")
         return None

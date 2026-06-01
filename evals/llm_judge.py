@@ -125,7 +125,7 @@ RECOMMENDATIONS_PROMPT = """Ты — AI-консультант по качест
 def _get_judge_model():
     """Get model for judging."""
     from services.ai_client import get_model
-    return get_model("gemini-3.5-flash")
+    return get_model("gemini-3.5-flash", feature="evals")
 
 
 def _extract_json_from_response(text: str) -> dict | list:

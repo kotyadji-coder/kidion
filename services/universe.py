@@ -16,7 +16,7 @@ logger = logging.getLogger("kidion")
 def _get_text_model():
     """Get Gemini model for text generation. Returns None in stub mode."""
     from services.ai_client import get_model
-    return get_model("gemini-3.5-flash")
+    return get_model("gemini-3.5-flash", feature="universe")
 
 
 def _stub_universe(child_name: str, interests_str: str) -> dict:
@@ -202,8 +202,10 @@ def generate_universe(
             zone.setdefault("description", "")
             zone.setdefault("lesson_frame", "")
         return result
-    except Exception:
+    except Exception as e:
         logger.exception("Universe generation failed, using stub")
+        from services.notify import notify_error
+        notify_error(f"Universe generation failed: {e}")
         return _stub_universe(child_name, interests_str)
 
 
@@ -237,14 +239,18 @@ def generate_character_image(character_prompt: str, equipped_items: list[dict] |
                 response_mime_type="image/png",
             ),
         )
+        from services.ai_client import report_usage
+        report_usage("gemini-2.5-flash", response, feature="universe")
 
         if response.candidates and response.candidates[0].content.parts:
             for part in response.candidates[0].content.parts:
                 if hasattr(part, "inline_data") and part.inline_data:
                     return part.inline_data.data
         return None
-    except Exception:
+    except Exception as e:
         logger.exception("Character image generation failed")
+        from services.notify import notify_error
+        notify_error(f"Character image generation failed: {e}")
         return None
 
 
@@ -254,7 +260,7 @@ def generate_shop_items(universe_description: str, character_name: str) -> list[
     Returns list of dicts with: category, title_ru, description_ru, emoji, price_stars.
     """
     from services.ai_client import get_model, is_safety_blocked
-    model = get_model("gemini-2.5-flash")
+    model = get_model("gemini-2.5-flash", feature="universe")
 
     prompt = f"""Ты — геймдизайнер детской образовательной платформы.
 
@@ -304,8 +310,10 @@ def generate_shop_items(universe_description: str, character_name: str) -> list[
                     "price_stars": max(5, min(50, int(item.get("price_stars", 10)))),
                 })
         return validated if validated else _stub_shop_items()
-    except Exception:
+    except Exception as e:
         logger.exception("Shop items generation failed, using stubs")
+        from services.notify import notify_error
+        notify_error(f"Shop items generation failed: {e}")
         return _stub_shop_items()
 
 

@@ -405,8 +405,10 @@ def generate_lesson_content(lesson_id: int, child: dict, topic: str, subject: st
 
             update_lesson_content(conn, lesson_id, content_url, worksheet_url, "done",
                                   worksheet_url=worksheet_url, icon=lesson_icon)
-    except Exception:
+    except Exception as e:
         logger.exception("Generation failed for lesson %s", lesson_id)
+        from services.notify import notify_error
+        notify_error(f"Lesson generation failed (id={lesson_id}): {e}")
         try:
             conn = get_connection(db_path)
             update_lesson_content(conn, lesson_id, None, None, "error")

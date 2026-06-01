@@ -18,12 +18,12 @@ FLASH_LITE_MODEL_NAME = "gemini-2.5-flash"
 
 def _get_model(model_name: str = None):
     from services.ai_client import get_model
-    return get_model(model_name or MODEL_STEP1)
+    return get_model(model_name or MODEL_STEP1, feature="lessons")
 
 
 def _get_flash_lite_model():
     from services.ai_client import get_model
-    return get_model(FLASH_LITE_MODEL_NAME)
+    return get_model(FLASH_LITE_MODEL_NAME, feature="lessons")
 
 
 def _is_blocked_by_safety(response) -> bool:
