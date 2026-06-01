@@ -1,6 +1,9 @@
 """
-image_generator.py - Generate illustrations using Gemini 2.5 Flash.
+image_generator.py - Generate illustrations using Gemini Flash Image.
 Used for lesson images and chat image generation.
+
+Image models use google-genai SDK with location="us-central1".
+Imagen 3 fallback uses old vertexai SDK.
 """
 
 import os
@@ -34,10 +37,12 @@ def generate_chat_image(description: str) -> bytes | None:
 
 
 def describe_photo_for_styling(image_bytes: bytes) -> str | None:
-    """Use Gemini via Vertex AI to describe a photo for re-generation in a different style."""
-    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    if not project:
-        logger.info("No GOOGLE_CLOUD_PROJECT — stub mode, no photo describe")
+    """Use Gemini to describe a photo for re-generation in a different style."""
+    from services.ai_client import get_client
+
+    client = get_client("us-central1")
+    if not client:
+        logger.info("No GenAI client — stub mode, no photo describe")
         return None
 
     prompt_text = (
@@ -49,15 +54,19 @@ def describe_photo_for_styling(image_bytes: bytes) -> str | None:
     )
 
     try:
-        _init_vertex(project)
-        from vertexai.generative_models import GenerativeModel, Part
+        from google.genai import types
 
-        model = GenerativeModel("gemini-2.5-flash")
-        image_part = Part.from_data(image_bytes, mime_type="image/jpeg")
-        response = model.generate_content([prompt_text, image_part])
+        image_part = types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
+        response = client.models.generate_content(
+            model="gemini-3.5-flash",
+            contents=[prompt_text, image_part],
+            config=types.GenerateContentConfig(
+                thinking_config=types.ThinkingConfig(thinking_level="MINIMAL"),
+            ),
+        )
 
         if response.text:
-            logger.info("Photo described via Vertex AI: %s", response.text[:100])
+            logger.info("Photo described via GenAI: %s", response.text[:100])
             return response.text.strip()
         return None
     except Exception:
@@ -122,7 +131,8 @@ def _stylize_photo_flux(image_bytes: bytes, style_en: str) -> bytes | None:
         if result.get("data") and result["data"][0].get("b64_json"):
             image_b64 = result["data"][0]["b64_json"]
             logger.info("Photo stylized via Together AI FLUX (%s)", style_en)
-            return base64.b64decode(image_b64)
+            import base64 as b64mod
+            return b64mod.b64decode(image_b64)
 
         logger.warning("Together AI returned no image data: %s", str(result)[:200])
         return None
@@ -131,42 +141,35 @@ def _stylize_photo_flux(image_bytes: bytes, style_en: str) -> bytes | None:
         return None
 
 
-def _init_vertex(project: str):
-    """Initialize Vertex AI with credentials."""
-    import vertexai
-    credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-    if credentials_path:
-        from google.oauth2 import service_account
-        credentials = service_account.Credentials.from_service_account_file(credentials_path)
-        vertexai.init(project=project, location="us-central1", credentials=credentials)
-    else:
-        vertexai.init(project=project, location="us-central1")
-
-
 def _extract_image_bytes(response) -> bytes | None:
     """Extract image bytes from Gemini response."""
     try:
         for part in response.candidates[0].content.parts:
-            if hasattr(part, "inline_data") and part.inline_data and part.inline_data.mime_type.startswith("image/"):
-                return part.inline_data.data
+            if hasattr(part, "inline_data") and part.inline_data:
+                mime = getattr(part.inline_data, "mime_type", "")
+                if mime.startswith("image/"):
+                    return part.inline_data.data
     except (IndexError, AttributeError):
         pass
     return None
 
 
 def _generate_image_gemini(prompt: str) -> bytes | None:
-    """Generate image using Gemini 2.5 Flash Image via Vertex AI."""
-    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    if not project:
+    """Generate image using Gemini 2.5 Flash Image via GenAI SDK."""
+    from services.ai_client import get_client
+
+    client = get_client("us-central1")
+    if not client:
         return None
     try:
-        _init_vertex(project)
-        from vertexai.generative_models import GenerativeModel
+        from google.genai import types
 
-        model = GenerativeModel("gemini-2.5-flash-image-preview")
-        response = model.generate_content(
-            prompt,
-            generation_config={"response_modalities": ["IMAGE", "TEXT"]},
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-image-preview",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_modalities=["IMAGE", "TEXT"],
+            ),
         )
         image_bytes = _extract_image_bytes(response)
         if image_bytes:
@@ -180,24 +183,27 @@ def _generate_image_gemini(prompt: str) -> bytes | None:
 
 
 def _stylize_photo_gemini(image_bytes: bytes, style_en: str) -> bytes | None:
-    """Style-transfer a photo using Gemini 2.5 Flash Image via Vertex AI."""
-    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    if not project:
+    """Style-transfer a photo using Gemini 2.5 Flash Image."""
+    from services.ai_client import get_client
+
+    client = get_client("us-central1")
+    if not client:
         return None
     try:
-        _init_vertex(project)
-        from vertexai.generative_models import GenerativeModel, Part
+        from google.genai import types
 
-        model = GenerativeModel("gemini-2.5-flash-image-preview")
-        image_part = Part.from_data(image_bytes, mime_type="image/jpeg")
+        image_part = types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
         prompt = (
             f"Transform this photo into {style_en}. "
             f"Keep the same person, pose, and composition. "
             f"Make it child-friendly and colorful."
         )
-        response = model.generate_content(
-            [prompt, image_part],
-            generation_config={"response_modalities": ["IMAGE", "TEXT"]},
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-image-preview",
+            contents=[prompt, image_part],
+            config=types.GenerateContentConfig(
+                response_modalities=["IMAGE", "TEXT"],
+            ),
         )
         result = _extract_image_bytes(response)
         if result:
@@ -212,9 +218,11 @@ def _stylize_photo_gemini(image_bytes: bytes, style_en: str) -> bytes | None:
 
 def generate_image(prompt: str) -> bytes | None:
     """Generate image: try Gemini 2.5 Flash Image first, fallback to Imagen 3."""
-    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    if not project:
-        logger.info("No GOOGLE_CLOUD_PROJECT — stub mode, no image")
+    from services.ai_client import get_client
+
+    client = get_client("us-central1")
+    if not client:
+        logger.info("No GenAI client — stub mode, no image")
         return None
 
     # Try Gemini 2.5 Flash Image first
@@ -222,11 +230,20 @@ def generate_image(prompt: str) -> bytes | None:
     if result:
         return result
 
-    # Fallback to Imagen 3
+    # Fallback to Imagen 3 (uses old vertexai SDK)
     logger.info("Gemini Flash Image failed, falling back to Imagen 3")
     try:
-        _init_vertex(project)
+        import vertexai
         from vertexai.preview.vision_models import ImageGenerationModel
+
+        project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+        credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        if credentials_path:
+            from google.oauth2 import service_account
+            credentials = service_account.Credentials.from_service_account_file(credentials_path)
+            vertexai.init(project=project, location="us-central1", credentials=credentials)
+        else:
+            vertexai.init(project=project, location="us-central1")
 
         model = ImageGenerationModel.from_pretrained("imagen-3.0-generate-002")
         response = model.generate_images(

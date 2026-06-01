@@ -1,8 +1,8 @@
 """
-ai_client.py — Vertex AI model provider for Kidion.
+ai_client.py — Google GenAI client for Kidion (Vertex AI mode).
 
-Returns Vertex AI GenerativeModel instances. Falls back to stub mode (None)
-if google-credentials.json is not available.
+Uses google-genai SDK v2+ with vertexai=True.
+Falls back to stub mode (None) if google-credentials.json is not available.
 
 LLM Dashboard integration: sends token usage after each call.
 """
@@ -18,50 +18,91 @@ logger = logging.getLogger("kidion")
 
 LLM_DASHBOARD_URL = "http://5.42.101.215:8005/api/usage"
 
-# ── Vertex AI initialization (cached) ──
+# ── Client initialization (cached per location) ──
 
-_vertex_initialized = False
-_vertex_project = None
+_clients: dict = {}
+_init_done: dict = {}
+_project: str | None = None
 
 
-def _ensure_vertex():
-    """Initialize Vertex AI once from google-credentials.json."""
-    global _vertex_initialized, _vertex_project
-    if _vertex_initialized:
-        return _vertex_project is not None
+def _get_project() -> str:
+    """Detect project ID from env or google-credentials.json."""
+    global _project
+    if _project is not None:
+        return _project
 
-    _vertex_initialized = True
-    creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
     project = os.getenv("GOOGLE_CLOUD_PROJECT", "")
+    creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
 
-    # Auto-detect from google-credentials.json if env vars not set
     if not project and os.path.exists("google-credentials.json"):
         try:
             with open("google-credentials.json") as f:
                 creds_data = json.load(f)
             project = creds_data.get("project_id", "")
-            creds_path = "google-credentials.json"
+            if not creds_path:
+                os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google-credentials.json"
         except Exception:
             pass
 
+    _project = project or ""
+    return _project
+
+
+def get_client(location: str = "global"):
+    """Get a GenAI client for a specific location. Returns None in stub mode."""
+    if location in _init_done:
+        return _clients.get(location)
+
+    _init_done[location] = True
+    project = _get_project()
+
     if not project:
         logger.info("No Vertex AI credentials — running in stub mode")
-        return False
+        return None
 
     try:
-        import vertexai
-        if creds_path:
-            from google.oauth2 import service_account
-            credentials = service_account.Credentials.from_service_account_file(creds_path)
-            vertexai.init(project=project, location="global", credentials=credentials)
-        else:
-            vertexai.init(project=project, location="global")
-        _vertex_project = project
-        logger.info("Vertex AI initialized: project=%s", project)
-        return True
+        from google import genai
+
+        client = genai.Client(
+            vertexai=True,
+            project=project,
+            location=location,
+        )
+        _clients[location] = client
+        logger.info("GenAI client initialized: project=%s, location=%s", project, location)
+        return client
     except Exception as e:
-        logger.warning("Vertex AI init failed: %s", e)
+        logger.warning("GenAI client init failed: %s", e)
+        return None
+
+
+# ── Public API ──
+
+def get_model(model_name: str, system_instruction=None):
+    """
+    Returns a ModelWrapper, or None if not configured (stub mode).
+
+    Usage:
+        model = get_model("gemini-3.5-flash")
+        if model is None:
+            return stub_response()
+        response = model.generate_content(prompt)
+    """
+    client = get_client("global")
+    if client is None:
+        return None
+    return ModelWrapper(client, model_name, system_instruction)
+
+
+def is_safety_blocked(response) -> bool:
+    """Check if a Gemini response was blocked by safety filters."""
+    if not response.candidates:
+        return True
+    candidate = response.candidates[0]
+    fr = getattr(candidate, "finish_reason", None)
+    if not fr:
         return False
+    return getattr(fr, "name", str(fr)) == "SAFETY"
 
 
 # ── LLM Dashboard reporting ──
@@ -84,30 +125,6 @@ def _send_to_dashboard(model: str, response):
         logger.debug("Failed to send usage to LLM dashboard", exc_info=True)
 
 
-# ── Public API ──
-
-def get_model(model_name: str, system_instruction=None):
-    """
-    Returns a Vertex AI GenerativeModel, or None if not configured (stub mode).
-
-    Usage:
-        model = get_model("gemini-2.5-flash")
-        if model is None:
-            return stub_response()
-        response = model.generate_content(prompt)
-    """
-    if not _ensure_vertex():
-        return None
-    try:
-        from vertexai.generative_models import GenerativeModel
-        if system_instruction:
-            return GenerativeModel(model_name, system_instruction=system_instruction)
-        return GenerativeModel(model_name)
-    except Exception as e:
-        logger.warning("Failed to create model %s: %s", model_name, e)
-        return None
-
-
 def report_usage(model_name: str, response):
     """Report token usage to LLM Dashboard in background thread."""
     threading.Thread(
@@ -117,5 +134,70 @@ def report_usage(model_name: str, response):
     ).start()
 
 
-# Backward compatibility alias — all existing callers use this name
-get_studio_model = get_model
+# ── Model Wrapper ──
+
+class ModelWrapper:
+    """Wraps google-genai client to provide generate_content() and start_chat()."""
+
+    def __init__(self, client, model_name: str, system_instruction=None):
+        self._client = client
+        self._model_name = model_name
+        self._system_instruction = system_instruction
+
+    def _build_config(self, generation_config=None):
+        from google.genai import types
+
+        kw: dict = {}
+        if self._system_instruction:
+            kw["system_instruction"] = self._system_instruction
+
+        # Thinking config for thinking models (3.5+)
+        if "3.5" in self._model_name:
+            kw["thinking_config"] = types.ThinkingConfig(thinking_level="MINIMAL")
+
+        # Merge caller's generation_config
+        if isinstance(generation_config, dict):
+            kw.update(generation_config)
+
+        return types.GenerateContentConfig(**kw) if kw else None
+
+    def generate_content(self, contents, generation_config=None, **_ignored):
+        config = self._build_config(generation_config)
+        response = self._client.models.generate_content(
+            model=self._model_name,
+            contents=contents,
+            config=config,
+        )
+        report_usage(self._model_name, response)
+        return response
+
+    def start_chat(self, history=None):
+        from google.genai import types
+
+        kw: dict = {}
+        if self._system_instruction:
+            kw["system_instruction"] = self._system_instruction
+        if "3.5" in self._model_name:
+            kw["thinking_config"] = types.ThinkingConfig(thinking_level="MINIMAL")
+
+        config = types.GenerateContentConfig(**kw) if kw else None
+
+        chat = self._client.chats.create(
+            model=self._model_name,
+            config=config,
+            history=history,
+        )
+        return _ChatWrapper(chat, self._model_name)
+
+
+class _ChatWrapper:
+    """Wraps google-genai chat session with usage reporting."""
+
+    def __init__(self, chat, model_name: str):
+        self._chat = chat
+        self._model_name = model_name
+
+    def send_message(self, message):
+        response = self._chat.send_message(message)
+        report_usage(self._model_name, response)
+        return response

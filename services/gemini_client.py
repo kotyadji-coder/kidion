@@ -11,8 +11,8 @@ from services.prompts import (
     VISUAL_LAYOUT_PROMPT,
 )
 
-MODEL_STEP1 = "gemini-2.5-flash"
-MODEL_STEP2 = "gemini-2.5-flash"
+MODEL_STEP1 = "gemini-3.5-flash"
+MODEL_STEP2 = "gemini-3.5-flash"
 FLASH_LITE_MODEL_NAME = "gemini-2.5-flash"
 
 
@@ -28,12 +28,8 @@ def _get_flash_lite_model():
 
 def _is_blocked_by_safety(response) -> bool:
     """Check if Gemini response was blocked by safety filters."""
-    if not response.candidates:
-        return True
-    candidate = response.candidates[0]
-    if hasattr(candidate, "finish_reason") and candidate.finish_reason:
-        return candidate.finish_reason.name == "SAFETY"
-    return False
+    from services.ai_client import is_safety_blocked
+    return is_safety_blocked(response)
 
 
 def _extract_json(raw: str) -> dict:
@@ -64,7 +60,7 @@ def generate_explanation(question: str, cached_methodologist: str | None = None)
     if model_step1 is None:
         return ("stub", _stub_lesson(question))
 
-    # Step 1: methodologist (gemini-2.5-pro) — skip if cached
+    # Step 1: methodologist — skip if cached
     if cached_methodologist:
         methodologist_output = cached_methodologist
     else:
@@ -76,7 +72,7 @@ def generate_explanation(question: str, cached_methodologist: str | None = None)
 
         methodologist_output = step1_response.text.strip()
 
-    # Step 2: tutor-gamer → strict JSON (gemini-3.1-pro-preview)
+    # Step 2: tutor-gamer → strict JSON
     model_step2 = _get_model(MODEL_STEP2)
     step2_prompt = TUTOR_GAMER_JSON_PROMPT.format(
         question=question,

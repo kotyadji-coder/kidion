@@ -63,7 +63,7 @@ def generate_weekly_report(
 
     from services.ai_client import get_model
 
-    model = get_model("gemini-2.5-flash", system_instruction="Ты помощник для родителей.")
+    model = get_model("gemini-3.5-flash", system_instruction="Ты помощник для родителей.")
     if model is None:
         return {
             "summary": f"На этой неделе {child_name} отправил(а) {len(messages)} сообщений персонажам.",

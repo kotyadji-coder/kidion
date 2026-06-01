@@ -21,7 +21,7 @@ Parent creates child (name, grade, interests) → AI generates universe + charac
 - **Backend:** FastAPI + uvicorn + SQLite (sqlite3, no ORM)
 - **Frontend:** Jinja2 templates + vanilla JS (no React/Vue)
 - **Auth:** bcrypt (passwords) + itsdangerous (signed cookies `kid_session` for parents, `kid_session_child` for kids)
-- **AI Generation:** Google AI Studio (primary, API key) + Vertex AI (fallback). Gemini 2.5 Flash Image (primary image gen) + Imagen 3 / Together AI FLUX (fallbacks). See AI Models section below.
+- **AI Generation:** Vertex AI via google-genai SDK v2+ (vertexai=True). Gemini 3.5 Flash (complex text) + 2.5 Flash (simple text), Gemini 2.5 Flash Image (images) + Imagen 3 / Together AI FLUX (fallbacks). See AI Models section below.
 - **Payments:** Prodamus (edtale.payform.ru, HMAC-SHA256 webhook via Sign header, demo mode active)
 - **Tests:** pytest + pytest-asyncio + httpx (306 tests)
 
@@ -136,7 +136,7 @@ kidion/
    - `generate_shop_items()` → Gemini Flash generates ~17 themed items (4 categories) → saved to `shop_items` table
 
 ### Stub Mode
-All generation functions return predefined defaults when neither `GEMINI_API_KEY` nor `GOOGLE_CLOUD_PROJECT` is set. Character image returns `None` (UI shows placeholder).
+All generation functions return predefined defaults when `GOOGLE_CLOUD_PROJECT` is not set. Character image returns `None` (UI shows placeholder).
 
 ### Kid Onboarding (`/kid/onboarding`)
 - First login redirects here if `character_onboarded=0`
@@ -280,30 +280,26 @@ Web Speech API (browser-side, free). Opens overlay, speech → text → editable
 
 ## AI Models & Backend
 
-### Priority: AI Studio (API key) → Vertex AI → Stub mode
-- `GEMINI_API_KEY` set → uses Google AI Studio (google-genai SDK)
-- `GOOGLE_CLOUD_PROJECT` set → uses Vertex AI (vertexai SDK)
-- Neither → returns stubs (for local dev/tests)
-- Image generation (PNG) always requires Vertex AI
-- Image generation (text-to-image + style transfer): Gemini 2.5 Flash Image primary, Imagen 3 / FLUX fallbacks
+### Priority: Vertex AI (google-genai SDK) → Stub mode
+- `GOOGLE_CLOUD_PROJECT` set → uses google-genai SDK v2+ with `vertexai=True`, location `"global"`
+- Not set → returns stubs (for local dev/tests)
+- Image generation: Gemini 2.5 Flash Image primary, Imagen 3 / FLUX fallbacks (location `"us-central1"`)
 - FLUX fallback requires Together AI (`TOGETHER_API_KEY`)
 
 ### Models by Function
 
 | Model | Function | File |
 |-------|----------|------|
-| `gemini-2.5-pro` | Lesson Step 1: Methodologist (rules, mnemonics) | gemini_client.py |
-| `gemini-3.1-pro-preview` | Lesson Step 2: Tutor-Gamer (JSON lesson + tasks), Universe + character generation | gemini_client.py, universe.py |
-| `gemini-2.5-flash-lite` | Lesson Step 3: Visual layout, image prompts | gemini_client.py |
-| `gemini-2.5-flash` | Kid chat (Киди), shop items, character/lesson images (Vertex only) | kid_chat.py, universe.py, image_generator.py |
-| `gemini-2.5-flash-image-preview` | Arty: text-to-image + photo style transfer (Vertex AI, $0.039/image) | image_generator.py |
+| `gemini-3.5-flash` | Complex text: lessons (steps 1-2), universe, skip test, reports, evals | gemini_client.py, universe.py, chat_report.py, evals/ |
+| `gemini-2.5-flash` | Simple text: lesson step 3 (image prompt), chat, shop items, character image (PNG) | gemini_client.py, kid_chat.py, universe.py |
+| `gemini-2.5-flash-image-preview` | Arty: text-to-image + photo style transfer ($0.039/image) | image_generator.py |
 | `FLUX.1-kontext-pro` | Arty photo style transfer fallback (Together AI, $0.04/image, 40 steps) | image_generator.py |
-| `imagen-3.0-generate-002` | Text-to-image fallback (Vertex AI) | image_generator.py |
+| `imagen-3.0-generate-002` | Text-to-image fallback (old vertexai SDK) | image_generator.py |
 
 ### Architecture
-- `services/ai_client.py` — `StudioModel` class wraps google-genai to mimic Vertex AI `GenerativeModel` interface
-- `get_studio_model(name)` returns `StudioModel` if `GEMINI_API_KEY` is set, else `None`
-- Each file's model-creation function tries Studio first, then Vertex, then returns `None` (stub)
+- `services/ai_client.py` — `google-genai` SDK v2+ with `vertexai=True`. `get_client(location)` returns `genai.Client`, `get_model(name)` returns `ModelWrapper` with auto `ThinkingConfig(MINIMAL)` for 3.5+ models
+- Text gen uses `location="global"`, image gen uses `location="us-central1"`
+- Imagen fallback still uses old `vertexai` SDK (`google-cloud-aiplatform`)
 
 ## Running
 

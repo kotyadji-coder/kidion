@@ -229,28 +229,25 @@ def generate_chat_response(
             gender_note = " Это девочка — используй женский род при обращении (она, молодец, сделала)."
         system_prompt += f"\nИмя ребёнка: {child_name}.{gender_note} Можешь иногда обращаться по имени."
 
-    from services.ai_client import get_model
+    from services.ai_client import get_model, is_safety_blocked
 
     model = get_model("gemini-2.5-flash", system_instruction=system_prompt)
     if model is None:
         return _stub_response(messages[-1]["content"] if messages else "")
 
     try:
-        from vertexai.generative_models import Content, Part
+        from google.genai import types
+
         history = []
         for msg in messages[:-1]:
             role = "user" if msg["role"] == "user" else "model"
-            history.append(Content(role=role, parts=[Part.from_text(msg["content"])]))
+            history.append(types.Content(role=role, parts=[types.Part(text=msg["content"])]))
 
         chat = model.start_chat(history=history)
         last_msg = messages[-1]["content"] if messages else ""
         response = chat.send_message(last_msg)
 
-        if not response.candidates:
-            return "Не получилось сформулировать ответ. Попробуй спросить по-другому."
-
-        candidate = response.candidates[0]
-        if hasattr(candidate, "finish_reason") and candidate.finish_reason and candidate.finish_reason.name == "SAFETY":
+        if is_safety_blocked(response):
             return "Эта тема мне не подходит. Давай поговорим о чём-нибудь другом?"
 
         return response.text.strip()

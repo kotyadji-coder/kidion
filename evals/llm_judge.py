@@ -125,7 +125,7 @@ RECOMMENDATIONS_PROMPT = """Ты — AI-консультант по качест
 def _get_judge_model():
     """Get model for judging."""
     from services.ai_client import get_model
-    return get_model("gemini-2.5-flash")
+    return get_model("gemini-3.5-flash")
 
 
 def _extract_json_from_response(text: str) -> dict | list:
@@ -209,7 +209,7 @@ def generate_recommendations(lesson_results: list, chat_results: list) -> list[d
         return [{"priority": "high", "area": "setup",
                  "issue": "No AI model configured",
                  "impact": "Cannot generate recommendations",
-                 "action": "Set GEMINI_API_KEY or GOOGLE_CLOUD_PROJECT"}]
+                 "action": "Set GOOGLE_CLOUD_PROJECT"}]
 
     # Build summaries
     lesson_scores = {}
@@ -287,7 +287,7 @@ def _stub_lesson_scores() -> dict:
         "curriculum_match": 4, "correctness": 4, "universe_integration": 3,
         "child_friendliness": 4, "engagement": 3,
         "strengths": "Stub mode", "weaknesses": "No AI evaluation",
-        "suggestion": "Configure GEMINI_API_KEY for real evaluation",
+        "suggestion": "Configure GOOGLE_CLOUD_PROJECT for real evaluation",
     }
 
 

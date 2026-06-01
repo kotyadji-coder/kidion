@@ -16,7 +16,7 @@ logger = logging.getLogger("kidion")
 def _get_text_model():
     """Get Gemini model for text generation. Returns None in stub mode."""
     from services.ai_client import get_model
-    return get_model("gemini-2.5-flash")
+    return get_model("gemini-3.5-flash")
 
 
 def _stub_universe(child_name: str, interests_str: str) -> dict:
@@ -175,20 +175,13 @@ def generate_universe(
         return _stub_universe(child_name, interests_str)
 
     try:
-        from vertexai.generative_models import GenerationConfig, HarmBlockThreshold, HarmCategory, SafetySetting
-        safety_settings = [
-            SafetySetting(category=HarmCategory.HARM_CATEGORY_HARASSMENT, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
-            SafetySetting(category=HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
-            SafetySetting(category=HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
-            SafetySetting(category=HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
-        ]
+        from services.ai_client import is_safety_blocked
+
         response = model.generate_content(
             prompt,
-            generation_config=GenerationConfig(response_mime_type="application/json"),
-            safety_settings=safety_settings,
+            generation_config={"response_mime_type": "application/json"},
         )
-        # Check safety ratings
-        if response.candidates and response.candidates[0].finish_reason and response.candidates[0].finish_reason.name == "SAFETY":
+        if is_safety_blocked(response):
             logger.warning("Universe generation blocked by safety filter for child interests: %s", interests_str)
             return generate_universe(child_name, gender, grade, ["приключения", "природа"])
         result = _extract_json(response.text)
@@ -220,17 +213,15 @@ def generate_character_image(character_prompt: str, equipped_items: list[dict] |
     If equipped_items is provided, adds them to the prompt.
     Returns PNG bytes or None in stub mode.
     """
-    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    if not project:
-        logger.info("GOOGLE_CLOUD_PROJECT not set - skipping character generation (stub mode)")
+    from services.ai_client import get_client
+
+    client = get_client("us-central1")
+    if client is None:
+        logger.info("No GenAI client — skipping character generation (stub mode)")
         return None
 
     try:
-        import vertexai
-        from vertexai.generative_models import GenerativeModel
-
-        vertexai.init(project=project, location="us-central1")
-        model = GenerativeModel("gemini-2.5-flash")
+        from google.genai import types
 
         full_prompt = character_prompt
         if equipped_items:
@@ -239,17 +230,12 @@ def generate_character_image(character_prompt: str, equipped_items: list[dict] |
             )
             full_prompt += f" The character is now wearing/holding: {items_desc}."
 
-        from vertexai.generative_models import HarmBlockThreshold, HarmCategory, SafetySetting
-        safety_settings = [
-            SafetySetting(category=HarmCategory.HARM_CATEGORY_HARASSMENT, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
-            SafetySetting(category=HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
-            SafetySetting(category=HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
-            SafetySetting(category=HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
-        ]
-        response = model.generate_content(
-            f"Generate a child-safe, friendly character illustration: {full_prompt}",
-            generation_config={"response_mime_type": "image/png"},
-            safety_settings=safety_settings,
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=f"Generate a child-safe, friendly character illustration: {full_prompt}",
+            config=types.GenerateContentConfig(
+                response_mime_type="image/png",
+            ),
         )
 
         if response.candidates and response.candidates[0].content.parts:
@@ -267,7 +253,7 @@ def generate_shop_items(universe_description: str, character_name: str) -> list[
     Generate a catalog of ~20 shop items themed to the child's universe.
     Returns list of dicts with: category, title_ru, description_ru, emoji, price_stars.
     """
-    from services.ai_client import get_model
+    from services.ai_client import get_model, is_safety_blocked
     model = get_model("gemini-2.5-flash")
 
     prompt = f"""Ты — геймдизайнер детской образовательной платформы.
@@ -295,38 +281,12 @@ def generate_shop_items(universe_description: str, character_name: str) -> list[
 
     if model is None:
         # Stub items
-        return [
-            {"category": "outfit", "title_ru": "Футболка героя", "description_ru": "Яркая футболка с эмблемой", "emoji": "👕", "price_stars": 5},
-            {"category": "outfit", "title_ru": "Плащ искателя", "description_ru": "Развевающийся плащ для приключений", "emoji": "🧥", "price_stars": 10},
-            {"category": "outfit", "title_ru": "Волшебная мантия", "description_ru": "Мантия с магическими узорами", "emoji": "🥋", "price_stars": 15},
-            {"category": "outfit", "title_ru": "Золотые доспехи", "description_ru": "Сверкающие доспехи знаний", "emoji": "🛡️", "price_stars": 20},
-            {"category": "outfit", "title_ru": "Корона мудреца", "description_ru": "Корона для самых умных", "emoji": "👑", "price_stars": 20},
-            {"category": "accessory", "title_ru": "Волшебная палочка", "description_ru": "Палочка для решения задач", "emoji": "🪄", "price_stars": 10},
-            {"category": "accessory", "title_ru": "Щит знаний", "description_ru": "Защищает от ошибок", "emoji": "🛡️", "price_stars": 15},
-            {"category": "accessory", "title_ru": "Меч света", "description_ru": "Разрубает сложные задачи", "emoji": "🗡️", "price_stars": 15},
-            {"category": "accessory", "title_ru": "Книга заклинаний", "description_ru": "Хранит все формулы", "emoji": "📖", "price_stars": 20},
-            {"category": "accessory", "title_ru": "Очки мудрости", "description_ru": "Видят скрытые подсказки", "emoji": "🤓", "price_stars": 25},
-            {"category": "pet", "title_ru": "Котёнок-искатель", "description_ru": "Пушистый помощник", "emoji": "🐱", "price_stars": 20},
-            {"category": "pet", "title_ru": "Дракончик", "description_ru": "Маленький огнедышащий друг", "emoji": "🐉", "price_stars": 30},
-            {"category": "pet", "title_ru": "Совёнок", "description_ru": "Мудрый ночной помощник", "emoji": "🦉", "price_stars": 25},
-            {"category": "pet", "title_ru": "Единорог", "description_ru": "Волшебный скакун", "emoji": "🦄", "price_stars": 40},
-            {"category": "background", "title_ru": "Волшебный лес", "description_ru": "Зелёный лес с светлячками", "emoji": "🌲", "price_stars": 15},
-            {"category": "background", "title_ru": "Космическая станция", "description_ru": "Учимся среди звёзд", "emoji": "🚀", "price_stars": 20},
-            {"category": "background", "title_ru": "Подводный замок", "description_ru": "Учёба на дне океана", "emoji": "🏰", "price_stars": 30},
-        ]
+        return _stub_shop_items()
 
     try:
-        from vertexai.generative_models import GenerationConfig, HarmBlockThreshold, HarmCategory, SafetySetting
-        safety_settings = [
-            SafetySetting(category=HarmCategory.HARM_CATEGORY_HARASSMENT, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
-            SafetySetting(category=HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
-            SafetySetting(category=HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
-            SafetySetting(category=HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold=HarmBlockThreshold.BLOCK_LOW_AND_ABOVE),
-        ]
         response = model.generate_content(
             prompt,
-            generation_config=GenerationConfig(response_mime_type="application/json"),
-            safety_settings=safety_settings,
+            generation_config={"response_mime_type": "application/json"},
         )
         items = _extract_json(response.text)
         if isinstance(items, dict):
@@ -343,9 +303,29 @@ def generate_shop_items(universe_description: str, character_name: str) -> list[
                     "emoji": item.get("emoji", "🎁"),
                     "price_stars": max(5, min(50, int(item.get("price_stars", 10)))),
                 })
-        return validated if validated else generate_shop_items("", "")  # fallback to stubs
+        return validated if validated else _stub_shop_items()
     except Exception:
         logger.exception("Shop items generation failed, using stubs")
-        return generate_shop_items.__wrapped__("", "") if hasattr(generate_shop_items, '__wrapped__') else [
-            {"category": "outfit", "title_ru": "Футболка героя", "description_ru": "Яркая футболка", "emoji": "👕", "price_stars": 5},
-        ]
+        return _stub_shop_items()
+
+
+def _stub_shop_items() -> list[dict]:
+    return [
+        {"category": "outfit", "title_ru": "Футболка героя", "description_ru": "Яркая футболка с эмблемой", "emoji": "👕", "price_stars": 5},
+        {"category": "outfit", "title_ru": "Плащ искателя", "description_ru": "Развевающийся плащ для приключений", "emoji": "🧥", "price_stars": 10},
+        {"category": "outfit", "title_ru": "Волшебная мантия", "description_ru": "Мантия с магическими узорами", "emoji": "🥋", "price_stars": 15},
+        {"category": "outfit", "title_ru": "Золотые доспехи", "description_ru": "Сверкающие доспехи знаний", "emoji": "🛡️", "price_stars": 20},
+        {"category": "outfit", "title_ru": "Корона мудреца", "description_ru": "Корона для самых умных", "emoji": "👑", "price_stars": 20},
+        {"category": "accessory", "title_ru": "Волшебная палочка", "description_ru": "Палочка для решения задач", "emoji": "🪄", "price_stars": 10},
+        {"category": "accessory", "title_ru": "Щит знаний", "description_ru": "Защищает от ошибок", "emoji": "🛡️", "price_stars": 15},
+        {"category": "accessory", "title_ru": "Меч света", "description_ru": "Разрубает сложные задачи", "emoji": "🗡️", "price_stars": 15},
+        {"category": "accessory", "title_ru": "Книга заклинаний", "description_ru": "Хранит все формулы", "emoji": "📖", "price_stars": 20},
+        {"category": "accessory", "title_ru": "Очки мудрости", "description_ru": "Видят скрытые подсказки", "emoji": "🤓", "price_stars": 25},
+        {"category": "pet", "title_ru": "Котёнок-искатель", "description_ru": "Пушистый помощник", "emoji": "🐱", "price_stars": 20},
+        {"category": "pet", "title_ru": "Дракончик", "description_ru": "Маленький огнедышащий друг", "emoji": "🐉", "price_stars": 30},
+        {"category": "pet", "title_ru": "Совёнок", "description_ru": "Мудрый ночной помощник", "emoji": "🦉", "price_stars": 25},
+        {"category": "pet", "title_ru": "Единорог", "description_ru": "Волшебный скакун", "emoji": "🦄", "price_stars": 40},
+        {"category": "background", "title_ru": "Волшебный лес", "description_ru": "Зелёный лес с светлячками", "emoji": "🌲", "price_stars": 15},
+        {"category": "background", "title_ru": "Космическая станция", "description_ru": "Учимся среди звёзд", "emoji": "🚀", "price_stars": 20},
+        {"category": "background", "title_ru": "Подводный замок", "description_ru": "Учёба на дне океана", "emoji": "🏰", "price_stars": 30},
+    ]

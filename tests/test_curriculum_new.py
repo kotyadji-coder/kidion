@@ -547,8 +547,8 @@ async def test_subject_progress_returns_correct_structure(enrolled_child: dict):
 # ---------------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_skip_test_assign_deducts_crystals(child_with_crystals: dict, auth_client: AsyncClient):
-    """POST /api/children/{id}/skip-test deducts 10 crystals from parent."""
+async def test_skip_test_assign_is_free(child_with_crystals: dict, auth_client: AsyncClient):
+    """POST /api/children/{id}/skip-test is free — no crystal deduction."""
     child_id = child_with_crystals["child_id"]
     user_id = child_with_crystals["user_id"]
 
@@ -571,7 +571,7 @@ async def test_skip_test_assign_deducts_crystals(child_with_crystals: dict, auth
         "SELECT crystals FROM users WHERE id=?", (user_id,)
     ).fetchone()[0]
     conn.close()
-    assert crystals == 190, f"Expected 190 crystals, got {crystals}"
+    assert crystals == 200, f"Expected 200 crystals (free), got {crystals}"
 
 
 @pytest.mark.asyncio
@@ -709,40 +709,3 @@ async def test_skip_test_pass_bulk_unlock(child_with_crystals: dict, auth_client
     assert available >= 1, f"Expected >= 1 available after unlock, got {available}"
 
 
-@pytest.mark.asyncio
-async def test_skip_test_no_crystals_returns_402(auth_client: AsyncClient):
-    """Skip test without crystals returns 402."""
-    child_resp = await auth_client.post("/api/children", json={
-        "name": "Бедный",
-        "gender": "boy",
-        "birth_date": "2019-01-01",
-        "grade": 1,
-        "universe": "Пустыня",
-        "pin_code":"9427"
-    })
-    child_id = child_resp.json()["id"]
-
-    await auth_client.post(
-        f"/api/children/{child_id}/enroll-subject",
-        json={"subject": "math", "grade": 1}
-    )
-
-    conn = direct_db()
-    topic = conn.execute(
-        "SELECT id FROM curriculum_topics WHERE subject='math' AND grade=1 AND theme_order=2"
-    ).fetchone()
-    topic_id = topic["id"]
-    conn.close()
-
-    # Remove all crystals — user has only 60 by default
-    db_path = get_db_path()
-    conn2 = sqlite3.connect(db_path)
-    conn2.execute("UPDATE users SET crystals=0")
-    conn2.commit()
-    conn2.close()
-
-    resp = await auth_client.post(
-        f"/api/children/{child_id}/skip-test",
-        json={"topic_id": topic_id}
-    )
-    assert resp.status_code == 402
