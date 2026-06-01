@@ -45,6 +45,7 @@ kidion/
 │   ├── curricula.py           # Load/search curriculum JSON files
 │   ├── universe.py            # Universe/character/shop generation (Gemini)
 │   ├── kid_chat.py            # Киди AI chat: 4 characters (incl. Arty artist), per-character safety prompts
+│   ├── notify.py              # Telegram error alerts (fire-and-forget via relay VPS)
 │   └── worksheet/             # Printable worksheet generation (from metodist)
 │       ├── models.py           # Pydantic models: 24 task types + 3 activities
 │       ├── prompts.py          # Prompts for worksheet/activity generation
@@ -367,6 +368,16 @@ python -m evals list             # List all runs
 Token usage from every Gemini call is sent to the centralized LLM Dashboard (`http://5.42.101.215:8005/`).
 
 - **How:** fire-and-forget `httpx.post()` in a daemon thread after each `generate_content()` call
-- **Where:** `services/ai_client.py` — `_send_to_dashboard()` function, called from `StudioModel.generate_content()` and `_StudioChat.send_message()`
+- **Where:** `services/ai_client.py` — `report_usage()` with `feature` tag, called from `ModelWrapper` and `_ChatWrapper`
+- **Feature tags:** `chat` (kid_chat, chat_report), `chat-images` (image_generator), `lessons` (gemini_client), `universe` (universe.py), `evals` (llm_judge)
+- **Dashboard pages:** `/` (main + chat.kidion.ru vs kidion.ru split), `/features` (detailed per-feature breakdown)
 - **Dashboard project:** `~/Documents/projects/llm-dashboard`
 - **If dashboard is down:** errors silently logged at DEBUG level, bot works normally
+
+## Error Notifications
+
+`services/notify.py` — fire-and-forget Telegram alerts via relay VPS (Telegram API blocked from Russia).
+
+- **Env:** `NOTIFY_BOT_TOKEN`, `NOTIFY_CHAT_ID`, `NOTIFY_RELAY_URL`
+- **Alerts on:** chat generation fail, lesson generation fail, universe/character/shop generation fail, all image generation failures (Gemini/FLUX/Imagen), invalid payment webhook signature
+- **Used by:** services/ modules import `notify_error()`, main.py imports as `_notify_admin_error`
