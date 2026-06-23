@@ -381,3 +381,17 @@ Token usage from every Gemini call is sent to the centralized LLM Dashboard (`ht
 - **Env:** `NOTIFY_BOT_TOKEN`, `NOTIFY_CHAT_ID`, `NOTIFY_RELAY_URL`
 - **Alerts on:** chat generation fail, lesson generation fail, universe/character/shop generation fail, all image generation failures (Gemini/FLUX/Imagen), invalid payment webhook signature
 - **Used by:** services/ modules import `notify_error()`, main.py imports as `_notify_admin_error`
+
+---
+# Kidion (из памяти)
+
+**Kidion** (веб-чат `chat.kidion.ru` / `kidion.ru`) — ЕДИНСТВЕННЫЙ проект, реально подключённый к **Together.ai**. Все остальные боты (груминг, ProTale/EdTale, school-bot, metodist, neurofoto, content) — только Gemini/Imagen/Vertex, без Together.
+
+- Приложение живёт на **5.42 (Москва, Timeweb)**: `/opt/kidion`, примонтировано сюда как `/mnt/5.42-opt/kidion` (sshfs, alias `kidion`). На 72.56 есть только заготовка nginx (`chat-kidion`, `kidion` → :8004) + `kidion.service` (disabled), самого кода нет.
+- Together используется в ОДНОМ месте: `services/image_generator.py` → `_stylize_photo_flux()`, модель `black-forest-labs/FLUX.1-kontext-pro` (~$0.04/img), вызов `https://api.together.xyz/v1/images/generations`. Это **фоллбэк** для стилизации фото у персонажа **«Арти»**: сначала Gemini 2.5 Flash Image, если упал — FLUX.
+- Логи срабатываний FLUX не показывают → фоллбэк почти не дёргается, фоновый расход ~0.
+- `TOGETHER_API_KEY` (tgp_v1_…) лежит в `/opt/kidion/.env`.
+
+**Why:** при разборе счёта Together.ai (трата $1.56, покрыта стартовым кредитом) важно было понять, что капает от приложений, а что — ручная песочница. Вывод: масса трат (deepseek-v4, kimi, qwen, flux.2-*, gemini-3-pro-image, imagen-4) — это ручные эксперименты в playground; от приложения теоретически только строка `flux.1-kontext-pro`.
+
+**How to apply:** если нужно обнулить риск Together — убрать `TOGETHER_API_KEY` из `/opt/kidion/.env` (потеряется только FLUX-фоллбэк Арти, основной Gemini-путь останется). Песочница Together НЕ бесплатна (это тот же платный API на стартовом кредите); бесплатные альтернативы — Google AI Studio, Groq, OpenRouter (:free). 2026-06-15 поправил права `.env.precutover` на 600. Связано с [[server-project-map]], [[server-migration-2026-06]].
