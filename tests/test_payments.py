@@ -155,6 +155,46 @@ async def test_webhook_always_returns_200(client: AsyncClient):
     assert resp.status_code == 200
 
 
+async def test_webhook_forwards_edbot_orders(client: AsyncClient, monkeypatch):
+    import main
+
+    forwarded = {}
+
+    class FakeAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        async def post(self, url, json=None, headers=None):
+            forwarded["url"] = url
+            forwarded["json"] = json
+            forwarded["headers"] = headers
+
+            class Response:
+                status_code = 200
+
+            return Response()
+
+    monkeypatch.setattr(main.httpx, "AsyncClient", FakeAsyncClient)
+
+    payload = {
+        "order_num": "edbot_vk_1077018_700_590_test",
+        "payment_status": "success",
+        "sum": "590.00",
+    }
+    resp = await client.post("/api/payment/webhook", json=payload, headers={"Sign": "abc"})
+
+    assert resp.status_code == 200
+    assert forwarded["url"] == "http://127.0.0.1:8011/api/payment/webhook"
+    assert forwarded["json"] == payload
+    assert forwarded["headers"] == {"Sign": "abc"}
+
+
 # ---------------------------------------------------------------------------
 # POST /api/payment/webhook — idempotency
 # ---------------------------------------------------------------------------

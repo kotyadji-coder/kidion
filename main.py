@@ -10,6 +10,7 @@ import sqlite3
 from contextlib import asynccontextmanager
 from typing import Optional
 
+import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
@@ -786,6 +787,19 @@ async def payment_webhook(request: Request):
         return JSONResponse({"ok": True})
 
     sign_header = request.headers.get("Sign", "")
+
+    order_id = str(body.get("order_num") or body.get("order_id") or "")
+    if order_id.startswith("edbot_"):
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                await client.post(
+                    "http://127.0.0.1:8011/api/payment/webhook",
+                    json=body,
+                    headers={"Sign": sign_header} if sign_header else {},
+                )
+        except Exception:
+            logging.exception("EdBot webhook forward failed for order_id=%s", order_id)
+        return JSONResponse({"ok": True})
 
     conn = get_db_connection()
     try:
