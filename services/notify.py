@@ -15,6 +15,10 @@ logger = logging.getLogger("kidion")
 
 def notify_error(message: str):
     """Send error alert to admin Telegram. Non-blocking, fire-and-forget."""
+    if os.environ.get("TESTING") == "1":
+        logger.error("ADMIN ALERT suppressed in tests: %s", message)
+        return
+
     bot_token = os.environ.get("NOTIFY_BOT_TOKEN")
     chat_id = os.environ.get("NOTIFY_CHAT_ID")
     relay_url = os.environ.get("NOTIFY_RELAY_URL")

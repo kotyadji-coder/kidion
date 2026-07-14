@@ -28,6 +28,17 @@ def set_test_env(monkeypatch):
     monkeypatch.setenv("PRODAMUS_SECRET_KEY", "test-prodamus-secret-key")
     monkeypatch.setenv("APP_BASE_URL", "http://testserver")
     monkeypatch.setenv("TESTING", "1")
+    monkeypatch.delenv("GOOGLE_CLOUD_PROJECT", raising=False)
+    monkeypatch.delenv("GOOGLE_APPLICATION_CREDENTIALS", raising=False)
+    monkeypatch.delenv("NOTIFY_BOT_TOKEN", raising=False)
+    monkeypatch.delenv("NOTIFY_CHAT_ID", raising=False)
+    monkeypatch.delenv("NOTIFY_RELAY_URL", raising=False)
+    monkeypatch.delenv("NOTIFY_RELAY_SECRET", raising=False)
+
+    import services.ai_client as ai_client
+    ai_client._clients.clear()
+    ai_client._init_done.clear()
+    ai_client._project = None
 
 
 # ---------------------------------------------------------------------------

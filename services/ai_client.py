@@ -50,6 +50,10 @@ def _get_project() -> str:
 
 def get_client(location: str = "global"):
     """Get a GenAI client for a specific location. Returns None in stub mode."""
+    if os.getenv("TESTING") == "1":
+        logger.info("TESTING=1 — GenAI disabled")
+        return None
+
     if location in _init_done:
         return _clients.get(location)
 

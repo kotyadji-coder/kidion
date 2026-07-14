@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import re
+from json import JSONDecodeError
 
 logger = logging.getLogger("kidion")
 
@@ -72,15 +73,71 @@ def _universe_to_description(data: dict) -> str:
     return _json.dumps(data, ensure_ascii=False)
 
 
-def _extract_json(raw: str) -> dict:
-    """Strip markdown fences and extract JSON."""
+def _strip_markdown_fence(raw: str) -> str:
     cleaned = re.sub(r"^```(?:json)?\s*", "", raw.strip(), flags=re.MULTILINE)
     cleaned = re.sub(r"```\s*$", "", cleaned.strip(), flags=re.MULTILINE)
-    cleaned = cleaned.strip()
-    match = re.search(r"[\[{].*[\]}]", cleaned, re.DOTALL)
-    if match:
-        cleaned = match.group(0)
-    return json.loads(cleaned)
+    return cleaned.strip()
+
+
+def _first_balanced_json(raw: str) -> str:
+    """Return the first balanced JSON object/array, ignoring model text after it."""
+    start = -1
+    opening = ""
+    for idx, char in enumerate(raw):
+        if char in "{[":
+            start = idx
+            opening = char
+            break
+    if start < 0:
+        return raw.strip()
+
+    closing = "}" if opening == "{" else "]"
+    stack = [closing]
+    in_string = False
+    escaped = False
+
+    for idx in range(start + 1, len(raw)):
+        char = raw[idx]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+            continue
+
+        if char == '"':
+            in_string = True
+        elif char in "{[":
+            stack.append("}" if char == "{" else "]")
+        elif char in "}]":
+            if not stack or char != stack[-1]:
+                break
+            stack.pop()
+            if not stack:
+                return raw[start:idx + 1].strip()
+
+    return raw[start:].strip()
+
+
+def _repair_json(candidate: str) -> str:
+    """Repair common LLM JSON slips without changing values."""
+    repaired = re.sub(r",\s*([}\]])", r"\1", candidate)
+    repaired = re.sub(r"([{\[,]\s*)([A-Za-z_][A-Za-z0-9_]*)\s*:", r'\1"\2":', repaired)
+    return repaired
+
+
+def _extract_json(raw: str) -> dict:
+    """Strip markdown fences and parse the first JSON object from a model response."""
+    cleaned = _first_balanced_json(_strip_markdown_fence(raw))
+    try:
+        return json.loads(cleaned)
+    except JSONDecodeError:
+        repaired = _repair_json(cleaned)
+        if repaired != cleaned:
+            return json.loads(repaired)
+        raise
 
 
 def generate_universe(

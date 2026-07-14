@@ -55,6 +55,30 @@ def _count_emoji(s: str) -> dict:
     }
 
 
+def _normalize_utf8_text(value: str) -> str:
+    """Convert JSON surrogate pairs to real characters and replace invalid lone surrogates."""
+    if not re.search(r"[\ud800-\udfff]", value):
+        return value
+    try:
+        return value.encode("utf-16", "surrogatepass").decode("utf-16")
+    except UnicodeDecodeError:
+        return value.encode("utf-8", "replace").decode("utf-8")
+
+
+def _sanitize_utf8(value):
+    """Recursively make generated content safe for UTF-8 writes/logs."""
+    if isinstance(value, str):
+        return _normalize_utf8_text(value)
+    if isinstance(value, list):
+        return [_sanitize_utf8(item) for item in value]
+    if isinstance(value, dict):
+        return {
+            _sanitize_utf8(key) if isinstance(key, str) else key: _sanitize_utf8(item)
+            for key, item in value.items()
+        }
+    return value
+
+
 def validate_lesson(lesson_json: dict, visual_blocks: list[dict] | None,
                      lesson_id: int, topic: str) -> None:
     """Validate generated lesson content and log errors to generation.log."""
@@ -315,7 +339,7 @@ def generate_lesson_content(lesson_id: int, child: dict, topic: str, subject: st
 
         if mode == "skip_test":
             # Skip test: only generate 5 tasks, no theory/images/worksheets
-            lesson_json = generate_skip_test(question)
+            lesson_json = _sanitize_utf8(generate_skip_test(question))
             lesson_json["story_blocks"] = []
 
             content_id = str(uuid.uuid4())[:8]
@@ -330,6 +354,8 @@ def generate_lesson_content(lesson_id: int, child: dict, topic: str, subject: st
             methodologist_output, lesson_json = generate_explanation(
                 question, cached_methodologist=cached_method
             )
+            methodologist_output = _sanitize_utf8(methodologist_output)
+            lesson_json = _sanitize_utf8(lesson_json)
 
             if not cached_method and methodologist_output != "stub":
                 save_methodologist_cache(conn, subject, grade, topic, methodologist_output)
@@ -362,6 +388,7 @@ def generate_lesson_content(lesson_id: int, child: dict, topic: str, subject: st
                 character_emoji=character_emoji,
                 universe_description=universe_desc,
             )
+            visual_blocks = _sanitize_utf8(visual_blocks)
 
             validate_lesson(lesson_json, visual_blocks, lesson_id, topic)
 
