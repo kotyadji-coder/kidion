@@ -53,6 +53,16 @@
 @media (min-width: 769px) { .sp-nav-links { display: flex; } }
 /* Mobile menu open */
 @media (max-width: 768px) {
+  .sp-nav-burger {
+    display: inline-grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text);
+  }
   .sp-nav-links.is-open {
     display: flex; flex-direction: column;
     position: absolute; top: 100%; left: 0; right: 0;
@@ -206,6 +216,7 @@
   gap: 36px;
   align-items: center;
 }
+.sp-hero-inner > * { min-width: 0; }
 @media (min-width: 769px) {
   .sp-hero-inner { grid-template-columns: 1.05fr 1fr; gap: 56px; }
 }
@@ -256,6 +267,21 @@
   display: flex; gap: 10px; flex-wrap: wrap;
   margin-bottom: 22px;
 }
+@media (max-width: 480px) {
+  .sp-hero-ctas .sp-btn {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 48px;
+    padding: 12px 14px;
+    white-space: normal;
+    text-align: center;
+    flex-wrap: wrap;
+  }
+  .sp-hero-ctas .sp-btn-sub {
+    margin-left: 0;
+  }
+}
 
 .sp-hero-trust {
   display: flex; align-items: center; gap: 14px;
@@ -272,6 +298,8 @@
   justify-content: center;
   align-items: flex-end;
   min-height: 380px;
+  width: 100%;
+  max-width: 100%;
 }
 @media (min-width: 769px) { .sp-hero-stage { min-height: 440px; } }
 
@@ -305,7 +333,7 @@
   z-index: 1;
 }
 .sp-hero-sparkle.s1 { top: 30px; left: -8px; animation: sp-float 6s ease-in-out infinite; }
-.sp-hero-sparkle.s2 { top: 80px; right: 10px; animation: sp-float 5s ease-in-out infinite 0.7s; }
+.sp-hero-sparkle.s2 { top: 80px; right: 22px; animation: sp-float 5s ease-in-out infinite 0.7s; }
 .sp-hero-sparkle.s3 { bottom: 18px; left: 8px; animation: sp-float 7s ease-in-out infinite 0.3s; }
 @keyframes sp-float {
   0%, 100% { transform: translateY(0) rotate(0deg); }
@@ -314,7 +342,7 @@
 
 .sp-hero-chat {
   position: relative;
-  width: 100%; max-width: 340px;
+  width: 100%; max-width: min(340px, 100%);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 24px;

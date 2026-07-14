@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "scripts": {
+    "test:e2e": "playwright test tests/e2e --browser chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.61.1"
+  }
+}

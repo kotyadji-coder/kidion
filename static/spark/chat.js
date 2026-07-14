@@ -851,6 +851,10 @@
   let voiceInterim = "";      // current interim text
   let voiceStopping = false;  // user pressed cancel/done
   let voiceHadError = false;  // onerror fired before onend
+  let voiceFallbackMode = false;
+  let mediaRecorder = null;
+  let voiceStream = null;
+  let voiceChunks = [];
 
   const voiceH = document.querySelector(".sc-voice-h");
   const voiceSub = document.querySelector(".sc-voice-sub");
@@ -870,26 +874,22 @@
 
   async function openVoiceOverlay() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      voiceH.textContent = "Браузер не поддерживает голосовой ввод";
-      voiceSub.textContent = "Попробуй Chrome или Safari.";
-      voiceTranscript.textContent = "";
-      voiceOverlay.classList.add("is-open");
-      setVoiceUI("error");
-      return;
-    }
-
     voiceText = "";
     voiceInterim = "";
     voiceStopping = false;
     voiceHadError = false;
+    voiceFallbackMode = false;
     voiceH.textContent = "Подготовка...";
     voiceSub.textContent = "Подключаю микрофон.";
     voiceTranscript.textContent = "";
     voiceOverlay.classList.add("is-open");
     setVoiceUI("listening");
 
-    startRecognition();
+    if (SpeechRecognition) {
+      startRecognition();
+    } else {
+      startVoiceFallback("Браузер не поддерживает встроенный голосовой ввод.");
+    }
   }
 
   function closeVoiceOverlay() {
@@ -899,10 +899,17 @@
       try { recognition.abort(); } catch (_) {}
       recognition = null;
     }
+    stopVoiceStream();
   }
 
   function finishVoiceInput() {
     voiceStopping = true;
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+      voiceH.textContent = "Распознаю...";
+      voiceSub.textContent = "Секунду, превращаю голос в текст.";
+      try { mediaRecorder.stop(); } catch (_) {}
+      return;
+    }
     if (recognition) {
       try { recognition.stop(); } catch (_) {}
     }
@@ -914,6 +921,105 @@
     }
     voiceOverlay.classList.remove("is-open");
     recognition = null;
+  }
+
+  function stopVoiceStream() {
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+      try { mediaRecorder.stop(); } catch (_) {}
+    }
+    mediaRecorder = null;
+    if (voiceStream) {
+      voiceStream.getTracks().forEach((track) => track.stop());
+      voiceStream = null;
+    }
+    voiceChunks = [];
+  }
+
+  async function startVoiceFallback(reason) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+      voiceH.textContent = "Браузер не поддерживает голосовой ввод";
+      voiceSub.textContent = "Попробуй обновить Chrome или ввести текст вручную.";
+      setVoiceUI("error");
+      return;
+    }
+
+    try {
+      voiceFallbackMode = true;
+      voiceHadError = false;
+      voiceStopping = false;
+      voiceChunks = [];
+      if (recognition) {
+        try { recognition.abort(); } catch (_) {}
+        recognition = null;
+      }
+      voiceStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : "";
+      mediaRecorder = mimeType
+        ? new MediaRecorder(voiceStream, { mimeType })
+        : new MediaRecorder(voiceStream);
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size) voiceChunks.push(event.data);
+      };
+      mediaRecorder.onstart = () => {
+        voicePulse.classList.add("is-active");
+        voiceH.textContent = "Говори, я слушаю!";
+        voiceSub.textContent = reason ? "Нажми «Готово» когда закончишь." : "Текст появится после записи.";
+      };
+      mediaRecorder.onerror = () => {
+        voiceH.textContent = "Не удалось записать голос";
+        voiceSub.textContent = "Проверь микрофон и попробуй снова.";
+        setVoiceUI("error");
+        stopVoiceStream();
+      };
+      mediaRecorder.onstop = transcribeVoiceBlob;
+      mediaRecorder.start();
+    } catch (e) {
+      voiceH.textContent = "Нет доступа к микрофону";
+      voiceSub.textContent = "Разреши микрофон в настройках сайта и обнови страницу.";
+      setVoiceUI("error");
+      stopVoiceStream();
+    }
+  }
+
+  async function transcribeVoiceBlob() {
+    const chunks = voiceChunks.slice();
+    const stream = voiceStream;
+    mediaRecorder = null;
+    voiceStream = null;
+    voiceChunks = [];
+    if (stream) stream.getTracks().forEach((track) => track.stop());
+    if (!voiceFallbackMode || !chunks.length) {
+      if (!voiceStopping) setVoiceUI("error");
+      return;
+    }
+
+    voiceH.textContent = "Распознаю...";
+    voiceSub.textContent = "Секунду, превращаю голос в текст.";
+    setVoiceUI("error");
+    btnVoiceRetry.style.display = "none";
+
+    try {
+      const blob = new Blob(chunks, { type: chunks[0].type || "audio/webm" });
+      const fd = new FormData();
+      fd.append("audio", blob, "voice.webm");
+      const result = await api("/api/kid/chat/transcribe", "POST", fd);
+      if (result.status === 200 && result.data.text) {
+        chatInput.value = result.data.text;
+        updateSendBtn();
+        voiceOverlay.classList.remove("is-open");
+        return;
+      }
+      voiceH.textContent = "Не расслышала";
+      voiceSub.textContent = "Попробуй сказать ещё раз ближе к микрофону.";
+      setVoiceUI("error");
+    } catch (e) {
+      voiceH.textContent = "Не удалось распознать голос";
+      voiceSub.textContent = "Проверь интернет и попробуй снова.";
+      setVoiceUI("error");
+    }
   }
 
   function startRecognition() {
@@ -975,10 +1081,11 @@
         setVoiceUI("error");
         recognition = null;
       } else if (e.error === "service-not-allowed") {
-        voiceH.textContent = "Голосовой сервис недоступен";
-        voiceSub.textContent = "Google Speech заблокирован в твоей сети. Попробуй VPN.";
-        setVoiceUI("error");
         recognition = null;
+        startVoiceFallback("Встроенный голосовой сервис недоступен.");
+      } else if (e.error === "network") {
+        recognition = null;
+        startVoiceFallback("Встроенный голосовой сервис недоступен.");
       } else if (e.error === "no-speech") {
         // Will auto-restart in onend
         voiceHadError = false; // allow restart

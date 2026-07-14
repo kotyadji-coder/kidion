@@ -3,7 +3,10 @@
 *.db
 __pycache__/
 venv/
+node_modules/
 .pytest_cache/
+playwright-report/
+test-results/
 *.pyc
 google-credentials.json
 *.pre-relay-secret-*

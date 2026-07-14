@@ -3706,6 +3706,45 @@ async def kid_chat_clear(request: Request):
     return JSONResponse({"ok": True})
 
 
+@app.post("/api/kid/chat/transcribe")
+async def kid_chat_transcribe(request: Request):
+    """Transcribe a short voice clip for Android browsers without Web Speech."""
+    conn = get_db_connection()
+    child = get_current_child(request, conn)
+    if not child:
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+
+    if check_rate_limit_by_key(str(child["id"]), "chat_voice", max_attempts=30, window=3600):
+        return JSONResponse({"error": "rate_limited"}, status_code=429)
+
+    content_type = request.headers.get("content-type", "")
+    if "multipart/form-data" not in content_type:
+        return JSONResponse({"error": "invalid_content_type"}, status_code=400)
+
+    form = await request.form()
+    audio_file = form.get("audio")
+    if not audio_file or not hasattr(audio_file, "read"):
+        return JSONResponse({"error": "missing_audio"}, status_code=400)
+
+    audio_bytes = await audio_file.read()
+    if not audio_bytes:
+        return JSONResponse({"error": "empty_audio"}, status_code=400)
+    if len(audio_bytes) > 8 * 1024 * 1024:
+        return JSONResponse({"error": "file_too_large"}, status_code=400)
+
+    mime_type = getattr(audio_file, "content_type", "") or "audio/webm"
+    if not mime_type.startswith("audio/") and mime_type not in {"video/webm", "video/mp4"}:
+        return JSONResponse({"error": "unsupported_audio"}, status_code=400)
+
+    from services import speech
+
+    text = sanitize_message(speech.transcribe_audio(audio_bytes, mime_type))
+    if not text:
+        return JSONResponse({"error": "empty_transcript"}, status_code=422)
+
+    return JSONResponse({"text": text})
+
+
 @app.post("/api/kid/chat/send")
 async def kid_chat_send(request: Request):
     conn = get_db_connection()
