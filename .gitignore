@@ -1,10 +1,12 @@
 .env
+.env.*
 *.db
 __pycache__/
 venv/
 .pytest_cache/
 *.pyc
 google-credentials.json
+*.pre-relay-secret-*
 content/
 *.db-shm
 *.db-wal
