@@ -16,7 +16,7 @@ import os
 import re
 import sqlite3
 from copy import deepcopy
-from urllib.parse import urlencode
+from urllib.parse import parse_qsl, urlencode
 
 from db import (
     create_payment,
@@ -127,6 +127,49 @@ def _php2dict(flat: dict) -> dict:
     return result
 
 
+def parse_prodamus_webhook_form(raw_body: bytes) -> dict:
+    """Parse Prodamus form-urlencoded webhook body without python-multipart."""
+    text = raw_body.decode("utf-8")
+    return dict(parse_qsl(text, keep_blank_values=True))
+
+
+def _signature_payload(data: dict) -> dict:
+    """Return webhook fields that are covered by the Prodamus signature."""
+    payload = dict(data)
+    for key in ("Sign", "sign", "signature"):
+        payload.pop(key, None)
+    return payload
+
+
+def _extract_signature(data: dict, sign_header: str = "") -> str:
+    """Read signature from the HTTP header, with body fallback for old callbacks."""
+    signature = sign_header or data.get("Sign") or data.get("sign") or data.get("signature") or ""
+    signature = str(signature).strip()
+    if signature.lower().startswith("sha256="):
+        signature = signature.split("=", 1)[1].strip()
+    return signature
+
+
+def extract_prodamus_order_id(event_body: dict) -> str:
+    """Return our order id from known Prodamus field variants."""
+    for key in ("order_num", "order_id"):
+        value = event_body.get(key)
+        if value:
+            return str(value)
+    return ""
+
+
+def _should_alert_invalid_signature(event_body: dict) -> bool:
+    """Notify Telegram only for payment-like webhooks, not provider probes/noise."""
+    order_id = extract_prodamus_order_id(event_body).strip()
+    status = str(event_body.get("payment_status", "")).lower()
+    if not order_id or order_id.lower() in {"unknown", "test"}:
+        return False
+    if status == "success":
+        return True
+    return order_id.startswith("kidion_")
+
+
 def verify_prodamus_signature(data: dict, signature: str) -> bool:
     """
     Verify HMAC-SHA256 signature from Prodamus webhook.
@@ -142,12 +185,13 @@ def verify_prodamus_signature(data: dict, signature: str) -> bool:
         logging.error("PRODAMUS_SECRET_KEY not set — rejecting webhook")
         return False
 
+    signature = _extract_signature(data, signature)
     if not signature:
         logging.warning("No webhook signature provided (Sign header missing)")
         return False
 
     # Convert flat form keys (products[0][name]) to nested dict
-    nested = _php2dict(data)
+    nested = _php2dict(_signature_payload(data))
 
     message = json.dumps(nested, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
 
@@ -214,13 +258,15 @@ def handle_webhook(conn: sqlite3.Connection, event_body: dict, sign_header: str 
     """
     # Verify signature (from Sign header, per Prodamus docs)
     if not verify_prodamus_signature(event_body, sign_header):
-        logging.warning("Invalid Prodamus webhook signature")
-        from services.notify import notify_error
-        notify_error(f"Invalid Prodamus webhook signature! order={event_body.get('order_num', '?')}")
+        order_id = extract_prodamus_order_id(event_body) or "unknown"
+        logging.warning("Invalid Prodamus webhook signature for order_id=%s", order_id)
+        if _should_alert_invalid_signature(event_body):
+            from services.notify import notify_error
+            notify_error(f"Invalid Prodamus webhook signature! order={order_id}")
         return
 
     # Prodamus uses 'order_num' for our order_id, 'order_id' is their internal ID
-    order_id = event_body.get("order_num", "") or event_body.get("order_id", "")
+    order_id = extract_prodamus_order_id(event_body)
     payment_status = event_body.get("payment_status", "")
 
     if not order_id:

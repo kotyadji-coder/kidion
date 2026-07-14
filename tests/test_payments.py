@@ -12,6 +12,7 @@ import hmac
 import json
 import os
 import sqlite3
+from urllib.parse import urlencode
 
 import pytest
 from httpx import AsyncClient
@@ -34,7 +35,7 @@ PACKAGES = {
 async def _register_and_login(
     client: AsyncClient, email: str = "payer@example.com", password: str = "password99"
 ) -> None:
-    await client.post("/auth/register", json={"email": email, "password": password})
+    await client.post("/auth/register", json={"email": email, "password": password, "consent": True})
     await client.post("/auth/login", json={"email": email, "password": password})
 
 
@@ -144,6 +145,50 @@ async def test_webhook_credits_crystals_on_payment_succeeded(
 
     crystals_after = (await client.get("/auth/me")).json()["crystals"]
     assert crystals_after == crystals_before + PACKAGES["60_60"]["crystals"]
+
+
+async def test_webhook_accepts_form_urlencoded_with_valid_signature(
+    client: AsyncClient, temp_db_path: str
+):
+    await _register_and_login(client)
+
+    create_resp = await client.post(
+        "/api/payment/create",
+        json={"package_id": "60_60"},
+    )
+    internal_payment_id = create_resp.json()["payment_id"]
+    order_id = _get_order_id_from_db(temp_db_path, internal_payment_id)
+
+    crystals_before = (await client.get("/auth/me")).json()["crystals"]
+    webhook_payload, sign_headers = _build_prodamus_webhook(order_id, "success", "60.00")
+
+    resp = await client.post(
+        "/api/payment/webhook",
+        content=urlencode(webhook_payload),
+        headers={**sign_headers, "Content-Type": "application/x-www-form-urlencoded"},
+    )
+    assert resp.status_code == 200
+
+    crystals_after = (await client.get("/auth/me")).json()["crystals"]
+    assert crystals_after == crystals_before + PACKAGES["60_60"]["crystals"]
+
+
+async def test_webhook_invalid_signature_alert_includes_order(monkeypatch, client: AsyncClient):
+    alerts = []
+
+    def fake_notify_error(message: str) -> None:
+        alerts.append(message)
+
+    monkeypatch.setattr("services.notify.notify_error", fake_notify_error)
+
+    order_id = "kidion_123_60_60_badbad"
+    resp = await client.post(
+        "/api/payment/webhook",
+        json={"order_num": order_id, "payment_status": "success", "sum": "60.00"},
+        headers={"Sign": "invalid"},
+    )
+    assert resp.status_code == 200
+    assert alerts == [f"Invalid Prodamus webhook signature! order={order_id}"]
 
 
 async def test_webhook_always_returns_200(client: AsyncClient):

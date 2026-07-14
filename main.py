@@ -114,7 +114,13 @@ from db import (
     create_chat_report,
     get_kid_chats_by_child,
 )
-from payments import PACKAGES, create_prodamus_payment, create_prodamus_subscription_payment, handle_webhook
+from payments import (
+    PACKAGES,
+    create_prodamus_payment,
+    create_prodamus_subscription_payment,
+    handle_webhook,
+    parse_prodamus_webhook_form,
+)
 from referral import generate_ref_code, find_referrer, process_registration_referral
 import services.generation
 from services.universe import generate_universe, generate_character_image, generate_shop_items
@@ -221,15 +227,14 @@ kid_templates = templates  # templates/kid/ lives under templates/
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
-_COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "").lower() in ("1", "true", "yes")
-_COOKIE_DOMAIN = os.environ.get("COOKIE_DOMAIN", "")  # ".kidion.ru" in production
-
-
 def _cookie_kwargs() -> dict:
     """Common cookie kwargs — includes domain if configured for cross-subdomain support."""
-    kw: dict = {"httponly": True, "samesite": "lax", "secure": _COOKIE_SECURE}
-    if _COOKIE_DOMAIN:
-        kw["domain"] = _COOKIE_DOMAIN
+    testing = os.environ.get("TESTING", "").lower() in ("1", "true", "yes")
+    secure = False if testing else os.environ.get("COOKIE_SECURE", "").lower() in ("1", "true", "yes")
+    domain = "" if testing else os.environ.get("COOKIE_DOMAIN", "")  # ".kidion.ru" in production
+    kw: dict = {"httponly": True, "samesite": "lax", "secure": secure}
+    if domain:
+        kw["domain"] = domain
     return kw
 
 
@@ -771,16 +776,13 @@ async def payment_webhook(request: Request):
         if "json" in content_type:
             body = await request.json()
         elif "urlencoded" in content_type:
-            form = await request.form()
-            body = dict(form)
+            body = parse_prodamus_webhook_form(raw_body)
         else:
             # Try JSON first, fall back to form
-            import json as _json
             try:
-                body = _json.loads(raw_body)
+                body = json.loads(raw_body)
             except Exception:
-                form = await request.form()
-                body = dict(form)
+                body = parse_prodamus_webhook_form(raw_body)
     except Exception:
         logging.exception("Webhook body parse error")
         return JSONResponse({"ok": True})
