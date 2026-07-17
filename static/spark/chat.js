@@ -1139,19 +1139,28 @@
     const gateError = document.getElementById("gate-error");
     const btnParent = document.getElementById("btn-parent-gate");
     const btnPro = document.getElementById("btn-pro-gate");
-    let correctAnswer = 0;
     let gateTarget = "";
 
-    function openGate(targetUrl) {
+    async function openGate(targetUrl) {
       gateTarget = targetUrl;
-      const a = 10 + Math.floor(Math.random() * 40);
-      const b = 10 + Math.floor(Math.random() * 40);
-      correctAnswer = a + b;
-      gateQuestion.textContent = `${a} + ${b} = ?`;
+      gateQuestion.textContent = "...";
       gateAnswer.value = "";
       gateError.style.display = "none";
       gateOverlay.classList.add("is-open");
-      setTimeout(() => gateAnswer.focus(), 100);
+      try {
+        const res = await fetch("/api/kid/parent-gate/challenge", {
+          method: "POST",
+          credentials: "same-origin",
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "challenge_failed");
+        gateQuestion.textContent = data.question;
+        setTimeout(() => gateAnswer.focus(), 100);
+      } catch (e) {
+        gateQuestion.textContent = "";
+        gateError.textContent = "Не получилось открыть проверку. Попробуйте ещё раз.";
+        gateError.style.display = "";
+      }
     }
 
     btnParent.addEventListener("click", () => openGate(`/chat/report/${CFG.childId}`));
@@ -1170,11 +1179,21 @@
       gateOverlay.classList.remove("is-open");
     });
 
-    function checkGate() {
-      if (parseInt(gateAnswer.value, 10) === correctAnswer) {
+    async function checkGate() {
+      const res = await fetch("/api/kid/parent-gate/verify", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answer: parseInt(gateAnswer.value, 10), target: gateTarget }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
         gateOverlay.classList.remove("is-open");
-        window.location.href = gateTarget;
+        window.location.href = data.redirect;
       } else {
+        gateError.textContent = data.error === "challenge_expired"
+          ? "Проверка устарела. Откройте её ещё раз."
+          : "Неправильно, попробуй ещё!";
         gateError.style.display = "";
         gateAnswer.value = "";
         gateAnswer.focus();

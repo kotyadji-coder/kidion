@@ -320,9 +320,32 @@ def _get_or_generate_topic_image(conn, child: dict, topic: str, subject: str,
     return image_bytes
 
 
+def _refund_generation_charge(conn, user_id: int | None, amount: int, reason: str) -> None:
+    """Refund a paid lesson generation once when the background job fails."""
+    if not user_id or amount <= 0:
+        return
+
+    from db import insert_transaction, update_crystals
+
+    refund_reason = f"refund:{reason}"
+    existing = conn.execute(
+        "SELECT id FROM transactions WHERE user_id=? AND reason=? LIMIT 1",
+        (user_id, refund_reason),
+    ).fetchone()
+    if existing:
+        return
+
+    if update_crystals(conn, user_id, amount):
+        insert_transaction(conn, user_id, amount, refund_reason)
+        logger.info("Refunded %s crystals for failed lesson generation %s", amount, reason)
+
+
 def generate_lesson_content(lesson_id: int, child: dict, topic: str, subject: str,
                              db_path: str, server_url: str,
-                             lesson_number: int = 1, mode: str = "normal") -> None:
+                             lesson_number: int = 1, mode: str = "normal",
+                             refund_user_id: int | None = None,
+                             refund_amount: int = 0,
+                             refund_reason: str | None = None) -> None:
     """Background task: generate lesson and save content_url to DB.
 
     lesson_number: 1-5 within topic (5 = activity worksheet instead of regular).
@@ -439,5 +462,11 @@ def generate_lesson_content(lesson_id: int, child: dict, topic: str, subject: st
         try:
             conn = get_connection(db_path)
             update_lesson_content(conn, lesson_id, None, None, "error")
+            _refund_generation_charge(
+                conn,
+                refund_user_id,
+                refund_amount,
+                refund_reason or f"lesson:{lesson_id}",
+            )
         except Exception:
             pass

@@ -4,11 +4,22 @@ Design: glass morphism matching school-bot (indigo accent, pastel gradients).
 """
 
 import os
+import re
 
 from services.theory_renderer import THEORY_CSS, THEORY_JS, render_theory_html
 
 _BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _CONTENT_DIR = os.path.join(_BASE_DIR, "content")
+
+
+def _normalize_utf8_text(value: str) -> str:
+    """Convert JSON surrogate pairs to real Unicode before writing HTML."""
+    if not re.search(r"[\ud800-\udfff]", value):
+        return value
+    try:
+        return value.encode("utf-16", "surrogatepass").decode("utf-16")
+    except UnicodeDecodeError:
+        return value.encode("utf-8", "replace").decode("utf-8")
 
 # ── Task type labels and colors ─────────────────────────────────────────────
 
@@ -670,6 +681,7 @@ function finishLesson() {{
 
     # Save main HTML
     html_path = os.path.join(_CONTENT_DIR, f"{content_id}.html")
+    html = _normalize_utf8_text(html)
     with open(html_path, "w", encoding="utf-8") as f:
         f.write(html)
 

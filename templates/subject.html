@@ -851,13 +851,39 @@ document.addEventListener('DOMContentLoaded', function() {
   enrollAndLoad();
 });
 
+function showSubjectSoon(message) {
+  var stats = document.getElementById('stats-grid');
+  var list = document.getElementById('topics-list');
+  if (stats) {
+    stats.innerHTML =
+      '<div class="kd-substat"><span class="kd-substat-label">Статус</span><span class="kd-substat-value" style="font-size:17px;letter-spacing:-0.018em">Скоро</span></div>';
+  }
+  if (list) {
+    list.innerHTML =
+      '<div style="padding:22px;color:var(--text-muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);line-height:1.5">' +
+      esc(message || 'Программа для этого предмета и класса пока готовится.') +
+      '</div>';
+  }
+}
+
 async function enrollAndLoad() {
-  var resp = await fetch('/api/children/' + CHILD_ID + '/enroll-subject', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({subject: SUBJECT, grade: GRADE})
-  });
-  var data = await resp.json();
+  var resp, data;
+  try {
+    resp = await fetch('/api/children/' + CHILD_ID + '/enroll-subject', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({subject: SUBJECT, grade: GRADE})
+    });
+    data = await resp.json();
+  } catch(e) {
+    showSubjectSoon('Не получилось загрузить программу. Попробуйте позже.');
+    return;
+  }
+
+  if (!resp.ok) {
+    showSubjectSoon('Программа для этого предмета и класса пока готовится.');
+    return;
+  }
 
   loadStats();
   loadProgram();

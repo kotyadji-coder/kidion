@@ -231,8 +231,8 @@ async def test_create_child_invalid_gender_returns_422(auth_client: AsyncClient)
 
 
 async def test_create_child_invalid_grade_returns_422(auth_client: AsyncClient):
-    """Grade outside 1–11 triggers 422."""
-    payload = {**CHILD_PAYLOAD, "grade": 12}
+    """Grade outside 1-6 triggers 422."""
+    payload = {**CHILD_PAYLOAD, "grade": 7}
     resp = await auth_client.post("/api/children", json=payload)
     assert resp.status_code == 422
 

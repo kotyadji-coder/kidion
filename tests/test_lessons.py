@@ -214,7 +214,7 @@ async def test_generate_lesson_empty_topic(auth_client: AsyncClient, child_data:
 
 @pytest.mark.asyncio
 async def test_generate_lesson_default_subject(auth_client: AsyncClient, child_data: dict):
-    """Test subject defaults to 'general' when not provided."""
+    """Test subject defaults to math when not provided."""
     with patch("services.generation.generate_lesson_content") as mock_gen:
         resp = await auth_client.post(
             "/api/lessons/generate",
@@ -226,7 +226,7 @@ async def test_generate_lesson_default_subject(auth_client: AsyncClient, child_d
 
     assert resp.status_code == 200
 
-    # Check the DB to verify subject was set to "general"
+    # Check the DB to verify subject was set to math.
     db_path = os.environ.get("DATABASE_PATH", "./kidion.db")
     conn = sqlite3.connect(db_path)
     cursor = conn.execute(
@@ -237,7 +237,7 @@ async def test_generate_lesson_default_subject(auth_client: AsyncClient, child_d
     conn.close()
 
     assert row is not None
-    assert row[0] == "general"
+    assert row[0] == "math"
 
 
 # ---------------------------------------------------------------------------

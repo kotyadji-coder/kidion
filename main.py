@@ -6,7 +6,10 @@ import json
 import logging
 import os
 import re
+import secrets
 import sqlite3
+import threading
+import time
 from contextlib import asynccontextmanager
 from typing import Optional
 
@@ -203,6 +206,36 @@ _CONTENT_DIR = os.path.join(_BASE_DIR, "content")
 
 # Set of strong references to background tasks (prevents garbage collection)
 _background_tasks: set = set()
+_parent_gate_challenges: dict[str, dict] = {}
+_PARENT_GATE_MAX_AGE_SECONDS = 10 * 60
+ACTIVE_SUBJECTS = ("math", "russian")
+PLANNED_SUBJECTS = ("english", "world")
+SUBJECT_ALIASES = {
+    "math": "math",
+    "математика": "math",
+    "russian": "russian",
+    "русский": "russian",
+    "русский язык": "russian",
+}
+_GENERATION_MAX_CONCURRENCY = max(1, int(os.environ.get("GENERATION_MAX_CONCURRENCY", "3")))
+_generation_semaphore = threading.BoundedSemaphore(_GENERATION_MAX_CONCURRENCY)
+
+
+def _start_lesson_generation(*args, **kwargs) -> threading.Thread:
+    """Run lesson generation with a small global concurrency cap."""
+    def _run():
+        with _generation_semaphore:
+            services.generation.generate_lesson_content(*args, **kwargs)
+
+    thread = threading.Thread(target=_run, name="kidion-lesson-generation", daemon=True)
+    thread.start()
+    return thread
+
+
+def _normalize_subject(value: str | None) -> str | None:
+    if value is None:
+        return value
+    return SUBJECT_ALIASES.get(str(value).strip().lower(), value)
 
 # Create content directory
 os.makedirs(_CONTENT_DIR, exist_ok=True)
@@ -236,6 +269,51 @@ def _cookie_kwargs() -> dict:
     if domain:
         kw["domain"] = domain
     return kw
+
+
+def _cleanup_parent_gate_challenges(now: float | None = None) -> None:
+    now = now or time.time()
+    expired = [
+        token for token, payload in _parent_gate_challenges.items()
+        if now - payload.get("created_at", 0) > _PARENT_GATE_MAX_AGE_SECONDS
+    ]
+    for token in expired:
+        _parent_gate_challenges.pop(token, None)
+
+
+def _make_parent_gate_problem(grade: int) -> tuple[str, int]:
+    """Return a math challenge that is intentionally above a child's grade."""
+    grade = max(1, min(6, int(grade or 1)))
+    if grade == 1:
+        a = secrets.randbelow(50) + 40
+        b = secrets.randbelow(40) + 30
+        return f"{a} + {b} = ?", a + b
+    if grade == 2:
+        a = secrets.randbelow(80) + 120
+        b = secrets.randbelow(60) + 40
+        return f"{a} - {b} = ?", a - b
+    if grade == 3:
+        a = secrets.randbelow(8) + 7
+        b = secrets.randbelow(7) + 6
+        return f"{a} x {b} = ?", a * b
+    if grade == 4:
+        a = secrets.randbelow(500) + 250
+        b = secrets.randbelow(400) + 180
+        return f"{a} + {b} = ?", a + b
+    if grade == 5:
+        a = secrets.randbelow(13) + 12
+        b = secrets.randbelow(9) + 11
+        return f"{a} x {b} = ?", a * b
+    a = secrets.randbelow(15) + 16
+    b = secrets.randbelow(12) + 9
+    c = secrets.randbelow(80) + 30
+    return f"{a} x {b} + {c} = ?", a * b + c
+
+
+def _parent_gate_target_allowed(target: str, child: dict) -> bool:
+    if target in {"/dashboard", "/profile", "/buy", "/chat/subscribe", "/kid/login"}:
+        return True
+    return target == f"/chat/report/{child['id']}"
 
 
 def _set_session_cookie(response: Response, user_id: int) -> None:
@@ -299,8 +377,8 @@ class ChildCreateRequest(BaseModel):
     @field_validator("grade")
     @classmethod
     def validate_grade(cls, v):
-        if not (1 <= v <= 11):
-            raise ValueError("grade must be between 1 and 11")
+        if not (1 <= v <= 6):
+            raise ValueError("grade must be between 1 and 6")
         return v
 
     @field_validator("birth_date")
@@ -336,8 +414,8 @@ class ChildUpdateRequest(BaseModel):
     @field_validator("grade")
     @classmethod
     def validate_grade(cls, v):
-        if v is not None and not (1 <= v <= 11):
-            raise ValueError("grade must be between 1 and 11")
+        if v is not None and not (1 <= v <= 6):
+            raise ValueError("grade must be between 1 and 6")
         return v
 
     @field_validator("pin_code")
@@ -353,10 +431,15 @@ class KidAuthRequest(BaseModel):
     pin: Optional[str] = None
 
 
+class ParentGateVerifyRequest(BaseModel):
+    answer: int
+    target: str
+
+
 class GenerateLessonRequest(BaseModel):
     child_id: int
     topic: str
-    subject: Optional[str] = "general"
+    subject: Optional[str] = "math"
 
     @field_validator("topic")
     @classmethod
@@ -364,6 +447,14 @@ class GenerateLessonRequest(BaseModel):
         if not v or not v.strip():
             raise ValueError("topic must not be empty")
         return v.strip()
+
+    @field_validator("subject")
+    @classmethod
+    def validate_subject(cls, v):
+        v = _normalize_subject(v)
+        if v not in ACTIVE_SUBJECTS:
+            raise ValueError("subject must be 'math' or 'russian'")
+        return v
 
 
 class LessonResultRequest(BaseModel):
@@ -1085,7 +1176,8 @@ async def kid_auth(body: KidAuthRequest, request: Request):
     ip = get_client_ip(request)
     conn = get_db_connection()
 
-    # Verify parent is logged in and owns this child
+    # Child entry is intentionally parent-session based. PIN is not used here;
+    # parent areas from child UI are protected by the parent-gate challenge.
     user = get_current_user(request, conn)
     if not user:
         return JSONResponse({"error": "unauthorized", "message": "Войдите в аккаунт родителя."}, status_code=401)
@@ -1103,6 +1195,55 @@ async def kid_auth(body: KidAuthRequest, request: Request):
         max_age=60 * 60 * 24 * 30,
         **_cookie_kwargs(),
     )
+    return response
+
+
+@app.post("/api/kid/parent-gate/challenge")
+async def kid_parent_gate_challenge(request: Request):
+    conn = get_db_connection()
+    child = get_current_child(request, conn)
+    if not child:
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+
+    _cleanup_parent_gate_challenges()
+    question, answer = _make_parent_gate_problem(child.get("grade", 1))
+    token = secrets.token_urlsafe(24)
+    _parent_gate_challenges[token] = {
+        "answer": answer,
+        "child_id": child["id"],
+        "created_at": time.time(),
+    }
+    response = JSONResponse({"question": question, "expires_in": _PARENT_GATE_MAX_AGE_SECONDS})
+    response.set_cookie(
+        "kid_parent_gate",
+        token,
+        max_age=_PARENT_GATE_MAX_AGE_SECONDS,
+        **_cookie_kwargs(),
+    )
+    return response
+
+
+@app.post("/api/kid/parent-gate/verify")
+async def kid_parent_gate_verify(body: ParentGateVerifyRequest, request: Request):
+    conn = get_db_connection()
+    child = get_current_child(request, conn)
+    if not child:
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    if not _parent_gate_target_allowed(body.target, child):
+        return JSONResponse({"error": "invalid_target"}, status_code=400)
+
+    _cleanup_parent_gate_challenges()
+    token = request.cookies.get("kid_parent_gate", "")
+    payload = _parent_gate_challenges.get(token)
+    if not payload or payload.get("child_id") != child["id"]:
+        return JSONResponse({"error": "challenge_expired"}, status_code=409)
+
+    if int(body.answer) != int(payload["answer"]):
+        return JSONResponse({"error": "wrong_answer"}, status_code=400)
+
+    _parent_gate_challenges.pop(token, None)
+    response = JSONResponse({"ok": True, "redirect": body.target})
+    response.delete_cookie("kid_parent_gate", **_cookie_kwargs())
     return response
 
 
@@ -1133,19 +1274,24 @@ async def generate_lesson(body: GenerateLessonRequest, request: Request):
     insert_transaction(conn, user["id"], -20, f"lesson_generation:child_{body.child_id}")
 
     # Create lesson record
-    subject = body.subject or "general"
+    subject = body.subject or "math"
     lesson_id = create_lesson(conn, body.child_id, "on_demand", body.topic, subject)
 
     # Launch background generation
     server_url = os.environ.get("APP_BASE_URL", "http://localhost:8003")
     db_path = get_db_path()
 
-    import threading
-    thread = threading.Thread(
-        target=services.generation.generate_lesson_content,
-        args=(lesson_id, dict(child), body.topic, subject, db_path, server_url)
+    _start_lesson_generation(
+        lesson_id,
+        dict(child),
+        body.topic,
+        subject,
+        db_path,
+        server_url,
+        refund_user_id=user["id"],
+        refund_amount=20,
+        refund_reason=f"lesson_generation:lesson_{lesson_id}",
     )
-    thread.start()
 
     return JSONResponse({"lesson_id": lesson_id})
 
@@ -1282,8 +1428,9 @@ class WeeklyPlanCreateRequest(BaseModel):
     @field_validator("subject")
     @classmethod
     def validate_subject(cls, v):
-        if v not in ("math", "russian", "english"):
-            raise ValueError("subject must be 'math', 'russian' or 'english'")
+        v = _normalize_subject(v)
+        if v not in ACTIVE_SUBJECTS:
+            raise ValueError("subject must be 'math' or 'russian'")
         return v
 
 
@@ -1458,12 +1605,14 @@ async def weekly_plan_next(plan_id: int, request: Request):
     server_url = os.environ.get("APP_BASE_URL", "http://localhost:8003")
     db_path = get_db_path()
 
-    import threading
-    thread = threading.Thread(
-        target=services.generation.generate_lesson_content,
-        args=(lesson_id, dict(child), topic_title, subject, db_path, server_url)
+    _start_lesson_generation(
+        lesson_id,
+        dict(child),
+        topic_title,
+        subject,
+        db_path,
+        server_url,
     )
-    thread.start()
 
     return JSONResponse({"lesson_id": lesson_id})
 
@@ -1516,8 +1665,11 @@ async def weekly_plan_generate_all(plan_id: int, request: Request):
     server_url = os.environ.get("APP_BASE_URL", "http://localhost:8003")
     db_path = get_db_path()
     lesson_ids = []
+    per_lesson_refund = PLAN_COST // remaining
+    refund_remainder = PLAN_COST % remaining
 
     for idx in range(plan["current_lesson_index"], plan["lessons_count"]):
+        generated_idx = len(lesson_ids)
         topic_id = topic_ids[idx]
         topic = all_topics.get(topic_id, {})
         topic_title = topic.get("title", topic_id)
@@ -1534,12 +1686,17 @@ async def weekly_plan_generate_all(plan_id: int, request: Request):
         lesson_ids.append(lesson_id)
 
         # Launch generation in background thread
-        import threading
-        thread = threading.Thread(
-            target=services.generation.generate_lesson_content,
-            args=(lesson_id, dict(child), topic_title, subject, db_path, server_url)
+        _start_lesson_generation(
+            lesson_id,
+            dict(child),
+            topic_title,
+            subject,
+            db_path,
+            server_url,
+            refund_user_id=user["id"],
+            refund_amount=per_lesson_refund + (1 if generated_idx < refund_remainder else 0),
+            refund_reason=f"weekly_plan:{plan_id}:lesson_{lesson_id}",
         )
-        thread.start()
 
     # Mark plan index as fully generated
     update_weekly_plan_index(conn, plan_id, plan["lessons_count"])
@@ -1606,8 +1763,9 @@ class EnrollmentCreateRequest(BaseModel):
     @field_validator("subject")
     @classmethod
     def validate_subject(cls, v):
-        if v not in ("math", "russian", "english"):
-            raise ValueError("subject must be 'math', 'russian' or 'english'")
+        v = _normalize_subject(v)
+        if v not in ACTIVE_SUBJECTS:
+            raise ValueError("subject must be 'math' or 'russian'")
         return v
 
     @field_validator("start_topic_index")
@@ -1783,12 +1941,14 @@ async def enrollment_next(enrollment_id: int, request: Request):
     server_url = os.environ.get("APP_BASE_URL", "http://localhost:8003")
     db_path = get_db_path()
 
-    import threading
-    thread = threading.Thread(
-        target=services.generation.generate_lesson_content,
-        args=(lesson_id, dict(child), topic["title"], subject, db_path, server_url)
+    _start_lesson_generation(
+        lesson_id,
+        dict(child),
+        topic["title"],
+        subject,
+        db_path,
+        server_url,
     )
-    thread.start()
 
     return JSONResponse({"lesson_id": lesson_id, "topic_title": topic["title"]})
 
@@ -1992,13 +2152,15 @@ async def enroll_subject(child_id: int, body: EnrollSubjectRequest, request: Req
                     conn.commit()
                     auto_lesson_ids.append(lesson_id)
 
-                    import threading
-                    thread = threading.Thread(
-                        target=services.generation.generate_lesson_content,
-                        args=(lesson_id, dict(child), fl["title_ru"], body.subject, db_path, server_url),
-                        kwargs={"lesson_number": fl["lesson_order"]},
+                    _start_lesson_generation(
+                        lesson_id,
+                        dict(child),
+                        fl["title_ru"],
+                        body.subject,
+                        db_path,
+                        server_url,
+                        lesson_number=fl["lesson_order"],
                     )
-                    thread.start()
                 except Exception:
                     pass
 
@@ -2170,13 +2332,15 @@ async def assign_skip_test(child_id: int, body: SkipTestRequest, request: Reques
     server_url = os.environ.get("APP_BASE_URL", "http://localhost:8003")
     db_path = get_db_path()
 
-    import threading
-    thread = threading.Thread(
-        target=services.generation.generate_lesson_content,
-        args=(lesson_id, dict(child), topic["title_ru"], topic["subject"], db_path, server_url),
-        kwargs={"mode": "skip_test"},
+    _start_lesson_generation(
+        lesson_id,
+        dict(child),
+        topic["title_ru"],
+        topic["subject"],
+        db_path,
+        server_url,
+        mode="skip_test",
     )
-    thread.start()
 
     return JSONResponse({"ok": True, "lesson_id": lesson_id, "status": "generating"})
 
@@ -2249,13 +2413,18 @@ async def generate_topic_lessons(child_id: int, body: BulkGenerateTopicRequest, 
         )
         conn.commit()
 
-        import threading
-        thread = threading.Thread(
-            target=services.generation.generate_lesson_content,
-            args=(lesson_id, dict(child), cl["title_ru"], topic["subject"], db_path, server_url),
-            kwargs={"lesson_number": cl["lesson_order"]},
+        _start_lesson_generation(
+            lesson_id,
+            dict(child),
+            cl["title_ru"],
+            topic["subject"],
+            db_path,
+            server_url,
+            lesson_number=cl["lesson_order"],
+            refund_user_id=user["id"],
+            refund_amount=20,
+            refund_reason=f"bulk_topic:{body.topic_id}:lesson_{lesson_id}",
         )
-        thread.start()
 
     return JSONResponse({
         "ok": True,
@@ -2266,6 +2435,14 @@ async def generate_topic_lessons(child_id: int, body: BulkGenerateTopicRequest, 
 
 class BulkGenerateMonthRequest(BaseModel):
     subject: str
+
+    @field_validator("subject")
+    @classmethod
+    def validate_subject(cls, v):
+        v = _normalize_subject(v)
+        if v not in ACTIVE_SUBJECTS:
+            raise ValueError("subject must be 'math' or 'russian'")
+        return v
 
 
 @app.post("/api/children/{child_id}/generate-month")
@@ -2323,13 +2500,18 @@ async def generate_month_lessons(child_id: int, body: BulkGenerateMonthRequest, 
         )
         conn.commit()
 
-        import threading
-        thread = threading.Thread(
-            target=services.generation.generate_lesson_content,
-            args=(lesson_id, dict(child), cl["title_ru"], topic["subject"], db_path, server_url),
-            kwargs={"lesson_number": cl["lesson_order"]},
+        _start_lesson_generation(
+            lesson_id,
+            dict(child),
+            cl["title_ru"],
+            topic["subject"],
+            db_path,
+            server_url,
+            lesson_number=cl["lesson_order"],
+            refund_user_id=user["id"],
+            refund_amount=20,
+            refund_reason=f"bulk_month:{body.subject}:lesson_{lesson_id}",
         )
-        thread.start()
 
     return JSONResponse({
         "ok": True,
@@ -2545,13 +2727,18 @@ async def kid_start_lesson(curriculum_lesson_id: int, request: Request):
     server_url = os.environ.get("APP_BASE_URL", "http://localhost:8003")
     db_path = get_db_path()
 
-    import threading
-    thread = threading.Thread(
-        target=services.generation.generate_lesson_content,
-        args=(lesson_id, dict(child), cl["title_ru"], topic["subject"], db_path, server_url),
-        kwargs={"lesson_number": cl["lesson_order"]},
+    _start_lesson_generation(
+        lesson_id,
+        dict(child),
+        cl["title_ru"],
+        topic["subject"],
+        db_path,
+        server_url,
+        lesson_number=cl["lesson_order"],
+        refund_user_id=parent["id"],
+        refund_amount=20,
+        refund_reason=f"kid_lesson:lesson_{lesson_id}",
     )
-    thread.start()
 
     return JSONResponse({"ok": True, "lesson_id": lesson_id, "status": "generating"})
 
@@ -2639,7 +2826,7 @@ async def get_child_curriculum(child_id: int, subject: str, request: Request):
     if child["parent_id"] != user["id"]:
         return JSONResponse({"error": "forbidden"}, status_code=403)
 
-    if subject not in ("math", "russian", "english"):
+    if subject not in ACTIVE_SUBJECTS:
         return JSONResponse({"error": "invalid_subject"}, status_code=400)
 
     result = get_curriculum_with_progress(conn, child_id, subject, child["grade"])
@@ -2687,8 +2874,9 @@ class GenerateTopicRequest(BaseModel):
     @field_validator("subject")
     @classmethod
     def validate_subject(cls, v):
-        if v not in ("math", "russian", "english"):
-            raise ValueError("subject must be 'math', 'russian' or 'english'")
+        v = _normalize_subject(v)
+        if v not in ACTIVE_SUBJECTS:
+            raise ValueError("subject must be 'math' or 'russian'")
         return v
 
 
@@ -2747,12 +2935,17 @@ async def generate_topic_lesson(body: GenerateTopicRequest, request: Request):
     server_url = os.environ.get("APP_BASE_URL", "http://localhost:8003")
     db_path = get_db_path()
 
-    import threading
-    thread = threading.Thread(
-        target=services.generation.generate_lesson_content,
-        args=(lesson_id, dict(child), topic["title"], body.subject, db_path, server_url)
+    _start_lesson_generation(
+        lesson_id,
+        dict(child),
+        topic["title"],
+        body.subject,
+        db_path,
+        server_url,
+        refund_user_id=user["id"],
+        refund_amount=20,
+        refund_reason=f"topic_lesson:lesson_{lesson_id}",
     )
-    thread.start()
 
     return JSONResponse({"lesson_id": lesson_id, "topic_title": topic["title"]})
 
@@ -4525,10 +4718,10 @@ async def page_child_subject(child_id: int, subject: str, request: Request):
 
 @app.get("/evals/dashboard", response_class=HTMLResponse)
 async def evals_dashboard(request: Request, run_id: int | None = None):
-    """Eval dashboard — protected by parent auth."""
+    """Eval dashboard — protected by admin auth."""
     conn = get_db_connection()
     user = get_current_user(request, conn)
-    if not user:
+    if not user or not _is_admin(user):
         return RedirectResponse("/login")
 
     from evals.runner import get_all_runs, get_run_details, compare_runs
@@ -4824,8 +5017,8 @@ async def evals_run_api(request: Request):
     """Trigger an eval run via API."""
     conn = get_db_connection()
     user = get_current_user(request, conn)
-    if not user:
-        return JSONResponse({"error": "auth required"}, 401)
+    if not user or not _is_admin(user):
+        return JSONResponse({"error": "admin required"}, 403)
 
     if _eval_running["active"]:
         return JSONResponse({"error": "Eval already running"}, 409)

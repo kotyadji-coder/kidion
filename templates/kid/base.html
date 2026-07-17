@@ -39,7 +39,7 @@
       </a>
       {% block nav_buttons %}{% endblock %}
       <a href="/kid/character" class="kid-nav__avatar" id="nav-avatar">{{ child.name[0]|upper }}</a>
-      <a href="/dashboard" class="kid-nav__gear" title="Кабинет родителя">
+      <a href="/dashboard" class="kid-nav__gear" data-parent-gate-target="/dashboard" title="Кабинет родителя">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </a>
     </div>
@@ -48,6 +48,34 @@
   <main class="kid-main">
     {% block content %}{% endblock %}
   </main>
+  {% if child is defined and child %}
+  <div class="kid-parent-gate" id="kid-parent-gate" aria-hidden="true">
+    <div class="kid-parent-gate__card">
+      <div class="kid-parent-gate__icon">🔒</div>
+      <div class="kid-parent-gate__title">Позови взрослых</div>
+      <div class="kid-parent-gate__question" id="kid-parent-gate-question"></div>
+      <div class="kid-parent-gate__row">
+        <input type="number" id="kid-parent-gate-answer" class="kid-parent-gate__input" inputmode="numeric" autocomplete="off" placeholder="?">
+        <button type="button" id="kid-parent-gate-check" class="kid-parent-gate__button">Войти</button>
+      </div>
+      <div class="kid-parent-gate__error" id="kid-parent-gate-error" hidden>Неправильно, попробуйте ещё раз.</div>
+      <button type="button" id="kid-parent-gate-cancel" class="kid-parent-gate__cancel">Назад</button>
+    </div>
+  </div>
+  <style>
+    .kid-parent-gate{display:none;position:fixed;inset:0;z-index:2000;align-items:center;justify-content:center;background:rgba(15,23,42,.48);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:20px}
+    .kid-parent-gate.is-open{display:flex}
+    .kid-parent-gate__card{width:min(360px,100%);border-radius:24px;background:#fff;padding:28px;text-align:center;box-shadow:0 24px 70px rgba(15,23,42,.28)}
+    .kid-parent-gate__icon{font-size:42px}
+    .kid-parent-gate__title{margin-top:10px;font-weight:800;font-size:22px;color:#1f2937}
+    .kid-parent-gate__question{margin:12px 0;font-weight:800;font-size:28px;color:#ff6b4a}
+    .kid-parent-gate__row{display:flex;gap:10px;align-items:center;justify-content:center}
+    .kid-parent-gate__input{width:108px;text-align:center;padding:10px;border:2px solid #e5e7eb;border-radius:14px;font-size:20px;font-weight:800;color:#1f2937}
+    .kid-parent-gate__button{padding:12px 18px;border:0;border-radius:14px;background:#ff6b4a;color:#fff;font-weight:800;cursor:pointer}
+    .kid-parent-gate__error{margin-top:10px;color:#dc2626;font-weight:700;font-size:14px}
+    .kid-parent-gate__cancel{margin-top:12px;border:0;background:transparent;color:#6b7280;font-weight:700;cursor:pointer;padding:8px 12px}
+  </style>
+  {% endif %}
   <script src="/static/kid/app.js"></script>
   {% block scripts %}{% endblock %}
 </body>

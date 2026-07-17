@@ -740,7 +740,9 @@
     var pct = total > 0 ? Math.round(completed / total * 100) : 0;
     var isContinue = playSubject && playSubject.key === s.key;
 
-    html += '<a class="hub-world k-card-hover" href="/kid/subject/' + s.key + '">';
+    var worldHref = hasLessons ? '/kid/subject/' + s.key : '#';
+    var worldStyle = hasLessons ? '' : 'opacity:.7;cursor:default;pointer-events:none';
+    html += '<a class="hub-world k-card-hover" href="' + worldHref + '" style="' + worldStyle + '">';
     if (isContinue) html += '<span class="hub-world-continue">Продолжить</span>';
     html += '<div class="hub-world-planet" style="background:radial-gradient(circle at 30% 30%, ' + s.accent + ', ' + darken(s.accent) + '); box-shadow: inset -8px -10px 16px rgba(0,0,0,.2), 0 12px 26px -10px ' + s.accent + '99; color: ' + s.accent + ';">' + s.icon + '</div>';
     html += '<div class="hub-world-name">' + s.short + '</div>';
@@ -758,7 +760,7 @@
 
   // Free lessons — always show, locked if none
   var hasFree = freeLessons.length > 0;
-  html += '<a class="hub-world k-card-hover" href="' + (hasFree ? '/kid/free-lessons' : '#') + '" style="' + (hasFree ? '' : 'opacity:.7;cursor:default') + '">';
+  html += '<a class="hub-world k-card-hover" href="' + (hasFree ? '/kid/free-lessons' : '#') + '" style="' + (hasFree ? '' : 'opacity:.7;cursor:default;pointer-events:none') + '">';
   html += '<div class="hub-world-planet" style="background:radial-gradient(circle at 30% 30%, #8E6BFF, #5A3DBE); box-shadow: inset -8px -10px 16px rgba(0,0,0,.2), 0 12px 26px -10px rgba(142,107,255,.6); color: #8E6BFF;">';
   html += '<svg width="58" height="58" viewBox="0 0 48 48" fill="none"><path d="M24 6l4 12 12 4-12 4-4 12-4-12-12-4 12-4z" fill="#fff" opacity=".3"/><path d="M38 8l1.5 4.5L44 14l-4.5 1.5L38 20l-1.5-4.5L32 14l4.5-1.5z" fill="#fff"/></svg>';
   html += '</div>';
@@ -794,36 +796,58 @@ function pluralLessons(n) {
   var question = document.getElementById('gate-question');
   var answer = document.getElementById('gate-answer');
   var error = document.getElementById('gate-error');
-  var correctAnswer = 0;
   var gateAction = null;
 
-  function generateProblem() {
-    var a = 10 + Math.floor(Math.random() * 40);
-    var b = 10 + Math.floor(Math.random() * 40);
-    correctAnswer = a + b;
-    question.textContent = a + ' + ' + b + ' = ?';
+  function actionTarget(action) {
+    return action === 'dashboard' ? '/dashboard' : '/kid/login';
+  }
+
+  async function loadProblem() {
+    question.textContent = '...';
     answer.value = '';
     error.style.display = 'none';
+    try {
+      var resp = await fetch('/api/kid/parent-gate/challenge', {
+        method: 'POST',
+        credentials: 'same-origin'
+      });
+      var data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'challenge_failed');
+      question.textContent = data.question;
+    } catch(e) {
+      question.textContent = '';
+      error.textContent = 'Не получилось открыть проверку. Попробуйте ещё раз.';
+      error.style.display = '';
+    }
   }
 
   function openGate(action) {
     gateAction = action;
-    generateProblem();
     gate.classList.add('is-open');
+    loadProblem();
     setTimeout(function() { answer.focus(); }, 100);
   }
 
-  function checkGate() {
-    if (parseInt(answer.value, 10) === correctAnswer) {
+  async function checkGate() {
+    var target = actionTarget(gateAction);
+    var resp = await fetch('/api/kid/parent-gate/verify', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({answer: parseInt(answer.value, 10), target: target})
+    });
+    var data = await resp.json();
+    if (resp.ok && data.ok) {
       gate.classList.remove('is-open');
       if (gateAction === 'dashboard') {
-        window.location.href = '/dashboard';
+        window.location.href = data.redirect;
       } else if (gateAction === 'logout') {
         fetch('/api/kid/logout', {method:'POST', credentials:'same-origin'}).then(function() {
           window.location.href = '/kid/login';
         });
       }
     } else {
+      error.textContent = data.error === 'challenge_expired' ? 'Проверка устарела. Откройте её ещё раз.' : 'Неправильно, попробуй ещё!';
       error.style.display = '';
       answer.value = '';
       answer.focus();

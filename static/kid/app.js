@@ -33,9 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
     logoutBtn.addEventListener('click', async (e) => {
       e.preventDefault();
       await apiPost('/api/kid/logout', {});
-      window.location.href = '/dashboard';
+      window.location.href = '/kid/login';
     });
   }
+  setupParentGateLinks();
 
   // Run page-specific init
   const page = document.body.dataset.page;
@@ -44,6 +45,84 @@ document.addEventListener('DOMContentLoaded', () => {
   if (page === 'lesson') initLessonPage();
   if (page === 'result') initResultPage();
 });
+
+function setupParentGateLinks() {
+  const gate = document.getElementById('kid-parent-gate');
+  const question = document.getElementById('kid-parent-gate-question');
+  const answer = document.getElementById('kid-parent-gate-answer');
+  const error = document.getElementById('kid-parent-gate-error');
+  const checkBtn = document.getElementById('kid-parent-gate-check');
+  const cancelBtn = document.getElementById('kid-parent-gate-cancel');
+  if (!gate || !question || !answer || !checkBtn || !cancelBtn) return;
+
+  let target = '';
+  let verifying = false;
+
+  async function openGate(nextTarget) {
+    target = nextTarget;
+    error.hidden = true;
+    answer.value = '';
+    question.textContent = '...';
+    gate.classList.add('is-open');
+    gate.setAttribute('aria-hidden', 'false');
+    try {
+      const res = await fetch('/api/kid/parent-gate/challenge', {
+        method: 'POST',
+        credentials: 'same-origin',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'challenge_failed');
+      question.textContent = data.question;
+      setTimeout(() => answer.focus(), 80);
+    } catch (e) {
+      question.textContent = '';
+      error.textContent = 'Не получилось открыть проверку. Попробуйте ещё раз.';
+      error.hidden = false;
+    }
+  }
+
+  async function verifyGate() {
+    if (verifying) return;
+    verifying = true;
+    error.hidden = true;
+    try {
+      const { status, data } = await apiPost('/api/kid/parent-gate/verify', {
+        answer: parseInt(answer.value, 10),
+        target,
+      });
+      if (status === 200 && data.ok) {
+        window.location.href = data.redirect;
+        return;
+      }
+      error.textContent = data.error === 'challenge_expired'
+        ? 'Проверка устарела. Откройте её ещё раз.'
+        : 'Неправильно, попробуйте ещё раз.';
+      error.hidden = false;
+      answer.value = '';
+      answer.focus();
+    } catch (e) {
+      error.textContent = 'Ошибка соединения.';
+      error.hidden = false;
+    } finally {
+      verifying = false;
+    }
+  }
+
+  document.querySelectorAll('[data-parent-gate-target]').forEach((link) => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      openGate(link.dataset.parentGateTarget || link.getAttribute('href') || '/dashboard');
+    });
+  });
+  checkBtn.addEventListener('click', verifyGate);
+  answer.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') verifyGate();
+  });
+  cancelBtn.addEventListener('click', () => {
+    gate.classList.remove('is-open');
+    gate.setAttribute('aria-hidden', 'true');
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Login Page: PIN keyboard
@@ -288,5 +367,5 @@ async function kidLogout() {
   try {
     await apiPost('/api/kid/logout', {});
   } catch (e) {}
-  window.location.href = '/dashboard';
+  window.location.href = '/kid/login';
 }

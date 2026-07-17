@@ -247,7 +247,7 @@
 /* Subject cards */
 .subjects-grid-v2 {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
 }
 .subject-card-v2 {
@@ -730,10 +730,8 @@
         <form id="free-lesson-form" class="free-lesson-form-v2">
           <input type="text" id="free-topic" placeholder="Например: Почему вымерли динозавры" required class="input-topic">
           <select id="free-subject" class="input-subject">
-            <option value="science">Окруж. мир</option>
             <option value="math">Математика</option>
             <option value="russian">Русский язык</option>
-            <option value="general">Другое</option>
           </select>
           <button type="submit" class="btn-create">Создать урок<span class="cp-cost"> (20 &#128142;)</span></button>
         </form>
@@ -846,6 +844,7 @@ async function loadSubjects() {
     var allSubjects = [
       {key: 'math', name: 'Математика', icon: '📐'},
       {key: 'russian', name: 'Русский язык', icon: '📝'},
+      {key: 'english', name: 'Английский', icon: '🌐'},
       {key: 'world', name: 'Окруж. мир', icon: '🌍'}
     ];
 
@@ -863,7 +862,7 @@ async function loadSubjects() {
       var pct = total ? Math.round((done / total) * 100) : 0;
       var hasData = s.key === 'math' || s.key === 'russian';
 
-      html += '<a href="/children/' + CHILD_ID + '/subject/' + s.key + '" class="subject-card-v2' + (hasData ? '' : ' subject-card-v2--disabled') + '">';
+      html += '<a href="' + (hasData ? '/children/' + CHILD_ID + '/subject/' + s.key : '#') + '" class="subject-card-v2' + (hasData ? '' : ' subject-card-v2--disabled') + '">';
       if (!hasData) html += '<span class="subject-card-v2__badge">скоро</span>';
       html += '<span class="subject-card-v2__icon">' + s.icon + '</span>';
       html += '<span class="subject-card-v2__name">' + s.name + '</span>';
@@ -1003,7 +1002,7 @@ document.getElementById('modal-confirm').addEventListener('click', async functio
       statusEl.style.color = 'var(--error)';
       statusEl.textContent = 'Ошибка: ' + (err.error || 'попробуйте позже');
       btn.disabled = false;
-      btn.textContent = '��ересоздать';
+      btn.textContent = 'Пересоздать';
     }
   } catch(e) {
     modal.style.display = 'none';
