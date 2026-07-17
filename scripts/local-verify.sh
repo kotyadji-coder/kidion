@@ -40,8 +40,10 @@ echo "== Project markers =="
 [ -d tests ] && echo "Detected: tests/"
 [ -d sim ] && echo "Detected: sim/"
 
+CHECK_MODE_VALUE="${CHECK_MODE:-${VERIFY_MODE:-task}}"
+
 if [ -x ./scripts/check.sh ]; then
-  run_required "Project code checks" ./scripts/check.sh
+  run_required "Project code checks" env CHECK_MODE="$CHECK_MODE_VALUE" ./scripts/check.sh "$CHECK_MODE_VALUE"
 else
   echo "WARNING: no ./scripts/check.sh"
   warned=1
@@ -104,4 +106,3 @@ if [ "$warned" -ne 0 ]; then
 fi
 
 echo "VERDICT: Проверено. Готово к выкладке. Живой проект не тронут."
-

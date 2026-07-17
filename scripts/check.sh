@@ -42,6 +42,26 @@ python_cmd() {
   fi
 }
 
+raise_open_file_limit() {
+  local target="${PYTEST_OPEN_FILES_LIMIT:-8192}"
+  local current
+  local hard
+  current="$(ulimit -Sn)"
+  hard="$(ulimit -Hn)"
+
+  if [ "$current" = "unlimited" ]; then
+    return 0
+  fi
+
+  if [ "$hard" != "unlimited" ] && [ "$target" -gt "$hard" ]; then
+    target="$hard"
+  fi
+
+  if [ "$target" -gt "$current" ]; then
+    ulimit -Sn "$target" 2>/dev/null || true
+  fi
+}
+
 echo "== Git status =="
 if command -v timeout >/dev/null 2>&1; then
   timeout "$GIT_STATUS_TIMEOUT" git status --short || echo "git status skipped or timed out"
@@ -65,10 +85,26 @@ fi
 
 if [ -f pyproject.toml ] || [ -f pytest.ini ] || [ -d tests ]; then
   echo "== Python project checks =="
+  raise_open_file_limit
   export PYTHONPATH="${PYTHONPATH:+$PYTHONPATH:}."
+  export TESTING=1
+  unset GOOGLE_CLOUD_PROJECT
+  unset GOOGLE_APPLICATION_CREDENTIALS
+  unset GOOGLE_API_KEY
+  unset GEMINI_API_KEY
+  unset GOOGLE_GENAI_USE_VERTEXAI
+  unset VERTEXAI_PROJECT
+  unset NOTIFY_BOT_TOKEN
+  unset NOTIFY_CHAT_ID
+  unset NOTIFY_RELAY_URL
+  unset NOTIFY_RELAY_SECRET
+  unset TOGETHER_API_KEY
   if [ "$MODE" = "quick" ] && [ -z "${PYTEST_TARGETS:-}" ]; then
     echo "No PYTEST_TARGETS set; skipping broad pytest in quick mode"
   elif py=$(python_cmd); then
+    if [ -f scripts/test-safety-preflight.py ]; then
+      run_timed "paid-provider safety preflight" "$py" scripts/test-safety-preflight.py
+    fi
     if [ "$MODE" = "quick" ]; then
       if [ -n "${PYTEST_TARGETS:-}" ]; then
         run_timed "pytest quick targets" "$py" -m pytest -q -x ${PYTEST_TARGETS}

@@ -30,3 +30,43 @@ def test_testing_env_suppresses_telegram_notify(monkeypatch):
     notify_error("test alert")
 
     assert calls == []
+
+
+def test_testing_env_suppresses_dashboard_usage(monkeypatch):
+    monkeypatch.setenv("TESTING", "1")
+
+    calls = []
+
+    def fake_post(*args, **kwargs):
+        calls.append((args, kwargs))
+
+    monkeypatch.setattr("services.ai_client.httpx.post", fake_post)
+
+    class Usage:
+        prompt_token_count = 10
+        candidates_token_count = 5
+
+    class Response:
+        usage_metadata = Usage()
+
+    import services.ai_client as ai_client
+    ai_client._send_to_dashboard("gemini-3.5-flash", Response(), feature="lessons")
+    ai_client.report_usage("gemini-3.5-flash", Response(), feature="lessons")
+
+    assert calls == []
+
+
+def test_testing_env_suppresses_together_flux(monkeypatch):
+    monkeypatch.setenv("TESTING", "1")
+    monkeypatch.setenv("TOGETHER_API_KEY", "real-key-must-not-be-used")
+
+    calls = []
+
+    def fake_post(*args, **kwargs):
+        calls.append((args, kwargs))
+
+    monkeypatch.setattr("httpx.post", fake_post)
+
+    from services.image_generator import _stylize_photo_flux
+    assert _stylize_photo_flux(b"fake-image", "cartoon") is None
+    assert calls == []

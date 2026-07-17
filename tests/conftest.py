@@ -34,6 +34,7 @@ def set_test_env(monkeypatch):
     monkeypatch.delenv("NOTIFY_CHAT_ID", raising=False)
     monkeypatch.delenv("NOTIFY_RELAY_URL", raising=False)
     monkeypatch.delenv("NOTIFY_RELAY_SECRET", raising=False)
+    monkeypatch.delenv("TOGETHER_API_KEY", raising=False)
 
     import services.ai_client as ai_client
     ai_client._clients.clear()

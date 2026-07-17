@@ -99,6 +99,10 @@ def _stylize_photo_flux(image_bytes: bytes, style_en: str) -> bytes | None:
     import base64
     import httpx
 
+    if os.environ.get("TESTING") == "1":
+        logger.info("TESTING=1 - skipping Together AI FLUX stylization")
+        return None
+
     api_key = os.environ.get("TOGETHER_API_KEY")
     if not api_key:
         logger.info("No TOGETHER_API_KEY — cannot stylize photo via FLUX")

@@ -110,6 +110,10 @@ def is_safety_blocked(response) -> bool:
 
 def _send_to_dashboard(model: str, response, feature: str = ""):
     """Fire-and-forget token usage reporting."""
+    if os.getenv("TESTING") == "1":
+        logger.debug("TESTING=1 - LLM dashboard usage reporting disabled")
+        return
+
     try:
         usage = getattr(response, "usage_metadata", None)
         input_tokens = getattr(usage, "prompt_token_count", 0) or 0
@@ -131,6 +135,10 @@ def _send_to_dashboard(model: str, response, feature: str = ""):
 
 def report_usage(model_name: str, response, feature: str = ""):
     """Report token usage to LLM Dashboard in background thread."""
+    if os.getenv("TESTING") == "1":
+        logger.debug("TESTING=1 - LLM dashboard usage reporting disabled")
+        return
+
     threading.Thread(
         target=_send_to_dashboard,
         args=(model_name, response, feature),
