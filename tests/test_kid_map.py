@@ -4,6 +4,7 @@ TDD tests for: kid subjects endpoint, kid lesson map, kid lesson start.
 All tests should FAIL before implementation (Red phase).
 """
 import os
+import json
 import sqlite3
 
 import pytest
@@ -134,6 +135,41 @@ async def test_kid_map_returns_correct_structure(kid_session: dict):
     assert first_topic["lessons"][0]["status"] == "available"
     for lesson in first_topic["lessons"][1:]:
         assert lesson["status"] == "locked"
+
+
+@pytest.mark.asyncio
+async def test_kid_map_includes_subject_universe_context(kid_session: dict):
+    """Subject map includes the child's personalized subject zone."""
+    client = kid_session["kid_client"]
+    child_id = kid_session["child_id"]
+
+    conn = direct_db()
+    conn.execute(
+        "UPDATE children SET universe_description=? WHERE id=?",
+        (
+            json.dumps({
+                "name": "Лунная станция",
+                "subject_zones": {
+                    "math": {
+                        "zone_name": "Математическая верфь",
+                        "description": "Здесь собирают ракеты по точным расчетам.",
+                    },
+                },
+                "year_mission": "Запустить исследовательский корабль",
+                "progression": "Каждая миссия добавляет новый модуль",
+            }, ensure_ascii=False),
+            child_id,
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+    resp = await client.get("/api/kid/subject/math/map")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["universe"]["name"] == "Лунная станция"
+    assert data["universe"]["zone_name"] == "Математическая верфь"
+    assert data["universe"]["year_mission"] == "Запустить исследовательский корабль"
 
 
 @pytest.mark.asyncio

@@ -995,6 +995,15 @@ async def _setup_child_universe(child_id: int, name: str, gender: str, grade: in
             character_prompt=universe_data.get("character_prompt", ""),
         )
 
+        if os.getenv("TESTING") != "1":
+            starter_lesson_ids = _create_free_starter_math_block(conn, child_id, grade)
+            if starter_lesson_ids:
+                logging.info(
+                    "Free starter math block queued for child %s: %s",
+                    child_id,
+                    starter_lesson_ids,
+                )
+
         # Step 2: Generate character image
         character_prompt = universe_data.get("character_prompt", "")
         if character_prompt:
@@ -1016,6 +1025,63 @@ async def _setup_child_universe(child_id: int, name: str, gender: str, grade: in
         logging.info(f"Universe setup complete for child {child_id}")
     except Exception:
         logging.exception(f"Failed to setup universe for child {child_id}")
+
+
+def _create_free_starter_math_block(conn: sqlite3.Connection, child_id: int, grade: int) -> list[int]:
+    """Generate the first five math lessons for a new child without charging crystals."""
+    child = get_child_by_id(conn, child_id)
+    if child is None:
+        return []
+
+    topics = get_topics_by_subject_grade(conn, "math", grade)
+    if not topics:
+        return []
+
+    initialize_child_progress(conn, child_id, "math", grade)
+    first_topic = topics[0]
+    rows = conn.execute(
+        """SELECT clp.id AS progress_id, cl.id AS curriculum_lesson_id,
+                  cl.lesson_order, cl.title_ru
+           FROM child_lesson_progress clp
+           JOIN curriculum_lessons cl ON cl.id = clp.curriculum_lesson_id
+           WHERE clp.child_id = ? AND cl.topic_id = ? AND clp.lesson_id IS NULL
+           ORDER BY cl.lesson_order
+           LIMIT 5""",
+        (child_id, first_topic["id"]),
+    ).fetchall()
+
+    server_url = os.environ.get("APP_BASE_URL", "http://localhost:8003")
+    db_path = get_db_path()
+    lesson_ids: list[int] = []
+    child_for_generation = dict(get_child_by_id(conn, child_id) or child)
+
+    for row in rows:
+        lesson_id = create_lesson(
+            conn,
+            child_id,
+            "curriculum",
+            row["title_ru"],
+            "math",
+        )
+        conn.execute(
+            "UPDATE child_lesson_progress SET status='available', lesson_id=? "
+            "WHERE id=? AND lesson_id IS NULL",
+            (lesson_id, row["progress_id"]),
+        )
+        conn.commit()
+        lesson_ids.append(lesson_id)
+
+        _start_lesson_generation(
+            lesson_id,
+            child_for_generation,
+            row["title_ru"],
+            "math",
+            db_path,
+            server_url,
+            lesson_number=row["lesson_order"],
+        )
+
+    return lesson_ids
 
 
 @app.get("/api/children")
@@ -2120,49 +2186,9 @@ async def enroll_subject(child_id: int, body: EnrollSubjectRequest, request: Req
 
     message = "enrolled" if rows_created > 0 else "already_enrolled"
 
-    # Auto-generate first lesson of the first topic on first enrollment (FREE)
+    # Starter lessons are created with the child's universe setup, not by merely
+    # opening/enrolling a subject page.
     auto_lesson_ids = []
-    if rows_created > 0:
-        first_topic = topics[0] if topics else None
-        if first_topic:
-            first_topic_id = first_topic["id"]
-            # Get first lesson of the first topic
-            first_lessons = conn.execute(
-                """SELECT clp.id AS progress_id, cl.id AS curriculum_lesson_id, cl.lesson_order, cl.title_ru
-                   FROM child_lesson_progress clp
-                   JOIN curriculum_lessons cl ON cl.id = clp.curriculum_lesson_id
-                   WHERE clp.child_id=? AND cl.topic_id=? AND clp.lesson_id IS NULL
-                   ORDER BY cl.lesson_order LIMIT 1""",
-                (child_id, first_topic_id),
-            ).fetchall()
-
-            server_url = os.environ.get("APP_BASE_URL", "http://localhost:8003")
-            db_path = get_db_path()
-
-            for fl in first_lessons:
-                try:
-                    lesson_id = create_lesson(
-                        conn, child_id, "curriculum", fl["title_ru"],
-                        body.subject, plan_id=None,
-                    )
-                    conn.execute(
-                        "UPDATE child_lesson_progress SET status='available', lesson_id=? WHERE id=?",
-                        (lesson_id, fl["progress_id"]),
-                    )
-                    conn.commit()
-                    auto_lesson_ids.append(lesson_id)
-
-                    _start_lesson_generation(
-                        lesson_id,
-                        dict(child),
-                        fl["title_ru"],
-                        body.subject,
-                        db_path,
-                        server_url,
-                        lesson_number=fl["lesson_order"],
-                    )
-                except Exception:
-                    pass
 
     return JSONResponse({
         "ok": True,
@@ -2225,6 +2251,7 @@ async def get_subject_progress(child_id: int, subject: str, request: Request):
         "total_lessons": stats["total_lessons"],
         "completed_lessons": stats["completed_lessons"],
         "total_stars": stats["total_stars"],
+        "universe": _subject_universe_context(child, subject),
         "topics": topics,
     })
 
@@ -2272,6 +2299,35 @@ def _get_enrolled_subjects_for_child(conn, child_id: int) -> list[dict]:
             "percent": percent,
         })
     return subjects
+
+
+def _subject_universe_context(child: dict, subject: str) -> dict:
+    raw_desc = child.get("universe_description") or ""
+    try:
+        data = json.loads(raw_desc)
+    except (TypeError, json.JSONDecodeError):
+        data = None
+
+    if not isinstance(data, dict):
+        return {
+            "name": child.get("universe") or "",
+            "zone_name": "",
+            "zone_description": "",
+            "year_mission": "",
+            "progression": "",
+        }
+
+    zone = data.get("subject_zones", {}).get(subject, {})
+    if not isinstance(zone, dict):
+        zone = {}
+
+    return {
+        "name": data.get("name", ""),
+        "zone_name": zone.get("zone_name", ""),
+        "zone_description": zone.get("description", ""),
+        "year_mission": data.get("year_mission", ""),
+        "progression": data.get("progression", ""),
+    }
 
 
 @app.post("/api/children/{child_id}/skip-test")
@@ -2661,6 +2717,7 @@ async def kid_subject_map(subject: str, request: Request):
         "total_lessons": stats["total_lessons"],
         "completed_lessons": stats["completed_lessons"],
         "total_stars": stats["total_stars"],
+        "universe": _subject_universe_context(child, subject),
         "topics": topics,
     })
 

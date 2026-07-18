@@ -10,6 +10,7 @@ import pytest
 import pytest_asyncio
 
 from httpx import AsyncClient
+import main
 
 
 # ---------------------------------------------------------------------------
@@ -247,6 +248,61 @@ async def test_enroll_subject_idempotent(auth_client: AsyncClient):
     ).fetchone()[0]
     conn.close()
     assert count == 165  # No duplicates
+
+
+@pytest.mark.asyncio
+async def test_free_starter_math_block_generates_first_topic_without_crystals(
+    auth_client: AsyncClient,
+    monkeypatch,
+):
+    """Universe setup can create the first math block for free."""
+    queued = []
+
+    def fake_start_generation(*args, **kwargs):
+        queued.append((args, kwargs))
+
+    monkeypatch.setattr(main, "_start_lesson_generation", fake_start_generation)
+
+    me_resp = await auth_client.get("/auth/me")
+    user_id = me_resp.json()["id"]
+    crystals_before = me_resp.json()["crystals"]
+
+    child_resp = await auth_client.post("/api/children", json={
+        "name": "Старт",
+        "gender": "girl",
+        "birth_date": "2019-01-01",
+        "grade": 1,
+        "universe": "Космос",
+        "source": "chat",
+    })
+    assert child_resp.status_code == 201
+    child_id = child_resp.json()["id"]
+
+    conn = direct_db()
+    lesson_ids = main._create_free_starter_math_block(conn, child_id, 1)
+    second_call_ids = main._create_free_starter_math_block(conn, child_id, 1)
+
+    first_topic_rows = conn.execute(
+        """SELECT clp.status, clp.lesson_id, cl.lesson_order
+           FROM child_lesson_progress clp
+           JOIN curriculum_lessons cl ON cl.id = clp.curriculum_lesson_id
+           JOIN curriculum_topics ct ON ct.id = cl.topic_id
+           WHERE clp.child_id=? AND ct.subject='math' AND ct.grade=1 AND ct.theme_order=1
+           ORDER BY cl.lesson_order""",
+        (child_id,),
+    ).fetchall()
+    parent_crystals = conn.execute(
+        "SELECT crystals FROM users WHERE id=?", (user_id,)
+    ).fetchone()[0]
+    conn.close()
+
+    assert len(lesson_ids) == 5
+    assert second_call_ids == []
+    assert len(queued) == 5
+    assert [row["lesson_order"] for row in first_topic_rows] == [1, 2, 3, 4, 5]
+    assert all(row["status"] == "available" for row in first_topic_rows)
+    assert all(row["lesson_id"] for row in first_topic_rows)
+    assert parent_crystals == crystals_before
 
 
 @pytest.mark.asyncio
@@ -726,4 +782,3 @@ async def test_skip_test_pass_bulk_unlock(child_with_crystals: dict, auth_client
     conn.close()
     assert completed >= 10, f"Expected >= 10 completed, got {completed}"
     assert available >= 1, f"Expected >= 1 available after unlock, got {available}"
-

@@ -143,6 +143,10 @@
     font-size: clamp(36px, 5vw, 56px); margin: 0; letter-spacing: -1px; color: var(--ink);
   }
   .prog h1 .accent { color: var(--accent); }
+  .prog-subtitle {
+    max-width: 680px; margin: 10px auto 0;
+    color: var(--ink-soft); font-weight: 800; font-size: 15px; line-height: 1.45;
+  }
   .prog-bar {
     margin: 22px auto 0; max-width: 540px;
     background: var(--paper); border: 1px solid var(--rim);
@@ -175,6 +179,41 @@
     max-width: 1200px; margin: 28px auto 120px; padding: 0 28px;
     position: relative; z-index: 1; overflow: visible;
   }
+
+  .map-month {
+    margin: 28px 0 0;
+    border: 0;
+  }
+  .map-month:first-child { margin-top: 0; }
+  .map-month-summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    background: rgba(255,255,255,0.78);
+    border: 1px solid rgba(42,36,82,0.08);
+    border-radius: 24px;
+    padding: 14px 18px;
+    box-shadow: var(--shadow-card);
+    color: var(--ink);
+  }
+  .map-month-summary::-webkit-details-marker { display: none; }
+  .map-month-title {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+    font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 20px;
+  }
+  .map-month-title span {
+    font-family: "Nunito", system-ui, sans-serif; color: var(--ink-soft);
+    font-size: 13px; font-weight: 800;
+  }
+  .map-month-progress {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: "Baloo 2", sans-serif; font-weight: 800;
+    color: var(--ok-deep); background: #ecfdf3;
+    border-radius: var(--r-pill); padding: 7px 12px;
+  }
+  .map-month-chevron { transition: transform .18s ease; color: var(--ink-soft); }
+  .map-month[open] .map-month-chevron { transform: rotate(180deg); }
+  .map-month-body { padding-top: 4px; }
 
   /* Island wrapper */
   .island-wrap { position: relative; margin: 60px 0 0; }
@@ -512,6 +551,7 @@
     <span>Программа</span><span class="dot"></span><span>{{ child.grade }} класс</span>
   </div>
   <h1 id="prog-title"></h1>
+  <p class="prog-subtitle" id="prog-subtitle" style="display:none"></p>
   <div class="prog-bar">
     <span class="label">Прогресс</span>
     <div class="prog-track"><span class="prog-fill" id="prog-fill"></span></div>
@@ -558,6 +598,8 @@ var COLORS = ['mint','peach','lilac'];
 })();
 
 function renderMap(data) {
+  applyUniverseTitle(data.universe || {});
+
   var done = data.completed_lessons || 0;
   var total = data.total_lessons || 0;
   var pct = total > 0 ? Math.round(done / total * 100) : 0;
@@ -572,8 +614,14 @@ function renderMap(data) {
   var html = '';
   var foundCurrent = false;
   var mobile = isMobile();
+  var activeTopicIndex = findActiveTopicIndex(topics);
 
   for (var i = 0; i < topics.length; i++) {
+    if (i % 4 === 0) {
+      if (i > 0) html += '</div></details>';
+      html += buildMonthStart(topics, i, activeTopicIndex);
+    }
+
     var topic = topics[i];
     var lessons = topic.lessons || [];
     var nc = lessons.length;
@@ -653,6 +701,7 @@ function renderMap(data) {
 
     html += '</div></div></div></section>'; // nodes, path, island, island-wrap
   }
+  if (topics.length > 0) html += '</div></details>';
 
   mapEl.innerHTML = html;
 
@@ -703,6 +752,71 @@ function renderMap(data) {
       }
     });
   });
+}
+
+function applyUniverseTitle(universe) {
+  var titleEl = document.getElementById('prog-title');
+  var subtitleEl = document.getElementById('prog-subtitle');
+  var zone = universe.zone_name || '';
+  var world = universe.name || '';
+  var mission = universe.year_mission || '';
+  var desc = universe.zone_description || '';
+
+  if (zone) {
+    titleEl.innerHTML = '<span class="accent">' + esc(zone) + '</span>';
+  }
+
+  var parts = [];
+  if (world) parts.push(world);
+  if (desc) parts.push(desc);
+  if (mission) parts.push('Цель года: ' + mission);
+
+  if (parts.length > 0) {
+    subtitleEl.textContent = parts.join(' · ');
+    subtitleEl.style.display = 'block';
+  }
+}
+
+function findActiveTopicIndex(topics) {
+  for (var i = 0; i < topics.length; i++) {
+    var lessons = topics[i].lessons || [];
+    var completed = 0;
+    var hasAvailable = false;
+    for (var j = 0; j < lessons.length; j++) {
+      if (lessons[j].status === 'completed') completed++;
+      if (lessons[j].status === 'available') hasAvailable = true;
+    }
+    if (hasAvailable || (completed > 0 && completed < lessons.length)) return i;
+  }
+  return 0;
+}
+
+function buildMonthStart(topics, startIndex, activeTopicIndex) {
+  var endIndex = Math.min(startIndex + 4, topics.length);
+  var monthNo = Math.floor(startIndex / 4) + 1;
+  var completed = 0;
+  var total = 0;
+  for (var i = startIndex; i < endIndex; i++) {
+    var lessons = topics[i].lessons || [];
+    total += lessons.length;
+    for (var j = 0; j < lessons.length; j++) {
+      if (lessons[j].status === 'completed') completed++;
+    }
+  }
+  var activeMonth = Math.floor(activeTopicIndex / 4) + 1;
+  var open = monthNo === 1 || monthNo === activeMonth;
+  var firstMission = startIndex + 1;
+  var lastMission = endIndex;
+
+  return '<details class="map-month" ' + (open ? 'open' : '') + '>' +
+    '<summary class="map-month-summary">' +
+      '<span class="map-month-title">Месяц ' + monthNo +
+        '<span>Миссии ' + firstMission + '-' + lastMission + '</span>' +
+      '</span>' +
+      '<span class="map-month-progress">' + completed + '/' + total + '</span>' +
+      '<span class="map-month-chevron">&#9662;</span>' +
+    '</summary>' +
+    '<div class="map-month-body">';
 }
 
 function nodeIcon(state) {
