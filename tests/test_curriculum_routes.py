@@ -5,54 +5,53 @@ import pytest
 from services.curriculum_routes import (
     LESSON_ROLES,
     CurriculumRouteError,
+    expected_blocks_for_grade,
+    expected_lessons_for_grade,
     load_route_curricula,
     load_route_curriculum,
     validate_route_curriculum,
 )
 
 
-def make_route(**overrides):
-    route = {
-        "subject": "math",
-        "grade": 1,
-        "title": "Математика 1 класс",
-        "blocks": [
+def make_block(week):
+    return {
+        "week": week,
+        "school_theme": f"Тема недели {week}",
+        "skills": [f"умение {week}"],
+        "mission_title": f"Миссия {week}",
+        "mission_goal": f"Цель миссии {week}",
+        "lessons": [
             {
-                "week": 1,
-                "school_theme": "Счет предметов",
-                "skills": ["считать предметы", "сравнивать группы"],
-                "mission_title": "Открыть ворота счетного города",
-                "mission_goal": "Найти пять числовых ключей",
-                "lessons": [
-                    {
-                        "order": index,
-                        "role": role,
-                        "title": f"Урок {index}",
-                        "school_focus": "Счет в пределах 10",
-                        "prompt_hint": "Связать задания с поиском ключей",
-                    }
-                    for index, role in enumerate(LESSON_ROLES, start=1)
-                ],
-            },
-            {
-                "week": 2,
-                "school_theme": "Сравнение чисел",
-                "skills": ["использовать больше и меньше"],
-                "mission_title": "Починить числовые весы",
-                "mission_goal": "Сравнить сигналы башен",
-                "lessons": [
-                    {
-                        "order": index,
-                        "role": role,
-                        "title": f"Весы {index}",
-                    }
-                    for index, role in enumerate(LESSON_ROLES, start=1)
-                ],
-            },
+                "order": index,
+                "role": role,
+                "title": f"Урок {week}.{index}",
+                "school_focus": f"Фокус недели {week}",
+                "prompt_hint": f"Связать задания с миссией {week}",
+            }
+            for index, role in enumerate(LESSON_ROLES, start=1)
         ],
+    }
+
+
+def make_route(*, subject="math", grade=1, blocks_count=None, **overrides):
+    if blocks_count is None:
+        blocks_count = expected_blocks_for_grade(grade)
+
+    route = {
+        "subject": subject,
+        "grade": grade,
+        "title": f"Математика {grade} класс",
+        "blocks": [make_block(week) for week in range(1, blocks_count + 1)],
     }
     route.update(overrides)
     return route
+
+
+def test_expected_route_size_is_uniform_by_school_year():
+    assert expected_blocks_for_grade(1) == 33
+    assert expected_lessons_for_grade(1) == 165
+    assert expected_blocks_for_grade(2) == 34
+    assert expected_lessons_for_grade(6) == 170
 
 
 def test_validate_route_curriculum_accepts_normal_route():
@@ -60,8 +59,15 @@ def test_validate_route_curriculum_accepts_normal_route():
 
     assert route["subject"] == "math"
     assert route["grade"] == 1
-    assert len(route["blocks"]) == 2
+    assert len(route["blocks"]) == 33
     assert [lesson["role"] for lesson in route["blocks"][0]["lessons"]] == list(LESSON_ROLES)
+
+
+def test_validate_route_curriculum_accepts_grade_two_year_route():
+    route = validate_route_curriculum(make_route(grade=2), source="test")
+
+    assert route["grade"] == 2
+    assert len(route["blocks"]) == 34
 
 
 def test_validate_route_curriculum_rejects_inactive_subject():
@@ -70,8 +76,16 @@ def test_validate_route_curriculum_rejects_inactive_subject():
 
 
 def test_validate_route_curriculum_rejects_grade_outside_active_range():
+    route = make_route()
+    route["grade"] = 7
+
     with pytest.raises(CurriculumRouteError, match="grade"):
-        validate_route_curriculum(make_route(grade=7), source="test")
+        validate_route_curriculum(route, source="test")
+
+
+def test_validate_route_curriculum_requires_full_year_block_count():
+    with pytest.raises(CurriculumRouteError, match="33 weekly blocks"):
+        validate_route_curriculum(make_route(blocks_count=12), source="test")
 
 
 def test_validate_route_curriculum_rejects_boolean_week():

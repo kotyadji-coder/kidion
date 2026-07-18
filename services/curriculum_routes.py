@@ -18,6 +18,14 @@ ACTIVE_ROUTE_SUBJECTS = ("math", "russian")
 ROUTE_GRADES = tuple(range(1, 7))
 LESSONS_PER_BLOCK = 5
 LESSON_ROLES = ("arrival", "explore", "practice", "challenge", "victory")
+ROUTE_BLOCKS_BY_GRADE = {
+    1: 33,
+    2: 34,
+    3: 34,
+    4: 34,
+    5: 34,
+    6: 34,
+}
 
 
 class CurriculumRouteError(ValueError):
@@ -172,12 +180,26 @@ def _normalize_block(
     }
 
 
+def expected_blocks_for_grade(grade: int) -> int:
+    """Return the required number of weekly mission blocks for a grade."""
+
+    if grade not in ROUTE_BLOCKS_BY_GRADE:
+        raise CurriculumRouteError("grade must be between 1 and 6")
+    return ROUTE_BLOCKS_BY_GRADE[grade]
+
+
+def expected_lessons_for_grade(grade: int) -> int:
+    """Return the required number of Kidion lessons for one subject route."""
+
+    return expected_blocks_for_grade(grade) * LESSONS_PER_BLOCK
+
+
 def validate_route_curriculum(data: Any, source: str = "<memory>") -> dict[str, Any]:
     """Validate and normalize a route curriculum dict.
 
-    The validator is strict about the stable product contract and deliberately
-    does not require a full 34-36 week year yet. That lets us build and test
-    content incrementally while still preventing malformed mission blocks.
+    The validator is strict about the stable product contract: 1st grade has
+    33 weekly missions, grades 2-6 have 34 weekly missions, and every mission
+    has exactly five Kidion lessons.
     """
 
     route = _require_dict(data, "route curriculum", source)
@@ -195,6 +217,13 @@ def validate_route_curriculum(data: Any, source: str = "<memory>") -> dict[str, 
     blocks = route.get("blocks")
     if not isinstance(blocks, list) or not blocks:
         raise CurriculumRouteError(f"{source}: blocks must be a non-empty list")
+
+    expected_block_count = expected_blocks_for_grade(grade)
+    if len(blocks) != expected_block_count:
+        raise CurriculumRouteError(
+            f"{source}: grade {grade} route must contain "
+            f"{expected_block_count} weekly blocks"
+        )
 
     normalized_blocks = [
         _normalize_block(
