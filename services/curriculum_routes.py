@@ -249,6 +249,59 @@ def route_key(route: dict[str, Any]) -> tuple[str, int]:
     return str(route["subject"]), int(route["grade"])
 
 
+def expected_route_keys() -> set[tuple[str, int]]:
+    """Return every active subject/grade pair that must have a route file."""
+
+    return {
+        (subject, grade)
+        for subject in ACTIVE_ROUTE_SUBJECTS
+        for grade in ROUTE_GRADES
+    }
+
+
+def route_to_template_curriculum(route: dict[str, Any]) -> dict[str, Any]:
+    """Convert a validated route curriculum to the legacy template shape.
+
+    The current weekly-plan helpers still expect `units[].topics[]`. Keeping
+    this adapter here lets route files become an import source without forcing
+    the existing database flows to switch in the same release.
+    """
+
+    normalized = validate_route_curriculum(route, source=f"{route.get('subject')}:{route.get('grade')}")
+    subject = normalized["subject"]
+    grade = normalized["grade"]
+
+    return {
+        "subject": subject,
+        "grade": grade,
+        "title": normalized["title"],
+        "units": [
+            {
+                "id": f"{subject}-{grade}-week-{block['week']:02d}",
+                "title": block["school_theme"],
+                "mission_title": block["mission_title"],
+                "mission_goal": block["mission_goal"],
+                "skills": block["skills"],
+                "topics": [
+                    {
+                        "id": (
+                            f"{subject}-{grade}-week-{block['week']:02d}-"
+                            f"lesson-{lesson['order']}"
+                        ),
+                        "title": lesson["title"],
+                        "skill": block["skills"][0],
+                        "role": lesson["role"],
+                        "school_focus": lesson.get("school_focus", ""),
+                        "prompt_hint": lesson.get("prompt_hint", ""),
+                    }
+                    for lesson in block["lessons"]
+                ],
+            }
+            for block in normalized["blocks"]
+        ],
+    }
+
+
 def load_route_curriculum(path: str | Path) -> dict[str, Any]:
     """Load one route curriculum JSON file and validate it."""
 

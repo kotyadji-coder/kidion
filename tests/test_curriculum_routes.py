@@ -3,12 +3,16 @@ import json
 import pytest
 
 from services.curriculum_routes import (
+    ACTIVE_ROUTE_SUBJECTS,
     LESSON_ROLES,
+    ROUTE_GRADES,
     CurriculumRouteError,
     expected_blocks_for_grade,
     expected_lessons_for_grade,
+    expected_route_keys,
     load_route_curricula,
     load_route_curriculum,
+    route_to_template_curriculum,
     validate_route_curriculum,
 )
 
@@ -138,3 +142,35 @@ def test_load_route_curricula_rejects_duplicate_subject_grade(tmp_path):
 
     with pytest.raises(CurriculumRouteError, match="duplicate"):
         load_route_curricula(tmp_path)
+
+
+def test_repository_route_curricula_cover_all_active_subjects_and_grades():
+    routes = load_route_curricula()
+
+    assert set(routes) == expected_route_keys()
+    assert expected_route_keys() == {
+        (subject, grade)
+        for subject in ACTIVE_ROUTE_SUBJECTS
+        for grade in ROUTE_GRADES
+    }
+
+    for (subject, grade), route in routes.items():
+        assert route["subject"] == subject
+        assert route["grade"] == grade
+        assert len(route["blocks"]) == expected_blocks_for_grade(grade)
+        assert sum(len(block["lessons"]) for block in route["blocks"]) == expected_lessons_for_grade(grade)
+
+
+def test_route_to_template_curriculum_preserves_weekly_mission_shape():
+    route = load_route_curricula()[("math", 1)]
+
+    template = route_to_template_curriculum(route)
+
+    assert template["subject"] == "math"
+    assert template["grade"] == 1
+    assert len(template["units"]) == 33
+    assert all(len(unit["topics"]) == 5 for unit in template["units"])
+    assert template["units"][0]["id"] == "math-1-week-01"
+    assert template["units"][0]["mission_title"]
+    assert template["units"][0]["topics"][0]["role"] == "arrival"
+    assert template["units"][0]["topics"][4]["role"] == "victory"
