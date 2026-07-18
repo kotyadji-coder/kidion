@@ -14,3 +14,4 @@ content/
 *.db-shm
 *.db-wal
 .claude/handoff/
+logs/*.log
