@@ -94,18 +94,18 @@ async def child_with_crystals(auth_client: AsyncClient) -> dict:
 # Seed data tests
 # ---------------------------------------------------------------------------
 
-def test_seed_math_grade1_creates_12_topics(client):
-    """After DB init, curriculum_topics should have 12 rows for math grade 1."""
+def test_seed_math_grade1_creates_33_topics(client):
+    """After DB init, curriculum_topics should have 33 rows for math grade 1."""
     conn = direct_db()
     count = conn.execute(
         "SELECT COUNT(*) FROM curriculum_topics WHERE subject='math' AND grade=1"
     ).fetchone()[0]
     conn.close()
-    assert count == 12, f"Expected 12 topics, got {count}"
+    assert count == 33, f"Expected 33 topics, got {count}"
 
 
-def test_seed_math_grade1_creates_60_lessons(client):
-    """After DB init, curriculum_lessons should have 60 rows for math grade 1."""
+def test_seed_math_grade1_creates_165_lessons(client):
+    """After DB init, curriculum_lessons should have 165 rows for math grade 1."""
     conn = direct_db()
     count = conn.execute(
         """SELECT COUNT(*) FROM curriculum_lessons cl
@@ -113,7 +113,26 @@ def test_seed_math_grade1_creates_60_lessons(client):
            WHERE ct.subject = 'math' AND ct.grade = 1"""
     ).fetchone()[0]
     conn.close()
-    assert count == 60, f"Expected 60 lessons, got {count}"
+    assert count == 165, f"Expected 165 lessons, got {count}"
+
+
+def test_seed_route_curricula_creates_all_active_subject_grades(client):
+    """Route seed covers math/russian grades 1-6 in kid map tables."""
+    conn = direct_db()
+    rows = conn.execute(
+        """SELECT subject, grade, COUNT(*) AS topic_count
+           FROM curriculum_topics
+           WHERE subject IN ('math', 'russian') AND grade BETWEEN 1 AND 6
+           GROUP BY subject, grade"""
+    ).fetchall()
+    conn.close()
+
+    counts = {(row["subject"], row["grade"]): row["topic_count"] for row in rows}
+    assert len(counts) == 12
+    assert counts[("math", 1)] == 33
+    assert counts[("russian", 1)] == 33
+    assert counts[("math", 6)] == 34
+    assert counts[("russian", 6)] == 34
 
 
 def test_seed_idempotent(client):
@@ -126,7 +145,7 @@ def test_seed_idempotent(client):
     count = conn.execute(
         "SELECT COUNT(*) FROM curriculum_topics WHERE subject='math' AND grade=1"
     ).fetchone()[0]
-    assert count == 12
+    assert count == 33
 
 
 # ---------------------------------------------------------------------------
@@ -134,8 +153,8 @@ def test_seed_idempotent(client):
 # ---------------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_enroll_subject_creates_60_progress_rows(auth_client: AsyncClient):
-    """POST /api/children/{id}/enroll-subject creates 60 child_lesson_progress rows."""
+async def test_enroll_subject_creates_165_progress_rows(auth_client: AsyncClient):
+    """POST /api/children/{id}/enroll-subject creates 165 child_lesson_progress rows."""
     child_resp = await auth_client.post("/api/children", json={
         "name": "Прогресс",
         "gender": "boy",
@@ -154,7 +173,7 @@ async def test_enroll_subject_creates_60_progress_rows(auth_client: AsyncClient)
     assert resp.status_code == 200
     data = resp.json()
     assert data["ok"] is True
-    assert data["total_lessons"] == 60
+    assert data["total_lessons"] == 165
 
     conn = direct_db()
     count = conn.execute(
@@ -162,7 +181,7 @@ async def test_enroll_subject_creates_60_progress_rows(auth_client: AsyncClient)
         (child_id,)
     ).fetchone()[0]
     conn.close()
-    assert count == 60
+    assert count == 165
 
 
 @pytest.mark.asyncio
@@ -195,7 +214,7 @@ async def test_enroll_subject_first_lesson_available(auth_client: AsyncClient):
     conn.close()
 
     assert available_count == 1, f"Expected 1 available, got {available_count}"
-    assert locked_count == 59, f"Expected 59 locked, got {locked_count}"
+    assert locked_count == 164, f"Expected 164 locked, got {locked_count}"
 
 
 @pytest.mark.asyncio
@@ -227,7 +246,7 @@ async def test_enroll_subject_idempotent(auth_client: AsyncClient):
         (child_id,)
     ).fetchone()[0]
     conn.close()
-    assert count == 60  # No duplicates
+    assert count == 165  # No duplicates
 
 
 @pytest.mark.asyncio
@@ -526,10 +545,10 @@ async def test_subject_progress_returns_correct_structure(enrolled_child: dict):
     data = resp.json()
 
     assert data["subject"] == "math"
-    assert data["total_lessons"] == 60
+    assert data["total_lessons"] == 165
     assert data["completed_lessons"] == 0
     assert "topics" in data
-    assert len(data["topics"]) == 12
+    assert len(data["topics"]) == 33
 
     first_topic = data["topics"][0]
     assert "id" in first_topic
@@ -707,5 +726,4 @@ async def test_skip_test_pass_bulk_unlock(child_with_crystals: dict, auth_client
     conn.close()
     assert completed >= 10, f"Expected >= 10 completed, got {completed}"
     assert available >= 1, f"Expected >= 1 available after unlock, got {available}"
-
 

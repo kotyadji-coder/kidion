@@ -1,54 +1,44 @@
 """
 services/curricula.py — curriculum loading and search for kidion.
 
-Loads JSON curricula files into curriculum_templates table and provides
+Loads route curricula files into curriculum_templates table and provides
 get_curriculum() and search_unit() helpers.
 """
 
 import json
 import logging
-import os
 from typing import Optional
 
 logger = logging.getLogger("kidion")
 
-_BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CURRICULA_DIR = os.path.join(_BASE_DIR, "data", "curricula")
-
-CURRICULA_FILES = [
-    ("math", 1, "math_1.json"),
-    ("math", 2, "math_2.json"),
-    ("russian", 1, "russian_1.json"),
-    ("russian", 2, "russian_2.json"),
-    ("english", 1, "english_1.json"),
-    ("english", 2, "english_2.json"),
-]
-
 
 def load_curricula(db_path: str) -> None:
-    """Load JSON curricula files into curriculum_templates table if not already loaded."""
+    """Load active route curricula into curriculum_templates table."""
     from db import get_connection
+    from services.curriculum_routes import load_route_curricula, route_to_template_curriculum
+
     conn = get_connection(db_path)
-    for subject, grade, filename in CURRICULA_FILES:
+    for (subject, grade), route in sorted(load_route_curricula().items()):
+        data = route_to_template_curriculum(route)
+        topics_json = json.dumps(data, ensure_ascii=False)
         row = conn.execute(
             "SELECT id FROM curriculum_templates WHERE subject=? AND grade=?",
             (subject, grade),
         ).fetchone()
         if row:
-            continue
-        filepath = os.path.join(CURRICULA_DIR, filename)
-        if not os.path.exists(filepath):
-            logger.warning("Curriculum file not found: %s", filepath)
-            continue
-        with open(filepath, encoding="utf-8") as f:
-            data = json.load(f)
-        conn.execute(
-            "INSERT INTO curriculum_templates (subject, grade, title, topics_json) "
-            "VALUES (?, ?, ?, ?)",
-            (subject, grade, data["title"], json.dumps(data, ensure_ascii=False)),
-        )
+            conn.execute(
+                "UPDATE curriculum_templates SET title=?, topics_json=?, updated_at=datetime('now') "
+                "WHERE id=?",
+                (data["title"], topics_json, row["id"]),
+            )
+        else:
+            conn.execute(
+                "INSERT INTO curriculum_templates (subject, grade, title, topics_json) "
+                "VALUES (?, ?, ?, ?)",
+                (subject, grade, data["title"], topics_json),
+            )
     conn.commit()
-    logger.info("Curricula loaded into DB")
+    logger.info("Route curricula loaded into DB")
 
 
 def get_curriculum(conn, subject: str, grade: int) -> Optional[dict]:

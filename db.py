@@ -434,7 +434,7 @@ def _init_schema(conn: sqlite3.Connection) -> None:
             pass
 
     # Seed curriculum data
-    _seed_math_grade1(conn)
+    _seed_route_curricula(conn)
 
     # Seed chat characters
     _seed_chat_characters(conn)
@@ -1475,27 +1475,41 @@ def _seed_chat_characters(conn: sqlite3.Connection) -> None:
 
 
 
-def _seed_math_grade1(conn: sqlite3.Connection) -> None:
-    """Idempotent seed: Math Grade 1, 12 themes x 5 lessons = 60 rows.
-    Checks if the first theme title matches; if not, clears and reseeds."""
-    existing = conn.execute(
-        "SELECT COUNT(*) FROM curriculum_topics WHERE subject='math' AND grade=1"
-    ).fetchone()[0]
-    if existing > 0:
-        # Check if seed data matches current version
-        first = conn.execute(
-            "SELECT title_ru FROM curriculum_topics WHERE subject='math' AND grade=1 AND theme_order=1"
+def _seed_route_curricula(conn: sqlite3.Connection) -> None:
+    """Idempotently seed active route curricula into the kid map tables."""
+    from services.curriculum_routes import load_route_curricula
+
+    for (subject, grade), route in sorted(load_route_curricula().items()):
+        expected_topics = len(route["blocks"])
+        expected_lessons = sum(len(block["lessons"]) for block in route["blocks"])
+        counts = conn.execute(
+            """SELECT COUNT(DISTINCT ct.id) AS topics_count, COUNT(cl.id) AS lessons_count
+               FROM curriculum_topics ct
+               LEFT JOIN curriculum_lessons cl ON cl.topic_id = ct.id
+               WHERE ct.subject = ? AND ct.grade = ?""",
+            (subject, grade),
         ).fetchone()
-        if first and first["title_ru"] == "Счёт до 10":
-            return  # Already correct version
-        # Old seed data — clear and reseed
+
+        first = conn.execute(
+            "SELECT title_ru FROM curriculum_topics WHERE subject=? AND grade=? AND theme_order=1",
+            (subject, grade),
+        ).fetchone()
+        first_title = route["blocks"][0]["school_theme"]
+        if (
+            counts["topics_count"] == expected_topics
+            and counts["lessons_count"] == expected_lessons
+            and first
+            and first["title_ru"] == first_title
+        ):
+            continue
+
         old_topics = conn.execute(
-            "SELECT id FROM curriculum_topics WHERE subject='math' AND grade=1"
+            "SELECT id FROM curriculum_topics WHERE subject=? AND grade=?",
+            (subject, grade),
         ).fetchall()
-        old_ids = [r["id"] for r in old_topics]
+        old_ids = [row["id"] for row in old_topics]
         if old_ids:
             placeholders = ",".join("?" * len(old_ids))
-            # Delete progress, lessons, then topics
             conn.execute(
                 f"DELETE FROM child_lesson_progress WHERE curriculum_lesson_id IN "
                 f"(SELECT id FROM curriculum_lessons WHERE topic_id IN ({placeholders}))",
@@ -1511,71 +1525,25 @@ def _seed_math_grade1(conn: sqlite3.Connection) -> None:
             )
             conn.commit()
 
-    themes = [
-        (1, "Счёт до 10", "🔢"),
-        (2, "Сравнение чисел", "⚖️"),
-        (3, "Сложение до 10", "➕"),
-        (4, "Вычитание до 10", "➖"),
-        (5, "Состав числа", "🧩"),
-        (6, "Числа до 20", "🔢"),
-        (7, "Сложение с переходом через 10", "➕"),
-        (8, "Вычитание с переходом через 10", "➖"),
-        (9, "Задачи на сложение", "📝"),
-        (10, "Задачи на вычитание", "📝"),
-        (11, "Геометрические фигуры", "📐"),
-        (12, "Измерение длины", "📏"),
-    ]
-
-    lessons_by_theme = {
-        1: ["Считаем предметы", "Числа 1, 2, 3", "Числа 4, 5",
-            "Числа 6, 7, 8", "Числа 9, 10"],
-        2: ["Больше и меньше", "Знаки > < =", "Сравниваем числа до 5",
-            "Сравниваем числа до 10", "Соседи числа"],
-        3: ["Что такое сложение", "Прибавляем 1 и 2", "Прибавляем 3 и 4",
-            "Прибавляем 5", "Считаем быстро"],
-        4: ["Что такое вычитание", "Вычитаем 1 и 2", "Вычитаем 3 и 4",
-            "Вычитаем 5", "Считаем быстро"],
-        5: ["Состав чисел 2, 3, 4", "Состав чисел 5, 6", "Состав чисел 7, 8",
-            "Состав чисел 9, 10", "Тренировка"],
-        6: ["Десяток", "Числа 11-15", "Числа 16-20",
-            "Сравниваем числа до 20", "Считаем до 20"],
-        7: ["Как прибавлять через 10", "9 + 2, 9 + 3, 9 + 4", "8 + 3, 8 + 4, 8 + 5",
-            "7 + 4, 7 + 5, 6 + 5", "Тренировка"],
-        8: ["Как вычитать через 10", "11 − 2, 11 − 3", "12 − 3, 12 − 4",
-            "13 − 4, 14 − 5", "Тренировка"],
-        9: ["Что такое задача", "Задачи «всего», «вместе»", "Задачи «на больше»",
-            "Рисуем схему", "Решаем задачи"],
-        10: ["Задачи «осталось»", "Задачи «на меньше»", "Задачи на сравнение",
-             "Рисуем схему", "Решаем задачи"],
-        11: ["Точка, линия, отрезок", "Треугольник", "Квадрат и прямоугольник",
-             "Круг и овал", "Ищем фигуры вокруг"],
-        12: ["Сантиметр", "Измеряем отрезки", "Чертим отрезки",
-             "Сравниваем длины", "Итоговый урок"],
-    }
-
-    for theme_order, title_ru, icon in themes:
-        conn.execute(
-            "INSERT INTO curriculum_topics (subject, grade, theme_order, title_ru, icon) "
-            "VALUES ('math', 1, ?, ?, ?)",
-            (theme_order, title_ru, icon),
-        )
-    conn.commit()
-
-    # Get topic IDs
-    topics = conn.execute(
-        "SELECT id, theme_order FROM curriculum_topics WHERE subject='math' AND grade=1 "
-        "ORDER BY theme_order"
-    ).fetchall()
-
-    for topic in topics:
-        lesson_titles = lessons_by_theme[topic["theme_order"]]
-        for lesson_order, title in enumerate(lesson_titles, 1):
-            conn.execute(
-                "INSERT INTO curriculum_lessons (topic_id, lesson_order, title_ru) "
-                "VALUES (?, ?, ?)",
-                (topic["id"], lesson_order, title),
-            )
-    conn.commit()
+        icon = "📐" if subject == "math" else "📝"
+        for block in route["blocks"]:
+            topic_id = conn.execute(
+                "INSERT INTO curriculum_topics (subject, grade, theme_order, title_ru, icon) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (subject, grade, block["week"], block["school_theme"], icon),
+            ).lastrowid
+            for lesson in block["lessons"]:
+                conn.execute(
+                    "INSERT INTO curriculum_lessons (topic_id, lesson_order, title_ru, prompt_hint) "
+                    "VALUES (?, ?, ?, ?)",
+                    (
+                        topic_id,
+                        lesson["order"],
+                        lesson["title"],
+                        lesson.get("prompt_hint", ""),
+                    ),
+                )
+        conn.commit()
 
 
 # ---------------------------------------------------------------------------

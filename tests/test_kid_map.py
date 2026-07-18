@@ -101,7 +101,7 @@ async def test_kid_subjects_returns_enrolled_subjects(kid_session: dict):
 
     math_subj = next((s for s in data["subjects"] if s["subject"] == "math"), None)
     assert math_subj is not None, "math not in subjects list"
-    assert math_subj["total_lessons"] == 60
+    assert math_subj["total_lessons"] == 165
     assert math_subj["completed_lessons"] == 0
 
 
@@ -125,9 +125,9 @@ async def test_kid_map_returns_correct_structure(kid_session: dict):
     data = resp.json()
 
     assert data["subject"] == "math"
-    assert data["total_lessons"] == 60
+    assert data["total_lessons"] == 165
     assert "topics" in data
-    assert len(data["topics"]) == 12
+    assert len(data["topics"]) == 33
 
     first_topic = data["topics"][0]
     assert len(first_topic["lessons"]) == 5

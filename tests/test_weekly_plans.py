@@ -42,15 +42,15 @@ async def _create_child(client: AsyncClient, grade=1, name="Маша") -> dict:
 # ---------------------------------------------------------------------------
 
 class TestLoadCurricula:
-    def test_load_curricula_inserts_four_rows(self, temp_db_path):
-        """load_curricula() must insert 4 rows into curriculum_templates."""
+    def test_load_curricula_inserts_active_route_rows(self, temp_db_path):
+        """load_curricula() must insert active math/russian routes for grades 1-6."""
         from db import get_connection, init_db
         from services.curricula import load_curricula
         init_db(temp_db_path)
         load_curricula(temp_db_path)
         conn = get_connection(temp_db_path)
         count = conn.execute("SELECT COUNT(*) FROM curriculum_templates").fetchone()[0]
-        assert count == 6
+        assert count == 12
 
     def test_load_curricula_idempotent(self, temp_db_path):
         """Calling load_curricula() twice must not duplicate rows."""
@@ -61,7 +61,7 @@ class TestLoadCurricula:
         load_curricula(temp_db_path)
         conn = get_connection(temp_db_path)
         count = conn.execute("SELECT COUNT(*) FROM curriculum_templates").fetchone()[0]
-        assert count == 6
+        assert count == 12
 
     def test_load_curricula_math_grade1(self, temp_db_path):
         """math grade 1 curriculum is loaded with correct subject and grade."""
@@ -74,7 +74,7 @@ class TestLoadCurricula:
             "SELECT * FROM curriculum_templates WHERE subject='math' AND grade=1"
         ).fetchone()
         assert row is not None
-        assert row["title"] == "Математика, 1 класс"
+        assert row["title"] == "Математика, 1 класс: годовой маршрут Kidion"
 
     def test_load_curricula_russian_grade2(self, temp_db_path):
         """russian grade 2 curriculum is loaded."""
@@ -102,7 +102,7 @@ class TestGetCurriculum:
         assert result is not None
         assert "data" in result
         assert "units" in result["data"]
-        assert len(result["data"]["units"]) >= 4
+        assert len(result["data"]["units"]) == 33
 
     def test_get_curriculum_not_found(self, temp_db_path):
         """get_curriculum returns None for unknown subject."""
